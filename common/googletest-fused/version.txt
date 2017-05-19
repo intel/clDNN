@@ -1,0 +1,4 @@
+Source:             https://github.com/google/googletest.git
+Latest commit:      ec44c6c1675c25b9827aacd08c02433cccde7780
+Latest commit date: 2016-07-14
+Latest fuse date:   2016-08-21
