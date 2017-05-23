@@ -52,13 +52,13 @@ request will be merged into our internal and GitHub repositories.
 ## System Requirements
 clDNN supports Intel® HD Graphics and Intel® Iris® Graphics and is optimized for
 - Codename *Skylake*:
-    * Intel® HD Graphics 510 (GT1, *consumer* market)
-    * Intel® HD Graphics 515 (GT2, *consumer* market)
-    * Intel® HD Graphics 520 (GT2, *consumer* market)
-    * Intel® HD Graphics 530 (GT2, *consumer* market)
-    * Intel® Iris® Graphics 540 (GT3e, *consumer* market)
-    * Intel® Iris® Graphics 550 (GT3e, *consumer* market)
-    * Intel® Iris® Pro Graphics 580 (GT4e, *consumer* market)
+    * Intel® HD Graphics 510 (GT1, *client* market)
+    * Intel® HD Graphics 515 (GT2, *client* market)
+    * Intel® HD Graphics 520 (GT2, *client* market)
+    * Intel® HD Graphics 530 (GT2, *client* market)
+    * Intel® Iris® Graphics 540 (GT3e, *client* market)
+    * Intel® Iris® Graphics 550 (GT3e, *client* market)
+    * Intel® Iris® Pro Graphics 580 (GT4e, *client* market)
     * Intel® HD Graphics P530 (GT2, *server* market)
     * Intel® Iris® Pro Graphics P555 (GT3e, *server* market)
     * Intel® Iris® Pro Graphics P580 (GT4e, *server* market)
@@ -68,7 +68,7 @@ clDNN supports Intel® HD Graphics and Intel® Iris® Graphics and is optimized 
 
 clDNN currently uses OpenCL™ with multiple Intel® OpenCL™ extensions and requires Intel® Graphics Driver to run.
 
-clDNN requires CPU with SSE/AVX support.
+clDNN requires CPU with Intel® SSE/Intel® AVX support.
 
 ---
 
