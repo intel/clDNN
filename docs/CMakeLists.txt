@@ -81,7 +81,7 @@ endif()
 # Generating documentation from code based on configuration file.
 add_custom_target("${CLDNN_BUILD__PROJ}"
     "${CMAKE_COMMAND}" -E make_directory "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/"
-    COMMAND (${__CLDNN_CatBinName} \"${__CLDNN_CfgFile__main}\" && "${CMAKE_COMMAND}" -E echo \"OUTPUT_DIRECTORY = ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/\" && "${CMAKE_COMMAND}" -E echo \"HAVE_DOT = ${__CLDNN_HaveDot}\") | doxygen -
+    COMMAND "${CMAKE_COMMAND}" -E echo "" && "(" ${__CLDNN_CatBinName} \"${__CLDNN_CfgFile__main}\" && "${CMAKE_COMMAND}" -E echo \"OUTPUT_DIRECTORY = ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/\" && "${CMAKE_COMMAND}" -E echo \"HAVE_DOT = ${__CLDNN_HaveDot}\" ")" "|"  doxygen -
     DEPENDS ${__CLDNN_AllFiles}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating documentation using Doxygen..."

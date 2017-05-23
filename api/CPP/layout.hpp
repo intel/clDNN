@@ -104,10 +104,10 @@ bool data_type_match(data_types data_type)
 }
 
 /// Helper function to get both data_types and format::type in a single, unique value. Useable in 'case' statement.
-constexpr auto fuse(data_types dt, cldnn::format::type fmt)
+constexpr auto fuse(data_types dt, cldnn::format::type fmt) -> decltype(static_cast<std::underlying_type<data_types>::type>(dt) | static_cast<std::underlying_type<format::type>::type>(fmt))
 {
-    using dt_type = std::underlying_type_t<data_types>;
-    using fmt_type = std::underlying_type_t<cldnn::format::type>;
+    using dt_type = std::underlying_type<data_types>::type;
+    using fmt_type = std::underlying_type<cldnn::format::type>::type;
     using fmt_narrow_type = int16_t;
 
     return static_cast<fmt_type>(fmt) <= std::numeric_limits<fmt_narrow_type>::max() &&
@@ -307,19 +307,6 @@ struct layout
         );
     }
 
-    /// Number of bytes needed to store this layout
-    size_t bytes_count() const { return data_type_traits::size_of(data_type) * get_linear_size(); }
-
-    bool has_fused_format(data_types const& dt, cldnn::format const& fmt) const
-    {
-        return (data_type == dt && format == fmt);
-    }
-
-    auto fused_format() const
-    {
-        return fuse(data_type, format);
-    }
-
     /// Modify padding in layout
     layout with_padding(padding const& padd) const
     {
@@ -339,6 +326,19 @@ struct layout
 
     /// Explicit padding of the @ref memory
     padding data_padding;
+
+    /// Number of bytes needed to store this layout
+    size_t bytes_count() const { return data_type_traits::size_of(data_type) * get_linear_size(); }
+
+    bool has_fused_format(data_types const& dt, cldnn::format const& fmt) const
+    {
+        return (data_type == dt && format == fmt);
+    }
+
+    auto fused_format() const -> decltype(fuse(data_type, format))
+    {
+        return fuse(data_type, format);
+    }
 };
 
 

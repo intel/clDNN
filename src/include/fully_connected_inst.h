@@ -47,7 +47,7 @@ public:
     const memory& input_memory() const { return dep_memory(0); }
     const memory& weights_memory() const { return dep_memory(1); }
     const memory& bias_memory() const { return dep_memory(2); }
-    const bool bias_term() const { return !argument.bias.empty(); }
+    bool bias_term() const { return !argument.bias.empty(); }
 };
 
 using fully_connected_inst = typed_primitive_inst<fully_connected>;
