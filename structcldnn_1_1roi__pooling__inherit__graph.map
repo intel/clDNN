@@ -1,0 +1,4 @@
+<map id="cldnn::roi_pooling" name="cldnn::roi_pooling">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; roi_pooling, cldnn\l_roi_pooling_desc \&gt;" alt="" coords="5,80,148,136"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="23,5,131,32"/>
+</map>

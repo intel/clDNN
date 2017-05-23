@@ -1,0 +1,4 @@
+<map id="cldnn::build_option" name="cldnn::build_option">
+<area shape="rect" id="node2" href="$structcldnn_1_1build__option__bool.html" title="build_option specialization for boolean options. " alt="" coords="5,80,136,121"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1build__option__outputs.html" title="build_option specialization for program outputs list. " alt="" coords="160,80,291,121"/>
+</map>

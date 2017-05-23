@@ -1,0 +1,5 @@
+<map id="cldnn::layout" name="cldnn::layout">
+<area shape="rect" id="node2" href="$structcldnn_1_1tensor.html" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="5,5,103,32"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1padding.html" title="Represents data padding information. " alt="" coords="127,5,234,32"/>
+<area shape="rect" id="node4" href="$structcldnn_1_1format.html" title="Represents memory formats (orders). &#160;&#160;In CNN most of data is describe as 4 dimensional blocks..." alt="" coords="259,5,356,32"/>
+</map>

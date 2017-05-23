@@ -1,0 +1,11 @@
+var searchData=
+[
+  ['batch_5fchars',['batch_chars',['../structcldnn_1_1format__traits.html#ac52c35ac2038f4b4722cf39617c4a42b',1,'cldnn::format_traits']]],
+  ['batch_5fnorm',['batch_norm',['../structcldnn_1_1batch__norm.html#ad620aa112e4af9e17b710bec367d81cb',1,'cldnn::batch_norm::batch_norm(const primitive_id &amp;id, const primitive_id &amp;input, const primitive_id &amp;mean, const primitive_id &amp;variance, bool use_global_stats, float epsilon, const padding &amp;output_padding=padding())'],['../structcldnn_1_1batch__norm.html#a22892073348ed0ee0e95b257c81b1df1',1,'cldnn::batch_norm::batch_norm(const dto *dto)']]],
+  ['batch_5fnum',['batch_num',['../structcldnn_1_1format.html#aaac23ef8f8bcb6fe08ba995116743281',1,'cldnn::format::batch_num(type fmt)'],['../structcldnn_1_1format.html#a1c487b6b38ffafb70dfc0f8d7eabf530',1,'cldnn::format::batch_num() const']]],
+  ['begin',['begin',['../structcldnn_1_1pointer.html#ade5108c064e6afe2774d0c417e6365b4',1,'cldnn::pointer']]],
+  ['build_5foption_5fbool',['build_option_bool',['../structcldnn_1_1build__option__bool.html#a50846931ef4aa23d70e5abd8df7844fa',1,'cldnn::build_option_bool::build_option_bool(bool value)'],['../structcldnn_1_1build__option__bool.html#a581e7e409cdc9701af14e4541dc19aae',1,'cldnn::build_option_bool::build_option_bool(const cldnn_build_option &amp;value)']]],
+  ['build_5foption_5foutputs',['build_option_outputs',['../structcldnn_1_1build__option__outputs.html#ab32c5d1e111065b0485fc58cc51f7246',1,'cldnn::build_option_outputs::build_option_outputs(const std::vector&lt; primitive_id &gt; &amp;outs)'],['../structcldnn_1_1build__option__outputs.html#a8c868bf3e53aeab194831e86313a649a',1,'cldnn::build_option_outputs::build_option_outputs(const cldnn_build_option &amp;value)']]],
+  ['build_5foptions',['build_options',['../classcldnn_1_1build__options.html#af921eab8b68a5e72c71610a77b0c0d1e',1,'cldnn::build_options::build_options(Args... args)'],['../classcldnn_1_1build__options.html#a547f8b4aff7f3d364cd74d00b77cf700',1,'cldnn::build_options::build_options(array_ref&lt; cldnn_build_option &gt; options)']]],
+  ['bytes_5fcount',['bytes_count',['../structcldnn_1_1layout.html#acfe67ab340441ca92e290418cea8930f',1,'cldnn::layout']]]
+];

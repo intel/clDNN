@@ -1,0 +1,4 @@
+<map id="cldnn::concatenation" name="cldnn::concatenation">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; concatenation, cldnn\l_concatenation_desc \&gt;" alt="" coords="5,80,163,136"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="30,5,138,32"/>
+</map>

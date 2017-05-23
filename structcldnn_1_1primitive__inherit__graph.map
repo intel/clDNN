@@ -1,0 +1,47 @@
+<map id="cldnn::primitive" name="cldnn::primitive">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="base class for all primitives implementations. " alt="" coords="186,5,329,47"/>
+<area shape="rect" id="node3" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; activation, cldnn_activation\l_desc \&gt;" alt="" coords="163,71,351,127"/>
+<area shape="rect" id="node5" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; batch_norm, cldnn_batch\l_norm_desc \&gt;" alt="" coords="167,151,347,207"/>
+<area shape="rect" id="node7" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; concatenation, cldnn\l_concatenation_desc \&gt;" alt="" coords="179,231,336,287"/>
+<area shape="rect" id="node9" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; convolution, cldnn\l_convolution_desc \&gt;" alt="" coords="186,311,329,367"/>
+<area shape="rect" id="node11" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; crop, cldnn_crop_desc \&gt;" alt="" coords="169,392,346,433"/>
+<area shape="rect" id="node13" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; data, cldnn_data_desc \&gt;" alt="" coords="169,457,346,499"/>
+<area shape="rect" id="node15" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; deconvolution, cldnn\l_deconvolution_desc \&gt;" alt="" coords="180,523,335,579"/>
+<area shape="rect" id="node17" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; detection_output, cldnn\l_detection_output_desc \&gt;" alt="" coords="171,603,343,659"/>
+<area shape="rect" id="node19" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; eltwise, cldnn_eltwise\l_desc \&gt;" alt="" coords="177,683,337,739"/>
+<area shape="rect" id="node21" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; fully_connected, cldnn\l_fully_connected_desc \&gt;" alt="" coords="174,763,341,819"/>
+<area shape="rect" id="node23" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; input_layout, cldnn\l_input_layout_desc \&gt;" alt="" coords="184,843,331,899"/>
+<area shape="rect" id="node25" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; lrn, cldnn_lrn_desc \&gt;" alt="" coords="180,924,335,965"/>
+<area shape="rect" id="node27" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; normalize, cldnn_normalize\l_desc \&gt;" alt="" coords="161,990,353,1046"/>
+<area shape="rect" id="node29" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; permute, cldnn_permute\l_desc \&gt;" alt="" coords="170,1070,345,1126"/>
+<area shape="rect" id="node31" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; pooling, cldnn_pooling\l_desc \&gt;" alt="" coords="176,1150,339,1206"/>
+<area shape="rect" id="node33" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; prior_box, cldnn_prior\l_box_desc \&gt;" alt="" coords="178,1230,337,1286"/>
+<area shape="rect" id="node35" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reorder, cldnn_reorder\l_desc \&gt;" alt="" coords="177,1310,337,1366"/>
+<area shape="rect" id="node37" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reshape, cldnn_reshape\l_desc \&gt;" alt="" coords="171,1390,343,1446"/>
+<area shape="rect" id="node39" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; roi_pooling, cldnn\l_roi_pooling_desc \&gt;" alt="" coords="186,1470,329,1526"/>
+<area shape="rect" id="node41" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; scale, cldnn_scale\l_desc \&gt;" alt="" coords="186,1550,329,1606"/>
+<area shape="rect" id="node43" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; simpler_nms, cldnn\l_simpler_nms_desc \&gt;" alt="" coords="182,1630,333,1686"/>
+<area shape="rect" id="node45" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; softmax, cldnn_softmax\l_desc \&gt;" alt="" coords="171,1710,343,1766"/>
+<area shape="rect" id="node4" href="$structcldnn_1_1activation.html" title="Activiation using rectified linear unit. " alt="" coords="423,86,537,113"/>
+<area shape="rect" id="node6" href="$structcldnn_1_1batch__norm.html" title="Batch normalization primitive. " alt="" coords="415,166,545,193"/>
+<area shape="rect" id="node8" href="$structcldnn_1_1concatenation.html" title="cldnn::concatenation" alt="" coords="409,246,551,273"/>
+<area shape="rect" id="node10" href="$structcldnn_1_1convolution.html" title="Performs forward spatial convolution with weight sharing. Also supports built&#45;in Relu cldnn_activatio..." alt="" coords="417,326,543,353"/>
+<area shape="rect" id="node12" href="$structcldnn_1_1crop.html" title="Performs crop operation on input. " alt="" coords="437,399,523,426"/>
+<area shape="rect" id="node14" href="$structcldnn_1_1data.html" title="Provides input data to topology. " alt="" coords="437,465,523,491"/>
+<area shape="rect" id="node16" href="$structcldnn_1_1deconvolution.html" title="Performs transposed convolution. Also supports built&#45;in Relu activation available by setting it in ar..." alt="" coords="411,538,549,565"/>
+<area shape="rect" id="node18" href="$structcldnn_1_1detection__output.html" title="Generates a list of detections based on location and confidence predictions by doing non maximum supp..." alt="" coords="401,618,559,645"/>
+<area shape="rect" id="node20" href="$structcldnn_1_1eltwise.html" title="Performs elementwise operations (sum, subtract, max or product) on two input primitives Also supports..." alt="" coords="429,698,531,725"/>
+<area shape="rect" id="node22" href="$structcldnn_1_1fully__connected.html" title="Performs forward fully connected layer (inner product). Also supports built&#45;in Relu cldnn_activation_..." alt="" coords="405,778,555,805"/>
+<area shape="rect" id="node24" href="$structcldnn_1_1input__layout.html" title="Provides input layout for a data to be passed later to network. " alt="" coords="415,858,545,885"/>
+<area shape="rect" id="node26" href="$structcldnn_1_1lrn.html" title="Local response normalization. " alt="" coords="443,931,517,958"/>
+<area shape="rect" id="node28" href="$structcldnn_1_1normalize.html" title="Normalizes the input using an L2 norm and multiplies the output with scale value. The scale can be eq..." alt="" coords="421,1005,539,1031"/>
+<area shape="rect" id="node30" href="$structcldnn_1_1permute.html" title="Permutes data in the memory, with respect to provided order. " alt="" coords="426,1085,534,1111"/>
+<area shape="rect" id="node32" href="$structcldnn_1_1pooling.html" title="Performs &quot;pooling&quot; operation which is a form of non&#45;linear down&#45;sampling. " alt="" coords="429,1165,531,1191"/>
+<area shape="rect" id="node34" href="$structcldnn_1_1prior__box.html" title="Generates a set of default bounding boxes with different sizes and aspect ratios. ..." alt="" coords="423,1245,537,1271"/>
+<area shape="rect" id="node36" href="$structcldnn_1_1reorder.html" title="Changes how data is ordered in memory. Value type is not changed &amp; all information is preserved..." alt="" coords="429,1325,531,1351"/>
+<area shape="rect" id="node38" href="$structcldnn_1_1reshape.html" title="Changes information about inputs&#39;s layout effectively creating new memory which share underlaying buf..." alt="" coords="427,1405,533,1431"/>
+<area shape="rect" id="node40" href="$structcldnn_1_1roi__pooling.html" title="cldnn::roi_pooling" alt="" coords="419,1485,541,1511"/>
+<area shape="rect" id="node42" href="$structcldnn_1_1scale.html" title="Performs elementwise product of input and scale_input. " alt="" coords="434,1565,526,1591"/>
+<area shape="rect" id="node44" href="$structcldnn_1_1simpler__nms.html" title="cldnn::simpler_nms" alt="" coords="413,1645,547,1671"/>
+<area shape="rect" id="node46" href="$structcldnn_1_1softmax.html" title="Normalizes results so they sum to 1. " alt="" coords="427,1725,533,1751"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="cldnn::reshape" name="cldnn::reshape">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reshape, cldnn_reshape\l_desc \&gt;" alt="" coords="467,57,639,113"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="309,71,417,98"/>
+<area shape="rect" id="node4" href="$structcldnn_1_1primitive_1_1fixed__size__vector__ref.html" title="Initialize fields common for all primitives. " alt="" coords="15,5,158,47"/>
+<area shape="rect" id="node5" href="$structcldnn_1_1padding.html" title="Represents data padding information. " alt="" coords="33,71,140,98"/>
+<area shape="rect" id="node6" href="$structcldnn_1_1primitive_1_1primitive__id__arr.html" title="cldnn::primitive::primitive\l_id_arr" alt="" coords="5,123,168,164"/>
+<area shape="rect" id="node7" href="$structcldnn_1_1tensor.html" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="504,137,601,163"/>
+</map>

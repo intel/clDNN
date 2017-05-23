@@ -1,0 +1,4 @@
+<map id="cldnn_layout" name="cldnn_layout">
+<area shape="rect" id="node2" href="$group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="70,109,175,136"/>
+<area shape="rect" id="node3" href="$group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="5,5,101,32"/>
+</map>

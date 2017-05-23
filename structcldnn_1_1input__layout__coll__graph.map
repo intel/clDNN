@@ -1,0 +1,10 @@
+<map id="cldnn::input_layout" name="cldnn::input_layout">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; input_layout, cldnn\l_input_layout_desc \&gt;" alt="" coords="285,185,431,241"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="208,109,316,136"/>
+<area shape="rect" id="node4" href="$structcldnn_1_1primitive_1_1fixed__size__vector__ref.html" title="Initialize fields common for all primitives. " alt="" coords="5,5,148,47"/>
+<area shape="rect" id="node5" href="$structcldnn_1_1padding.html" title="Represents data padding information. " alt="" coords="370,13,477,39"/>
+<area shape="rect" id="node7" href="$structcldnn_1_1layout.html" title="Describes memory layout. " alt="" coords="457,109,553,136"/>
+<area shape="rect" id="node6" href="$structcldnn_1_1primitive_1_1primitive__id__arr.html" title="cldnn::primitive::primitive\l_id_arr" alt="" coords="173,5,335,47"/>
+<area shape="rect" id="node8" href="$structcldnn_1_1tensor.html" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="512,13,609,39"/>
+<area shape="rect" id="node9" href="$structcldnn_1_1format.html" title="Represents memory formats (orders). &#160;&#160;In CNN most of data is describe as 4 dimensional blocks..." alt="" coords="633,13,731,39"/>
+</map>

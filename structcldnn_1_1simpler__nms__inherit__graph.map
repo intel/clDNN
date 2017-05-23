@@ -1,0 +1,4 @@
+<map id="cldnn::simpler_nms" name="cldnn::simpler_nms">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; simpler_nms, cldnn\l_simpler_nms_desc \&gt;" alt="" coords="5,80,156,136"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="27,5,135,32"/>
+</map>

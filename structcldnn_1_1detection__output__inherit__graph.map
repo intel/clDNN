@@ -1,0 +1,4 @@
+<map id="cldnn::detection_output" name="cldnn::detection_output">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; detection_output, cldnn\l_detection_output_desc \&gt;" alt="" coords="5,80,177,136"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="37,5,145,32"/>
+</map>

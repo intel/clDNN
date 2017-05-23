@@ -1,0 +1,6 @@
+<map id="cldnn_reorder_desc" name="cldnn_reorder_desc">
+<area shape="rect" id="node2" href="$group__c__topology.html#structcldnn__float__arr" title="Represents reference to an array of floats. " alt="" coords="5,109,112,136"/>
+<area shape="rect" id="node3" href="$group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="147,109,253,136"/>
+<area shape="rect" id="node4" href="$group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="152,5,248,32"/>
+<area shape="rect" id="node5" href="$group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="277,109,424,136"/>
+</map>

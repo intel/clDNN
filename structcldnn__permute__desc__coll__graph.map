@@ -1,0 +1,6 @@
+<map id="cldnn_permute_desc" name="cldnn_permute_desc">
+<area shape="rect" id="node2" href="$group__c__topology.html#structcldnn__uint16__t__arr" title="Represents reference to an array of uint16_t. " alt="" coords="5,109,133,136"/>
+<area shape="rect" id="node3" href="$group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="158,109,263,136"/>
+<area shape="rect" id="node4" href="$group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="163,5,259,32"/>
+<area shape="rect" id="node5" href="$group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="288,109,435,136"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="cldnn::scale" name="cldnn::scale">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; scale, cldnn_scale\l_desc \&gt;" alt="" coords="5,80,148,136"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="23,5,131,32"/>
+</map>

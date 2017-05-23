@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$structcldnn_1_1build__option.html" title="Represents user&#45;provided program build option. " alt="" coords="5,46,136,73"/>
+<area shape="rect" id="node2" href="$structcldnn_1_1build__option__bool.html" title="build_option specialization for boolean options. " alt="" coords="184,5,315,47"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1build__option__outputs.html" title="build_option specialization for program outputs list. " alt="" coords="184,71,315,112"/>
+</map>
