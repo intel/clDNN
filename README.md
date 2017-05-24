@@ -32,6 +32,8 @@ The latest clDNN documentation is at [GitHub pages](https://01org.github.io/clDN
 
 There is also inline documentation available that can be [generated with Doxygen](#generating-documentation).
 
+Accelerate Deep Learning Inference with Intel® Processor Graphics whitepaper [link](https://software.intel.com/en-us/articles/accelerating-deep-learning-inference-with-intel-processor-graphics).
+
 ## Support
 Please report issues and suggestions 
 [GitHub issues](https://github.com/01org/cldnn/issues).
