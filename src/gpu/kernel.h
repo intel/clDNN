@@ -23,6 +23,7 @@
 #include "kernels_cache.h"
 #include "event_impl.h"
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
 
