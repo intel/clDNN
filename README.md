@@ -203,33 +203,6 @@ Special `install` target will place the API header files and libraries in `/usr/
 (`C:/Program Files/clDNN` or `C:/Program Files (x86)/clDNN` on Windows). To change
 the installation path, use the option `-DCMAKE_INSTALL_PREFIX=<prefix>` when invoking CMake.
 
-## Disclaimers, Warranties, Legal Notices and Limitations of Liability
-> You may not use or facilitate the use of this document in connection with any
-infringement or other legal analysis concerning Intel products described herein.
-You agree to grant Intel® a non-exclusive, royalty-free license to any patent claim
-thereafter drafted which includes subject matter disclosed herein.  
-No license (express or implied, by estoppel or otherwise) to any intellectual property
-rights is granted by this document.  
-Intel® technologies' features and benefits depend on system configuration and may require
-enabled hardware, software or service activation. Performance varies depending on system
-configuration. No computer system can be absolutely secure. Check with your system manufacturer
-or retailer or learn more at [intel.com](http://www.intel.com).  
-Intel® technologies may require enabled hardware, specific software, or services activation.
-Check with your system manufacturer or retailer.  
-The products described may contain design defects or errors known as errata which may cause
-the product to deviate from published specifications. Current characterized errata are
-available on request.  
-Intel® disclaims all express and implied warranties, including without limitation, the implied
-warranties of merchantability, fitness for a particular purpose, and non-infringement,
-as well as any warranty arising from course of performance, course of dealing, or usage in trade.  
-All information provided here is subject to change without notice. Contact your Intel®
-representative to obtain the latest Intel product specifications and roadmaps.  
-Copies of documents which have an order number and are referenced in this document may be
-obtained by calling 1-800-548-4725 or visit [here](http://www.intel.com/design/literature.htm).  
-Intel, Centrino, vPro, Core, Thunderbolt, Ultrabook and the Intel logo are trademarks of
-Intel® Corporation in the U.S. and other countries.
-
-
 ---
 
 
