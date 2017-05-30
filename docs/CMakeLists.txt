@@ -26,7 +26,7 @@ set(__CLDNN_CfgFile__main
     "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
   )
 
-set(__CLDNN_Directory__examples "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+set(__CLDNN_Directory__examples "${CMAKE_CURRENT_SOURCE_DIR}/../tests/examples")
 set(__CLDNN_Label__examples     "examples")
 file(GLOB __CLDNN_Sources__examples
     "${__CLDNN_Directory__examples}/*.h"

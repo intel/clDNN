@@ -1,14 +1,14 @@
-#include <memory.hpp>
-#include <topology.hpp>
-#include <primitives/reorder.hpp>
-#include <primitives/input_layout.hpp>
-#include <primitives/convolution.hpp>
-#include <primitives/data.hpp>
-#include <primitives/pooling.hpp>
-#include <primitives/fully_connected.hpp>
-#include <primitives/softmax.hpp>
-#include <engine.hpp>
-#include <network.hpp>
+#include <api/CPP/memory.hpp>
+#include <api/CPP/topology.hpp>
+#include <api/CPP/reorder.hpp>
+#include <api/CPP/input_layout.hpp>
+#include <api/CPP/convolution.hpp>
+#include <api/CPP/data.hpp>
+#include <api/CPP/pooling.hpp>
+#include <api/CPP/fully_connected.hpp>
+#include <api/CPP/softmax.hpp>
+#include <api/CPP/engine.hpp>
+#include <api/CPP/network.hpp>
 
 #include <iostream>
 
@@ -27,7 +27,7 @@ const tensor::value_type
 // Create layout with same sizes but new format.
 layout create_reordering_layout(format new_format, const layout& src_layout)
 {
-    return { src_layout.data_type, src_layout.size.transform(new_format, 1) };
+    return { src_layout.data_type, new_format, src_layout.size };
 }
 
 // Create MNIST topology
@@ -72,20 +72,20 @@ topology create_topology(const layout& in_layout, const memory& conv1_weights_me
         pooling("pool1",
             "conv1",                // Input: "conv1"
             pooling_mode::max,      // Pooling mode: MAX
-            { format::yx, {2,2} },  // stride: 2
-            { format::yx, {2,2} }   // kernel_size: 2
+            spatial(2,2),  // stride: 2
+            spatial(2,2)   // kernel_size: 2
         )
     );
 
     // Conv2 weights data is not available now, so just declare its layout
-    layout conv2_weights_layout(data_type, { format::oiyx,{ conv2_out_channels, conv1_out_channels, conv_krnl_size, conv_krnl_size } });
+    layout conv2_weights_layout(data_type, format::bfyx,{ conv2_out_channels, conv1_out_channels, conv_krnl_size, conv_krnl_size });
 
     // Define the rest of topology.
     topology.add(
         // Input layout for conv2 weights. Data will passed by network::set_input_data()
         input_layout("conv2_weights", conv2_weights_layout),
         // Input layout for conv2 bias.
-        input_layout("conv2_bias", { data_type, { format::x, { conv2_out_channels } } }),
+        input_layout("conv2_bias", { data_type, format::bfyx, spatial(conv2_out_channels) }),
         // Second convolution id: "conv2"
         convolution("conv2",
             "pool1",                // Input: "pool1"
@@ -96,8 +96,8 @@ topology create_topology(const layout& in_layout, const memory& conv1_weights_me
         pooling("pool2",
             "conv2",                // Input: "conv2"
             pooling_mode::max,      // Pooling mode: MAX
-            { format::yx,{ 2,2 } }, // stride: 2
-            { format::yx,{ 2,2 } }  // kernel_size: 2
+            spatial(2, 2), // stride: 2
+            spatial(2, 2)  // kernel_size: 2
         ),
         // Fully connected (inner product) primitive id "fc1"
         fully_connected("fc1",
@@ -147,18 +147,18 @@ int recognize_image(network& network, const memory& input_memory)
 // User-defined helpers which are out of this example scope
 // //////////////////////////////////////////////////////////////
 // Loads file to a vector of floats.
-vector<float> load_data(const string& filename);
+vector<float> load_data(const string& filename) { return{ 0 }; }
 
 // Allocates memory and load data from file.
 // Memory layout is taken from file.
-memory load_mem(const engine& engine, const string& filename);
+memory load_mem(const engine& engine, const string& filename) { return{ 0 }; }
 
 // Load image, resize to [x,y] and store in a vector of floats
 // in the order "bfyx".
-vector<float> load_image_bfyx(const string& str, int x, int y);
+vector<float> load_image_bfyx(const string& str, int x, int y) { return{ 0 }; }
 // //////////////////////////////////////////////////////////////
 
-int main()
+int main_func()
 {
     // Use data type: float
     auto data_type = type_to_data_type<float>::value;
@@ -166,12 +166,12 @@ int main()
     // Network input layout
     layout in_layout(
         data_type, // stored data type
-        { format::bfyx, // data stored in order batch-channel-Y-X, where X coordinate changes first.
+        format::bfyx, // data stored in order batch-channel-Y-X, where X coordinate changes first.
             {1, input_channels, input_size, input_size} // batch: 1, channels: 1, Y: 28, X: 28
-        });
+        );
 
     // Create memory for conv1 weights
-    layout conv1_weights_layout(data_type, { format::oiyx,{ conv1_out_channels, input_channels, conv_krnl_size, conv_krnl_size } });
+    layout conv1_weights_layout(data_type, format::bfyx,{ conv1_out_channels, input_channels, conv_krnl_size, conv_krnl_size });
     vector<float> my_own_buffer = load_data("conv1_weights.bin");
     // The conv1_weights_mem is attached to my_own_buffer, so my_own_buffer should not be changed or descroyed until network execution completion.
     auto conv1_weights_mem = memory::attach(conv1_weights_layout, my_own_buffer.data(), my_own_buffer.size());
@@ -180,7 +180,7 @@ int main()
     cldnn::engine engine;
 
     // Create memory for conv1 bias
-    layout conv1_bias_layout(data_type, { format::x,{ 20 } });
+    layout conv1_bias_layout(data_type, format::bfyx, spatial(20));
     // Memory allocation requires engine
     auto conv1_bias_mem = memory::allocate(engine, conv1_bias_layout);
     // The memory is allocated by library, so we do not need to care about buffer lifetime.
@@ -217,4 +217,6 @@ int main()
         auto result = recognize_image(network, input_memory);
         cout << img_name << " recognized as" << result << endl;
     }
+
+    return 0;
 }
