@@ -23,7 +23,7 @@ var group__cpp__memory =
       [ "layout", "structcldnn_1_1layout.html#a302f8e95086bda7a74b137872a23e4c7", null ],
       [ "bytes_count", "structcldnn_1_1layout.html#acfe67ab340441ca92e290418cea8930f", null ],
       [ "count", "structcldnn_1_1layout.html#a487b8ed020768208a98a57cca81834dd", null ],
-      [ "fused_format", "structcldnn_1_1layout.html#ad442e6a79f39508f1b0b4d2f598462a0", null ],
+      [ "fused_format", "structcldnn_1_1layout.html#ab7a74013bdb30fd734f74e2779c439f4", null ],
       [ "get_buffer_size", "structcldnn_1_1layout.html#a2bdda0516074ddf5ff987e1d4b8846c9", null ],
       [ "get_linear_size", "structcldnn_1_1layout.html#ada0f605a1226456592c301a3a7de430b", null ],
       [ "has_fused_format", "structcldnn_1_1layout.html#a8a08cf0c6238da3d135db3bf8b7c89fd", null ],
@@ -144,7 +144,7 @@ var group__cpp__memory =
       [ "f16", "group__cpp__memory.html#gga978c06d1af08c83d1f5bfa33a76fdbc0aa2449b6477c1fef79be4202906486876", null ]
     ] ],
     [ "data_type_match", "group__cpp__memory.html#ga295bf941db1a6eef11e96ff2592d8761", null ],
-    [ "fuse", "group__cpp__memory.html#ga5ec0d8156e86ed1db06c49c8a97789c8", null ],
+    [ "fuse", "group__cpp__memory.html#ga7d01618b5894ddc654a82bfcaaa85146", null ],
     [ "operator*", "group__cpp__memory.html#gaf0bf0ece2b03b8f7507f5a587f278f35", null ],
     [ "operator+", "group__cpp__memory.html#gae65fce3af0fcb9ea256889e58b246a0b", null ],
     [ "operator-", "group__cpp__memory.html#ga625efbc5f8a91ed1c9d80f87c5c9c0f1", null ],

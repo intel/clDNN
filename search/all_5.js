@@ -11,7 +11,7 @@ var searchData=
   ['format_5fnum',['format_num',['../structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470',1,'cldnn::format']]],
   ['format_5ftraits',['format_traits',['../structcldnn_1_1format__traits.html',1,'cldnn']]],
   ['fully_5fconnected',['fully_connected',['../structcldnn_1_1fully__connected.html',1,'cldnn::fully_connected'],['../structcldnn_1_1fully__connected.html#ae2d67771051f743add83b5c3d9810ac5',1,'cldnn::fully_connected::fully_connected(const primitive_id &amp;id, const primitive_id &amp;input, const primitive_id &amp;weights, const primitive_id &amp;bias=&quot;&quot;, bool with_activation=false, float activation_slp=0.0f, const padding &amp;output_padding=padding())'],['../structcldnn_1_1fully__connected.html#a65f1bd1f5cbbb579a3b147c25945e562',1,'cldnn::fully_connected::fully_connected(const dto *dto)']]],
-  ['fuse',['fuse',['../group__cpp__memory.html#ga5ec0d8156e86ed1db06c49c8a97789c8',1,'cldnn']]],
+  ['fuse',['fuse',['../group__cpp__memory.html#ga7d01618b5894ddc654a82bfcaaa85146',1,'cldnn']]],
   ['fusing',['fusing',['../structcldnn_1_1build__option.html#a150cede9e377e69b011652d393e2c782',1,'cldnn::build_option::fusing()'],['../group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba4ebb0fdb5a7d19c6d95e191357ce3af6',1,'cldnn::fusing()']]],
   ['fyxb',['fyxb',['../structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6aaf5ed14f67f8fd7e736f8fb386da70b6',1,'cldnn::format']]]
 ];

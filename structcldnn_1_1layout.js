@@ -5,7 +5,7 @@ var structcldnn_1_1layout =
     [ "layout", "structcldnn_1_1layout.html#a302f8e95086bda7a74b137872a23e4c7", null ],
     [ "bytes_count", "structcldnn_1_1layout.html#acfe67ab340441ca92e290418cea8930f", null ],
     [ "count", "structcldnn_1_1layout.html#a487b8ed020768208a98a57cca81834dd", null ],
-    [ "fused_format", "structcldnn_1_1layout.html#ad442e6a79f39508f1b0b4d2f598462a0", null ],
+    [ "fused_format", "structcldnn_1_1layout.html#ab7a74013bdb30fd734f74e2779c439f4", null ],
     [ "get_buffer_size", "structcldnn_1_1layout.html#a2bdda0516074ddf5ff987e1d4b8846c9", null ],
     [ "get_linear_size", "structcldnn_1_1layout.html#ada0f605a1226456592c301a3a7de430b", null ],
     [ "has_fused_format", "structcldnn_1_1layout.html#a8a08cf0c6238da3d135db3bf8b7c89fd", null ],

@@ -136,6 +136,10 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1layout.html#ada0f605a1226456592c301a3a7de430b">get_linear_size</a> () const</td></tr>
 <tr class="memdesc:ada0f605a1226456592c301a3a7de430b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get aligned linear size calculated as multiplication of all elements. <br /></td></tr>
 <tr class="separator:ada0f605a1226456592c301a3a7de430b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cdcd54ed2bf4bee265a2ee880605c2d"><td class="memItemLeft" align="right" valign="top"><a id="a4cdcd54ed2bf4bee265a2ee880605c2d"></a>
+<a class="el" href="structcldnn_1_1layout.html">layout</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1layout.html#a4cdcd54ed2bf4bee265a2ee880605c2d">with_padding</a> (<a class="el" href="structcldnn_1_1padding.html">padding</a> const &amp;padd) const</td></tr>
+<tr class="memdesc:a4cdcd54ed2bf4bee265a2ee880605c2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Modify padding in layout. <br /></td></tr>
+<tr class="separator:a4cdcd54ed2bf4bee265a2ee880605c2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acfe67ab340441ca92e290418cea8930f"><td class="memItemLeft" align="right" valign="top"><a id="acfe67ab340441ca92e290418cea8930f"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1layout.html#acfe67ab340441ca92e290418cea8930f">bytes_count</a> () const</td></tr>
 <tr class="memdesc:acfe67ab340441ca92e290418cea8930f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of bytes needed to store this layout. <br /></td></tr>
@@ -143,13 +147,9 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="memitem:a8a08cf0c6238da3d135db3bf8b7c89fd"><td class="memItemLeft" align="right" valign="top"><a id="a8a08cf0c6238da3d135db3bf8b7c89fd"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>has_fused_format</b> (<a class="el" href="group__cpp__memory.html#ga978c06d1af08c83d1f5bfa33a76fdbc0">data_types</a> const &amp;dt, <a class="el" href="structcldnn_1_1format.html">cldnn::format</a> const &amp;fmt) const</td></tr>
 <tr class="separator:a8a08cf0c6238da3d135db3bf8b7c89fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad442e6a79f39508f1b0b4d2f598462a0"><td class="memItemLeft" align="right" valign="top"><a id="ad442e6a79f39508f1b0b4d2f598462a0"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>fused_format</b> () const</td></tr>
-<tr class="separator:ad442e6a79f39508f1b0b4d2f598462a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4cdcd54ed2bf4bee265a2ee880605c2d"><td class="memItemLeft" align="right" valign="top"><a id="a4cdcd54ed2bf4bee265a2ee880605c2d"></a>
-<a class="el" href="structcldnn_1_1layout.html">layout</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1layout.html#a4cdcd54ed2bf4bee265a2ee880605c2d">with_padding</a> (<a class="el" href="structcldnn_1_1padding.html">padding</a> const &amp;padd) const</td></tr>
-<tr class="memdesc:a4cdcd54ed2bf4bee265a2ee880605c2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Modify padding in layout. <br /></td></tr>
-<tr class="separator:a4cdcd54ed2bf4bee265a2ee880605c2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7a74013bdb30fd734f74e2779c439f4"><td class="memItemLeft" align="right" valign="top"><a id="ab7a74013bdb30fd734f74e2779c439f4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>fused_format</b> () const -&gt; decltype(fuse(<a class="el" href="structcldnn_1_1layout.html#a5832c02b2c3487c23000796c0e97dcf0">data_type</a>, <a class="el" href="structcldnn_1_1format.html">format</a>))</td></tr>
+<tr class="separator:ab7a74013bdb30fd734f74e2779c439f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
