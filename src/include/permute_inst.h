@@ -25,7 +25,11 @@ namespace cldnn
 template <>
 struct typed_program_node<permute> : public typed_program_node_base<permute>
 {
+    using parent = typed_program_node_base<permute>;
+
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
 };
 

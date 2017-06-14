@@ -27,7 +27,11 @@ namespace cldnn
 template <>
 struct typed_program_node<convolution> : public typed_program_node_base<convolution>
 {
+    using parent = typed_program_node_base<convolution>;
+
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
 
     auto& weights(size_t idx) const

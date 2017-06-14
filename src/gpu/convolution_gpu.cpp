@@ -108,6 +108,20 @@ struct convolution_gpu : typed_primitive_impl<convolution> {
         return kd;
     }
 
+    static bool is_kernel_valid(kernel_data& kd)
+    {
+        if ((kd.gws0 == 0) || (kd.gws1 == 0) || (kd.gws2 == 0) || (kd.lws0 == 0) || (kd.lws1 == 0) || (kd.lws2 == 0))
+        {
+            return false;
+        }
+        if ((kd.gws0 % kd.lws0) || (kd.gws1 % kd.lws1) || (kd.gws2 % kd.lws2))
+        {
+            return false;
+        }
+        return true;
+    }
+
+
     typedef kd_selector_t<kernel_data, convolution_node, data_types, format::type, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, gpu::engine_info_internal::configurations> ks_type;
     static ks_type ks;
 
@@ -164,7 +178,7 @@ struct convolution_gpu : typed_primitive_impl<convolution> {
             gpu::make_jit_constant("RELU",                      static_cast<int>(outer.get_primitive()->with_activation)),
             gpu::make_jit_constant("NEGATIVE_SLOPE",            outer.get_primitive()->activation_negative_slope),
             gpu::make_jit_constant("BIAS_TERM",                 static_cast<int>(outer.bias_term())),
-			gpu::make_jit_constant("DILATION",                  outer.get_primitive()->dilation),
+            gpu::make_jit_constant("DILATION",                  outer.get_primitive()->dilation),
         };
 
         if (weights_layout.format == format::yxfb)
@@ -322,14 +336,14 @@ convolution_gpu::kernel_data default_yxio_f32_b1(const convolution_node& arg)
 
     convolution_gpu::kernel_data kd = convolution_gpu::set_default(arg);
     kd.lws0 = 16;
-    if (filter_layout.size.feature[0] * batch_size % kd.lws0 != 0 ||
-        arg.get_primitive()->output_padding)
+    if (filter_buffer_size.batch[0] * batch_size % kd.lws0 != 0 ||
+        output_layout.data_padding)
     {
         kd = default_yxio_f32(arg);
     }
     else
     {
-        int output_feature_count = filter_buffer_size.feature[0];
+        int output_feature_count = filter_buffer_size.batch[0];
         // We cannot return 8 because we are processing 4 spatial coordinates for batch1,
         // and if we use more than 4 ofm_per_work_item we downgrade simd16 to simd8 which would break this algorithm.
         // NOTE: We could return 8 but then we must process only 2 coordinates, which is slower than processing 4 coordinates using blockread4
@@ -357,9 +371,9 @@ convolution_gpu::kernel_data default_yxio_f32_b1(const convolution_node& arg)
         }
         kd.kernel_name = kernel_name_yxfb_yxio_b1_block_multiple_x;
 
-        kd.gws0 = (filter_buffer_size.feature[0] * batch_size / (kd.ofm_per_work_item * kd.batches_per_work_item)) / split;
+        kd.gws0 = (output_feature_count * batch_size / (kd.ofm_per_work_item * kd.batches_per_work_item)) / split;
 
-        if (kd.gws0 == 0)
+        if (!convolution_gpu::is_kernel_valid(kd))
         {
             kd = default_yxio_f32(arg);
         }
@@ -380,13 +394,14 @@ convolution_gpu::kernel_data default_yxio_f32_b8(const convolution_node& arg)
 
     convolution_gpu::kernel_data kd = convolution_gpu::set_default(arg);
     kd.lws0 = batch_size == 8 ? 8 : 16;
-    if (filter_buffer_size.feature[0] * batch_size % kd.lws0 != 0)
+    if ((filter_buffer_size.batch[0] * batch_size % kd.lws0 != 0) ||
+        output_layout.data_padding)
     {
         kd = default_yxio_f32(arg);
     }
     else
     {
-        if (((filter_buffer_size.feature[0] * batch_size) / 16) % kd.lws0)
+        if (((filter_buffer_size.batch[0] * batch_size) / 16) % kd.lws0)
         {
             kd.ofm_per_work_item = 8;
         }
@@ -398,7 +413,7 @@ convolution_gpu::kernel_data default_yxio_f32_b8(const convolution_node& arg)
     
         kd.gws0 = (output_buffer_size.feature[0] * batch_size / (kd.ofm_per_work_item * kd.batches_per_work_item)) / split;
 
-        if (kd.gws0 == 0)
+        if (!convolution_gpu::is_kernel_valid(kd))
         {
             kd = default_yxio_f32(arg);
         }
@@ -418,7 +433,8 @@ convolution_gpu::kernel_data default_yxio_f32_b32(const convolution_node& arg)
 
     convolution_gpu::kernel_data kd = convolution_gpu::set_default(arg);
     kd.lws0 = 16;
-    if (filter_buffer_size.feature[0] * batch_size % kd.lws0 != 0)
+    if ((filter_buffer_size.batch[0] * batch_size % kd.lws0 != 0) ||
+        output_layout.data_padding)
     {
         kd = default_yxio_f32(arg);
     }
@@ -430,7 +446,7 @@ convolution_gpu::kernel_data default_yxio_f32_b32(const convolution_node& arg)
 
         kd.gws0 = (output_buffer_size.feature[0] * batch_size / (kd.ofm_per_work_item * kd.batches_per_work_item)) / split;
 
-        if (kd.gws0 == 0)
+        if (!convolution_gpu::is_kernel_valid(kd))
         {
             kd = default_yxio_f32(arg);
         }
@@ -448,6 +464,7 @@ convolution_gpu::kernel_data default_yxio_f16(const convolution_node& arg)
 convolution_gpu::kernel_data default_yxio_f16_b16(const convolution_node& arg)
 {
     auto filter_layout = arg.weights(0).get_output_layout();
+    auto const& filter_buffer_size = filter_layout.get_buffer_size();
 
     auto output_layout = arg.get_output_layout();
     auto const& output_buffer_size = output_layout.get_buffer_size();
@@ -457,13 +474,14 @@ convolution_gpu::kernel_data default_yxio_f16_b16(const convolution_node& arg)
     const uint32_t min_ofm_per_wi = 16;
     const uint32_t min_batches_per_wi = 1;
     const uint32_t min_lws = 16;
-    const auto filter_ofm_num = filter_layout.size.batch[0];
+    const auto filter_ofm_num = filter_buffer_size.batch[0];
 
     convolution_gpu::kernel_data kd = convolution_gpu::set_default(arg);
     // Number of output features is positive and dividable by minimum number of output features processed inside work item.
     if (filter_ofm_num > 0 && filter_ofm_num % min_ofm_per_wi == 0 &&
         // Batch size is positive and dividable by minimum number of batches processed when smallest local work size is used.
-        batch_size > 0 && batch_size % (min_batches_per_wi * min_lws) == 0)
+        batch_size > 0 && batch_size % (min_batches_per_wi * min_lws) == 0
+        && !output_layout.data_padding)
     {
         kd.ofm_per_work_item = min_ofm_per_wi;
         if (batch_size % (4 * min_batches_per_wi * min_lws) == 0)
@@ -484,7 +502,7 @@ convolution_gpu::kernel_data default_yxio_f16_b16(const convolution_node& arg)
         kd.lws0 = min_lws;
         kd.kernel_name = kernel_name_yxfb_yxio_b16_fp16;
 
-        if (kd.gws0 == 0)
+        if (!convolution_gpu::is_kernel_valid(kd))
         {
             kd = default_yxio_f16(arg);
         }
@@ -523,7 +541,7 @@ static std::pair<size_t, size_t> get_bfyx_req_input_block_dims(
     size_t output_block_height,
     const cldnn::tensor& filter_size,
     const cldnn::tensor& stride,
-	const cldnn::tensor& dilation,
+    const cldnn::tensor& dilation,
     size_t sub_group_size = 16,
     size_t read_chunk_size = 8,
     size_t min_read_size = 16)
@@ -552,7 +570,7 @@ convolution_gpu::kernel_data default_bfyx_os_iyx_osv16(const convolution_node& a
 
     auto output_size = arg.get_output_layout().size;
     auto stride = arg.get_primitive()->stride;
-	auto dilation = arg.get_primitive()->dilation;
+    auto dilation = arg.get_primitive()->dilation;
 
     convolution_gpu::kernel_data kd = convolution_gpu::set_default(arg);
     kd.kernel_name = kernel_name_bfyx_os_iyx_osv16;
@@ -622,7 +640,7 @@ convolution_gpu::kernel_data default_bfyx_os_iyx_osv16(const convolution_node& a
         auto input_block_dims = get_bfyx_req_input_block_dims(kd.block_width, kd.block_height,
                                                                 filter_buffer_size,
                                                                 stride,
-																dilation,
+                                                                dilation,
                                                                 sub_group_size,
                                                                 kd.fp16_unit_used ? sub_group_size : sub_group_size / 2,
                                                                 sub_group_size);

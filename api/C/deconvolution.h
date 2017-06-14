@@ -47,7 +47,7 @@ float activation_negative_slope;
 uint32_t split;
 /// @brief Array of primitive ids containing weights data. Size of array should be equivalent to @p split.
 cldnn_primitive_id_arr weights;
-/// @brief Array of primitive ids containing bias data. Size of array should be equivalent to @p split.
+/// @brief Array of primitive ids containing bias data. Size of array should be equivalent to @p split or should be empty (if not using bias).
 cldnn_primitive_id_arr bias;
 CLDNN_END_PRIMITIVE_DESC(deconvolution)
 

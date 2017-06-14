@@ -63,10 +63,14 @@ void network_impl::reset_execution(bool wait)
         for (auto& pair : _events)
         {
             auto clevent = pair.second->get();
-            auto event_status = clevent.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>();
-            if (event_status != CL_COMPLETE)
+            if (clevent.get() != CL_NONE)
             {
-                events.emplace_back(clevent);
+                auto event_status = clevent.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>();
+
+                if (event_status != CL_COMPLETE)
+                {
+                    events.emplace_back(clevent);
+                }
             }
         }
         if (events.size() > 0)
@@ -94,6 +98,7 @@ void network_impl::set_input_data(const primitive_id& id, memory_impl* data)
 
     //Wait for previous execution completion
     reset_execution(true);
+        
     input->set_data(data);
 }
 

@@ -24,7 +24,11 @@ namespace cldnn
 template <>
 struct typed_program_node<fully_connected> : public typed_program_node_base<fully_connected>
 {
+    using parent = typed_program_node_base<fully_connected>;
+
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
     auto& weights() const { return get_dependency(1); }
     auto& bias() const { return get_dependency(2); }

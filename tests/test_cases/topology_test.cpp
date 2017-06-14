@@ -345,7 +345,11 @@ protected:
             virtual bool AddPrimitive(cldnn::topology& topology, cldnn::primitive_id id, cldnn::layout output_layout, std::deque<named_layout>& input_layouts) {
             }
         };
-        class simpler_nms_layer_type : public topology_layer_type {
+        class psroi_pooling_layer_type : public topology_layer_type {
+            virtual bool AddPrimitive(cldnn::topology& topology, cldnn::primitive_id id, cldnn::layout output_layout, std::deque<named_layout>& input_layouts) {
+            }
+        };
+        class proposal_layer_type : public topology_layer_type {
             virtual bool AddPrimitive(cldnn::topology& topology, cldnn::primitive_id id, cldnn::layout output_layout, std::deque<named_layout>& input_layouts) {
             }
         };

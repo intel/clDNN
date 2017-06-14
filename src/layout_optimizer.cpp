@@ -115,12 +115,19 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
 
     case data_type::weights: //fc weights
     {
-        if (batch > 1 && expected_data_type != data_types::f16 && batch % 8 == 0)
+        if (batch > 1 && !(expected_data_type == data_types::f16 && batch >= 16) && batch % 8 == 0)
         {
             expected_tensor = cldnn::tensor(
                 current_layout.size.batch[0], 1, current_layout.size.feature[0] * current_layout.size.spatial[0] * current_layout.size.spatial[1], 1
             );
             expected_format = cldnn::format::bs_xs_xsv8_bsv8;
+        }
+        else if (expected_data_type == data_types::f16 && batch == 16)
+        {
+            expected_tensor = cldnn::tensor(
+                current_layout.size.batch[0], 1, current_layout.size.feature[0] * current_layout.size.spatial[0] * current_layout.size.spatial[1], 1
+            );
+            expected_format = cldnn::format::bs_xs_xsv8_bsv16;
         }
         else if (batch == 1)
         {

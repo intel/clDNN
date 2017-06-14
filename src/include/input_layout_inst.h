@@ -25,7 +25,10 @@ struct memory_impl;
 
 template <>
 struct typed_program_node<input_layout> : public typed_program_node_base<input_layout>
-{};
+{
+    using parent = typed_program_node_base<input_layout>;
+    using parent::parent;
+};
 
 using input_layout_node = typed_program_node<input_layout>;
 

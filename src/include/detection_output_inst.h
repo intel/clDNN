@@ -29,7 +29,11 @@ namespace cldnn
 template <>
 class typed_program_node<detection_output> : public typed_program_node_base<detection_output>
 {
+    using parent = typed_program_node_base<detection_output>;
+
 public:
+    using parent::parent;
+
     auto& location() const { return get_dependency(0); }
     auto& confidence() const { return get_dependency(1); }
     auto& prior_box() const { return get_dependency(2); }
@@ -40,18 +44,18 @@ using detection_output_node = typed_program_node<detection_output>;
 template <>
 class typed_primitive_inst<detection_output> : public typed_primitive_inst_base<detection_output>
 {
-	using parent = typed_primitive_inst_base<detection_output>;
+    using parent = typed_primitive_inst_base<detection_output>;
 
 public:
-	static layout calc_output_layout(detection_output_node const& node);
+    static layout calc_output_layout(detection_output_node const& node);
     static std::string to_string(detection_output_node const& node);
 
 public:
-	typed_primitive_inst(network_impl& network, detection_output_node const& node);
+    typed_primitive_inst(network_impl& network, detection_output_node const& node);
 
-	const memory& location_memory() const { return dep_memory(0); }
-	const memory& confidence_memory() const { return dep_memory(1); }
-	const memory& prior_box_memory() const { return dep_memory(2); }
+    const memory& location_memory() const { return dep_memory(0); }
+    const memory& confidence_memory() const { return dep_memory(1); }
+    const memory& prior_box_memory() const { return dep_memory(2); }
 };
 
 using detection_output_inst = typed_primitive_inst<detection_output>;

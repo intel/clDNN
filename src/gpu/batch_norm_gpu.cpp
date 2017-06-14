@@ -112,13 +112,19 @@ struct batch_norm_gpu : typed_primitive_impl<batch_norm>
         if (!data.fp16_supported && data.fp16_unit_used)
             throw std::invalid_argument("GPU device does not support half precision floating-point formats (cl_khr_fp16 extension)");
 
+        auto input_padding = outer.input().get_output_layout().data_padding;
+
         gpu::jit_constants mem_consts {
             gpu::make_jit_constant("INPUT",                 outer.input().get_output_layout().size),
+            gpu::make_jit_constant("OUTPUT",                outer.get_output_layout().size),
             gpu::make_jit_constant("EPSILON",               data.fp16_unit_used ? 0.0f : outer.get_primitive()->epsilon),
             gpu::make_jit_constant("FP16_UNIT_USED",        static_cast<int>(data.fp16_unit_used)),
             gpu::make_jit_constant("UNIT_TYPE",             data.fp16_unit_used ? "half" : "float"),
             gpu::make_jit_constant("UNIT_VAL_ZERO",         data.fp16_unit_used ? "0.0h" : "0.0f"),
             gpu::make_jit_constant("UNIT_VAL_SQUARE",       data.fp16_unit_used ? "2.0h" : "2.0f"),
+            gpu::make_jit_constant("INPUT_PADDING",         input_padding),
+            gpu::make_jit_constant("OUTPUT_PADDING",        outer.get_output_layout().data_padding),
+            gpu::make_jit_constant("BFYX_USED",             static_cast<int>(outer.input().get_output_layout().format == cldnn::format::bfyx ? true : false)),
         };
 
         return mem_consts;
@@ -161,6 +167,10 @@ kd_selector_t<batch_norm_gpu::kernel_data, batch_norm_node, data_types, format::
     { std::make_tuple(data_types::f32, format::yxfb, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
     { std::make_tuple(data_types::f16, format::yxfb, false, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
     { std::make_tuple(data_types::f16, format::yxfb, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
+    { std::make_tuple(data_types::f32, format::bfyx, false, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
+    { std::make_tuple(data_types::f32, format::bfyx, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
+    { std::make_tuple(data_types::f16, format::bfyx, false, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
+    { std::make_tuple(data_types::f16, format::bfyx, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
 };
 
 namespace {
@@ -170,6 +180,8 @@ namespace {
 
             implementation_map<batch_norm>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), val_fw);
             implementation_map<batch_norm>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), val_fw);
+            implementation_map<batch_norm>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), val_fw);
+            implementation_map<batch_norm>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), val_fw);
         }
         ~attach() {}
     };

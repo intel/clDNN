@@ -295,6 +295,11 @@ struct layout
             sizes[0] = align_to(sizes[0], 8);
             sizes[2] = align_to(sizes[2], 8);
         }
+        else if (this->format == cldnn::format::bs_xs_xsv8_bsv16 && !(is_aligned_to(sizes[0], 16) && is_aligned_to(sizes[2], 8)))
+        {
+            sizes[0] = align_to(sizes[0], 16);
+            sizes[2] = align_to(sizes[2], 8);
+        }
         else if (this->format == cldnn::format::bs_x_bsv16 && !is_aligned_to(sizes[0], 16))
         {
             sizes[0] = align_to(sizes[0], 16);

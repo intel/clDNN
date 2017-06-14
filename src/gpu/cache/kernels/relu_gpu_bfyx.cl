@@ -17,24 +17,33 @@
     #pragma OPENCL EXTENSION cl_khr_fp16 : enable
 #endif
 
-#if RELU && FP16_UNIT_USED
-    #define ACTIVATION(output, input) output = isinf(convert_half(NEGATIVE_SLOPE)) ? ((input >= 0.0h) ? \
-    input : -convert_half(NEGATIVE_SLOPE)) : (max(input, 0.0h) + convert_half(NEGATIVE_SLOPE) * min(input, 0.0h));
-#elif RELU
-    #define ACTIVATION(output, input) output = isinf(NEGATIVE_SLOPE) ? ((input >= 0.0f) ? \
-    input : -NEGATIVE_SLOPE) : (max(input, 0.0f) + NEGATIVE_SLOPE * min(input, 0.0f));
+#if (RELU || PRELU) && FP16_UNIT_USED
+    #define ACTIVATION(output, input, slope) output = isinf(convert_half(slope)) ? ((input >= 0.0h) ? \
+    input : -convert_half(slope)) : (max(input, 0.0h) + convert_half(slope) * min(input, 0.0h));
+#elif (RELU || PRELU)
+    #define ACTIVATION(output, input, slope) output = isinf(slope) ? ((input >= 0.0f) ? \
+    input : -slope) : (max(input, 0.0f) + slope * min(input, 0.0f));
 #else
     #define ACTIVATION(output, input) output = input;
 #endif
 
 
-KERNEL (relu_gpu_bfyx)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
+KERNEL (relu_gpu_bfyx)(const __global UNIT_TYPE* input, 
+					   __global UNIT_TYPE* output
+#if PRELU
+					   , const __global UNIT_TYPE* slope
+#endif
+					  )
 {
     // constexpr:
     const uint input_buffer_size_x = INPUT_PADDING_LOWER_SIZE_X + INPUT_SIZE_X + INPUT_PADDING_UPPER_SIZE_X;
     const uint input_buffer_size_y = INPUT_PADDING_LOWER_SIZE_Y + INPUT_SIZE_Y + INPUT_PADDING_UPPER_SIZE_Y;
+    const uint input_buffer_size_f = INPUT_PADDING_LOWER_FEATURE_NUM + INPUT_FEATURE_NUM + INPUT_PADDING_UPPER_FEATURE_NUM;
+
     const uint output_buffer_size_x = OUTPUT_PADDING_LOWER_SIZE_X + OUTPUT_SIZE_X + OUTPUT_PADDING_UPPER_SIZE_X;
     const uint output_buffer_size_y = OUTPUT_PADDING_LOWER_SIZE_Y + OUTPUT_SIZE_Y + OUTPUT_PADDING_UPPER_SIZE_Y;
+    const uint output_buffer_size_f = OUTPUT_PADDING_LOWER_FEATURE_NUM + OUTPUT_FEATURE_NUM + OUTPUT_PADDING_UPPER_FEATURE_NUM;
+
     const uint batch_num = INPUT_BATCH_NUM;
 
     const uint global_id = get_global_id(0);
@@ -43,13 +52,21 @@ KERNEL (relu_gpu_bfyx)(const __global UNIT_TYPE* input, __global UNIT_TYPE* outp
     const uint x = ((global_id / batch_num) / INPUT_FEATURE_NUM) % INPUT_SIZE_X;
     const uint y = ((global_id / batch_num) / INPUT_FEATURE_NUM) / INPUT_SIZE_X;
 
-    uint input_id = (batch_id * INPUT_FEATURE_NUM + feature_id) * input_buffer_size_x * input_buffer_size_y;
+    uint input_id = (INPUT_PADDING_LOWER_BATCH_NUM + batch_id) * input_buffer_size_x * input_buffer_size_y * input_buffer_size_f;
+    input_id += (INPUT_PADDING_LOWER_FEATURE_NUM + feature_id) * input_buffer_size_x * input_buffer_size_y;
     input_id += (INPUT_PADDING_LOWER_SIZE_Y + y) * input_buffer_size_x + INPUT_PADDING_LOWER_SIZE_X + x;
 
-    uint output_id = (batch_id * OUTPUT_FEATURE_NUM + feature_id) * output_buffer_size_x * output_buffer_size_y;
+    uint output_id = (OUTPUT_PADDING_LOWER_BATCH_NUM + batch_id) * output_buffer_size_x * output_buffer_size_y * output_buffer_size_f;
+    output_id += (OUTPUT_PADDING_LOWER_FEATURE_NUM + feature_id) * output_buffer_size_x * output_buffer_size_y;
     output_id += (OUTPUT_PADDING_LOWER_SIZE_Y + y) * output_buffer_size_x + OUTPUT_PADDING_LOWER_SIZE_X + x;
 
+#if RELU
+	ACTIVATION(output[output_id], input[input_id], NEGATIVE_SLOPE);
+#elif PRELU
+	ACTIVATION(output[output_id], input[input_id], slope[feature_id]);
+#else
     ACTIVATION(output[output_id], input[input_id]);
+#endif
 }
 
 #undef ACTIVATION

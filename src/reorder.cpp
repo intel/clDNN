@@ -25,7 +25,7 @@ namespace cldnn
 
 primitive_type_id reorder_type_id()
 {
-    static primitive_type_base<reorder, reorder_inst> instance;
+    static primitive_type_base<reorder> instance;
     return &instance;
 }
 
@@ -36,7 +36,7 @@ layout reorder_inst::calc_output_layout(reorder_node const& node)
     auto of = node.get_primitive()->output_format;
     auto op = node.get_primitive()->output_padding;
 
-    if(of == format::bs_xs_xsv8_bsv8 || of == format::bs_x_bsv16)
+    if(of == format::bs_xs_xsv8_bsv8 || of == format::bs_xs_xsv8_bsv16 || of == format::bs_x_bsv16)
         return layout(odt, of, input_layout.size.transform(of, 1), op);
     else
         return layout(odt, of, input_layout.size, op);
@@ -77,10 +77,6 @@ reorder_inst::typed_primitive_inst(network_impl& network, reorder_node const& no
         }
         if (static_cast<size_t>(input_mem.get_layout().size.feature[0]) != argument.subtract_per_feature.size())
             throw std::runtime_error("Number of features/channels in input does not match the number of features/channels in values to subtract");
-    }
-    if (node.has_padded_dependency())
-    {
-        throw std::runtime_error("Reorder with input which contains padding is NOT IMPLEMENTED yet!");
     }
 }
 }

@@ -51,54 +51,54 @@ struct normalize :public primitive_base<normalize, CLDNN_PRIMITIVE_DESC(normaliz
     /// @brief Constructs normalize primitive.
     /// @param id This primitive id.
     /// @param input Input primitive id.
-	/// @param scale_input Scale input primitive id with values needed for scaling after the normalization.
-	/// Scale x dimension should be 1 (if all channels have the same scale) or equal to input feature size (one scale per channel).
-	/// All other dimensions should be 1.
+    /// @param scale_input Scale input primitive id with values needed for scaling after the normalization.
+    /// Scale x dimension should be 1 (if all channels have the same scale) or equal to input feature size (one scale per channel).
+    /// All other dimensions should be 1.
     /// @param across_spatial Determines if the normalization is done across or within spatial (see documentation above).
-	/// @param epsilon Epsilon for not dividing by zero while normalizing.
-	normalize(
+    /// @param epsilon Epsilon for not dividing by zero while normalizing.
+    normalize(
         const primitive_id& id,
         const primitive_id& input,
-		const primitive_id& scale_input,
-		const bool across_spatial = true,
-		const float epsilon = 1e-10f,
+        const primitive_id& scale_input,
+        const bool across_spatial = true,
+        const float epsilon = 1e-10f,
         const padding& output_padding = padding()
         )
         : primitive_base(id, {input}, output_padding)
-		, scale_input(scale_input)
+        , scale_input(scale_input)
         , across_spatial(across_spatial)
         , epsilon(epsilon)
     {}
 
     /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{normalize}
-	normalize(const dto* dto)
+    normalize(const dto* dto)
         : primitive_base(dto)
-		, scale_input(dto->scale_input)
+        , scale_input(dto->scale_input)
         , across_spatial(dto->across_spatial != 0)
         , epsilon(dto->epsilon)
     {}
 
-	/// @brief Scale input primitive id with values needed for scaling after the normalization.
-	/// Scale x dimension should be 1 (if all channels have the same scale) or equal to input feature size (one scale per channel).
-	/// All other dimensions should be 1.
-	primitive_id scale_input;
+    /// @brief Scale input primitive id with values needed for scaling after the normalization.
+    /// Scale x dimension should be 1 (if all channels have the same scale) or equal to input feature size (one scale per channel).
+    /// All other dimensions should be 1.
+    primitive_id scale_input;
     /// @brief Determines if the normalization is done across or within spatial (see documentation above).
-	bool across_spatial;
-	/// @brief Epsilon for not dividing by zero while normalizing.
-	float epsilon;
+    bool across_spatial;
+    /// @brief Epsilon for not dividing by zero while normalizing.
+    float epsilon;
 
 protected:
 
-	std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override
-	{
-		return{ scale_input };
-	}
+    std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override
+    {
+        return{ scale_input };
+    }
 
     void update_dto(dto& dto) const override
     {
-		dto.scale_input = scale_input.c_str();
+        dto.scale_input = scale_input.c_str();
         dto.across_spatial = across_spatial;
-		dto.epsilon = epsilon;
+        dto.epsilon = epsilon;
     }
 };
 /// @}

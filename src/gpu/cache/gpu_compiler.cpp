@@ -35,10 +35,10 @@ binary_data gpu_compiler::compile(context* context, const jit& compile_options, 
     auto& clContext = context->context();
     code source = inject_jit(compile_options, code_src);
     cl::Program program(clContext, source, false);
-	program.compile();
+    program.compile();
     auto binaries = program.getInfo<CL_PROGRAM_BINARIES>();
-	assert(binaries.size() == 1 && "There should be only one binary");
-	return binary_data(binaries[0].begin(), binaries[0].end());
+    assert(binaries.size() == 1 && "There should be only one binary");
+    return binary_data(binaries[0].begin(), binaries[0].end());
 }
 
 } } }

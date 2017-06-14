@@ -62,7 +62,7 @@ struct format_traits
 };
 
 /// @brief Represents memory formats (orders).
-/// @n In CNN most of data is describe as 4 dimensional blocks. In Intel(R) clDNN library we describe memory with 4 letters
+/// @n In CNN most of data is described as 4 dimensional blocks. In Intel(R) clDNN library we describe memory with 4 letters
 /// - b - number of blocks in batch. For weights formats: output features - conv, neurons - inner product
 /// - f - number of feature maps, features or channels. For weights formats: input features - conv, inputs, inner product
 /// - x - spatial, width
@@ -80,8 +80,10 @@ struct format
         fyxb = cldnn_format_fyxb, ///< format not used inside clDNN, but supported in reorder as extension for user provided formats.
         os_iyx_osv16 = cldnn_format_os_iyx_osv16, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
                                                   ///< \n \image html os_iyx_osv16.jpg
-        bs_xs_xsv8_bsv8 = cldnn_format_bs_xs_xsv8_bsv8, ///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice.
-                                                        ///< \n \image html bs_xs_xsv8_bsv8.jpg
+        bs_xs_xsv8_bsv8 = cldnn_format_bs_xs_xsv8_bsv8,  ///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice.
+                                                         ///< \n \image html bs_xs_xsv8_bsv8.jpg
+        bs_xs_xsv8_bsv16 = cldnn_format_bs_xs_xsv8_bsv16,///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv16 - 16 values of single slice.
+                                                         ///< \n \image html bs_xs_xsv8_bsv16.jpg
         bs_x_bsv16 = cldnn_format_bs_x_bsv16, ///< format used only for fully connected weights fp16 batch=1 : bs - batch slice (responses slice), bsv16 - 16 values of single batch slice, x - flattened plane of (fyx).
                                               ///< \n \image html bs_x_bsv16.jpg
         format_num = cldnn_format_format_num, ///< number of format types
@@ -99,6 +101,7 @@ struct format
             { fyxb,{ 1, 1, 2, "fyxb", "bfxy" } },
             { os_iyx_osv16, { 1, 1, 2, "bfyx", "bfxy" }},
             { bs_xs_xsv8_bsv8, { 1, 1, 1, "bx", "b?x?" }},
+            { bs_xs_xsv8_bsv16,{ 1, 1, 1, "bx", "b?x?" } },
             { bs_x_bsv16, { 1, 1, 1, "bx", "b?x?" }}
         };
         return traits.at(fmt);
@@ -230,10 +233,10 @@ struct tensor
 
     typedef int32_t value_type;     ///< Values type stored in tensor.
     //TODO find the way to prevent direct change of following fields.
-    array_ref<value_type> raw;      ///< Raw representation of all dimensions.
-    array_ref<value_type> batch;    ///< Batch dimensions.
-    array_ref<value_type> feature;  ///< Feature maps.
-    array_ref<value_type> spatial;  ///< Spatial dimensions.
+    mutable_array_ref<value_type> raw;      ///< Raw representation of all dimensions.
+    mutable_array_ref<value_type> batch;    ///< Batch dimensions.
+    mutable_array_ref<value_type> feature;  ///< Feature maps.
+    mutable_array_ref<value_type> spatial;  ///< Spatial dimensions.
 
 private:
     value_type _sizes[CLDNN_TENSOR_DIM_MAX];
@@ -380,11 +383,26 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const tensor& tensor)
     {
-        for (size_t i = 0; i < tensor.raw.size(); ++i)
+        os << "[b:";
+        for (size_t i = 0; i < tensor.batch.size(); ++i)
         {
-            os << tensor.raw.at(i);
-            i != (tensor.raw.size() - 1) ? os << "x" : os << "";
+            os << tensor.batch[i];
+            i != (tensor.batch.size() - 1) ? os << "," : os << "";
         }
+        os << ", f:";
+        for (size_t i = 0; i < tensor.feature.size(); ++i)
+        {
+            os << tensor.feature[i];
+            i != (tensor.feature.size() - 1) ? os << "," : os << "";
+        }
+
+        std::vector<std::string> spatials = { ", x", ", y", ", z", ", w" };
+        for (size_t i = 0; i < tensor.spatial.size(); ++i)
+        {
+            os  << spatials[i] << ":" << tensor.spatial[i];
+        }
+        os << "]";
+
         return os;
     }
 
@@ -508,7 +526,7 @@ public:
         {
             auto c = val_order[i];
             //skip f and y for the formats that do not have it
-            if (((new_fmt == format::bs_xs_xsv8_bsv8) || (new_fmt == format::bs_x_bsv16)) && ((c == 'f') || (c == 'y')))
+            if (((new_fmt == format::bs_xs_xsv8_bsv8) || (new_fmt == format::bs_xs_xsv8_bsv16) || (new_fmt == format::bs_x_bsv16)) && ((c == 'f') || (c == 'y')))
             {
                 if (new_order[i] == '?')
                     new_sizes[i] = default_size;
@@ -555,6 +573,13 @@ public:
             my_sizes[0] = align_to(my_sizes[0], 8);
             my_sizes[1] = align_to(my_sizes[1], 8);
             adjusted_coords[0] = align_to(adjusted_coords[0], 8);
+            adjusted_coords[1] = align_to(adjusted_coords[1], 8);
+        }
+        else if (fmt == cldnn::format::bs_xs_xsv8_bsv16 && !(is_aligned_to(my_sizes[0], 16) && is_aligned_to(my_sizes[1], 8)))
+        {
+            my_sizes[0] = align_to(my_sizes[0], 16);
+            my_sizes[1] = align_to(my_sizes[1], 8);
+            adjusted_coords[0] = align_to(adjusted_coords[0], 16);
             adjusted_coords[1] = align_to(adjusted_coords[1], 8);
         }
         else if (fmt == cldnn::format::bs_x_bsv16 && !is_aligned_to(my_sizes[0], 16))

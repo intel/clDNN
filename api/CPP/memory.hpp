@@ -130,7 +130,7 @@ struct memory
     {
         return check_status<bool>("checking if two memories refers to the same buffer failed", [&](status_t* status)
         {
-            return cldnn_is_the_same_buffer(_impl, other._impl, status);
+            return cldnn_is_the_same_buffer(_impl, other._impl, status) != 0;
         });
     }
 

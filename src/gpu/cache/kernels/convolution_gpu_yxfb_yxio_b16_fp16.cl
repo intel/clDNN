@@ -85,14 +85,14 @@ KERNEL(convolution_gpu_yxfb_yxio_b16_fp16)(
 
         for (uint i = 0; i < FILTER_SIZE_Y; i++)
         {
-            int input_offset_y = y + i;
+            int input_offset_y = y + i * DILATION_SIZE_Y;
             bool zero_y = input_offset_y >= INPUT_SIZE_Y || input_offset_y < 0;
 
             if(!zero_y)
             {
                 for (uint j = 0; j < FILTER_SIZE_X; j++)
                 {
-                    int input_offset_x = x + j;
+                    int input_offset_x = x + j * DILATION_SIZE_X;
 
                     bool zero = input_offset_x >= INPUT_SIZE_X || input_offset_x < 0;
 

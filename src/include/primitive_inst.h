@@ -57,6 +57,9 @@ struct primitive_impl
 */
 class primitive_inst
 {
+    template <class PType>
+    friend class typed_primitive_inst;
+
 public:
     virtual ~primitive_inst() = default;
 

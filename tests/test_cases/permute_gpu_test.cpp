@@ -111,9 +111,11 @@ TEST(permute_gpu_f32, basic_bfyx_permute_0_1_3_2)
 
 }
 
-TEST(permute_gpu_f32, basic_yxfb_permute_2_3_1_0)
+TEST(permute_gpu_f32, basic_yxfb_permute_3_2_0_1)
 {
     //  Input               : yxfb:2x2x2x2
+    //  Permute order       : { 3,2,0,1 }
+    //  Output padding      : 0x1
     //
     //  Input:
     //  f0: b0:  1    2  b1:   0    0
@@ -155,7 +157,7 @@ TEST(permute_gpu_f32, basic_yxfb_permute_2_3_1_0)
 
     topology topology(
         input_layout("input", input.get_layout()),
-        permute("permute", "input", { 2, 3, 1, 0 }, { { 0, 0, 1, 0}, 0 }));
+        permute("permute", "input", { 3, 2, 0, 1 }, { { 0, 0, 1, 0}, 0 }));
 
     network network(engine, topology);
     network.set_input_data("input", input);
@@ -180,6 +182,85 @@ TEST(permute_gpu_f32, basic_yxfb_permute_2_3_1_0)
 
     auto output_ptr = output.pointer<float>();
     for (int i = 0; i < 32; i++)
+    {
+        EXPECT_FLOAT_EQ(answers[i], output_ptr[i]);
+    }
+
+}
+
+TEST(permute_gpu_f32, basic_bfyx_permute_0_1_3_2_input_padding)
+{
+    //  Input               : bfyx:2x2x3x2
+    //  Permute order       : { 0,1,3,2 }
+    //  Input padding       : 2x1
+    //
+    //  Input:
+    //  f0: b0:  1    2   -15  b1:   0    0     -15
+    //  f0: b0:  3    4   -15  b1:   0.5 -0.5   -15
+    //  f1: b0:  5    6   -15  b1:   1.5  5.2   -15
+    //  f1: b0:  7    8   -15  b1:   12   8     -15
+    //
+    //  Input:
+    //  f0: b0:  1    3  b1:   0    0.5
+    //  f0: b0:  2    4  b1:   0    -0.5
+    //  f0: b0:  -15 -15 b1:   -15  -15
+    //  f1: b0:  5    7  b1:   1.5  12
+    //  f1: b0:  6    8  b1:   5.2   8
+    //  f1: b0:  -15 -15 b1:   -15   -15
+    //
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
+
+    set_values(input, {
+        1.0f,  2.0f, -15.f,
+        3.0f,  4.0f, -15.f,
+
+        5.0f,  6.0f, -15.f,
+        7.0f,  8.0f, -15.f,
+
+        0.0f,  0.0f, -15.f,
+        0.5f, -0.5f, -15.f,
+
+        1.5f,  5.2f, -15.f,
+        12.0f, 8.0f, -15.f,
+    });
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, { { 0, 0, 2, 1 }, 0 }),
+        permute("permute", "reorder", { 0, 1, 3, 2 }));
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "permute");
+
+    auto output = outputs.begin()->second.get_memory();
+
+    float answers[24] = {
+        1.0f,  3.0f,
+        2.0f,  4.0f,
+        -15.0f,  -15.0f,
+
+        5.0f,  7.0f,
+        6.0f,  8.0f,
+        -15.0f,  -15.0f,
+
+        0.0f,  0.5f,
+        0.0f, -0.5f,
+        -15.0f,  -15.0f,
+
+        1.5f,  12.0f,
+        5.2f, 8.0f,
+        -15.0f,  -15.0f,
+    };
+
+    auto output_ptr = output.pointer<float>();
+    for (int i = 0; i < 24; i++)
     {
         EXPECT_FLOAT_EQ(answers[i], output_ptr[i]);
     }

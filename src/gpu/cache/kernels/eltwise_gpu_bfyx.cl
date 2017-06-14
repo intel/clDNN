@@ -30,26 +30,30 @@
 KERNEL (eltwise_gpu_bfyx)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output, const __global UNIT_TYPE* input2)
 {
     // constexpr:
+    const uint input_buffer_size_x = INPUT_PADDING_LOWER_SIZE_X + INPUT_SIZE_X + INPUT_PADDING_UPPER_SIZE_X;
+    const uint input_buffer_size_y = INPUT_PADDING_LOWER_SIZE_Y + INPUT_SIZE_Y + INPUT_PADDING_UPPER_SIZE_Y;
     const uint output_buffer_size_x = OUTPUT_PADDING_LOWER_SIZE_X + OUTPUT_SIZE_X + OUTPUT_PADDING_UPPER_SIZE_X;
     const uint output_buffer_size_y = OUTPUT_PADDING_LOWER_SIZE_Y + OUTPUT_SIZE_Y + OUTPUT_PADDING_UPPER_SIZE_Y;
-
 
     const uint batch_num = INPUT_BATCH_NUM;
 
     const uint global_id = get_global_id(0);
 
-    uint input_id = global_id;
-
-#if OUTPUT_PADDING_LOWER_SIZE_X > 0 || OUTPUT_PADDING_UPPER_SIZE_X > 0 || OUTPUT_PADDING_LOWER_SIZE_Y > 0 || OUTPUT_PADDING_UPPER_SIZE_Y > 0
+#if OUTPUT_PADDING_LOWER_SIZE_X > 0 || OUTPUT_PADDING_UPPER_SIZE_X > 0 || OUTPUT_PADDING_LOWER_SIZE_Y > 0 || OUTPUT_PADDING_UPPER_SIZE_Y > 0 || \
+    INPUT_PADDING_LOWER_SIZE_X > 0 || INPUT_PADDING_UPPER_SIZE_X > 0 || INPUT_PADDING_LOWER_SIZE_Y > 0 || INPUT_PADDING_UPPER_SIZE_Y > 0
     const uint x = global_id % INPUT_SIZE_X;
     const uint y = (global_id / (INPUT_SIZE_X)) % INPUT_SIZE_Y;
     const uint f = (global_id / (INPUT_SIZE_X * INPUT_SIZE_Y)) % INPUT_FEATURE_NUM;
     const uint b = (global_id / (INPUT_SIZE_X * INPUT_SIZE_Y * INPUT_FEATURE_NUM));
 
+    uint input_id = (b * INPUT_FEATURE_NUM + f) * input_buffer_size_x * input_buffer_size_y;
+    input_id += (INPUT_PADDING_LOWER_SIZE_Y + y) * input_buffer_size_x + INPUT_PADDING_LOWER_SIZE_X + x;
+
     uint output_id = (b * OUTPUT_FEATURE_NUM + f) * output_buffer_size_x * output_buffer_size_y;
     output_id += (OUTPUT_PADDING_LOWER_SIZE_Y + y) * output_buffer_size_x + OUTPUT_PADDING_LOWER_SIZE_X + x;
 #else
-    uint output_id = input_id;
+    uint input_id = global_id;
+    uint output_id = global_id;
 #endif
 
     const UNIT_TYPE in1 = input[input_id];

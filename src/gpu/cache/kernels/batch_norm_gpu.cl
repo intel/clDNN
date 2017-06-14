@@ -19,9 +19,25 @@
 
 KERNEL (batch_norm_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output, __global UNIT_TYPE* mean, __global UNIT_TYPE* variance)
 {
+    // constexpr:
+    const int input_buffer_size_x = INPUT_PADDING_LOWER_SIZE_X + INPUT_SIZE_X + INPUT_PADDING_UPPER_SIZE_X;
+    const int input_buffer_size_y = INPUT_PADDING_LOWER_SIZE_Y + INPUT_SIZE_Y + INPUT_PADDING_UPPER_SIZE_Y;
+    const uint output_buffer_size_x = OUTPUT_PADDING_LOWER_SIZE_X + OUTPUT_SIZE_X + OUTPUT_PADDING_UPPER_SIZE_X;
+    const uint output_buffer_size_y = OUTPUT_PADDING_LOWER_SIZE_Y + OUTPUT_SIZE_Y + OUTPUT_PADDING_UPPER_SIZE_Y;
+
     const uint feature_id = get_global_id(1);
+    const uint x = ((uint)get_global_id(2) % INPUT_SIZE_X);
+    const uint y = ((uint)get_global_id(2) / INPUT_SIZE_X);
+
     const uint feature_offset = feature_id * INPUT_BATCH_NUM;
-    const uint linear_id = (uint)get_global_id(0) + feature_offset + (uint)get_global_id(2) * INPUT_BATCH_NUM * INPUT_FEATURE_NUM;
+
+#if BFYX_USED
+    const uint input_linear_id = x + INPUT_PADDING_LOWER_SIZE_X + input_buffer_size_x * (INPUT_PADDING_LOWER_SIZE_Y + y + input_buffer_size_y * ((uint)get_global_id(1) + (uint)get_global_id(0) * INPUT_FEATURE_NUM));
+    const uint output_linear_id = x + OUTPUT_PADDING_LOWER_SIZE_X + output_buffer_size_x * (OUTPUT_PADDING_LOWER_SIZE_Y + y + output_buffer_size_y * ((uint)get_global_id(1) + (uint)get_global_id(0) * OUTPUT_FEATURE_NUM));
+#else
+    const uint input_linear_id = (uint)get_global_id(0) + INPUT_BATCH_NUM * ((uint)get_global_id(1) + INPUT_FEATURE_NUM * (x + INPUT_PADDING_LOWER_SIZE_X + (uint)input_buffer_size_x * (INPUT_PADDING_LOWER_SIZE_Y + y)));
+    const uint output_linear_id = (uint)get_global_id(0) + OUTPUT_BATCH_NUM * ((uint)get_global_id(1) + OUTPUT_FEATURE_NUM * (x + OUTPUT_PADDING_LOWER_SIZE_X + (uint)output_buffer_size_x * (OUTPUT_PADDING_LOWER_SIZE_Y + y)));
+#endif
 
     //compute mean
     UNIT_TYPE acc = UNIT_VAL_ZERO;
@@ -46,5 +62,5 @@ KERNEL (batch_norm_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* out
 
     UNIT_TYPE variance_val = acc / (INPUT_BATCH_NUM * INPUT_SIZE_X * INPUT_SIZE_Y);
 
-    output[linear_id] = (input[linear_id] - mean_val) / (sqrt(variance_val) + EPSILON);
+    output[output_linear_id] = (input[input_linear_id] - mean_val) / sqrt(variance_val + EPSILON);
 }

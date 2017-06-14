@@ -71,14 +71,6 @@ set(__CLDNN_Label__gtest               "google test framework")
 file(GLOB __CLDNN_Sources__gtest
     "${__CLDNN_Directory__gtest}/*.cc"
   )
-
-set(__CLDNN_Directory__examples      "${CMAKE_CURRENT_SOURCE_DIR}/examples")
-set(__CLDNN_Label__examples          "examples")
-file(GLOB __CLDNN_Sources__examples
-    "${__CLDNN_Directory__examples}/*.h"
-    "${__CLDNN_Directory__examples}/*.hpp"
-    "${__CLDNN_Directory__examples}/*.cpp"
-  )
   
 if (MSVC)
   file(GLOB __CLDNN_Sources__natvis
@@ -92,7 +84,6 @@ set(__CLDNN_AllSources
     ${__CLDNN_Sources__test_utils}
     ${__CLDNN_Sources__module_tests}
     ${__CLDNN_Sources__gtest}
-    ${__CLDNN_Sources__examples}
     ${__CLDNN_Sources__natvis}
   )
 
@@ -103,7 +94,6 @@ source_group("${__CLDNN_Label__test_cases}"   FILES ${__CLDNN_Sources__test_case
 source_group("${__CLDNN_Label__test_utils}"   FILES ${__CLDNN_Sources__test_utils})
 source_group("${__CLDNN_Label__module_tests}" FILES ${__CLDNN_Sources__module_tests})
 source_group("${__CLDNN_Label__gtest}"        FILES ${__CLDNN_Sources__gtest})
-source_group("${__CLDNN_Label__examples}"     FILES ${__CLDNN_Sources__examples})
 
 # ===================================== Include/Link directories =======================================
 

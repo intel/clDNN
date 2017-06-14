@@ -25,7 +25,11 @@ namespace cldnn
 template <>
 class typed_program_node<crop> : public typed_program_node_base<crop>
 {
+    using parent = typed_program_node_base<crop>;
+
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
 };
 

@@ -62,6 +62,13 @@ public:
     auto id() const { return desc->id; }
     auto type() const { return desc->type; }
 
+    template <class PType>
+    bool is_type() const
+    {
+        static_assert(meta::is_primitive_v<PType>, "Type argument for program_node::is_type should be a non-const, non-volatile type derived from primitive");
+        return type() == PType::type_id();
+    }
+
     auto& get_program() { return myprog; }
     auto const& get_program() const { return myprog; }
 
@@ -203,6 +210,8 @@ struct typed_program_node_base : public program_node
     friend struct program_impl;
 
 public:
+    using program_node::program_node;
+
     std::shared_ptr<const PType> get_primitive() const { return std::static_pointer_cast<const PType>(program_node::get_primitive()); }
 
 protected:
@@ -219,6 +228,8 @@ protected:
 template <class PType>
 struct typed_program_node : public typed_program_node_base<PType>
 {
+    using typed_program_node_base<PType>::typed_program_node_base;
+
     auto& input() const { return program_node::get_dependency(0); }
 };
 
@@ -287,6 +298,7 @@ private:
     void reorder_inputs(layout_optimizer& lo);
     void optimize_weights(layout_optimizer& lo);
     void prepare_padding();
+    void prepare_buffer_fusing();
 
     /*
     ** Utilities

@@ -38,7 +38,7 @@ public:
     const memory& input_memory() const { return dep_memory(0); }
 
 private:
-	template<typename dtype> void generate_output();
+    template<typename dtype> void generate_output();
 };
 
 using prior_box_inst = typed_primitive_inst<prior_box>;

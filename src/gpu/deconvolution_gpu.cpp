@@ -150,6 +150,7 @@ struct deconvolution_gpu : typed_primitive_impl<deconvolution> {
             gpu::make_jit_constant("UNIT_VAL_ZERO",             _kernel_data.fp16_unit_used ? "0.0h" : "0.0f"),
             gpu::make_jit_constant("RELU",                      static_cast<int>(outer.get_primitive()->with_activation)),
             gpu::make_jit_constant("NEGATIVE_SLOPE",            outer.get_primitive()->activation_negative_slope),
+            gpu::make_jit_constant("BIAS_TERM",                 static_cast<int>(outer.bias_term()))
         };
 
         return mem_consts;
@@ -177,19 +178,38 @@ struct deconvolution_gpu : typed_primitive_impl<deconvolution> {
         std::vector<cldnn::refcounted_obj_ptr<cldnn::event_impl>> tmp_events(events);
 
         // execute kernels
-        for (decltype(split) i = 0; i < split; i++) {
-            assert(kd.gws0 % kd.lws0 == 0);
-            auto event = _kernel.run<gpu::input_mem, gpu::output_mem, gpu::input_mem, gpu::input_mem, uint32_t>
-                ({ { kd.gws0, kd.gws1, kd.gws2 },{ kd.lws0, kd.lws1, kd.lws2 } },
-                    tmp_events,
-                    input_mem,
-                    output_mem,
-                    instance.weights_memory(i), //filters
-                    instance.bias_memory(i), //biases
-                    i);
-            tmp_events.clear();
-            tmp_events.emplace_back(event);
+        if (outer.bias_term())
+        {
+            for (decltype(split) i = 0; i < split; i++) {
+                assert(kd.gws0 % kd.lws0 == 0);
+                auto event = _kernel.run<gpu::input_mem, gpu::output_mem, gpu::input_mem, gpu::input_mem, uint32_t>
+                    ({ { kd.gws0, kd.gws1, kd.gws2 },{ kd.lws0, kd.lws1, kd.lws2 } },
+                        tmp_events,
+                        input_mem,
+                        output_mem,
+                        instance.weights_memory(i), //filters
+                        instance.bias_memory(i), //biases
+                        i);
+                tmp_events.clear();
+                tmp_events.emplace_back(event);
+            }
         }
+        else
+        {
+            for (decltype(split) i = 0; i < split; i++) {
+                assert(kd.gws0 % kd.lws0 == 0);
+                auto event = _kernel.run<gpu::input_mem, gpu::output_mem, gpu::input_mem, uint32_t>
+                    ({ { kd.gws0, kd.gws1, kd.gws2 },{ kd.lws0, kd.lws1, kd.lws2 } },
+                        tmp_events,
+                        input_mem,
+                        output_mem,
+                        instance.weights_memory(i), //filters
+                        i);
+                tmp_events.clear();
+                tmp_events.emplace_back(event);
+            }
+        }
+
         return tmp_events.at(0);
     }
 

@@ -23,7 +23,7 @@ namespace cldnn
 {
 primitive_type_id input_layout_type_id()
 {
-    static primitive_type_base<input_layout, input_layout_inst> instance;
+    static primitive_type_base<input_layout> instance;
     return &instance;
 }
 

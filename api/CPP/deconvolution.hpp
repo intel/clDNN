@@ -40,7 +40,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
     /// @param id This primitive id.
     /// @param input Input primitive id.
     /// @param weights List of primitive ids containing weights data.
-    /// @param bias List of primitive ids containing bias data.
+    /// @param bias List of primitive ids containing bias data. Provide empty vector if using next parameters without bias.
     /// @param input_padding Input padding/offset.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param with_activation Enables Relu activation.
@@ -49,7 +49,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         const primitive_id& id,
         const primitive_id& input,
         const std::vector<primitive_id>& weights,
-        const std::vector<primitive_id>& bias,
+        const std::vector<primitive_id>& bias = std::vector<primitive_id>(0),
         tensor stride = { 1, 1, 1, 1 },
         tensor input_offset = { 0,0,0,0 },
         bool with_activation = false,
@@ -80,7 +80,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         , _weights(dto->weights)
         , _bias(dto->bias)
     {
-        if (!dto->split || weights.size() != bias.size() || dto->split != weights.size())
+        if (!dto->split || (weights.size() != bias.size() && bias.size() != 0) || dto->split != weights.size())
             throw std::invalid_argument("Invalid deconvolution dto: bad split value");
     }
 

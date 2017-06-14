@@ -22,7 +22,7 @@ namespace cldnn
 {
 primitive_type_id convolution_type_id()
 {
-    static primitive_type_base<convolution, convolution_inst> instance;
+    static primitive_type_base<convolution> instance;
     return &instance;
 }
 
@@ -35,7 +35,7 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 
     auto input_offset = desc->input_offset;
     auto strd = desc->stride;
-	auto dilation = desc->dilation;
+    auto dilation = desc->dilation;
     auto split = desc->weights.size();
 
     // compute how many outputs in rows and columns will be generate by filter. 
@@ -44,15 +44,13 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
     if (kernel_xy.size() != 2)
         throw std::runtime_error("Weights have to have 2 dimensions in spatial domain.");
 
-	tensor kernel_extent = { 1, 1, dilation.spatial[0] * (kernel_xy[0] - 1) + 1, dilation.spatial[1] * (kernel_xy[1] - 1) + 1 };
+    tensor kernel_extent = { 1, 1, dilation.spatial[0] * (kernel_xy[0] - 1) + 1, dilation.spatial[1] * (kernel_xy[1] - 1) + 1 };
 
     // TODO: Consider moving general parameter verification to arguments constructor.
     if (strd.spatial[0] <= 0 || strd.spatial[1] <= 0)
         throw std::invalid_argument("Stride must be positive (>= 1)");
-	if (dilation.spatial[0] <= 0 || dilation.spatial[1] <= 0)
-		throw std::invalid_argument("Dilation must be positive (>= 1)");
-	if ( (input_layout.size.batch[0] > 1) && (dilation.spatial[0] > 1 || dilation.spatial[1] > 1) )
-		throw std::invalid_argument("Dilation not supported in batch > 1");
+    if (dilation.spatial[0] <= 0 || dilation.spatial[1] <= 0)
+        throw std::invalid_argument("Dilation must be positive (>= 1)");
     if (2 * input_offset.spatial[0] > input_layout.size.spatial[0] || 2 * input_offset.spatial[1] > input_layout.size.spatial[1])
         throw std::invalid_argument("Input offset is greater than input data range. There is no input data to process");
 

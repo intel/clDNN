@@ -23,7 +23,7 @@ namespace cldnn
 {
 primitive_type_id data_type_id()
 {
-    static primitive_type_base<data, data_inst> instance;
+    static primitive_type_base<data> instance;
     return &instance;
 }
 

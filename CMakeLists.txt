@@ -107,7 +107,10 @@ endif()
 # Code generation settings.
 
 # Path which points to root directory where code generated elements are created.
-set(CLDNN__CODEGEN_DIR     "${CMAKE_CURRENT_BINARY_DIR}/codegen/${CLDNN__TARGET_CFG_VAR}")
+set(CLDNN__CODEGEN_BASEDIR "${CMAKE_CURRENT_BINARY_DIR}/codegen")
+# Path which points to root directory where code generated elements are created
+# (specific to build configuration).
+set(CLDNN__CODEGEN_DIR     "${CLDNN__CODEGEN_BASEDIR}/${CLDNN__TARGET_CFG_VAR}")
 
 # Path which points to automatically included directory with code generated elements
 # (to support "copy-if-different" optimization).
@@ -406,7 +409,11 @@ mark_as_advanced(CLDNN__INCLUDE_TESTS)
 
 # ======================================================================================================
 
-# Run (requires CLDNN__INCLUDE_TESTS to be true): Tests (unit tests and small acceptance tests) for clDNN framework.
+# Include and build: clDNN tutorial.
+set(CLDNN__INCLUDE_TUTORIAL ON CACHE BOOL "Include and build: clDNN Tutorial.")
+mark_as_advanced(CLDNN__INCLUDE_TUTORIAL)
+
+# ======================================================================================================# Run (requires CLDNN__INCLUDE_TESTS to be true): Tests (unit tests and small acceptance tests) for clDNN framework.
 set(CLDNN__RUN_TESTS OFF CACHE BOOL "Run: clDNN framework's tests.")
 mark_as_advanced(CLDNN__RUN_TESTS)
 
@@ -621,7 +628,7 @@ message(STATUS "[clDNN]  - boost ver. used to build:      ${CLDNN__BOOST_VERSION
 message(STATUS "[clDNN]")
 message(STATUS "[clDNN]  - Include/Build cldnn core:      ${CLDNN__INCLUDE_CORE}")
 message(STATUS "[clDNN]  - Include/Build tests:           ${CLDNN__INCLUDE_TESTS}")
-message(STATUS "[clDNN]")
+message(STATUS "[clDNN]  - Include/Build tutorial:        ${CLDNN__INCLUDE_TUTORIAL}")
 message(STATUS "[clDNN]  - Run tests:                     ${CLDNN__RUN_TESTS}")
 message(STATUS "[clDNN]")
 message(STATUS "[clDNN]  - Use static C++ Runtime:        ${CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME}")
@@ -1062,7 +1069,7 @@ endif()
 include_directories(
     ${CLDNN__IOCL_ICD_INCDIRS}
     "${CLDNN__KHR_CLHPP_DIR}"
-    ${Boost_INCLUDE_DIRS}
+#    "${CLDNN__API_DIR}"
     "${CLDNN__CODEGEN_INCDIR}"
   )
 link_directories(
@@ -1072,10 +1079,16 @@ link_directories(
 # =================================== Link targets and dependencies ====================================
 if(CLDNN__INCLUDE_CORE)
   add_subdirectory(src)
+  add_subdirectory(api_test_builds)
 endif()
 if(CLDNN__INCLUDE_TESTS)
   add_subdirectory(tests)
 endif()
+
+if(CLDNN__INCLUDE_TUTORIAL)
+  add_subdirectory(tutorial)
+endif()
+
 add_subdirectory(docs)
 
 # ======================================================================================================

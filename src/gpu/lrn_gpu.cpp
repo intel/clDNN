@@ -78,6 +78,7 @@ struct lrn_gpu : typed_primitive_impl<lrn>
     static kernel_data set_default(const lrn_node& arg)
     {
         auto input_layout = arg.input().get_output_layout();  // input
+        auto output_layout = arg.get_output_layout(); // output
 
         kernel_data kd;
 
@@ -96,8 +97,8 @@ struct lrn_gpu : typed_primitive_impl<lrn>
         kd.lws1 = 1;
         kd.lws2 = 1;
 
-        auto& output_padding = arg.get_primitive()->output_padding;
-        auto& input_padding = arg.input().get_primitive()->output_padding;
+        auto& output_padding = output_layout.data_padding;
+        auto& input_padding = input_layout.data_padding;
 
         if (arg.get_primitive()->norm_region == cldnn_lrn_norm_region_across_channel)
         {
@@ -106,7 +107,6 @@ struct lrn_gpu : typed_primitive_impl<lrn>
                 !input_padding &&                            // optimized kernel_batch8 does not support input padding
                 input_layout.size.batch[0] % 8 == 0 && // batch_num is multiple of 8
                 kd.gws0 % 64 == 0 &&
-                !input_padding &&
                 !output_padding)                           // batch_num * feature_num is multiple of 64
             {
                 kd.gws0 /= 8;
@@ -156,7 +156,7 @@ struct lrn_gpu : typed_primitive_impl<lrn>
         auto input_padding = outer.input().get_output_layout().data_padding;
         auto input_size = outer.input().get_output_layout().size;
 
-        auto output_padding = outer.get_primitive()->output_padding;
+        auto output_padding = outer.get_output_layout().data_padding;
         auto output_size = outer.get_output_layout().size;
 
         int count = input_size.sizes()[0] * input_size.sizes()[1] * input_size.sizes()[2] * input_size.sizes()[3];

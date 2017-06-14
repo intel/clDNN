@@ -98,9 +98,11 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
     // constexpr:
     const uint input_buffer_size_x = INPUT_PADDING_LOWER_SIZE_X + INPUT_SIZE_X + INPUT_PADDING_UPPER_SIZE_X;
     const uint input_buffer_size_y = INPUT_PADDING_LOWER_SIZE_Y + INPUT_SIZE_Y + INPUT_PADDING_UPPER_SIZE_Y;
+    const uint input_buffer_size_f = INPUT_PADDING_LOWER_FEATURE_NUM + INPUT_FEATURE_NUM + INPUT_PADDING_UPPER_FEATURE_NUM;
+
     const uint output_buffer_size_x = OUTPUT_PADDING_LOWER_SIZE_X + OUTPUT_SIZE_X + OUTPUT_PADDING_UPPER_SIZE_X;
     const uint output_buffer_size_y = OUTPUT_PADDING_LOWER_SIZE_Y + OUTPUT_SIZE_Y + OUTPUT_PADDING_UPPER_SIZE_Y;
-
+    const uint output_buffer_size_f = OUTPUT_PADDING_LOWER_FEATURE_NUM + OUTPUT_FEATURE_NUM + OUTPUT_PADDING_UPPER_FEATURE_NUM;
 
     const uint oc  = (uint)get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column
     const uint or  = (uint)get_global_id(1) * OUT_BLOCK_HEIGHT; // or = Output Row
@@ -121,7 +123,8 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
         out[i] = UNIT_VAL_ZERO;
     }
 
-    in_addr = (batch_idx * INPUT_FEATURE_NUM + split_idx * FILTER_INPUT_FEATURE_NUM) * input_buffer_size_x * input_buffer_size_y;
+    in_addr = (INPUT_PADDING_LOWER_BATCH_NUM + batch_idx) * input_buffer_size_x * input_buffer_size_y * input_buffer_size_f;
+    in_addr += (INPUT_PADDING_LOWER_FEATURE_NUM + split_idx * FILTER_INPUT_FEATURE_NUM) * input_buffer_size_x * input_buffer_size_y;
     in_addr += (INPUT_PADDING_LOWER_SIZE_Y + INPUT_OFFSET_SIZE_Y + or * STRIDE_SIZE_Y) * input_buffer_size_x + (INPUT_PADDING_LOWER_SIZE_X + INPUT_OFFSET_SIZE_X + oc * STRIDE_SIZE_X) + lid;
 
     for(int kd = 0; kd < FILTER_INPUT_FEATURE_NUM; kd++)  // _ID = 3, RGB
@@ -212,7 +215,8 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
         weight_addr -= PREFETCH * SUB_GROUP_SIZE;
     }
 
-    uint out_addr = (batch_idx * OUTPUT_FEATURE_NUM + split_idx * FILTER_OUTPUT_FEATURE_NUM + feature_idx) * output_buffer_size_x * output_buffer_size_y; // out_addr indices into start of 16 feature maps.
+    uint out_addr = (OUTPUT_PADDING_LOWER_BATCH_NUM + batch_idx) * output_buffer_size_x * output_buffer_size_y * output_buffer_size_f;
+    out_addr += (OUTPUT_PADDING_LOWER_FEATURE_NUM + split_idx * FILTER_OUTPUT_FEATURE_NUM + feature_idx) * output_buffer_size_x * output_buffer_size_y; // out_addr indices into start of 16 feature maps.
     out_addr += (OUTPUT_PADDING_LOWER_SIZE_Y + or) * output_buffer_size_x + OUTPUT_PADDING_LOWER_SIZE_X + oc;  // offset for the 4x3 block that this workitem is working on;
 
 #if BIAS_TERM

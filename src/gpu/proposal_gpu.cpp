@@ -14,7 +14,7 @@
 // limitations under the License.
 */
 
-#include "simpler_nms_inst.h"
+#include "proposal_inst.h"
 #include "kernel.h"
 #include "kd_selector.h"
 #include "implementation_map.h"
@@ -29,48 +29,87 @@
 
 using namespace cldnn;
 
-namespace neural
-{
 
-static inline float clamp_v(const float v, const float v_min, const float v_max)
+/****************************************************************************
+ *                                                                          *
+ *                              Common Utils                                *
+ *                                                                          *
+ ****************************************************************************/
+
+template <class T>
+static const T & clamp_v(const T & v, const T & lower, const T & upper)
 {
-    return std::max(v_min, std::min(v, v_max));
+    return std::max(lower, std::min(v, upper));
 }
 
-struct simpler_nms_roi_t
+static inline bool hasSingleBatchOutput(const program_node & node)
 {
-    float x0, y0, x1, y1;
+    const auto & batch = node.get_output_layout().size.batch;
 
-    float area() const { return std::max<float>(0, y1 - y0 + 1) * std::max<float>(0, x1 - x0 + 1); }
-    simpler_nms_roi_t intersect (simpler_nms_roi_t other) const
-    {
-        return
-        {
-            std::max(x0, other.x0),
-            std::max(y0, other.y0),
-            std::min(x1, other.x1),
-            std::min(y1, other.y1)
-        };
-    }
-    simpler_nms_roi_t clamp (simpler_nms_roi_t other) const
-    {
-        return
-        {
-            clamp_v(x0, other.x0, other.x1),
-            clamp_v(y0, other.y0, other.y1),
-            clamp_v(x1, other.x0, other.x1),
-            clamp_v(y1, other.y0, other.y1)
-        };
-    }
-};
+    return batch.empty() || (batch.size() == 1 && batch[0] == 1);
+}
 
-struct simpler_nms_delta_t { float shift_x, shift_y, log_w, log_h; };
-struct simpler_nms_proposal_t { simpler_nms_roi_t roi; float confidence; size_t ord; };
-        
-simpler_nms_roi_t simpler_nms_gen_bbox( const simpler_nms_inst::anchor& box,
-                                        const simpler_nms_delta_t& delta,
-                                        int anchor_shift_x,
-                                        int anchor_shift_y)
+namespace
+{
+    struct roi_t
+    {
+        float x0, y0, x1, y1;
+
+        float area() const { return std::max<float>(0, y1 - y0 + 1) * std::max<float>(0, x1 - x0 + 1); }
+        roi_t intersect (roi_t other) const
+        {
+            return
+            {
+                std::max(x0, other.x0), std::max(y0, other.y0),
+                std::min(x1, other.x1), std::min(y1, other.y1)
+            };
+        }
+        roi_t clamp (roi_t other) const
+        {
+            return
+            {
+                clamp_v(x0, other.x0, other.x1),
+                clamp_v(y0, other.y0, other.y1),
+                clamp_v(x1, other.x0, other.x1),
+                clamp_v(y1, other.y0, other.y1)
+            };
+        }
+    };
+
+    struct delta_t { float shift_x, shift_y, log_w, log_h; };
+    struct proposal_t { roi_t roi; float confidence; size_t ord; };
+} // anonymous namespace
+
+
+/****************************************************************************
+ *                                                                          *
+ *                              Impl Details                                *
+ *                                                                          *
+ ****************************************************************************/
+
+static void sort_and_keep_n_items(std::vector<proposal_t>& proposals, size_t n)
+{
+    auto cmp_fn = [](const proposal_t& a, const proposal_t& b)
+    {
+        return (a.confidence > b.confidence) || (a.confidence == b.confidence && a.ord > b.ord);
+    };
+
+    if (proposals.size() > n)
+    {
+        std::partial_sort(proposals.begin(), proposals.begin() + n, proposals.end(), cmp_fn);
+        proposals.resize(n);
+    }
+    else
+    {
+        std::sort(proposals.begin(), proposals.end(), cmp_fn);
+    }        
+}
+
+static roi_t gen_bbox(
+        const proposal_inst::anchor& box,
+        const delta_t& delta,
+        int anchor_shift_x,
+        int anchor_shift_y)
 {
     float anchor_w = box.end_x - box.start_x + 1.0f;
     float anchor_h = box.end_y - box.start_y + 1;
@@ -82,89 +121,57 @@ simpler_nms_roi_t simpler_nms_gen_bbox( const simpler_nms_inst::anchor& box,
     float half_pred_w = std::exp(delta.log_w) * anchor_w * .5f;
     float half_pred_h = std::exp(delta.log_h) * anchor_h * .5f;
 
-    return { pred_center_x - half_pred_w,
-             pred_center_y - half_pred_h,
-             pred_center_x + half_pred_w,
-             pred_center_y + half_pred_h };
+    return
+    {
+        pred_center_x - half_pred_w, pred_center_y - half_pred_h,
+        pred_center_x + half_pred_w, pred_center_y + half_pred_h
+    };
 }
         
-std::vector< simpler_nms_roi_t > simpler_nms_perform_nms(
-        const std::vector<simpler_nms_proposal_t>& proposals,
+static std::vector<roi_t> perform_nms(
+        const std::vector<proposal_t>& proposals,
         float iou_threshold,
         size_t top_n)
 {
-//TODO(ruv): can I mark the 1st arg, proposals as const? ifndef DONT_PRECALC_AREA, i can
-//TODO(ruv): is it better to do the precalc or not? since we need to fetch the floats from memory anyway for -
-//           intersect calc, it's only a question of whether it's faster to do (f-f)*(f-f) or fetch another val
-#define DONT_PRECALC_AREA
-
-#ifndef DONT_PRECALC_AREA
-    std::vector<float> areas;
-    areas.reserve(proposals.size());
-    std::transform(proposals.begin(), proposals.end(), areas.begin(), [](const simpler_nms_proposals_t>& v)
-    {
-        return v.roi.area();
-    });
-#endif
-
-    std::vector<simpler_nms_roi_t> res;
+    std::vector<roi_t> res;
     res.reserve(top_n);
-#ifdef DONT_PRECALC_AREA
+
     for (const auto & prop : proposals)
     {
-        const simpler_nms_roi_t& bbox = prop.roi;
-        const float area = bbox.area();
-#else
-        size_t proposal_count = proposals.size();
-        for (size_t proposalIndex = 0; proposalIndex < proposal_count; ++proposalIndex)
-        {
-            const simpler_nms_roi_t& bbox = proposals[proposalIndex].roi;
-#endif
-            // For any realistic WL, this condition is true for all top_n values anyway
-            if (prop.confidence > 0)
-            {
-                bool overlaps = std::any_of(res.begin(), res.end(), [&](const simpler_nms_roi_t& res_bbox)
-                {
-                    float interArea = bbox.intersect(res_bbox).area();
-#ifdef DONT_PRECALC_AREA
-                    float unionArea = res_bbox.area() + area - interArea;
-#else
-                    float unionArea = res_bbox.area() + areas[proposalIndex] - interArea;
-#endif
-                    return interArea > iou_threshold * unionArea;
-                });
+        const roi_t& bbox = prop.roi;
 
-                if (! overlaps)
-                {
-                    res.push_back(bbox);
-                    if (res.size() == top_n) break;
-                }
+        // For any realistic WL, this condition is true for all top_n values anyway
+        if (prop.confidence > 0)
+        {
+            bool overlaps = std::any_of(res.begin(), res.end(), [&](const roi_t& res_bbox)
+            {
+                float interArea = bbox.intersect(res_bbox).area();
+                float unionArea = res_bbox.area() + bbox.area() - interArea;
+
+                return interArea > iou_threshold * unionArea;
+            });
+
+            if (!overlaps)
+            {
+                res.push_back(bbox);
+                if (res.size() == top_n) break;
             }
         }
-
-        return res;
     }
 
-
-bool cmp_fn(const simpler_nms_proposal_t& a, const simpler_nms_proposal_t& b)
-{
-    return (a.confidence > b.confidence) || (a.confidence == b.confidence && a.ord > b.ord);
+    res.resize(top_n);
+    return res;
 }
 
 
-inline void sort_and_keep_n_items(std::vector<simpler_nms_proposal_t>& proposals, size_t n)
+/****************************************************************************
+ *                                                                          *
+ *                              Proposal Layer                              *
+ *                                                                          *
+ ****************************************************************************/
+
+namespace neural
 {
-    if (proposals.size() > n)
-    {
-        std::partial_sort(proposals.begin(), proposals.begin() + n, proposals.end(), cmp_fn);
-        proposals.resize(n);
-    }
-    else
-    {
-        std::sort(proposals.begin(), proposals.end(), cmp_fn);
-    }        
-}
-        
 
 template <>
 struct kd_default_value_selector<neural::gpu::engine_info_internal::architectures>
@@ -178,9 +185,9 @@ struct kd_default_value_selector<neural::gpu::engine_info_internal::configuratio
     static constexpr neural::gpu::engine_info_internal::configurations value = neural::gpu::engine_info_internal::configurations::GT_UNKNOWN;
 };
 
-struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
+struct proposal_gpu : typed_primitive_impl<proposal>
 {
-    const simpler_nms_node& outer;
+    const proposal_node& outer;
     gpu::engine_info_internal _engine_info;
 
     struct kernel_data 
@@ -192,9 +199,9 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
     } _kernel_data;
     gpu::kernel _kernel;
 
-    static kd_selector_t<kernel_data, simpler_nms_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> ks;
+    static kd_selector_t<kernel_data, proposal_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> ks;
 
-    simpler_nms_gpu(const simpler_nms_node& arg)
+    proposal_gpu(const proposal_node& arg)
         : outer(arg),
         _engine_info(outer.get_program().get_engine()->get_context()->get_engine_info()),
         _kernel_data(ks.get_kernel(
@@ -207,7 +214,7 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
         _kernel(outer.get_program().get_engine()->get_context(), _kernel_data.kernel_name, get_jit_constants(outer, _kernel_data))
     {}
 
-    static kernel_data set_default(const simpler_nms_node& outer)
+    static kernel_data set_default(const proposal_node& outer)
     {
         kernel_data kd;
 
@@ -230,7 +237,7 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
         return kd;
     }
 
-    static gpu::jit_constants get_jit_constants(const simpler_nms_node& outer, const kernel_data& data)
+    static gpu::jit_constants get_jit_constants(const proposal_node& outer, const kernel_data& data)
     {   
         gpu::jit_constants foo{
             gpu::make_jit_constant("INPUT", outer.cls_score().get_output_layout().get_buffer_size()),
@@ -250,7 +257,7 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
     template<typename dtype>
     inline void float_write_helper(dtype* mem, float f)
     {
-		bool is_fp32 = (sizeof(dtype) == 4);
+        bool is_fp32 = (sizeof(dtype) == 4);
 
         if (is_fp32) 
         {
@@ -263,15 +270,15 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
     }
     
     template<typename dtype>
-    void execute(simpler_nms_inst& instance)
+    void execute(proposal_inst& instance)
     {
-        const std::vector<simpler_nms_inst::anchor>& anchors = instance.get_anchors();
+        const std::vector<proposal_inst::anchor>& anchors = instance.get_anchors();
 
         size_t anchors_num = anchors.size();
       
-        const cldnn::memory& cls_scores = instance.dep_memory(simpler_nms_inst::cls_scores_index);
-        const cldnn::memory& bbox_pred  = instance.dep_memory(simpler_nms_inst::bbox_pred_index);
-        const cldnn::memory& image_info = instance.dep_memory(simpler_nms_inst::image_info_index);
+        const cldnn::memory& cls_scores = instance.dep_memory(proposal_inst::cls_scores_index);
+        const cldnn::memory& bbox_pred  = instance.dep_memory(proposal_inst::bbox_pred_index);
+        const cldnn::memory& image_info = instance.dep_memory(proposal_inst::image_info_index);
 
         // feat map sizes
         int fm_h = cls_scores.get_layout().size.spatial[1];
@@ -283,18 +290,30 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
         pointer<dtype> image_info_ptr = image_info.pointer<dtype>();
         const dtype* image_info_mem = image_info_ptr.data();
 
-        int img_w = (int)(float_read_helper(image_info_mem + cldnn::simpler_nms_inst::image_info_width_index) + EPSILON);
-        int img_h = (int)(float_read_helper(image_info_mem + cldnn::simpler_nms_inst::image_info_height_index) + EPSILON);
-        int img_z = (int)(float_read_helper(image_info_mem + cldnn::simpler_nms_inst::image_info_depth_index) + EPSILON);
+        int img_w = (int)(float_read_helper(image_info_mem + cldnn::proposal_inst::image_info_width_index) + EPSILON);
+        int img_h = (int)(float_read_helper(image_info_mem + cldnn::proposal_inst::image_info_height_index) + EPSILON);
+        int img_z = (int)(float_read_helper(image_info_mem + cldnn::proposal_inst::image_info_depth_index) + EPSILON);
 
         int scaled_min_bbox_size = instance.argument.min_bbox_size * img_z;
+
+        int min_bbox_x = scaled_min_bbox_size;
+        if (image_info.count() > cldnn::proposal_inst::image_info_scale_min_bbox_x)
+        {
+            min_bbox_x = static_cast<int>(min_bbox_x * float_read_helper(image_info_mem + cldnn::proposal_inst::image_info_scale_min_bbox_x));
+        }
+
+        int min_bbox_y = scaled_min_bbox_size;
+        if (image_info.count() > cldnn::proposal_inst::image_info_scale_min_bbox_y)
+        {
+            min_bbox_y = static_cast<int>(min_bbox_y * float_read_helper(image_info_mem + cldnn::proposal_inst::image_info_scale_min_bbox_y));
+        }
 
         pointer<dtype> cls_scores_ptr = cls_scores.pointer<dtype>();
         pointer<dtype> bbox_pred_ptr  = bbox_pred.pointer<dtype>();
         dtype* cls_scores_mem = cls_scores_ptr.data();
         dtype* bbox_pred_mem  = bbox_pred_ptr.data();
 
-        std::vector<simpler_nms_proposal_t> sorted_proposals_confidence;
+        std::vector<proposal_t> sorted_proposals_confidence;
         for (int y = 0; y < fm_h; ++y)
         {
             int anchor_shift_y = y * instance.argument.feature_stride;
@@ -312,20 +331,20 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
                     float dx1 = float_read_helper(bbox_pred_mem + location_index + fm_sz * (anchor_index * 4 + 2));
                     float dy1 = float_read_helper(bbox_pred_mem + location_index + fm_sz * (anchor_index * 4 + 3));
 
-                    simpler_nms_delta_t bbox_delta { dx0, dy0, dx1, dy1 };
+                    delta_t bbox_delta { dx0, dy0, dx1, dy1 };
 
                     unsigned int scores_index = location_index + fm_sz * (anchor_index + (unsigned int)anchors_num * 1);
                     float proposal_confidence = float_read_helper(cls_scores_mem + scores_index);
 
-                    simpler_nms_roi_t tmp_roi = simpler_nms_gen_bbox(anchors[anchor_index], bbox_delta, anchor_shift_x, anchor_shift_y);
-                    simpler_nms_roi_t roi = tmp_roi.clamp({ 0, 0, float(img_w - 1), float(img_h - 1) });
+                    roi_t tmp_roi = gen_bbox(anchors[anchor_index], bbox_delta, anchor_shift_x, anchor_shift_y);
+                    roi_t roi = tmp_roi.clamp({ 0, 0, float(img_w - 1), float(img_h - 1) });
 
                     int bbox_w = (int)roi.x1 - (int)roi.x0 + 1;
                     int bbox_h = (int)roi.y1 - (int)roi.y0 + 1;
 
-                    if (bbox_w >= scaled_min_bbox_size && bbox_h >= scaled_min_bbox_size)
+                    if (bbox_w >= min_bbox_x && bbox_h >= min_bbox_y)
                     {
-                        simpler_nms_proposal_t proposal { roi, proposal_confidence, sorted_proposals_confidence.size() };
+                        proposal_t proposal { roi, proposal_confidence, sorted_proposals_confidence.size() };
                         sorted_proposals_confidence.push_back(proposal);
                     }
                 }
@@ -333,7 +352,7 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
         }
 
         sort_and_keep_n_items(sorted_proposals_confidence, instance.argument.pre_nms_topn);
-        std::vector< simpler_nms_roi_t > res = simpler_nms_perform_nms(sorted_proposals_confidence, instance.argument.iou_threshold, instance.argument.post_nms_topn);
+        std::vector<roi_t> res = perform_nms(sorted_proposals_confidence, instance.argument.iou_threshold, instance.argument.post_nms_topn);
 
         const cldnn::memory& output = instance.output_memory();
         
@@ -352,7 +371,7 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
         }
     }
 
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, simpler_nms_inst& instance) override
+    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, proposal_inst& instance) override
     {
         for (auto& a : events) {
             a->wait();
@@ -371,15 +390,26 @@ struct simpler_nms_gpu : typed_primitive_impl<simpler_nms>
         return ev;
     }
 
-    static primitive_impl* create(const simpler_nms_node& arg) 
-    {        
-        return new simpler_nms_gpu(arg);
+    static primitive_impl* create(const proposal_node& arg) 
+    {
+        const layout & l = arg.image_info().get_output_layout();
+        const size_t count = l.size.count();
+
+        if ((size_t)l.size.spatial[0] != count || (count != 3 && count != 6)) {
+            throw std::invalid_argument("image_info must have either 3 or 6 items");
+        }
+
+        if (!hasSingleBatchOutput(arg.bbox_pred()) || !hasSingleBatchOutput(arg.cls_score())) {
+            throw std::invalid_argument("Proposal doesn't support batching.");
+        }
+
+        return new proposal_gpu(arg);
     }
 };
 
 
 
-kd_selector_t<simpler_nms_gpu::kernel_data, simpler_nms_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> simpler_nms_gpu::ks = {
+kd_selector_t<proposal_gpu::kernel_data, proposal_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> proposal_gpu::ks = {
     { std::make_tuple(data_types::f32, format::bfyx, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
     { std::make_tuple(data_types::f16, format::bfyx, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default }
 };
@@ -391,8 +421,8 @@ namespace
     {
         attach()
         {
-            implementation_map<simpler_nms>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), simpler_nms_gpu::create);
-            implementation_map<simpler_nms>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), simpler_nms_gpu::create);
+            implementation_map<proposal>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), proposal_gpu::create);
+            implementation_map<proposal>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), proposal_gpu::create);
         }
 
         ~attach() {}

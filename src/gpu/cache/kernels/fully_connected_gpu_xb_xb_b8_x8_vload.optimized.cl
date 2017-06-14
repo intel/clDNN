@@ -13,40 +13,77 @@
 // limitations under the License.
 
 
-#if RELU
+#if FP16_SUPPORTED
+    #pragma OPENCL EXTENSION cl_khr_fp16 : enable
+#endif
+
+#if RELU && FP16_UNIT_USED
+    #define ACTIVATION(output, input) output = isinf(convert_half(NEGATIVE_SLOPE)) ? ((input >= 0.0h) ? \
+    input : -convert_half(NEGATIVE_SLOPE)) : (max(input, 0.0h) + convert_half(NEGATIVE_SLOPE) * min(input, 0.0h));
+#elif RELU
     #define ACTIVATION(output, input) output = isinf(NEGATIVE_SLOPE) ? ((input >= 0.0f) ? \
     input : -NEGATIVE_SLOPE) : (max(input, 0.0f) + NEGATIVE_SLOPE * min(input, 0.0f));
 #else
     #define ACTIVATION(output, input) output = input;
 #endif
 
-#define MULTIPLY_BLOCKS_8x8(_result, _blockA, _blockB)  \
-{   \
-    const float8 acol0 = TRANSPOSE_BLOCK_8_COL( _blockA, 0 ); \
-    const float8 acol1 = TRANSPOSE_BLOCK_8_COL( _blockA, 1 ); \
-    const float8 acol2 = TRANSPOSE_BLOCK_8_COL( _blockA, 2 ); \
-    const float8 acol3 = TRANSPOSE_BLOCK_8_COL( _blockA, 3 ); \
-    const float8 acol4 = TRANSPOSE_BLOCK_8_COL( _blockA, 4 ); \
-    const float8 acol5 = TRANSPOSE_BLOCK_8_COL( _blockA, 5 ); \
-    const float8 acol6 = TRANSPOSE_BLOCK_8_COL( _blockA, 6 ); \
-    const float8 acol7 = TRANSPOSE_BLOCK_8_COL( _blockA, 7 ); \
-    _result = mad( _blockB.s0, acol0, _result ); \
-    _result = mad( _blockB.s1, acol1, _result ); \
-    _result = mad( _blockB.s2, acol2, _result ); \
-    _result = mad( _blockB.s3, acol3, _result ); \
-    _result = mad( _blockB.s4, acol4, _result ); \
-    _result = mad( _blockB.s5, acol5, _result ); \
-    _result = mad( _blockB.s6, acol6, _result ); \
-    _result = mad( _blockB.s7, acol7, _result ); \
-}
+#define CONCAT_TOKEN_HANDLER1(prefix, suffix) prefix##suffix
+
+// Expands and concatenates two tokens into one.
+#define CONCAT_TOKEN(prefix, suffix) CONCAT_TOKEN_HANDLER1(prefix, suffix)
+
+// Creates vector type.
+#define MAKE_VECTOR_TYPE(elem_type, size) CONCAT_TOKEN(elem_type, size)
+
+#if FP16_UNIT_USED
+    #define MULTIPLY_BLOCKS_8x8(_result, _blockA, _blockB)  \
+    {   \
+        const half8 acol0 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 0 ); \
+        const half8 acol1 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 1 ); \
+        const half8 acol2 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 2 ); \
+        const half8 acol3 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 3 ); \
+        const half8 acol4 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 4 ); \
+        const half8 acol5 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 5 ); \
+        const half8 acol6 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 6 ); \
+        const half8 acol7 = TRANSPOSE_BLOCK_8_COL_FP16( _blockA, 7 ); \
+        _result = fma( _blockB.s0, acol0, _result ); \
+        _result = fma( _blockB.s1, acol1, _result ); \
+        _result = fma( _blockB.s2, acol2, _result ); \
+        _result = fma( _blockB.s3, acol3, _result ); \
+        _result = fma( _blockB.s4, acol4, _result ); \
+        _result = fma( _blockB.s5, acol5, _result ); \
+        _result = fma( _blockB.s6, acol6, _result ); \
+        _result = fma( _blockB.s7, acol7, _result ); \
+    }
+#else
+    #define MULTIPLY_BLOCKS_8x8(_result, _blockA, _blockB)  \
+    {   \
+        const float8 acol0 = TRANSPOSE_BLOCK_8_COL( _blockA, 0 ); \
+        const float8 acol1 = TRANSPOSE_BLOCK_8_COL( _blockA, 1 ); \
+        const float8 acol2 = TRANSPOSE_BLOCK_8_COL( _blockA, 2 ); \
+        const float8 acol3 = TRANSPOSE_BLOCK_8_COL( _blockA, 3 ); \
+        const float8 acol4 = TRANSPOSE_BLOCK_8_COL( _blockA, 4 ); \
+        const float8 acol5 = TRANSPOSE_BLOCK_8_COL( _blockA, 5 ); \
+        const float8 acol6 = TRANSPOSE_BLOCK_8_COL( _blockA, 6 ); \
+        const float8 acol7 = TRANSPOSE_BLOCK_8_COL( _blockA, 7 ); \
+        _result = mad( _blockB.s0, acol0, _result ); \
+        _result = mad( _blockB.s1, acol1, _result ); \
+        _result = mad( _blockB.s2, acol2, _result ); \
+        _result = mad( _blockB.s3, acol3, _result ); \
+        _result = mad( _blockB.s4, acol4, _result ); \
+        _result = mad( _blockB.s5, acol5, _result ); \
+        _result = mad( _blockB.s6, acol6, _result ); \
+        _result = mad( _blockB.s7, acol7, _result ); \
+    }
+#endif
 
 #define SUB_GROUP_SIZE 8
 
 __attribute__((reqd_work_group_size(SUB_GROUP_SIZE, 1, 1)))
 KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
-    const __global float* input,
-    __global float* output,
-    const __global float* weight
+    const __global UNIT_TYPE* input,
+    __global UNIT_TYPE* output,
+    const __global UNIT_TYPE* weight
 #if BIAS_TERM
     , __global UNIT_TYPE* bias)
 #else
@@ -61,20 +98,20 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 
     uint neuronIdx = sub_group_idx + (global_id / 8) * 8 * NEURONS_PER_WORK_ITEM;
 
-    float8 blockC00 = 0.f;
-    float8 blockC10 = 0.f;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC00 = UNIT_VAL_ZERO;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC10 = UNIT_VAL_ZERO;
 
 #if BATCHES_PER_WORK_ITEM >= 16
-    float8 blockC01 = 0.f;
-    float8 blockC11 = 0.f;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC01 = UNIT_VAL_ZERO;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC11 = UNIT_VAL_ZERO;
 #endif
 
 #if BATCHES_PER_WORK_ITEM >= 32
-    float8 blockC02 = 0.f;
-    float8 blockC12 = 0.f;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC02 = UNIT_VAL_ZERO;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC12 = UNIT_VAL_ZERO;
 
-    float8 blockC03 = 0.f;
-    float8 blockC13 = 0.f;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC03 = UNIT_VAL_ZERO;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockC13 = UNIT_VAL_ZERO;
 #endif
 
     uint weight_offset = neuronIdx;
@@ -87,17 +124,17 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
     uint input_idx = sub_group_idx * (BATCHES_PER_WORK_ITEM / 8) * (uint)get_global_size(1) + (group_id * BATCHES_PER_WORK_ITEM) / 8;
     for(uint h = 0; h < INPUT_ELEMENTS_COUNT / 8; h++)
     {
-        float8 blockA00 = vload8(input_idx, input);
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA00 = vload8(input_idx, input);
 
 #if BATCHES_PER_WORK_ITEM >= 16
-        float8 blockA01 = vload8(input_idx + 1, input);
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA01 = vload8(input_idx + 1, input);
 #endif
 
 #if BATCHES_PER_WORK_ITEM >= 32
-        float8 blockA02 = vload8(input_idx + 2, input);
-        float8 blockA03 = vload8(input_idx + 3, input);
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA02 = vload8(input_idx + 2, input);
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA03 = vload8(input_idx + 3, input);
 #endif
-        float8 blockB00;
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockB00;
         blockB00.s0 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
         blockB00.s1 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
         blockB00.s2 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
@@ -119,7 +156,7 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 
 #if NEURONS_PER_WORK_ITEM > 1
 
-        float8 blockB10;
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockB10;
         blockB10.s0 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
         blockB10.s1 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
         blockB10.s2 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
@@ -213,5 +250,10 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 #endif // #if NEURONS_PER_WORK_ITEM > 1
 }
 
+#undef SUB_GROUP_SIZE
+#undef ALIGNED_BLOCK_READ8
+#undef MAKE_VECTOR_TYPE
+#undef CONCAT_TOKEN
+#undef CONCAT_TOKEN_HANDLER1
 #undef MULTIPLY_BLOCKS_8x8
 #undef ACTIVATION

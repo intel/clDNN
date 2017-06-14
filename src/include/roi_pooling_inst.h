@@ -24,7 +24,11 @@ namespace cldnn
 template <>
 struct typed_program_node<roi_pooling> : public typed_program_node_base<roi_pooling>
 {
+    using parent = typed_program_node_base<roi_pooling>;
+
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
     auto& rois() const { return get_dependency(1); }
 };

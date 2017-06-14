@@ -23,9 +23,16 @@
 
 using namespace cldnn;
 
+static inline bool hasSingleBatchOutput(const program_node & node)
+{
+    const auto & batch = node.get_output_layout().size.batch;
+
+    return batch.empty() || (batch.size() == 1 && batch[0] == 1);
+}
+
 namespace neural
 {
-static const std::string roi_pooling_kernel_name            = "roi_pooling_gpu";
+static const std::string roi_pooling_kernel_name = "roi_pooling_gpu";
 
 template <>
 struct kd_default_value_selector<neural::gpu::engine_info_internal::architectures>
@@ -108,15 +115,19 @@ struct roi_pooling_gpu : typed_primitive_impl<roi_pooling>
 
         gpu::jit_constants mem_consts{
             gpu::make_jit_constant("INPUT",             input_size),
+            gpu::make_jit_constant("MAX_POOL",          outer.get_primitive()->mode == pooling_mode::max), //TODO(ruv): is it ok?
             gpu::make_jit_constant("POOLED_HEIGHT",     outer.get_primitive()->pooled_height),
             gpu::make_jit_constant("POOLED_WIDTH",      outer.get_primitive()->pooled_width),
+            gpu::make_jit_constant("SPATIAL_SCALE",     outer.get_primitive()->spatial_scale),
+            gpu::make_jit_constant("GROUP_SZ",          outer.get_primitive()->group_sz),
             gpu::make_jit_constant("INPUT_PADDING",     outer.input().get_output_layout().data_padding),
             gpu::make_jit_constant("OUTPUT_PADDING",    outer.get_output_layout().data_padding),
-            gpu::make_jit_constant("SPATIAL_SCALE",     outer.get_primitive()->spatial_scale),
             gpu::make_jit_constant("FP16_SUPPORTED",    static_cast<int>(engine_info.supports_fp16)),
             gpu::make_jit_constant("FP16_UNIT_USED",    static_cast<int>(data.fp16_unit_used)),
             gpu::make_jit_constant("UNIT_TYPE",         data.fp16_unit_used ? "half" : "float"),
-            gpu::make_jit_constant("UNIT_INIT_VAL_MAX", data.fp16_unit_used ? "HALF_MAX" : "FLT_MAX")
+            gpu::make_jit_constant("UNIT_INIT_VAL_MAX", data.fp16_unit_used ? "HALF_MAX" : "FLT_MAX"),
+
+            gpu::make_jit_constant("USE_OLD_SCALE_AND_ROUNDING", !outer.get_primitive()->group_sz),
         };
         return mem_consts;
     }
@@ -135,10 +146,10 @@ struct roi_pooling_gpu : typed_primitive_impl<roi_pooling>
 
     static primitive_impl* create(const roi_pooling_node& arg)
     {
-        auto input_arg  = arg.input().get_output_layout();
-        auto output_arg = arg.get_output_layout();
+        const auto & input_arg  = arg.input().get_output_layout();
+        const auto & output_arg = arg.get_output_layout();
 
-        const auto padding_filling_value = arg.get_output_layout().data_padding.filling_value();
+        const auto padding_filling_value = output_arg.data_padding.filling_value();
 
         if (padding_filling_value != 0.0f) {
             throw std::logic_error("ROI pooling supports only zero padding.");
@@ -146,6 +157,19 @@ struct roi_pooling_gpu : typed_primitive_impl<roi_pooling>
 
         if (input_arg.format != output_arg.format) {
             throw std::invalid_argument("ROI pooling input/output data format does not match.");
+        }
+
+        auto group_sz = arg.get_primitive()->group_sz;
+        auto in_feat = input_arg.get_buffer_size().feature[0];
+        auto out_feat = output_arg.get_buffer_size().feature[0];
+
+
+        if (group_sz < 0 || (group_sz && in_feat != group_sz * group_sz * out_feat)) {
+            throw std::invalid_argument("group_sz must be either 0 (For RoIPooling) or satisfy ifm == ofm * group_sz * group_sz (For PSRoIPooling)");
+        }
+
+        if (!hasSingleBatchOutput(arg.input())) {
+            throw std::invalid_argument("PS/ RoI Pooling doesn't support batching.");
         }
         
         return new roi_pooling_gpu(arg);

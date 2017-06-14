@@ -30,10 +30,21 @@
 extern "C" {
 #endif
 
-/// @brief Activiation using rectified linear unit.
+/// @brief Activation using rectified linear unit or parameterized rectified linear unit.
+/// @details Can get one negative slope or negative slope per channel.
+/// @par Algorithm:
+///   out(i,x,y) = max(0, in(i,x,y)) + slope(i) * min(0, in(i,x,y))
+/// @par Where:
+///   @li out(i,x,y) : value at x, y from i-th feature map after activation.
+///   @li in(i,x,y) : value at x, y from i-th feature map before activation.
+///   @li slope(i) : the slope value of the i-th feature map (can be shared across channels or one slope per channel).
 CLDNN_BEGIN_PRIMITIVE_DESC(activation)
 /// @brief Activation negative slope.
 float negative_slope;
+/// @brief PRelu activation slope input primitive id.
+/// Input x dimension should be equal to input feature size (one slope per channel).
+/// All other dimensions should be 1.
+cldnn_primitive_id negative_slope_input;
 CLDNN_END_PRIMITIVE_DESC(activation)
 
 CLDNN_DECLARE_PRIMITIVE_TYPE_ID(activation);

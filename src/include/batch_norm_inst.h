@@ -25,7 +25,11 @@ namespace cldnn
 template <>
 struct typed_program_node<batch_norm> : public typed_program_node_base<batch_norm>
 {
+    using parent = typed_program_node_base<batch_norm>;
+
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
     auto& mean() const { return get_dependency(1); }
     auto& variance() const { return get_dependency(2); }

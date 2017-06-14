@@ -18,6 +18,7 @@
 #include "kernel.h"
 #include "kd_selector.h"
 #include "implementation_map.h"
+#include "events_waiter.h"
 
 #include <initializer_list>
 
@@ -77,14 +78,17 @@ struct concatenation_gpu : typed_primitive_impl<concatenation>
 
         const int inputs_count = static_cast<int>(outer.inputs_count());
 
-        _kernels_with_data.reserve(inputs_count);
-        for (auto input_idx = 0; input_idx < inputs_count; ++input_idx)
+        if (!outer.can_be_optimized())
         {
-            auto input_layout = outer.input(input_idx).get_output_layout();
-            auto data = ks.get_kernel(std::make_pair(input_idx, std::cref(outer)), input_layout.data_type, input_layout.format, outer.get_primitive()->axis, input_layout.size.batch[0], _engine_info.architecture, _engine_info.configuration);//set_kernel_data(/*input_idx,*/ _outer/*, engine_info*/);
-            gpu::kernel kernel(context, data.kernel_name, get_jit_constants(input_idx, data), outer.id());
+            _kernels_with_data.reserve(inputs_count);
+            for (auto input_idx = 0; input_idx < inputs_count; ++input_idx)
+            {
+                auto input_layout = outer.input(input_idx).get_output_layout();
+                auto data = ks.get_kernel(std::make_pair(input_idx, std::cref(outer)), input_layout.data_type, input_layout.format, outer.get_primitive()->axis, input_layout.size.batch[0], _engine_info.architecture, _engine_info.configuration);//set_kernel_data(/*input_idx,*/ _outer/*, engine_info*/);
+                gpu::kernel kernel(context, data.kernel_name, get_jit_constants(input_idx, data), outer.id());
 
-            _kernels_with_data.emplace_back(std::move(kernel), std::move(data));
+                _kernels_with_data.emplace_back(std::move(kernel), std::move(data));
+            }
         }
     }
 
@@ -157,6 +161,14 @@ struct concatenation_gpu : typed_primitive_impl<concatenation>
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, concatenation_inst& instance) override
     {
+        if (outer.can_be_optimized())
+        {
+            if (events.size() == 1)
+                return events[0];
+
+            return neural::gpu::events_waiter(outer.get_program().get_engine()->get_context()).run(events);
+        }
+
         size_t inputs_count = outer.inputs_count();
 
         const auto& output_mem = instance.output_memory();  // output

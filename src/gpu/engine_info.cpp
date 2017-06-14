@@ -141,7 +141,7 @@ const device_info& get_device_info(int device_id)
 
     auto it = device_map.find(device_id);
     if (it == device_map.end())
-        throw std::runtime_error(std::string(device_info_failed_msg) + " - unknown device id: " + to_string_hex(device_id));
+        throw std::runtime_error(std::string(device_info_failed_msg) + " - unsupported device id: " + to_string_hex(device_id) + ". Note: HD5xx+ devices are supported");
 
     return device_map.at(device_id);
 }

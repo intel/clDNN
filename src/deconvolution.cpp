@@ -22,7 +22,7 @@ namespace cldnn
 {
 primitive_type_id deconvolution_type_id()
 {
-    static primitive_type_base<deconvolution, deconvolution_inst> instance;
+    static primitive_type_base<deconvolution> instance;
     return &instance;
 }
 
@@ -107,14 +107,16 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
     {
         auto& filter_mem = weights_memory(j);
         auto& filter_inst = filter_mem.get_layout(); //deconvolution filter
-        auto& bias_inst = bias_memory(j).get_layout();
-
         auto input_offset = argument.input_offset;
 
-        if (bias_inst.size.batch[0] != 1 && bias_inst.size.feature[0] != 1 && bias_inst.size.spatial[1] != 1)
-            throw std::runtime_error("Biases isn't 1D vector."); // b=1, f=1
-        if (bias_inst.size.spatial[0] != output_size.feature[0] / split)
-            throw std::runtime_error("Biases/output feature maps number does not match.");
+        if (argument.bias.size() != 0)
+        {
+            auto& bias_inst = bias_memory(j).get_layout();
+            if (bias_inst.size.batch[0] != 1 && bias_inst.size.feature[0] != 1 && bias_inst.size.spatial[1] != 1)
+                throw std::runtime_error("Biases isn't 1D vector."); // b=1, f=1
+            if (bias_inst.size.spatial[0] != output_size.feature[0] / split)
+                throw std::runtime_error("Biases/output feature maps number does not match.");
+        }
         if (node.get_output_layout().data_padding.filling_value() != 0.0f)
             throw std::runtime_error("Wnknown padding mode.");
         if (input_offset.raw.size() != input_inst.size.raw.size())

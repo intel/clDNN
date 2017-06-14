@@ -19,7 +19,7 @@
 
 #include <vector>
 
-#include "../C/simpler_nms.h"
+#include "../C/proposal.h"
 #include "primitive.hpp"
 
 namespace cldnn
@@ -31,11 +31,11 @@ namespace cldnn
 /// @addtogroup cpp_primitives Primitives
 /// @{
 
-struct simpler_nms : public primitive_base<simpler_nms, CLDNN_PRIMITIVE_DESC(simpler_nms)>
+struct proposal : public primitive_base<proposal, CLDNN_PRIMITIVE_DESC(proposal)>
 {
-    CLDNN_DECLATE_PRIMITIVE(simpler_nms)
+    CLDNN_DECLATE_PRIMITIVE(proposal)
  
-    simpler_nms(
+    proposal(
         const primitive_id& id,        
         const primitive_id& cls_scores,
         const primitive_id& bbox_pred,
@@ -46,6 +46,7 @@ struct simpler_nms : public primitive_base<simpler_nms, CLDNN_PRIMITIVE_DESC(sim
         int feature_stride,
         int pre_nms_topn,
         int post_nms_topn,
+        const std::vector<float>& ratios_param,
         const std::vector<float>& scales_param,
         const padding& output_padding = padding()
         )
@@ -56,11 +57,12 @@ struct simpler_nms : public primitive_base<simpler_nms, CLDNN_PRIMITIVE_DESC(sim
                  feature_stride(feature_stride),
                  pre_nms_topn(pre_nms_topn),
                  post_nms_topn(post_nms_topn),
+                 ratios(ratios_param),
                  scales(scales_param)
     {
     }
 
-    simpler_nms(const dto* dto) :
+    proposal(const dto* dto) :
         primitive_base(dto),
         max_proposals(dto->max_proposals),
         iou_threshold(dto->iou_threshold),
@@ -68,6 +70,7 @@ struct simpler_nms : public primitive_base<simpler_nms, CLDNN_PRIMITIVE_DESC(sim
         feature_stride(dto->feature_stride),
         pre_nms_topn(dto->pre_nms_topn),
         post_nms_topn(dto->post_nms_topn),
+        ratios(float_arr_to_vector(dto->ratios)),
         scales(float_arr_to_vector(dto->scales))
     {
     }
@@ -78,6 +81,7 @@ struct simpler_nms : public primitive_base<simpler_nms, CLDNN_PRIMITIVE_DESC(sim
     int feature_stride;
     int pre_nms_topn;
     int post_nms_topn;      
+    std::vector<float> ratios;
     std::vector<float> scales;
 
 protected:
@@ -89,6 +93,7 @@ protected:
         dto.feature_stride = feature_stride;
         dto.pre_nms_topn = pre_nms_topn;
         dto.post_nms_topn = post_nms_topn;
+        dto.ratios = float_vector_to_arr(ratios);
         dto.scales = float_vector_to_arr(scales);
     }
 };

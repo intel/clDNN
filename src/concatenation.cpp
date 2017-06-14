@@ -21,7 +21,7 @@ namespace cldnn
 {
 primitive_type_id concatenation_type_id()
 {
-    static primitive_type_base<concatenation, concatenation_inst> instance;
+    static primitive_type_base<concatenation> instance;
     return &instance;
 }
 
@@ -113,5 +113,9 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
                 throw std::runtime_error("Output size in non-concatenated dimension mistmatch input");
         }
     }
+
+    if (node.can_be_optimized())
+        for (auto const& i : _deps)
+            i->_output = _output;
 }
 }

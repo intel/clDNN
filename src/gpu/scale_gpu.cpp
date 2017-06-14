@@ -108,7 +108,7 @@ struct scale_gpu : typed_primitive_impl<scale>
 
         auto input_size = outer.input().get_output_layout().size;
         auto output_size = outer.get_output_layout().size;
-        auto scale_size = outer.scale().get_output_layout().size;
+        auto scale_size = outer.scale_in().get_output_layout().size;
 
         gpu::jit_constants mem_consts{
             gpu::make_jit_constant("INPUT",                 input_size),
@@ -149,7 +149,7 @@ struct scale_gpu : typed_primitive_impl<scale>
 scale_gpu::kernel_data set_default(const scale_node& arg)
 {
     scale_gpu::kernel_data kd = scale_gpu::set_kernel_data(arg);
-    kd.scale_bfyx_used = (arg.scale().get_output_layout().format == cldnn::format::bfyx) ? true : false;
+    kd.scale_bfyx_used = (arg.scale_in().get_output_layout().format == cldnn::format::bfyx) ? true : false;
     kd.input_bfyx_used = (arg.input().get_output_layout().format == cldnn::format::bfyx) ? true : false;
     kd.kernel_name = kernel_name;
 

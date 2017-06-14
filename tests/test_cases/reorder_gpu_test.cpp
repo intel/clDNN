@@ -558,32 +558,36 @@ TEST(reorder_gpu, basic_convert_f16_f32_f16) {
     }
 }
 
-TEST(DISABLED_reorder_gpu_f32, basic_flatten_yxfb_to_bx)
+TEST(reorder_gpu_f32, basic_yxfb_to_bfyx_input_padding)
 {
     //  Input               : yxfb:2x2x2x2
-    //  Output              : bx:2x8
+    //  Output              : bfyx:2x2x2x2
     //
     //  Input:
+    //  b0 f0:  1    2
+    //  b0 f0:  3    4
+    //
+    //  b0 f1:  5    6
+    //  b0 f1:  7    8
+    //
+    //  b1 f0:  0    0
+    //  b1 f0: 0.5 -0.5
+    //
+    //  b1 f1: 1.5  5.2
+    //  b1 f1: 12    8
+    //
+    //  Output:
     //  f0: b0:  1    2  b1:   0    0
     //  f0: b0:  3    4  b1:   0.5 -0.5
     //  f1: b0:  5    6  b1:   1.5  5.2
     //  f1: b0:  7    8  b1:   12   8
-    //
-    //  Output:
-    //  b0:  1    2   3    4    5    6    7    8
-    //  b1:  0    0   0.5  -0.5 1.5  5.2  12   8
 
     engine engine;
 
-    auto batch_num = 2;
-    auto feature_num = 2;
-    auto x_size = 2;
-    auto y_size = 2;
+    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    layout output_layout(data_types::f32, format::bfyx, { 2,2,2,2 });
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ batch_num, feature_num, x_size, y_size } });
-    layout output_layout(data_types::f32, format::bfyx,{ batch_num, 1, y_size * x_size * feature_num, 1 });
-
-    std::vector<float> input_vec = {
+    set_values(input, {
         1.f, 0.f,
         5.f, 1.5f,
 
@@ -595,174 +599,47 @@ TEST(DISABLED_reorder_gpu_f32, basic_flatten_yxfb_to_bx)
 
         4.f, -0.5f,
         8.f, 8.f
-    };
-    set_values(input, input_vec);
+    });
 
     topology topology(
         input_layout("input", input.get_layout()),
-        reorder("reorder", "input", output_layout));
+        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, "", { { 0, 0, 1, 2 }, 0 }),
+        reorder("reorder2", "reorder", output_layout));
 
     network network(engine, topology);
     network.set_input_data("input", input);
 
     auto outputs = network.execute();
     EXPECT_EQ(outputs.size(), size_t(1));
-    EXPECT_EQ(outputs.begin()->first, "reorder");
+    EXPECT_EQ(outputs.begin()->first, "reorder2");
 
     auto output = outputs.begin()->second.get_memory();
-    auto output_ptr = output.pointer<float>();
 
+    float answers[16] = {
+        1.0f,  2.0f,
+        3.0f,  4.0f,
 
+        5.0f,  6.0f,
+        7.0f,  8.0f,
 
-    for (int i = 0; i < batch_num; ++i) { //B
-        for (int j = 0; j < feature_num * y_size * x_size; ++j) { //F * Y * X
-            int linear_id_output = j + i * feature_num * y_size * x_size;
-            int cpos = j / (x_size * y_size);
-            int ypos = (j / x_size) % y_size;
-            int xpos = j % x_size;
-            int linear_id = i + batch_num * (cpos + feature_num * (xpos + x_size * ypos));
-            EXPECT_EQ(output_ptr[linear_id_output], input_vec[linear_id]);
-        }
-    }
-}
-
-TEST(DISABLED_reorder_gpu_f32, basic_flatten_yxfb_to_xb)
-{
-    //  Input               : yxfb:2x2x2x2
-    //  Output              : bx:2x8
-    //
-    //  Input:
-    //  f0: b0:  1    2  b1:   0    0
-    //  f0: b0:  3    4  b1:   0.5 -0.5
-    //  f1: b0:  5    6  b1:   1.5  5.2
-    //  f1: b0:  7    8  b1:   12   8
-    //
-    //  Output:
-    //  b0:  1    2   3    4    5    6    7    8
-    //  b1:  0    0   0.5  -0.5 1.5  5.2  12   8
-
-    engine engine;
-
-    auto batch_num = 2;
-    auto feature_num = 2;
-    auto x_size = 2;
-    auto y_size = 2;
-
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ batch_num, feature_num, x_size, y_size } });
-    layout output_layout(data_types::f32, format::yxfb,{ batch_num, 1, y_size * x_size * feature_num, 1 });
-
-    std::vector<float> input_vec = {
-        1.f, 0.f,
-        5.f, 1.5f,
-
-        2.f, 0.f,
-        6.f, 5.2f,
-
-        3.f, 0.5f,
-        7.f, 12.f,
-
-        4.f, -0.5f,
-        8.f, 8.f
-    };
-    set_values(input, input_vec);
-
-    topology topology(
-        input_layout("input", input.get_layout()),
-        reorder("reorder", "input", output_layout));
-
-    network network(engine, topology);
-    network.set_input_data("input", input);
-
-    auto outputs = network.execute();
-    EXPECT_EQ(outputs.size(), size_t(1));
-    EXPECT_EQ(outputs.begin()->first, "reorder");
-
-    auto output = outputs.begin()->second.get_memory();
-    auto output_ptr = output.pointer<float>();
-
-    std::vector<float> debug, debug2, debug3;
-    for (int j = 0; j < batch_num * feature_num * y_size * x_size; ++j) {
-        debug.push_back(output_ptr[j]);
-    }
-
-    for (int i = 0; i < batch_num; ++i) { //B
-        for (int j = 0; j < feature_num * y_size * x_size; ++j) { //F * Y * X
-            int linear_id_output = j * batch_num + i;
-            int cpos = j / (x_size * y_size);
-            int ypos = (j / x_size) % y_size;
-            int xpos = j % x_size;
-            int linear_id = i + batch_num * (cpos + feature_num * (xpos + x_size * ypos));
-            EXPECT_EQ(output_ptr[linear_id_output], input_vec[linear_id]);
-        }
-    }
-}
-
-TEST(DISABLED_reorder_gpu_f32, basic_flatten_bfyx_to_bx)
-{
-    //  Input               : yxfb:2x2x2x2
-    //  Output              : bx:2x8
-    //
-    //  Input:
-    //  f0: b0:  1    2  b1:   0    0
-    //  f0: b0:  3    4  b1:   0.5 -0.5
-    //  f1: b0:  5    6  b1:   1.5  5.2
-    //  f1: b0:  7    8  b1:   12   8
-    //
-    //  Output:
-    //  b0:  1    2    3    4    5    6    7    8
-    //  b1:  0    0    0.5  -0.5 1.5  5.2  12   8
-
-    engine engine;
-
-    auto batch_num = 2;
-    auto feature_num = 2;
-    auto x_size = 2;
-    auto y_size = 2;
-
-    auto input = memory::allocate(engine, { data_types::f32,format::bfyx,{ batch_num, feature_num, x_size, y_size } });
-    layout output_layout(data_types::f32, format::bfyx,{ batch_num, 1, y_size * x_size * feature_num, 1 });
-
-    std::vector<float> input_vec = {
-        1.f, 2.f,
-        3.f, 4.f,
-
-        5.f, 6.f,
-        7.f, 8.f,
-
-        0.f, 0.f,
+        0.0f,  0.0f,
         0.5f, -0.5f,
 
-        1.5f, 5.2f,
-        12.f, 8.f
+        1.5f,  5.2f,
+        12.0f, 8.0f
     };
-    set_values(input, input_vec);
-
-    topology topology(
-        input_layout("input", input.get_layout()),
-        reorder("reorder", "input", output_layout));
-
-    network network(engine, topology);
-    network.set_input_data("input", input);
-
-    auto outputs = network.execute();
-    EXPECT_EQ(outputs.size(), size_t(1));
-    EXPECT_EQ(outputs.begin()->first, "reorder");
-
-    auto output = outputs.begin()->second.get_memory();
     auto output_ptr = output.pointer<float>();
-
-    for (int i = 0; i < batch_num; ++i) { //B
-        for (int j = 0; j < feature_num * y_size * x_size; ++j) { //F * Y * X
-            int linear_id = j + i * feature_num * y_size * x_size;
-            EXPECT_EQ(output_ptr[linear_id], input_vec[linear_id]);
-        }
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_FLOAT_EQ(answers[i], output_ptr[i]);
     }
+
 }
 
-TEST(DISABLED_reorder_gpu_f32, basic_flatten_yxfb_to_x)
+TEST(reorder_gpu_f32, basic_bfyx_to_yxfb_input_padding)
 {
-    //  Input               : yxfb:2x2x2x2
-    //  Output              : bx:2x8
+    //  Input               : bfyx:2x2x2x2
+    //  Output              : yxfb:2x2x2x2
     //
     //  Input:
     //  f0: b0:  1    2  b1:   0    0
@@ -771,19 +648,53 @@ TEST(DISABLED_reorder_gpu_f32, basic_flatten_yxfb_to_x)
     //  f1: b0:  7    8  b1:   12   8
     //
     //  Output:
-    //  1  0  5  1.5  2  0  6  5.2  3  0.5  7  12  4  -0.5  8  8
+    //  b0 f0:  1    2
+    //  b0 f0:  3    4
+    //
+    //  b0 f1:  5    6
+    //  b0 f1:  7    8
+    //
+    //  b1 f0:  0    0
+    //  b1 f0: 0.5 -0.5
+    //
+    //  b1 f1: 1.5  5.2
+    //  b1 f1: 12    8
+    //
 
     engine engine;
 
-    auto batch_num = 2;
-    auto feature_num = 2;
-    auto x_size = 2;
-    auto y_size = 2;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    layout output_layout(data_types::f32, format::yxfb, { 2,2,2,2 });
 
-    auto input = memory::allocate(engine, { data_types::f32,format::yxfb,{ batch_num, feature_num, x_size, y_size } });
-    layout output_layout(data_types::f32, format::yxfb,{ 1, 1, y_size * x_size * feature_num * batch_num, 1 });
+    set_values(input, {
+        1.0f,  2.0f,
+        3.0f,  4.0f,
 
-    std::vector<float> input_vec = {
+        5.0f,  6.0f,
+        7.0f,  8.0f,
+
+        0.0f,  0.0f,
+        0.5f, -0.5f,
+
+        1.5f,  5.2f,
+        12.0f, 8.0f
+    });
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, "", { { 0, 0, 2, 1 }, 0 }),
+        reorder("reorder2", "reorder", output_layout));
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder2");
+
+    auto output = outputs.begin()->second.get_memory();
+
+    float answers[16] = {
         1.f, 0.f,
         5.f, 1.5f,
 
@@ -796,34 +707,15 @@ TEST(DISABLED_reorder_gpu_f32, basic_flatten_yxfb_to_x)
         4.f, -0.5f,
         8.f, 8.f
     };
-    set_values(input, input_vec);
-
-    topology topology(
-        input_layout("input", input.get_layout()),
-        reorder("reorder", "input", output_layout));
-
-    network network(engine, topology);
-    network.set_input_data("input", input);
-
-    auto outputs = network.execute();
-    EXPECT_EQ(outputs.size(), size_t(1));
-    EXPECT_EQ(outputs.begin()->first, "reorder");
-
-    auto output = outputs.begin()->second.get_memory();
+    std::vector<float> out;
     auto output_ptr = output.pointer<float>();
-
-    for (int i = 0; i < batch_num; ++i) { //B
-        for (int j = 0; j < feature_num * y_size * x_size; ++j) { //F * Y * X
-            int linear_id_output = j * batch_num + i;
-            int cpos = j / (x_size * y_size);
-            int ypos = (j / x_size) % y_size;
-            int xpos = j % x_size;
-            int linear_id = i + batch_num * (cpos + feature_num * (xpos + x_size * ypos));
-            EXPECT_EQ(output_ptr[linear_id_output], input_vec[linear_id]);
-        }
+    for (int i = 0; i < 16; i++)
+    {
+        out.push_back(output_ptr[i]);
+        EXPECT_FLOAT_EQ(answers[i], output_ptr[i]);
     }
-}
 
+}
 
 using namespace cldnn;
 
@@ -832,117 +724,117 @@ class reorder_test : public tests::generic_test
 
 public:
 
-	static void TearDownTestCase()
-	{
-		for (auto generic_params : all_generic_params)
-		{
-			delete generic_params;
-		}
-		for (auto test_param : all_test_params)
-		{
-			auto primitive = std::get<1>(test_param);
-			delete primitive;
-		}
-	}
+    static void TearDownTestCase()
+    {
+        for (auto generic_params : all_generic_params)
+        {
+            delete generic_params;
+        }
+        for (auto test_param : all_test_params)
+        {
+            auto primitive = std::get<1>(test_param);
+            delete primitive;
+        }
+    }
 
 
-	static std::vector<std::tuple<test_params*, cldnn::primitive*>> generate_specific_test_params()
-	{
-		generic_test::generate_generic_test_params(all_generic_params, true);
+    static std::vector<std::tuple<test_params*, cldnn::primitive*>> generate_specific_test_params()
+    {
+        generic_test::generate_generic_test_params(all_generic_params);
 
-		const std::vector<cldnn::data_types> data_types = { cldnn::data_types::f32 ,  cldnn::data_types::f16 };
+        const std::vector<cldnn::data_types> data_types = { cldnn::data_types::f32 ,  cldnn::data_types::f16 };
 
-		for (auto test_param : all_generic_params)
-		{
-			cldnn::tensor input_tensor = test_param->input_layouts[0];
+        for (auto test_param : all_generic_params)
+        {
+            cldnn::tensor input_tensor = test_param->input_layouts[0].size;
 
-			std::vector<cldnn::layout> output_layouts = {};
+            std::vector<cldnn::layout> output_layouts = {};
 
-			for (auto dt : data_types)
-			{
-				for (auto fmt : generic_test::test_input_formats)
-				{
-					output_layouts.push_back({ dt, fmt, input_tensor });
-				}
-			}
-			// TODO: check unsupported formats.
+            for (auto dt : data_types)
+            {
+                for (auto fmt : generic_test::test_input_formats)
+                {
+                    output_layouts.push_back({ dt, fmt, input_tensor });
+                }
+            }
+            // TODO: check unsupported formats.
 
-			//TODO: check subtract.
-			std::vector<float> subtract = {};
+            //TODO: check subtract.
+            std::vector<float> subtract = {};
 
-			for (auto output_layout : output_layouts)
-			{
-				//TODO: check input + output padding.
-				all_test_params.push_back(std::make_tuple(test_param, new reorder("reorder", "input0", output_layout, subtract)));
-			}
-		}
+            for (auto output_layout : output_layouts)
+            {
+                //TODO: check input + output padding.
+                all_test_params.push_back(std::make_tuple(test_param, new reorder("reorder", "input0", output_layout, subtract)));
+            }
+        }
 
-		return all_test_params;
-	}
+        return all_test_params;
+    }
 
-	virtual bool is_format_supported(cldnn::format format)
-	{
-		return (	(format == cldnn_format_type::cldnn_format_yxfb) ||
-					(format == cldnn_format_type::cldnn_format_byxf) ||
-					(format == cldnn_format_type::cldnn_format_bfyx) ||
-					(format == cldnn_format_type::cldnn_format_fyxb)
-				);	
-	}
+    virtual bool is_format_supported(cldnn::format format)
+    {
+        return (    (format == cldnn_format_type::cldnn_format_yxfb) ||
+                    (format == cldnn_format_type::cldnn_format_byxf) ||
+                    (format == cldnn_format_type::cldnn_format_bfyx) ||
+                    (format == cldnn_format_type::cldnn_format_fyxb)
+                );
+    }
 
-	template<typename InputType, typename OutputType>
-	memory generate_reference_typed(const std::vector<cldnn::memory>& inputs)
-	{
-		const cldnn::reorder* reorder = (cldnn::reorder*)layer_params;
-		primitive_id mean = reorder->mean;
-		std::vector<float> subtract_per_feature = reorder->subtract_per_feature;
-		assert(mean == "");
-		assert(subtract_per_feature.size() == 0);
-		
-		auto output = memory::allocate(engine, cldnn::layout(reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
+    template<typename InputType, typename OutputType>
+    memory generate_reference_typed(const std::vector<cldnn::memory>& inputs)
+    {
+        const cldnn::reorder* reorder = (cldnn::reorder*)layer_params;
+        primitive_id mean = reorder->mean;
+        std::vector<float> subtract_per_feature = reorder->subtract_per_feature;
+        assert(mean == "");
+        assert(subtract_per_feature.size() == 0);
+        
+        auto output = memory::allocate(engine, cldnn::layout(reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
 
-		cldnn::pointer<InputType> input_mem = inputs[0].pointer<InputType>();
-		cldnn::pointer<OutputType> output_mem = output.pointer<OutputType>();
+        cldnn::pointer<InputType> input_mem = inputs[0].pointer<InputType>();
+        cldnn::pointer<OutputType> output_mem = output.pointer<OutputType>();
 
-		for (size_t i = 0; i < inputs[0].get_layout().get_linear_size(); i++)
-		{
-			// Write the output in the same order as the input with type conversion as needed.
-			// The correct order will be checked in generic_test::compare_buffers.
-			output_mem[i] = (OutputType)input_mem[i];
-		}
+        for (size_t i = 0; i < inputs[0].get_layout().get_linear_size(); i++)
+        {
+            // Write the output in the same order as the input with type conversion as needed.
+            // The correct order will be checked in generic_test::compare_buffers.
+            output_mem[i] = (OutputType)input_mem[i];
+        }
 
-		return output;
-	}
+        return output;
+    }
 
-	virtual memory generate_reference(const std::vector<cldnn::memory>& inputs)
-	{
-		if (generic_params->data_type == data_types::f32)
-		{
-			if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
-			{
-				return generate_reference_typed<float, float>(inputs);
-			}
-			else
-			{
-				return generate_reference_typed<float, FLOAT16>(inputs);
-			}
-		}
-		else
-		{
-			if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
-			{
-				return generate_reference_typed<FLOAT16, float>(inputs);
-			}
-			else
-			{
-				return generate_reference_typed<FLOAT16, FLOAT16>(inputs);
-			}
-		}		
-	}
+    virtual memory generate_reference(const std::vector<cldnn::memory>& inputs)
+    {
+        if (generic_params->data_type == data_types::f32)
+        {
+            if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
+            {
+                return generate_reference_typed<float, float>(inputs);
+            }
+            else
+            {
+                return generate_reference_typed<float, FLOAT16>(inputs);
+            }
+        }
+        else
+        {
+            if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
+            {
+                return generate_reference_typed<FLOAT16, float>(inputs);
+            }
+            else
+            {
+                return generate_reference_typed<FLOAT16, FLOAT16>(inputs);
+            }
+        }
+    }
 
 private:
 
-	static std::vector<tests::test_params*> all_generic_params;
-	static std::vector<std::tuple<test_params*, cldnn::primitive*>> all_test_params;
+    static std::vector<tests::test_params*> all_generic_params;
+    static std::vector<std::tuple<test_params*, cldnn::primitive*>> all_test_params;
 
 };
 
@@ -951,10 +843,10 @@ std::vector<std::tuple<test_params*, cldnn::primitive*>> reorder_test::all_test_
 
 TEST_P(reorder_test, DISABLED_test_all)
 {
-	run_single_test();
+    run_single_test();
 }
 
 INSTANTIATE_TEST_CASE_P(REORDER,
-						reorder_test,
-						::testing::ValuesIn(reorder_test::generate_specific_test_params()),
-						tests::generic_test::custom_param_name_functor());
+                        reorder_test,
+                        ::testing::ValuesIn(reorder_test::generate_specific_test_params()),
+                        tests::generic_test::custom_param_name_functor());

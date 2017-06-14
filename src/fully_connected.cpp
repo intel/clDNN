@@ -22,7 +22,7 @@ namespace cldnn
 {
 primitive_type_id fully_connected_type_id()
 {
-    static primitive_type_base<fully_connected, fully_connected_inst> instance;
+    static primitive_type_base<fully_connected> instance;
     return &instance;
 }
 

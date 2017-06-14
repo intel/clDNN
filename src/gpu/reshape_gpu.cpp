@@ -64,31 +64,6 @@ struct reshape_gpu : public typed_primitive_impl<reshape>
         return data;
     }
 
-    static std::string generate_sizes_str(format fmt, tensor const& t)
-    {
-        auto sizes = t.sizes(fmt);
-        std::stringstream ss;
-        ss << "(uint[]){ " << sizes[3] << ", " << sizes[2] << ", " << sizes[1] << ", " << sizes[0] << " }";
-        return ss.str();
-    }
-
-    static std::string generate_offsets_str(format fmt, tensor const& dims)
-    {
-        auto sizes = dims.sizes(fmt);
-
-        int32_t accum = 1;
-        for (size_t i = 1; i <= sizes.size(); ++i)
-        {
-            auto size = sizes[sizes.size() - i];
-            sizes[sizes.size() - i] = accum;
-            accum *= size;
-        }
-
-        std::stringstream ss;
-        ss << "(uint[]){ " << sizes[3] << ", " << sizes[2] << ", " << sizes[1] << ", " << sizes[0] << " }";
-        return ss.str();
-    }
-
     static gpu::jit_constants get_jit_constants(reshape_node const& node, kernel_data const& data)
     {
         auto input_layout = node.input().get_output_layout();
@@ -96,12 +71,12 @@ struct reshape_gpu : public typed_primitive_impl<reshape>
         auto mem_format = input_layout.format;
 
         gpu::jit_constants mem_consts{
-            gpu::make_jit_constant("INPUT_SIZES", generate_offsets_str(mem_format, input_layout.size)),
-            gpu::make_jit_constant("OUTPUT_SIZES", generate_offsets_str(mem_format, output_layout.size)),
-            gpu::make_jit_constant("INPUT_PADDING_LOWER", generate_sizes_str(mem_format, input_layout.data_padding.lower_size())),
-            gpu::make_jit_constant("OUTPUT_PADDING_LOWER", generate_sizes_str(mem_format, output_layout.data_padding.lower_size())),
-            gpu::make_jit_constant("INPUT_BUFFER_SIZES", generate_offsets_str(mem_format, input_layout.get_buffer_size())),
-            gpu::make_jit_constant("OUTPUT_BUFFER_SIZES", generate_offsets_str(mem_format, output_layout.get_buffer_size())),
+            gpu::make_jit_constant("INPUT_SIZES", gpu::get_accumulated_sizes_array(input_layout)),
+            gpu::make_jit_constant("OUTPUT_SIZES", gpu::get_accumulated_sizes_array(output_layout)),
+            gpu::make_jit_constant("INPUT_PADDING_LOWER", gpu::get_tensor_array(mem_format, input_layout.data_padding.lower_size())),
+            gpu::make_jit_constant("OUTPUT_PADDING_LOWER", gpu::get_tensor_array(mem_format, output_layout.data_padding.lower_size())),
+            gpu::make_jit_constant("INPUT_BUFFER_SIZES", gpu::get_accumulated_buffer_sizes_array(input_layout)),
+            gpu::make_jit_constant("OUTPUT_BUFFER_SIZES", gpu::get_accumulated_buffer_sizes_array(output_layout)),
             gpu::make_jit_constant("UNIT_TYPE", data.fp16_unit_used ? "ushort" : "float")
         };
 

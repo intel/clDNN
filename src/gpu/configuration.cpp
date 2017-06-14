@@ -26,6 +26,7 @@ namespace neural {
             , device_type(gpu)
             , device_vendor(0x8086)
             , compiler_options("")
+            , single_kernel_name("")
         {}
     }
 }

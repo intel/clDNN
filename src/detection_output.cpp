@@ -22,7 +22,7 @@ namespace cldnn
 {
 primitive_type_id detection_output_type_id()
 {
-    static primitive_type_base<detection_output, detection_output_inst> instance;
+    static primitive_type_base<detection_output> instance;
     return &instance;
 }
 
@@ -101,9 +101,37 @@ detection_output_inst::typed_primitive_inst(network_impl& network, detection_out
         throw std::invalid_argument("Detection output layer supports only bfyx input format.");
     }
 
-    if (node.is_padded() || node.has_padded_dependency())
+    tensor location_size = location_memory().get_layout().size;
+    if ( (location_size.feature[0] * location_size.batch[0]) != (int)location_memory().get_layout().count() )
     {
-        throw std::invalid_argument("Detection output layer doesn't support input and output padding.");
+        throw std::invalid_argument("Dimensions mismatch of location input in Detection output layer!");
+    }
+
+    tensor confidence_size = confidence_memory().get_layout().size;
+    if ( (confidence_size.feature[0] * confidence_size.batch[0]) != (int)confidence_memory().get_layout().count() )
+    {
+        throw std::invalid_argument("Dimensions mismatch of confidence input in Detection output layer!");
+    }
+
+    if (confidence_size.batch[0] != location_size.batch[0])
+    {
+        throw std::invalid_argument("Batch size mismatch of confidence input and location input in Detection output layer!");
+    }
+
+    tensor prior_box_size = prior_box_memory().get_layout().size;
+    if ((prior_box_size.batch[0] != 1) || (prior_box_size.spatial[0] != 1) || (prior_box_size.feature[0] != 2) )
+    {
+        throw std::invalid_argument("Dimensions mismatch of prior-box input in Detection output layer!");
+    }
+
+    if (node.is_padded())
+    {
+        throw std::invalid_argument("Detection output layer doesn't support output padding.");
+    }
+
+    if (node.get_dependency(2).is_padded())
+    {
+        throw std::invalid_argument("Detection output layer doesn't support input padding in Prior-Box input");
     }
 }
 }

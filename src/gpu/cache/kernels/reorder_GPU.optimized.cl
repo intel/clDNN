@@ -31,14 +31,18 @@ uint FUNC(OUT_FORMAT)(uint size[DIMENSIONS], uint pos[DIMENSIONS], uint lpad[DIM
 KERNEL (reorder_GPU)(const __global SRC_TYPE* input, __global DEST_TYPE* output)
 {
     const uint global_id_0 = get_global_id(0);
-    const uint global_id_1 = get_global_id(1);
-    const uint global_id_2 = get_global_id(2);
-    const uint global_size_1 = get_global_size(1);
-    const uint global_size_0 = get_global_size(0);
+    const uint dim0 = global_id_0 % SIZE[CALCULATION_ORDER[0]];
+    const uint dim1 = global_id_0 / SIZE[CALCULATION_ORDER[0]];
+    const uint dim2 = get_global_id(1);
+    const uint dim3 = get_global_id(2);
+
+    const uint dim_size0 = INPUT_LOWER_PADDING[CALCULATION_ORDER[0]] + SIZE[CALCULATION_ORDER[0]] + INPUT_UPPER_PADDING[CALCULATION_ORDER[0]];
+    const uint dim_size1 = INPUT_LOWER_PADDING[CALCULATION_ORDER[1]] + SIZE[CALCULATION_ORDER[1]] + INPUT_UPPER_PADDING[CALCULATION_ORDER[1]];
+    const uint dim_size2 = INPUT_LOWER_PADDING[CALCULATION_ORDER[2]] + get_global_size(1) + INPUT_UPPER_PADDING[CALCULATION_ORDER[2]];
 
     uint pos[DIMENSIONS]; // position in each of dimensions
-    pos[CALCULATION_ORDER[DIMENSIONS-1]] = global_id_2;
-    pos[CALCULATION_ORDER[DIMENSIONS-2]] = global_id_1;
+    pos[CALCULATION_ORDER[DIMENSIONS-1]] = dim3;
+    pos[CALCULATION_ORDER[DIMENSIONS-2]] = dim2;
     uint pos1D = global_id_0;
     for(uint i = 0; i < DIMENSIONS-2; i++)
     {
@@ -47,8 +51,9 @@ KERNEL (reorder_GPU)(const __global SRC_TYPE* input, __global DEST_TYPE* output)
         pos1D /= SIZE[order_idx];
     }
 
-    uint output_pos = FUNC_CALL(OUT_FORMAT)(SIZE, pos, LOWER_PADDING, UPPER_PADDING);
-    uint input_idx = (global_id_2 * global_size_1 + global_id_1) * global_size_0 + global_id_0;
+    uint output_pos = FUNC_CALL(OUT_FORMAT)(SIZE, pos, OUTPUT_LOWER_PADDING, OUTPUT_UPPER_PADDING);
+    uint input_idx = (((dim3 + INPUT_LOWER_PADDING[CALCULATION_ORDER[3]]) * dim_size2 + (dim2 + INPUT_LOWER_PADDING[CALCULATION_ORDER[2]])) * dim_size1 +
+                     (dim1 + INPUT_LOWER_PADDING[CALCULATION_ORDER[1]])) * dim_size0 + dim0 + INPUT_LOWER_PADDING[CALCULATION_ORDER[0]];
     output[output_pos] = SRC_DEST_TYPE_CVT_FUNC(input[input_idx]);
 }
 

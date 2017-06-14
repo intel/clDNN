@@ -25,7 +25,10 @@ namespace cldnn
 template <>
 struct typed_program_node<deconvolution> : public typed_program_node_base<deconvolution>
 {
+    using parent = typed_program_node_base<deconvolution>;
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
 
     auto& weights(size_t idx) const
@@ -42,6 +45,14 @@ public:
             throw std::range_error("bias offset too big");
 
         return get_dependency(1 + typed_desc()->weights.size() + idx);
+    }
+
+    bool bias_term() const
+    {
+        if (get_primitive()->bias.size() != 0)
+            return true;
+        else
+            return false;
     }
 };
 
@@ -71,10 +82,21 @@ public:
 
     const memory& bias_memory(size_t index) const
     {
+        if (argument.bias.size() == 0 && index >= argument.bias.size())
+            throw std::range_error("no bias data");
+
         if (index >= argument.bias.size())
             throw std::range_error("bias offset too big");
 
         return dep_memory(1 + argument.weights.size() + index);
+    }
+
+    bool bias_term() const
+    {
+        if (argument.bias.size() != 0)
+            return true;
+        else
+            return false;
     }
 };
 

@@ -18,6 +18,10 @@
 
 KERNEL (reorder_gpu_padding_bfyx_f32)(const __global SRC_TYPE* input, __global DEST_TYPE* output)
 {
+    // constexpr:
+    const uint input_buffer_size_x = INPUT_LOWER_PADDING[2] + INPUT_SIZE_X + INPUT_UPPER_PADDING[2];
+    const uint input_buffer_size_y = INPUT_LOWER_PADDING[3] + INPUT_SIZE_Y + INPUT_UPPER_PADDING[3];
+
     const uint pos_b = get_global_id(0);
     const uint pos_f = get_global_id(1);
     const uint pos_y = get_global_id(2);
@@ -25,14 +29,15 @@ KERNEL (reorder_gpu_padding_bfyx_f32)(const __global SRC_TYPE* input, __global D
     if(pos_y >= INPUT_SIZE_Y)
         return;
 
-    uint input_pos = pos_b * INPUT_SIZE_X * INPUT_SIZE_Y * INPUT_FEATURE_NUM;
-    input_pos += pos_f * INPUT_SIZE_X * INPUT_SIZE_Y;
-    input_pos += pos_y * INPUT_SIZE_X;
+    uint input_pos = pos_b * input_buffer_size_x * input_buffer_size_y * INPUT_FEATURE_NUM;
+    input_pos += pos_f * input_buffer_size_x * input_buffer_size_y;
+    input_pos += (INPUT_LOWER_PADDING[3] + pos_y) * input_buffer_size_x;
+    input_pos += INPUT_LOWER_PADDING[2];
 
     uint output_pos = (pos_b * OUTPUT_SIZE_X * OUTPUT_SIZE_Y * OUTPUT_FEATURE_NUM);
     output_pos += pos_f * OUTPUT_SIZE_X * OUTPUT_SIZE_Y;
-    output_pos += (pos_y + LOWER_PADDING[3]) * OUTPUT_SIZE_X;
-    output_pos += LOWER_PADDING[2];
+    output_pos += (pos_y + OUTPUT_LOWER_PADDING[3]) * OUTPUT_SIZE_X;
+    output_pos += OUTPUT_LOWER_PADDING[2];
     for(uint x = 0; x < INPUT_SIZE_X; x++)
     {
         output[output_pos++] = input[input_pos++];

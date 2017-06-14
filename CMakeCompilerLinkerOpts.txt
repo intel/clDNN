@@ -87,6 +87,7 @@ if(MSVC)
       ALIAS ExtensionsEnabled          DisableExtensions REMOVE_GROUP
       ALIAS StandardCxx11
       ALIAS StandardCxx14
+      ALIAS StandardC99
       ALIAS StandardNone
       ALIAS FastMath
       ALIAS NoFastMath
@@ -152,6 +153,7 @@ elseif(CMAKE_COMPILER_IS_INTEL)
       ALIAS ExtensionsEnabled
       ALIAS StandardCxx11              "-std=c++11"
       ALIAS StandardCxx14              "-std=c++14"
+      ALIAS StandardC99                "-std=c99"
       ALIAS StandardNone               Standard REMOVE_GROUP
       ALIAS FastMath                   
       ALIAS NoFastMath                 FastMathOpts REMOVE_GROUP
@@ -228,6 +230,7 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
       ALIAS ExtensionsEnabled
       ALIAS StandardCxx11              "-std=c++11"
       ALIAS StandardCxx14              "-std=c++14"
+      ALIAS StandardC99                "-std=c99"
       ALIAS StandardNone               Standard REMOVE_GROUP
       ALIAS FastMath                   "-ffast-math"
       ALIAS NoFastMath                 FastMathOpts REMOVE_GROUP
@@ -316,6 +319,7 @@ elseif((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES
       ALIAS ExtensionsEnabled
       ALIAS StandardCxx11              "-std=c++11"
       ALIAS StandardCxx14              "-std=c++14"
+      ALIAS StandardC99                "-std=c99"
       ALIAS StandardNone               Standard REMOVE_GROUP
       ALIAS FastMath                   "-ffast-math"
       ALIAS NoFastMath                 FastMathOpts REMOVE_GROUP

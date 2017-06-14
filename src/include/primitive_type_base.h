@@ -23,7 +23,7 @@
 
 namespace cldnn
 {
-template<class PType, class PType_Inst>
+template<class PType>
 struct primitive_type_base : ::cldnn_primitive_type
 {
     static_assert(std::is_base_of<primitive, PType>::value, "Primitive type passed to primitive_type_base should derive from cldnn::primitive");
@@ -36,12 +36,20 @@ struct primitive_type_base : ::cldnn_primitive_type
         return std::make_shared<PType>(as_dto<PType>(dto));
     }
 
+    std::shared_ptr<cldnn::program_node> create_node(program_impl& program, const std::shared_ptr<primitive> prim) const override
+    {
+        if (prim->type != this)
+            throw std::invalid_argument("primitive_type_base::create_node: primitive type mismatch");
+
+        return std::make_shared<typed_program_node<PType>>(prim, program);
+    }
+
     std::shared_ptr<cldnn::primitive_inst> create_instance(network_impl& network, const cldnn::program_node& node) const override
     {
         if (node.get_primitive()->type != this)
             throw std::invalid_argument("primitive_type_base::create_instance: primitive type mismatch");
 
-        return std::make_shared<PType_Inst>(network, node);
+        return std::make_shared<typed_primitive_inst<PType>>(network, node);
     }
 
     std::unique_ptr<primitive_impl> choose_impl(engine_impl& engine, const cldnn::program_node& node) const override
@@ -57,7 +65,7 @@ struct primitive_type_base : ::cldnn_primitive_type
         if (node.get_primitive()->type != this)
             throw std::invalid_argument("primitive_type_base::calc_output_layout: primitive type mismatch");
 
-        return PType_Inst::calc_output_layout(node);
+        return typed_primitive_inst<PType>::calc_output_layout(node);
     }
 
     std::string to_string(const cldnn::program_node& node) const
@@ -65,7 +73,7 @@ struct primitive_type_base : ::cldnn_primitive_type
         if (node.get_primitive()->type != this)
             throw std::invalid_argument("primitive_type_base::to_string: primitive type mismatch");
 
-        return PType_Inst::to_string(node);
+        return typed_primitive_inst<PType>::to_string(node);
     }
 
 };

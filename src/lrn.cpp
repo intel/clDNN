@@ -21,7 +21,7 @@ namespace cldnn
 {
 primitive_type_id lrn_type_id()
 {
-    static primitive_type_base<lrn, lrn_inst> instance;
+    static primitive_type_base<lrn> instance;
     return &instance;
 }
 

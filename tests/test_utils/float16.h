@@ -20,23 +20,23 @@
 
 struct FLOAT16
 {
-	union
-	{
-		uint16_t v = 0;
-		struct // added this struct for the .natvis file (for debug)
-		{
-			uint16_t significand : 10;
-			uint16_t exponent : 5;
-			uint16_t sign : 1;
-		} format;
-	};
+    union
+    {
+        uint16_t v = 0;
+        struct // added this struct for the .natvis file (for debug)
+        {
+            uint16_t significand : 10;
+            uint16_t exponent : 5;
+            uint16_t sign : 1;
+        } format;
+    };
 
-	static FLOAT16 min_val()
-	{
-		FLOAT16 f16;
-		f16.v = 0xFC00;
-		return f16;
-	}
+    static FLOAT16 min_val()
+    {
+        FLOAT16 f16;
+        f16.v = 0xFC00;
+        return f16;
+    }
 
     operator double() const { double d = (double)float16_to_float32(v); return d; }
     operator float() const { float f = float16_to_float32(v); return f; }
@@ -46,10 +46,11 @@ struct FLOAT16
     FLOAT16(int i) { v = float32_to_float16(float(i)); }
     explicit FLOAT16(int16_t d) : v(d) {}
     friend FLOAT16 operator +(const FLOAT16 &v1, const FLOAT16 &v2);
-	friend FLOAT16 operator -(const FLOAT16 &v1, const FLOAT16 &v2);
+    friend FLOAT16 operator -(const FLOAT16 &v1, const FLOAT16 &v2);
     friend FLOAT16 operator *(const FLOAT16 &v1, const FLOAT16 &v2);
     friend FLOAT16 operator /(const FLOAT16 &v1, const FLOAT16 &v2);
     friend bool operator >(const FLOAT16 &v1, const FLOAT16 &v2);
+    friend bool operator >=(const FLOAT16 &v1, const FLOAT16 &v2);
     friend bool operator <(const FLOAT16 &v1, const FLOAT16 &v2);
     friend bool operator >(const FLOAT16 &v1, const float &v2);
     friend bool operator <(const FLOAT16 &v1, const float &v2);
@@ -69,52 +70,57 @@ struct FLOAT16
             return *this;
     }
 
-	FLOAT16& operator *=(const FLOAT16 &v1)
-	{
-		*this = (float)*this * (float)v1;
-		return *this;
-	}
+    FLOAT16& operator *=(const FLOAT16 &v1)
+    {
+        *this = (float)*this * (float)v1;
+        return *this;
+    }
 };
 
 
 inline FLOAT16 operator +(const FLOAT16 &v1, const FLOAT16 &v2)
 {
-	return (float)v1 + (float)v2;
+    return (float)v1 + (float)v2;
 }
 
 inline FLOAT16 operator -(const FLOAT16 &v1, const FLOAT16 &v2)
 {
-	return (float)v1 - (float)v2;
+    return (float)v1 - (float)v2;
 }
 
 inline FLOAT16 operator *(const FLOAT16 &v1, const FLOAT16 &v2)
 {
-	return (float)v1 * (float)v2;
+    return (float)v1 * (float)v2;
 }
 
 inline FLOAT16 operator /(const FLOAT16 &v1, const FLOAT16 &v2)
 {
-	return (float)v1 / (float)v2;
+    return (float)v1 / (float)v2;
 }
 
 inline bool operator >(const FLOAT16 &v1, const FLOAT16 &v2)
 {
-	return (float)v1 > (float)v2;
+    return (float)v1 > (float)v2;
+}
+
+inline bool operator >=(const FLOAT16 &v1, const FLOAT16 &v2)
+{
+    return (float)v1 >= (float)v2;
 }
 
 inline bool operator <(const FLOAT16 &v1, const FLOAT16 &v2)
 {
-	return (float)v1 < (float)v2;
+    return (float)v1 < (float)v2;
 }
 
 inline bool operator >(const FLOAT16 &v1, const float &v2)
 {
-	return (float)v1 > v2;
+    return (float)v1 > v2;
 }
 
 inline bool operator <(const FLOAT16 &v1, const float &v2)
 {
-	return (float)v1 < v2;
+    return (float)v1 < v2;
 }
 
 inline bool operator !=(const FLOAT16 &v1, const FLOAT16 &v2)

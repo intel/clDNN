@@ -84,6 +84,30 @@ inline std::string to_code_string<double>(double val) {
     return buffer;
 }
 
+//returns reverse(t.sizes(fmt))
+//first value of the returned array is size within the most-changing dimension (e.g. for bfyx returns { t(x), t(y), t(f), t(b) }
+std::vector<uint32_t> get_tensor_array(cldnn::format fmt, const cldnn::tensor& t);
+
+//returns reduce_left(get_tensor_array(layout), operator *)
+//each value in the returned vector tells how many elements one needs to skip to increment position along specified dimension
+//first value is related to incrementation along the most-chanining dimension within buffer and is always equal to 1
+//e.g.: for bfyx returns { 1, t(x), t(x)*t(y), t(x)*t(y)*t(f) }
+std::vector<uint32_t> get_accumulated_tensor_array(cldnn::format fmt, const cldnn::tensor& t);
+
+//returns get_tensor_array(layout.format, layout.size)
+std::vector<uint32_t> get_sizes_array(cldnn::layout const& layout);
+
+//returns get_tensor_array(layout.format, layout.get_buffer_size())
+std::vector<uint32_t> get_buffer_sizes_array(cldnn::layout const& layout);
+
+//returns get_accumulated_tensor_array(layout.format, layout.size)
+std::vector<uint32_t> get_accumulated_sizes_array(cldnn::layout const& layout);
+
+//returns get_accumulated_tensor_array(layout.format, layout.get_buffer_size())
+std::vector<uint32_t> get_accumulated_buffer_sizes_array(cldnn::layout const& layout);
+
+std::string get_offsets_string(size_t dimensions, const cldnn::tensor &sizes);
+
 // TODO refactor jit_constant, make_jit_constant, etc...
 class jit_constant {
 protected:
@@ -206,8 +230,6 @@ inline  std::shared_ptr<jit_constant> make_jit_constant(const std::string& name,
     return std::static_pointer_cast<jit_constant>(std::make_shared<memory_jit_constant>(name, value));
 }
 
-
-
 class memories_jit_constant : public vector_jit_constant {
     const std::vector<cldnn::memory> _mem;
 
@@ -241,6 +263,31 @@ public:
 
 inline  std::shared_ptr<jit_constant> make_jit_constant(const std::string& name, const std::vector<cldnn::memory> value) {
     return std::static_pointer_cast<jit_constant>(std::make_shared<memories_jit_constant>(name, value));
+}
+
+class array_jit_constant : public jit_constant
+{
+    const std::vector<uint32_t> _array;
+
+public:
+    array_jit_constant(const std::string& name, const std::vector<uint32_t> array)
+        : jit_constant(name), _array(std::move(array)) {}
+
+    kernels_cache::jit_definitions get_definitions() const override {
+        std::stringstream ss;
+        ss << "(uint[]){";
+        for (size_t i = 0; i < _array.size(); ++i)
+            ss << _array[i] << (i + 1 < _array.size() ? ", " : "");
+        ss << "}";
+
+        return kernels_cache::jit_definitions{
+            { _name, ss.str() }
+        };
+    }
+};
+
+inline std::shared_ptr<jit_constant> make_jit_constant(const std::string& name, const std::vector<uint32_t> array) {
+    return std::static_pointer_cast<jit_constant>(std::make_shared<array_jit_constant>(name, std::move(array)));
 }
 
 class jit_constants {
@@ -381,14 +428,27 @@ public:
         cl::Event end_event;
         std::vector<cl::Event> events;
         events.reserve(dependencies.size());
-        for(auto& dependency : dependencies)
+        for (auto& dependency : dependencies)
         {
             events.emplace_back(dependency->get());
         }
-
         auto clkernel = context()->get_kernels_cache().get_kernel(_kernel_id);
         setArgs<0>(clkernel, std::forward<Args>(args)...);
-        context()->queue().enqueueNDRangeKernel(clkernel, cl::NullRange, options.global_range(), options.local_range(), &events, &end_event);
+
+        if (context()->enabled_single_kernel())
+        {
+            std::string proper_layer_name = _kernel_id.substr(0, _kernel_id.rfind("_"));
+            if (proper_layer_name.compare(context()->single_kernel_name()) == 0)
+            {
+                context()->queue().enqueueNDRangeKernel(clkernel, cl::NullRange, options.global_range(), options.local_range() , nullptr, &end_event);
+            }
+        }
+        else
+        {
+            context()->queue().enqueueNDRangeKernel(clkernel, cl::NullRange, options.global_range(), options.local_range(), &events, &end_event);
+        }
+
+       
 
         return{ new cldnn::event_impl(end_event), false };
     }

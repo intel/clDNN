@@ -21,7 +21,7 @@ namespace cldnn
 {
 primitive_type_id roi_pooling_type_id()
 {
-    static primitive_type_base<roi_pooling, roi_pooling_inst> instance;
+    static primitive_type_base<roi_pooling> instance;
     return &instance;
 }
 
@@ -34,24 +34,47 @@ layout roi_pooling_inst::calc_output_layout(roi_pooling_node const& node)
     layout rois_layout = node.rois().get_output_layout();
     int num_rois = rois_layout.size.batch[0];
 
+    int gss = desc->group_sz * desc->group_sz;
+
+    if (desc->group_sz < 0 || (gss && fm % gss != 0))
+    {
+        throw std::runtime_error("group_sz must be either 0 (For RoIPooling) or satisfy fm % (group_sz^2) == 0");
+    }
+
+    if (gss)
+    {
+        fm /= gss;
+    }
+
     return layout(rois_layout.data_type, format::bfyx, { num_rois, fm, desc->pooled_width, desc->pooled_height });
 }
 
 std::string roi_pooling_inst::to_string(roi_pooling_node const& node)
 {
-    std::stringstream               primitive_description;
-    auto desc                       = node.get_primitive();
-    auto input                      = node.input();
-    auto input_rois                 = node.rois();
+    std::stringstream primitive_description;
+    auto desc           = node.get_primitive();
+    auto input          = node.input();
+    auto input_rois     = node.rois();
+    auto mode           = desc->mode == pooling_mode::max ? "max" : "average";
 
-    primitive_description << "id: " << desc->id << ", type: roi_pooling" << 
-        "\n\tinput: "         << input.id() << ", count: " << input.get_output_layout().count() << ",  size: " << input.get_output_layout().size <<
-        "\n\tinput_rois: "    << input_rois.id() << ", count: " << input_rois.get_output_layout().count() << ",  size: " << input_rois.get_output_layout().size <<
-        "\n\tpooled_width: "  << desc->pooled_width << "pooled_height: " << desc->pooled_height <<
-        "\n\tspatial_scale: " << desc->spatial_scale <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    primitive_description
+        << "{\n"
+        << "\tid: " << desc->id << ",\n"
+        << "\ttype: roi_pooling,\n"
+        << "\tparams: {\n"
+        << "\t\tmode: " << mode << ",\n"
+        << "\t\tpooled_w: " << desc->pooled_width << ",\n"
+        << "\t\tpooled_h: " << desc->pooled_height << ",\n"
+        << "\t\tspatial_scale: " << desc->spatial_scale << ",\n"
+        << "\t\tgroup_sz: " << desc->group_sz << "\n"
+        << "\t}\n"
+        << "\toutput: {\n"
+        << "\t\tpad_lower_sz: " << desc->output_padding.lower_size() << ",\n"
+        << "\t\tpad_upper_sz: " << desc->output_padding.upper_size() << ",\n"
+        << "\t\tcount: " << node.get_output_layout().count() << ",\n"
+        << "\t\tsize: " << node.get_output_layout().size << "\n"
+        << "\t}\n"
+        << "}\n";
 
     return primitive_description.str();
 }

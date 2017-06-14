@@ -25,7 +25,7 @@ namespace cldnn
 
 primitive_type_id permute_type_id()
 {
-    static primitive_type_base<permute, permute_inst> instance;
+    static primitive_type_base<permute> instance;
     return &instance;
 }
 

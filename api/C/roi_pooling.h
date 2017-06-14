@@ -32,9 +32,18 @@ extern "C" {
 
 
 CLDNN_BEGIN_PRIMITIVE_DESC(roi_pooling)
-int pooled_height;
+/// @brief Pooling method. See #cldnn_pooling_mode.
+int32_t mode;
+
+/// @brief Output width.
 int pooled_width;
+/// @brief Output height.
+int pooled_height;
+/// @brief Ratio of the coordinates used in RoIs to the width (and height) of the input data.
 float spatial_scale;
+
+/// @brief Group size as defined by PSRoIPooling when > 0, else if 0 means regular RoIPooling.
+int group_sz;
 CLDNN_END_PRIMITIVE_DESC(roi_pooling)
 
 CLDNN_DECLARE_PRIMITIVE_TYPE_ID(roi_pooling);

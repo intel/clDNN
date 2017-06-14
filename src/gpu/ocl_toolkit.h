@@ -38,6 +38,7 @@ struct configuration {
     device_types device_type;
     uint32_t device_vendor;
     std::string compiler_options;
+    std::string single_kernel_name;
     configuration();
 };
 
@@ -99,6 +100,8 @@ public:
     gpu_toolkit(gpu_toolkit&& other) = delete;
     gpu_toolkit& operator=(const gpu_toolkit& other) = delete;
     gpu_toolkit& operator=(gpu_toolkit&& other) = delete;
+    std::string single_kernel_name() const { return _configuration.single_kernel_name; }
+    bool enabled_single_kernel() const { return single_kernel_name() == "" ? false : true; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////

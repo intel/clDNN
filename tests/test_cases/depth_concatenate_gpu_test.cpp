@@ -212,7 +212,7 @@ public:
                         test_params * tp = new test_params();
                         tp->data_type = dt;
 
-                        tp->input_layouts.push_back( cldnn::tensor(  b, f0, w, h ) );
+                        tp->input_layouts.push_back( cldnn::layout(tp->data_type, tp->fmt, cldnn::tensor(  b, f0, w, h )) );
 
                         all_generic_params.emplace_back(tp);
                     }
@@ -224,8 +224,8 @@ public:
                         test_params * tp = new test_params();
                         tp->data_type = dt;
 
-                        tp->input_layouts.push_back( cldnn::tensor(  b, f0, w, h ) );
-                      tp->input_layouts.push_back( cldnn::tensor(  b, f1, w, h ) );
+                        tp->input_layouts.push_back(cldnn::layout(tp->data_type, tp->fmt, cldnn::tensor(  b, f0, w, h )) );
+                      tp->input_layouts.push_back(cldnn::layout(tp->data_type, tp->fmt, cldnn::tensor(  b, f1, w, h )) );
 
                         all_generic_params.emplace_back(tp);
                     }
@@ -238,9 +238,9 @@ public:
                         test_params * tp = new test_params();
                         tp->data_type = dt;
 
-                        tp->input_layouts.push_back( cldnn::tensor( b, f0, w, h ) );
-                        tp->input_layouts.push_back( cldnn::tensor( b, f1, w, h ) );
-                        tp->input_layouts.push_back( cldnn::tensor( b, f2, w, h ) );
+                        tp->input_layouts.push_back(cldnn::layout(tp->data_type, tp->fmt, cldnn::tensor( b, f0, w, h )) );
+                        tp->input_layouts.push_back(cldnn::layout(tp->data_type, tp->fmt, cldnn::tensor( b, f1, w, h )) );
+                        tp->input_layouts.push_back(cldnn::layout(tp->data_type, tp->fmt, cldnn::tensor( b, f2, w, h )) );
 
                         all_generic_params.emplace_back(tp);
                     }
@@ -357,9 +357,9 @@ public:
             const auto chans = p->fmt.order();
 
             res << "_" << "Input" << i;
-            for (unsigned int j = 0; j < p->input_layouts[i].sizes(p->fmt).size(); ++j)
+            for (unsigned int j = 0; j < p->input_layouts[i].size.sizes(p->fmt).size(); ++j)
             {
-                res << chans[j] << p->input_layouts[i].sizes(p->fmt)[j];
+                res << chans[j] << p->input_layouts[i].size.sizes(p->fmt)[j];
             }
         }
 

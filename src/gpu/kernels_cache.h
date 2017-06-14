@@ -39,7 +39,7 @@ private:
     std::mutex _mutex;
     std::map<std::string, std::string> _kernel_codes;
     std::map<std::string, kernel_type> _kernels;
-	manager::primitive_db _database;
+    manager::primitive_db _database;
     bool _modified = true;
 
     std::vector<std::string> get_program_source() const;

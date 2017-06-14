@@ -214,23 +214,23 @@ TEST(pooling_forward_gpu, basic_max_yxfb_f32_wsiz2x2_wstr1x1_i3x3x2x2_nopad) {
 }
 
 TEST(pooling_forward_gpu, offsets_max_yxfb_f32_wsiz2x2_wstr2x2_i2x2x1x1_zeropad) {
-	//  Brief test description.
-	//
-	//  Pool window: 2x2
-	//  Pool stride: 2x2
-	//  Pool mode: max
-	//  Padding: zero
-	//
-	//  Input offset : -1x-1
-	//  Input data:
-	//  [ padd, padd, padd, padd]
-	//  [ padd,  1.5, -0.5, padd]
-	//  [ padd, -1.0,  0.5, padd]
-	//  [ padd, padd, padd, padd]
-	//
-	//  Expected output:
-	//  [ 1.5,   0]
-	//  [   0, 0.5]
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 2x2
+    //  Pool mode: max
+    //  Padding: zero
+    //
+    //  Input offset : -1x-1
+    //  Input data:
+    //  [ padd, padd, padd, padd]
+    //  [ padd,  1.5, -0.5, padd]
+    //  [ padd, -1.0,  0.5, padd]
+    //  [ padd, padd, padd, padd]
+    //
+    //  Expected output:
+    //  [ 1.5, -0.5]
+    //  [   -1, 0.5]
 
     engine engine;
 
@@ -251,10 +251,10 @@ TEST(pooling_forward_gpu, offsets_max_yxfb_f32_wsiz2x2_wstr2x2_i2x2x1x1_zeropad)
     auto output_prim = outputs.begin()->second.get_memory();
 
     auto output_ptr = output_prim.pointer<float>();
-	EXPECT_EQ(1.5f, output_ptr[0]);
-	EXPECT_EQ(0.0f, output_ptr[1]);
-	EXPECT_EQ(0.0f, output_ptr[2]);
-	EXPECT_EQ(0.5f, output_ptr[3]);
+    EXPECT_EQ( 1.5f, output_ptr[0]);
+    EXPECT_EQ(-0.5f, output_ptr[1]);
+    EXPECT_EQ(-1.0f, output_ptr[2]);
+    EXPECT_EQ( 0.5f, output_ptr[3]);
 }
 
 TEST(pooling_forward_gpu, offsets_max_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad) {
@@ -274,7 +274,7 @@ TEST(pooling_forward_gpu, offsets_max_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad)
     //  [ padd, padd, padd, padd, padd]
     //
     //  Expected output:
-    //  [ 1.5,   0]
+    //  [ 1.5,  -0.5]
     //  [   1,  -0.5]
 
     engine engine;
@@ -303,28 +303,28 @@ TEST(pooling_forward_gpu, offsets_max_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad)
 
     auto output_ptr = output_prim.pointer<float>();
     EXPECT_EQ(1.5f, get_value<float>(output_ptr, 0));
-    EXPECT_EQ(0.0f, get_value<float>(output_ptr, 1));
+    EXPECT_EQ(-0.5f, get_value<float>(output_ptr, 1));
     //TODO !!!implement correct output size calculation!!!
     EXPECT_EQ(1.0f, get_value<float>(output_ptr, 3));
     EXPECT_EQ(-0.5f, get_value<float>(output_ptr, 4));
 }
 
 TEST(pooling_forward_gpu, basic_avg_yxfb_f32_wsiz2x2_wstr1x1_i3x3x1x1_nopad) {
-	//  Brief test description.
-	//
-	//  Pool window: 2x2
-	//  Pool stride: 1x1
-	//  Pool mode: avg
-	//  Padding: none
-	//
-	//  Input data:
-	//  [-0.5,  1.0,  0.5]
-	//  [ 2.0,  1.5, -0.5]
-	//  [ 4.0, -1.0,  3.5]
-	//
-	//  Expected output:
-	//  [ 1.0,   0.625]
-	//  [ 1.625, 0.875]
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 1x1
+    //  Pool mode: avg
+    //  Padding: none
+    //
+    //  Input data:
+    //  [-0.5,  1.0,  0.5]
+    //  [ 2.0,  1.5, -0.5]
+    //  [ 4.0, -1.0,  3.5]
+    //
+    //  Expected output:
+    //  [ 1.0,   0.625]
+    //  [ 1.625, 0.875]
 
     engine engine;
 
@@ -346,30 +346,30 @@ TEST(pooling_forward_gpu, basic_avg_yxfb_f32_wsiz2x2_wstr1x1_i3x3x1x1_nopad) {
 
     auto output_ptr = output_prim.pointer<float>();
     
-	EXPECT_EQ(1.0f,   output_ptr[0]);
-	EXPECT_EQ(0.625f, output_ptr[1]);
-	EXPECT_EQ(1.625f, output_ptr[2]);
-	EXPECT_EQ(0.875f, output_ptr[3]);
+    EXPECT_EQ(1.0f,   output_ptr[0]);
+    EXPECT_EQ(0.625f, output_ptr[1]);
+    EXPECT_EQ(1.625f, output_ptr[2]);
+    EXPECT_EQ(0.875f, output_ptr[3]);
 }
 
 TEST(pooling_forward_gpu, offsets_avg_yxfb_f32_wsiz2x2_wstr2x2_i2x2x1x1_zeropad) {
-	//  Brief test description.
-	//
-	//  Pool window: 2x2
-	//  Pool stride: 2x2
-	//  Pool mode: avg
-	//  Padding: zero
-	//
-	//  Input offset : -1x-1
-	//  Input data:
-	//  [ padd, padd, padd, padd]
-	//  [ padd,  1.5, -0.5, padd]
-	//  [ padd, -1.0,  0.5, padd]
-	//  [ padd, padd, padd, padd]
-	//
-	//  Expected output:
-	//  [ 0.375, -0.125]
-	//  [ -0.25,  0.125]
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 2x2
+    //  Pool mode: avg
+    //  Padding: zero
+    //
+    //  Input offset : -1x-1
+    //  Input data:
+    //  [ padd, padd, padd, padd]
+    //  [ padd,  1.5, -0.5, padd]
+    //  [ padd, -1.0,  0.5, padd]
+    //  [ padd, padd, padd, padd]
+    //
+    //  Expected output:
+    //  [ 0.375, -0.125]
+    //  [ -0.25,  0.125]
 
     engine engine;
 
@@ -390,30 +390,30 @@ TEST(pooling_forward_gpu, offsets_avg_yxfb_f32_wsiz2x2_wstr2x2_i2x2x1x1_zeropad)
     auto output_prim = outputs.begin()->second.get_memory();
 
     auto output_ptr = output_prim.pointer<float>();
-	EXPECT_EQ(0.375f,  output_ptr[0]);
-	EXPECT_EQ(-0.125f, output_ptr[1]);
-	EXPECT_EQ(-0.25f,  output_ptr[2]);
-	EXPECT_EQ(0.125f,  output_ptr[3]);
+    EXPECT_EQ(0.375f,  output_ptr[0]);
+    EXPECT_EQ(-0.125f, output_ptr[1]);
+    EXPECT_EQ(-0.25f,  output_ptr[2]);
+    EXPECT_EQ(0.125f,  output_ptr[3]);
 }
 
 TEST(pooling_forward_gpu, offsets_avg_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad) {
-	//  Brief test description.
-	//
-	//  Pool window: 2x2
-	//  Pool stride: 2x2
-	//  Pool mode: avg
-	//  Padding: zero
-	//
-	//  Input offset : -1x-1
-	//  Input data:
-	//  [ padd, padd, padd, padd]
-	//  [ padd,  1.5, -0.5,  2.5]
-	//  [ padd, -1.0,  0.5,  3.0]
-	//  [ padd,  0.5,  0.0, -8.0]
-	//
-	//  Expected output:
-	//  [  0.375,    0.5]
-	//  [ -0.125, -1.125]
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 2x2
+    //  Pool mode: avg
+    //  Padding: zero
+    //
+    //  Input offset : -1x-1
+    //  Input data:
+    //  [ padd, padd, padd, padd]
+    //  [ padd,  1.5, -0.5,  2.5]
+    //  [ padd, -1.0,  0.5,  3.0]
+    //  [ padd,  0.5,  0.0, -8.0]
+    //
+    //  Expected output:
+    //  [  0.375,    0.5]
+    //  [ -0.125, -1.125]
 
     engine engine;
 
@@ -434,11 +434,11 @@ TEST(pooling_forward_gpu, offsets_avg_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad)
     auto output_prim = outputs.begin()->second.get_memory();
 
     auto output_ptr = output_prim.pointer<float>();
-	EXPECT_EQ(0.375f,  output_ptr[0]);
-	EXPECT_EQ(0.5f,    output_ptr[1]);
+    EXPECT_EQ(0.375f,  output_ptr[0]);
+    EXPECT_EQ(0.5f,    output_ptr[1]);
     //TODO !!!implement correct output size calculation!!!
-	EXPECT_EQ(-0.125f, output_ptr[3]);
-	EXPECT_EQ(-1.125f, output_ptr[4]);
+    EXPECT_EQ(-0.125f, output_ptr[3]);
+    EXPECT_EQ(-1.125f, output_ptr[4]);
 }
 
 TEST(pooling_forward_gpu, offsets_avg_yxfb_bfyx_f32_wsiz2x2_wstr2x2_i2x2x1x1_outpad2) {
@@ -521,7 +521,7 @@ TEST(pooling_forward_gpu, offsets_max_yxfb_bfyx_f32_wsiz2x2_wstr2x2_i3x3x1x1_out
     //
     //  Expected output:
     //  [0, 0, 0, 0, 0]
-    //  [0, 1.5, 0, 0, 0]
+    //  [0, 1.5, -0.5, 0, 0]
     //  [0, 1, -0.5, 0, 0]
     //  [0, 0, 0, 0, 0]
 
@@ -551,7 +551,7 @@ TEST(pooling_forward_gpu, offsets_max_yxfb_bfyx_f32_wsiz2x2_wstr2x2_i3x3x1x1_out
 
         std::vector<float> expected = {
             0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.5f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.5f,-0.5f, 0.0f, 0.0f,
             0.0f, 1.f, -0.5f, 0.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
         };

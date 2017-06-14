@@ -62,7 +62,7 @@ struct normalize_gpu : typed_primitive_impl<normalize>
 
     static kd_selector_t<kernel_data, normalize_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> ks;
 
-	normalize_gpu(const normalize_node& arg)
+    normalize_gpu(const normalize_node& arg)
         : outer(arg),
         _engine_info(outer.get_program().get_engine()->get_context()->get_engine_info()),
         _kernel_data(ks.get_kernel(
@@ -105,28 +105,28 @@ struct normalize_gpu : typed_primitive_impl<normalize>
         if (!engine_info.supports_fp16 && data.fp16_unit_used)
             throw std::invalid_argument("GPU device does not support half precision floating-point formats (cl_khr_fp16 extension)");
 
-        auto input_padding = outer.input().get_primitive()->output_padding;
+        auto input_padding = outer.input().get_output_layout().data_padding;
         auto input_size = outer.input().get_output_layout().size;
 
-		auto output_padding = outer.get_primitive()->output_padding;
-		auto output_size = outer.get_output_layout().size;
+        auto output_padding = outer.get_output_layout().data_padding;
+        auto output_size = outer.get_output_layout().size;
 
-		auto scale_feature_size = outer.scale().get_output_layout().size.spatial[0];
+        auto scale_feature_size = outer.scale().get_output_layout().size.spatial[0];
 
         gpu::jit_constants mem_consts {
             gpu::make_jit_constant("INPUT",                         input_size),
-			gpu::make_jit_constant("SCALE_INDEX",					(scale_feature_size == 1) ? "0" : "f"),
+            gpu::make_jit_constant("SCALE_INDEX",                   (scale_feature_size == 1) ? "0" : "f"),
             gpu::make_jit_constant("OUTPUT",                        outer.get_output_layout().size),
-			gpu::make_jit_constant("EPSILON",						outer.get_primitive()->epsilon),
+            gpu::make_jit_constant("EPSILON",                       outer.get_primitive()->epsilon),
             gpu::make_jit_constant("FP16_SUPPORTED",                static_cast<int>(engine_info.supports_fp16)),
             gpu::make_jit_constant("FP16_UNIT_USED",                static_cast<int>(data.fp16_unit_used)),
             gpu::make_jit_constant("UNIT_TYPE",                     data.fp16_unit_used ? "half" : "float"),
             gpu::make_jit_constant("INPUT_PADDING",                 input_padding),
-            gpu::make_jit_constant("OUTPUT_PADDING",                outer.get_primitive()->output_padding),
+            gpu::make_jit_constant("OUTPUT_PADDING",                output_padding),
             gpu::make_jit_constant("INPUT_BUFFER_SIZE_X",           !input_padding ? input_size.spatial[0] : input_size.spatial[0] + input_padding.upper_size().spatial[0] + input_padding.lower_size().spatial[0]),
             gpu::make_jit_constant("INPUT_BUFFER_SIZE_Y",           !input_padding ? input_size.spatial[1] : input_size.spatial[1] + input_padding.upper_size().spatial[1] + input_padding.lower_size().spatial[1]),
-			gpu::make_jit_constant("OUTPUT_BUFFER_SIZE_X",          !output_padding ? output_size.spatial[0] : output_size.spatial[0] + output_padding.upper_size().spatial[0] + output_padding.lower_size().spatial[0]),
-			gpu::make_jit_constant("OUTPUT_BUFFER_SIZE_Y",          !output_padding ? output_size.spatial[1] : output_size.spatial[1] + output_padding.upper_size().spatial[1] + output_padding.lower_size().spatial[1])
+            gpu::make_jit_constant("OUTPUT_BUFFER_SIZE_X",          !output_padding ? output_size.spatial[0] : output_size.spatial[0] + output_padding.upper_size().spatial[0] + output_padding.lower_size().spatial[0]),
+            gpu::make_jit_constant("OUTPUT_BUFFER_SIZE_Y",          !output_padding ? output_size.spatial[1] : output_size.spatial[1] + output_padding.upper_size().spatial[1] + output_padding.lower_size().spatial[1])
         };
 
         return mem_consts;
@@ -141,7 +141,7 @@ struct normalize_gpu : typed_primitive_impl<normalize>
                 events,
                 instance.input_memory(),
                 instance.output_memory(),
-				instance.scale_memory());
+                instance.scale_memory());
     }
 
 
@@ -151,95 +151,95 @@ struct normalize_gpu : typed_primitive_impl<normalize>
 
 
 normalize_gpu::kernel_data get_kernel_across_spatial(const normalize_node& arg, format format)
-{	
-	normalize_gpu::kernel_data kd = normalize_gpu::set_default(arg);
+{    
+    normalize_gpu::kernel_data kd = normalize_gpu::set_default(arg);
 
-	if (format == cldnn::format::bfyx)
-	{
-		kd.kernel_name = kernel_name_across_spatial_bfyx;	
-	}
-	else if (format == cldnn::format::yxfb)
-	{
-		kd.kernel_name = kernel_name_across_spatial_yxfb;
-	}
-	else
-	{
-		throw std::invalid_argument("Unsupported normalize across spatial format - " + cldnn::format::traits(format).order);
-	}
+    if (format == cldnn::format::bfyx)
+    {
+        kd.kernel_name = kernel_name_across_spatial_bfyx;    
+    }
+    else if (format == cldnn::format::yxfb)
+    {
+        kd.kernel_name = kernel_name_across_spatial_yxfb;
+    }
+    else
+    {
+        throw std::invalid_argument("Unsupported normalize across spatial format - " + cldnn::format::traits(format).order);
+    }
  
-	return kd;
+    return kd;
 }
 
 normalize_gpu::kernel_data get_kernel_within_spatial(const normalize_node& arg, format format)
 {
-	normalize_gpu::kernel_data kd = normalize_gpu::set_default(arg);
+    normalize_gpu::kernel_data kd = normalize_gpu::set_default(arg);
    
-	if (format == cldnn::format::bfyx)
-	{
-		kd.kernel_name = kernel_name_within_spatial_bfyx;	
-	}
-	else if (format == cldnn::format::yxfb)
-	{
-		kd.kernel_name = kernel_name_within_spatial_yxfb;
-	}
-	else
-	{
-		throw std::invalid_argument("Unsupported normalize within spatial format - " + cldnn::format::traits(format).order);
-	}
-	auto input_layout = arg.input().get_output_layout();
-	kd.gws0 = align_to(input_layout.size.spatial[0], 32);
-	kd.gws1 = input_layout.size.spatial[1];
-	kd.gws2 = input_layout.size.batch[0];
+    if (format == cldnn::format::bfyx)
+    {
+        kd.kernel_name = kernel_name_within_spatial_bfyx;    
+    }
+    else if (format == cldnn::format::yxfb)
+    {
+        kd.kernel_name = kernel_name_within_spatial_yxfb;
+    }
+    else
+    {
+        throw std::invalid_argument("Unsupported normalize within spatial format - " + cldnn::format::traits(format).order);
+    }
+    auto input_layout = arg.input().get_output_layout();
+    kd.gws0 = align_to(input_layout.size.spatial[0], 32);
+    kd.gws1 = input_layout.size.spatial[1];
+    kd.gws2 = input_layout.size.batch[0];
 
-	kd.lws0 = 32;
-	kd.lws1 = 1;
-	kd.lws2 = 1;
+    kd.lws0 = 32;
+    kd.lws1 = 1;
+    kd.lws2 = 1;
 
     return kd;
 }
 
 normalize_gpu::kernel_data get_bfyx_normalize_kernel(const normalize_node& arg)
 {
-	if (arg.get_primitive()->across_spatial)
-	{
-		return get_kernel_across_spatial(arg, cldnn::format::bfyx);
-	}
-	else
-	{
-		return get_kernel_within_spatial(arg, cldnn::format::bfyx);
-	}
+    if (arg.get_primitive()->across_spatial)
+    {
+        return get_kernel_across_spatial(arg, cldnn::format::bfyx);
+    }
+    else
+    {
+        return get_kernel_within_spatial(arg, cldnn::format::bfyx);
+    }
 }
 
 normalize_gpu::kernel_data get_yxfb_normalize_kernel(const normalize_node& arg)
 {
-	if (arg.get_primitive()->across_spatial)
-	{
-		return get_kernel_across_spatial(arg, cldnn::format::yxfb);
-	}
-	else
-	{
-		return get_kernel_within_spatial(arg, cldnn::format::yxfb);
-	}
+    if (arg.get_primitive()->across_spatial)
+    {
+        return get_kernel_across_spatial(arg, cldnn::format::yxfb);
+    }
+    else
+    {
+        return get_kernel_within_spatial(arg, cldnn::format::yxfb);
+    }
 }
 
 kd_selector_t<normalize_gpu::kernel_data, normalize_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> normalize_gpu::ks = 
 {
     { std::make_tuple(data_types::f32, format::bfyx, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), get_bfyx_normalize_kernel },
     { std::make_tuple(data_types::f16, format::bfyx, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), get_bfyx_normalize_kernel },
-	{ std::make_tuple(data_types::f32, format::yxfb, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), get_yxfb_normalize_kernel },
-	{ std::make_tuple(data_types::f16, format::yxfb, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), get_yxfb_normalize_kernel },
+    { std::make_tuple(data_types::f32, format::yxfb, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), get_yxfb_normalize_kernel },
+    { std::make_tuple(data_types::f16, format::yxfb, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), get_yxfb_normalize_kernel },
 };
 
 
 namespace {
     struct attach 
-	{
+    {
         attach() 
-		{
+        {
             implementation_map<normalize>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), normalize_gpu::create);
             implementation_map<normalize>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), normalize_gpu::create);
-			implementation_map<normalize>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), normalize_gpu::create);
-			implementation_map<normalize>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), normalize_gpu::create);
+            implementation_map<normalize>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), normalize_gpu::create);
+            implementation_map<normalize>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), normalize_gpu::create);
         }
         ~attach() {}
     };

@@ -35,7 +35,7 @@ typedef enum /*:int32_t*/
 {
     cldnn_code_type_corner,
     cldnn_code_type_center_size,
-	cldnn_code_type_corner_size,
+    cldnn_code_type_corner_size,
 } cldnn_prior_box_code_type;
 
 /// @brief Generates a list of detections based on location and confidence predictions by doing non maximum suppression.

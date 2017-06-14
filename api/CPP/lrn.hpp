@@ -51,7 +51,7 @@ struct lrn :public primitive_base<lrn, CLDNN_PRIMITIVE_DESC(lrn)>
     /// @param alpha Hyper parameter "alpha".
     /// @param beta Hyper parameter "beta".
     /// @param lrn_norm_region Normalize across or within channel
-	lrn(
+    lrn(
         const primitive_id& id,
         const primitive_id& input,
         uint32_t size,
@@ -70,7 +70,7 @@ struct lrn :public primitive_base<lrn, CLDNN_PRIMITIVE_DESC(lrn)>
     {}
 
     /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{normalization}
-	lrn(const dto* dto)
+    lrn(const dto* dto)
         : primitive_base(dto)
         , size(dto->size)
         , k(dto->k)

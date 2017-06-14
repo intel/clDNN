@@ -28,7 +28,7 @@ std::vector<code> primitive_db::get(const primitive_id & id)
     auto codes = primitives.equal_range(id);
     std::vector<code> temp;
     std::for_each(codes.first, codes.second, [&](auto c){ temp.push_back(c.second); });
-	assert(temp.size() > 0 && "There should be at least one implementation of primitive");
+    assert(temp.size() > 0 && "There should be at least one implementation of primitive");
     return temp;
 }
 

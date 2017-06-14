@@ -16,26 +16,29 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "api/CPP/simpler_nms.hpp"
+#include "api/CPP/proposal.hpp"
 #include "primitive_inst.h"
 
 namespace cldnn
 {
 
 template <>
-struct typed_program_node<simpler_nms> : public typed_program_node_base<simpler_nms>
+struct typed_program_node<proposal> : public typed_program_node_base<proposal>
 {
+    using parent = typed_program_node_base<proposal>;
+    using parent::parent;
+
     auto& cls_score() const { return get_dependency(0); }
     auto& bbox_pred() const { return get_dependency(1); }
     auto& image_info() const { return get_dependency(2); }
 };
 
-using simpler_nms_node = typed_program_node<simpler_nms>;
+using proposal_node = typed_program_node<proposal>;
 
 template <>
-class typed_primitive_inst<simpler_nms> : public typed_primitive_inst_base<simpler_nms>
+class typed_primitive_inst<proposal> : public typed_primitive_inst_base<proposal>
 {
-    using parent = typed_primitive_inst_base<simpler_nms>;
+    using parent = typed_primitive_inst_base<proposal>;
 
 public:
     struct anchor
@@ -63,22 +66,28 @@ public:
     enum input_index {
         cls_scores_index,
         bbox_pred_index,
-		image_info_index
+        image_info_index
     };
+
+    //TODO(ruv): missign validation?? for image_info dimensions? also faster r-cnn expected it to be dim3 while the new networks expect dim 6!!! ([5] being unused)
+    //TODO(ruv): we should be able to set dims[3]=dim[4]=1 if not provided
 
     // indices of the image info parameters inside the image_info memory object (the object
     // is an integer array of these parameters)
-	enum image_info_size_index {
-		image_info_width_index = 0,
-		image_info_height_index = 1,
-		image_info_depth_index = 2
-	};
+    enum image_info_size_index {
+        image_info_height_index,
+        image_info_width_index,
+        image_info_depth_index,
+        image_info_scale_min_bbox_y,
+        image_info_scale_min_bbox_x,
+        image_info_scale_depth_index,
+    };
 
-    static layout calc_output_layout(simpler_nms_node const& node);
-    static std::string to_string(simpler_nms_node const& node);
+    static layout calc_output_layout(proposal_node const& node);
+    static std::string to_string(proposal_node const& node);
 
 public:    
-    typed_primitive_inst(network_impl& network, simpler_nms_node const& desc);
+    typed_primitive_inst(network_impl& network, proposal_node const& desc);
 
     const std::vector<anchor>& get_anchors() const { return _anchors; }
 
@@ -86,6 +95,6 @@ private:
     std::vector<anchor> _anchors;
 };
 
-using simpler_nms_inst = typed_primitive_inst<simpler_nms>;
+using proposal_inst = typed_primitive_inst<proposal>;
 
 }

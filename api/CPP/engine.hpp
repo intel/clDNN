@@ -39,21 +39,23 @@ struct engine_configuration
     const bool enable_profiling;         ///< Enable per-primitive profiling.
     const bool meaningful_kernels_names; ///< Generate meaniful names fo OpenCL kernels.
     const std::string compiler_options;  ///< OpenCL compiler options string.
+    const std::string single_kernel_name; ///< If provided, runs specific layer.
 
     /// @brief Constructs engine configuration with specified options.
     /// @param profiling Enable per-primitive profiling.
     /// @param decorate_kernel_names Generate meaniful names fo OpenCL kernels.
     /// @param options OpenCL compiler options string.
-    engine_configuration(bool profiling = false, bool decorate_kernel_names = false, const std::string& options = std::string())
-        :enable_profiling(profiling), meaningful_kernels_names(decorate_kernel_names), compiler_options(options) {}
+    /// @param single_kernel If provided, runs specific layer.
+    engine_configuration(bool profiling = false, bool decorate_kernel_names = false, const std::string& options = std::string(), const std::string& single_kernel = std::string())
+        :enable_profiling(profiling), meaningful_kernels_names(decorate_kernel_names), compiler_options(options), single_kernel_name(single_kernel) {}
 
     engine_configuration(const cldnn_engine_configuration& c_conf)
-        :enable_profiling(c_conf.enable_profiling != 0), meaningful_kernels_names(c_conf.meaningful_kernels_names != 0), compiler_options(c_conf.compiler_options){}
+        :enable_profiling(c_conf.enable_profiling != 0), meaningful_kernels_names(c_conf.meaningful_kernels_names != 0), compiler_options(c_conf.compiler_options), single_kernel_name(c_conf.single_kernel_name){}
 
     /// @brief Implicit conversion to C API @ref ::cldnn_engine_configuration
     operator ::cldnn_engine_configuration() const
     {
-        return{ enable_profiling, meaningful_kernels_names, compiler_options.c_str() };
+        return{ enable_profiling, meaningful_kernels_names, compiler_options.c_str(), single_kernel_name.c_str() };
     }
 };
 

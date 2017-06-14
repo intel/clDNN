@@ -117,6 +117,7 @@ typedef struct
     uint32_t enable_profiling;         ///< Enable per-primitive profiling.
     uint32_t meaningful_kernels_names; ///< Generate meaniful names fo OpenCL kernels.
     const char* compiler_options;      ///< OpenCL compiler options string.
+    const char* single_kernel_name;    ///< If provided, runs specific layer.
 }  cldnn_engine_configuration;
 
 /// @brief Information about the engine returned by cldnn_get_engine_info().
@@ -200,6 +201,8 @@ typedef enum /*:int32_t*/
                                 ///< \n \image html os_iyx_osv16.jpg
     cldnn_format_bs_xs_xsv8_bsv8, ///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice.
                                   ///< \n \image html bs_xs_xsv8_bsv8.jpg
+    cldnn_format_bs_xs_xsv8_bsv16,///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv16 - 16 values of single slice.
+                                  ///< \n \image html bs_xs_xsv8_bsv16.jpg
     cldnn_format_bs_x_bsv16,    ///< format used only for fully connected weights fp16 batch=1 : bs - batch slice (responses slice), bsv16 - 16 values of single batch slice, x - flattened plane of (fyx).
                                 ///< \n \image html bs_x_bsv16.jpg
     cldnn_format_format_num,    ///< number of format types
@@ -309,7 +312,7 @@ CLDNN_API cldnn_topology cldnn_create_topology(cldnn_status* status);
 
 /// @brief Add new primitive to the topology.
 /// @param[in] dto The pointer to a structure defined by @ref CLDNN_BEGIN_PRIMITIVE_DESC and @ref CLDNN_END_PRIMITIVE_DESC
-CLDNN_API void cldnn_add_primitive(cldnn_topology topology, const CLDNN_PRIMITIVE_DESC(primitive)* dto, cldnn_status* status);
+CLDNN_API void cldnn_add_primitive(cldnn_topology topology, const struct CLDNN_PRIMITIVE_DESC(primitive)* dto, cldnn_status* status);
 
 /// @brief Return all primitives id from topology.
 /// @details Function fills user provided buffer by primitive ids. Each id is followed by '\0'.
@@ -472,7 +475,7 @@ CLDNN_API cldnn_memory cldnn_allocate_memory(cldnn_engine engine, cldnn_layout l
 /// @note User is responsible for buffer deallocation. Buffer lifetime should be bigger than lifetime of the memory object.
 CLDNN_API cldnn_memory cldnn_attach_memory(cldnn_layout layout, void* pointer, size_t size, cldnn_status* status);
 /// @brief Checks if two memory objects refer to the same underlaying buffer.
-CLDNN_API bool cldnn_is_the_same_buffer(cldnn_memory mem1, cldnn_memory mem2, cldnn_status* status);
+CLDNN_API int32_t cldnn_is_the_same_buffer(cldnn_memory mem1, cldnn_memory mem2, cldnn_status* status);
 /// @brief Increment reference counter for the memory object.
 CLDNN_API void cldnn_retain_memory(cldnn_memory memory, cldnn_status* status);
 /// @brief Decrement reference counter for the memory object. Deletes object when counter becomes zero.

@@ -25,9 +25,13 @@ namespace cldnn
 template <>
 struct typed_program_node<scale> : public typed_program_node_base<scale>
 {
+    using parent = typed_program_node_base<scale>;
+
 public:
+    using parent::parent;
+
     auto& input() const { return get_dependency(0); }
-    auto& scale() const { return get_dependency(1); }
+    auto& scale_in() const { return get_dependency(1); }
     auto& bias() const { return get_dependency(2); }
 };
 

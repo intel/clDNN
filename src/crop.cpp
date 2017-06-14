@@ -21,7 +21,7 @@ namespace cldnn
 {
 primitive_type_id crop_type_id()
 {
-    static primitive_type_base<crop, crop_inst> instance;
+    static primitive_type_base<crop> instance;
     return &instance;
 }
 

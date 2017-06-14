@@ -22,7 +22,7 @@ namespace cldnn
 {
 primitive_type_id pooling_type_id()
 {
-    static primitive_type_base<pooling, pooling_inst> instance;
+    static primitive_type_base<pooling> instance;
     return &instance;
 }
 
@@ -68,9 +68,9 @@ std::string pooling_inst::to_string(pooling_node const& node)
     auto input          = node.input();
     auto strd           = desc->stride;
     auto kernel_size    = desc->size;
-    auto mode           = desc->mode == pooling_mode::average ? "avarage" : "max";   
+    auto mode           = desc->mode == pooling_mode::max ? "max" : "average";
 
-    primitive_description << "id: " << desc->id << ", type: pooling" << ", mode: " << mode <<
+    primitive_description << "id: " << desc->id << ", type: pooling, mode: " << mode <<
         "\n\tinput: "         << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
         "\n\tstride: "        << strd.spatial[0] << "x" << strd.spatial[1] << 
         "\n\tkernel size: "   << kernel_size.spatial[0] << "x" << kernel_size.spatial[1] << 

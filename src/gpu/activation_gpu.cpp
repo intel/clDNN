@@ -90,17 +90,20 @@ struct activation_gpu : typed_primitive_impl<activation>
         auto output_size = outer.get_output_layout().size;
         auto output_padding = outer.get_output_layout().data_padding;
 
+        bool is_parameterized = outer.is_parameterized();
+
         gpu::jit_constants mem_consts
         {
-            gpu::make_jit_constant("INPUT",          input_size),
-            gpu::make_jit_constant("INPUT_PADDING",  input_padding),
-            gpu::make_jit_constant("OUTPUT",         output_size),
-            gpu::make_jit_constant("OUTPUT_PADDING", output_padding),
-            gpu::make_jit_constant("RELU",           1),
-            gpu::make_jit_constant("NEGATIVE_SLOPE", outer.get_primitive()->negative_slope),
-            gpu::make_jit_constant("FP16_SUPPORTED", static_cast<int>(engine_info.supports_fp16)),
-            gpu::make_jit_constant("FP16_UNIT_USED", static_cast<int>(data.fp16_unit_used)),
-            gpu::make_jit_constant("UNIT_TYPE",      data.fp16_unit_used ? "half" : "float")
+            gpu::make_jit_constant("INPUT",                         input_size),
+            gpu::make_jit_constant("INPUT_PADDING",                 input_padding),
+            gpu::make_jit_constant("OUTPUT",                        output_size),
+            gpu::make_jit_constant("OUTPUT_PADDING",                output_padding),
+            gpu::make_jit_constant("RELU",                          is_parameterized ? 0 : 1),
+            gpu::make_jit_constant("PRELU",                         is_parameterized ? 1 : 0),
+            gpu::make_jit_constant("NEGATIVE_SLOPE",                outer.get_primitive()->negative_slope),
+            gpu::make_jit_constant("FP16_SUPPORTED",                static_cast<int>(engine_info.supports_fp16)),
+            gpu::make_jit_constant("FP16_UNIT_USED",                static_cast<int>(data.fp16_unit_used)),
+            gpu::make_jit_constant("UNIT_TYPE",                     data.fp16_unit_used ? "half" : "float")
         };
 
         return mem_consts;
@@ -110,11 +113,23 @@ struct activation_gpu : typed_primitive_impl<activation>
     {
         const auto& kd    = _kernel_data;
 
-        return _kernel.run<gpu::input_mem, gpu::output_mem>(
-            { kd.gws0, kd.lws0 },
-            events,
-            instance.input_memory(),
-            instance.output_memory());
+        if (outer.is_parameterized())
+        {
+            return _kernel.run<gpu::input_mem, gpu::output_mem, gpu::input_mem>(
+                { kd.gws0, kd.lws0 },
+                events,
+                instance.input_memory(),
+                instance.output_memory(),
+                instance.slope_memory());
+        }
+        else
+        {
+            return _kernel.run<gpu::input_mem, gpu::output_mem>(
+                { kd.gws0, kd.lws0 },
+                events,
+                instance.input_memory(),
+                instance.output_memory());
+        }  
     }
 
     static primitive_impl* create(const activation_node& arg) { return new activation_gpu(arg); };

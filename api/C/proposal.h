@@ -15,8 +15,8 @@
 */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef SIMPLER_NMS_H
-#define SIMPLER_NMS_H
+#ifndef PROPOSAL_H
+#define PROPOSAL_H
 
 #include "cldnn.h"
 /// @addtogroup c_api C API
@@ -32,17 +32,18 @@ extern "C" {
 
 #define CLDNN_ROI_VECTOR_SIZE 5
 
-CLDNN_BEGIN_PRIMITIVE_DESC(simpler_nms)
+CLDNN_BEGIN_PRIMITIVE_DESC(proposal)
     int max_proposals;
     float iou_threshold;
     int min_bbox_size;
     int feature_stride;
     int pre_nms_topn;
     int post_nms_topn;
+    cldnn_float_arr ratios;
     cldnn_float_arr scales;
-CLDNN_END_PRIMITIVE_DESC(simpler_nms)
+CLDNN_END_PRIMITIVE_DESC(proposal)
 
-CLDNN_DECLARE_PRIMITIVE_TYPE_ID(simpler_nms);
+CLDNN_DECLARE_PRIMITIVE_TYPE_ID(proposal);
 
 #ifdef __cplusplus
 }
@@ -51,5 +52,5 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(simpler_nms);
 /// @}
 /// @}
 /// @}
-#endif /* SIMPLER_NMS_H */
+#endif /* PROPOSAL_H */
 

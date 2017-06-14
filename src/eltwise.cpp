@@ -22,7 +22,7 @@ namespace cldnn
 {
 primitive_type_id eltwise_type_id()
 {
-    static primitive_type_base<eltwise, eltwise_inst> instance;
+    static primitive_type_base<eltwise> instance;
     return &instance;
 }
 

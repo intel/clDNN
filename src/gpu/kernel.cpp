@@ -40,4 +40,67 @@ void kernel_execution_options::set_local_sizes()
         total_lws *= optimal_lws_values[lws_idx];
     }
 }
+
+std::vector<uint32_t> get_tensor_array(cldnn::format fmt, const cldnn::tensor& t)
+{
+    std::vector<uint32_t> ret;
+    
+    auto&& sizes = t.sizes(fmt);
+    ret.reserve(sizes.size());
+
+    for (auto itr = sizes.rbegin(); itr != sizes.rend(); ++itr)
+        ret.push_back(*itr);
+
+    return ret;
+}
+
+std::vector<uint32_t> get_accumulated_tensor_array(cldnn::format fmt, const cldnn::tensor& t)
+{
+    std::vector<uint32_t> ret;
+
+    auto&& sizes = t.sizes(fmt);
+    ret.reserve(sizes.size());
+
+    uint32_t acc = 1;
+    for (auto itr = sizes.rbegin(); itr != sizes.rend(); ++itr)
+    {
+        ret.push_back(acc);
+        acc *= *itr;
+    }
+
+    return ret;
+
+}
+
+std::vector<uint32_t> get_sizes_array(cldnn::layout const& layout)
+{
+    return get_tensor_array(layout.format, layout.size);
+}
+
+std::vector<uint32_t> get_buffer_sizes_array(cldnn::layout const& layout)
+{
+    return get_tensor_array(layout.format, layout.get_buffer_size());
+}
+
+std::vector<uint32_t> get_accumulated_sizes_array(cldnn::layout const& layout)
+{
+    return get_accumulated_tensor_array(layout.format, layout.size);
+}
+
+std::vector<uint32_t> get_accumulated_buffer_sizes_array(cldnn::layout const& layout)
+{
+    return get_accumulated_tensor_array(layout.format, layout.get_buffer_size());
+}
+
+std::string get_offsets_string(size_t dimensions, const cldnn::tensor &sizes)
+{
+    std::stringstream os;
+    os << "(uint[]){ ";
+    for (size_t i = 0; i < dimensions; i++)
+    {
+        os << static_cast<uint32_t>(sizes.raw[i]) << ", ";
+    }
+    os << " }";
+    return os.str();
+}
 } }

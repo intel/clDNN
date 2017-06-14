@@ -21,7 +21,7 @@ namespace cldnn
 {
 primitive_type_id batch_norm_type_id()
 {
-    static primitive_type_base<batch_norm, batch_norm_inst> instance;
+    static primitive_type_base<batch_norm> instance;
     return &instance;
 }
 
@@ -55,19 +55,9 @@ std::string batch_norm_inst::to_string(batch_norm_node const& node)
 batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node const& node)
     :parent(network, node) 
 {
-    auto input_format = input_memory().get_layout().format;
-    auto output_format = output_memory().get_layout().format;
     auto mean_format = mean_memory().get_layout().format;
     auto variance_format = variance_memory().get_layout().format;
 
-    if (input_format != format::yxfb)
-    {
-        throw std::runtime_error("Batch norm input is not in yxfb format!");
-    }
-    if (output_format != format::yxfb)
-    {
-        throw std::runtime_error("Batch norm output is not in yxfb format!");
-    }
     if (mean_format != format::yxfb &&
         mean_format != format::bfyx)
     {

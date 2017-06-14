@@ -496,9 +496,9 @@ cldnn_memory cldnn_attach_memory(cldnn_layout layout, void* pointer, size_t size
     });
 }
 
-CLDNN_API bool cldnn_is_the_same_buffer(cldnn_memory mem1, cldnn_memory mem2, cldnn_status* status)
+CLDNN_API int32_t cldnn_is_the_same_buffer(cldnn_memory mem1, cldnn_memory mem2, cldnn_status* status)
 {
-    return exception_handler<bool>(CLDNN_ERROR, status, false, [&]()
+    return static_cast<int32_t>(exception_handler<bool>(CLDNN_ERROR, status, false, [&]()
     {
         SHOULD_NOT_BE_NULL(mem1, "Memory");
         SHOULD_NOT_BE_NULL(mem2, "Memory");
@@ -515,7 +515,7 @@ CLDNN_API bool cldnn_is_the_same_buffer(cldnn_memory mem1, cldnn_memory mem2, cl
 
         //memories were allocated by the engine so let it decide whether they refer to the same buffer
         return api_cast(mem1)->get_engine()->is_the_same_buffer(api_cast(mem1), api_cast(mem2));
-    });
+    }));
 }
 
 void cldnn_retain_memory(cldnn_memory memory, cldnn_status* status)
@@ -635,7 +635,7 @@ PRIMITIVE_TYPE_ID_CALL_IMPL(reorder)
 PRIMITIVE_TYPE_ID_CALL_IMPL(reshape)
 PRIMITIVE_TYPE_ID_CALL_IMPL(scale)
 PRIMITIVE_TYPE_ID_CALL_IMPL(softmax)
-PRIMITIVE_TYPE_ID_CALL_IMPL(simpler_nms)
+PRIMITIVE_TYPE_ID_CALL_IMPL(proposal)
 PRIMITIVE_TYPE_ID_CALL_IMPL(roi_pooling)
 PRIMITIVE_TYPE_ID_CALL_IMPL(prior_box)
 PRIMITIVE_TYPE_ID_CALL_IMPL(detection_output)

@@ -84,6 +84,37 @@ struct permute_gpu : typed_primitive_impl<permute>
         return kd;
     }
 
+    static std::vector<uint16_t> get_permute_order(format::type fmt)
+    {
+        switch (fmt)
+        {
+            // For input formats:
+            // 0 - batch (b), 1 - feature (f), 2, 3 - spatial (x -> 2, y -> 3)
+        case format::byxf:
+            return{ 0, 3, 2, 1 };
+
+        case format::yxfb:
+            return{ 3, 2, 1, 0 };
+
+        case format::bfyx:
+            return{ 0, 1, 3, 2 };
+
+        case format::fyxb:
+            return{ 1, 3, 2, 0 };
+
+        default:
+            throw std::invalid_argument("This format is not supported in GPU permute_inst");
+        }
+    }
+
+    static std::vector<uint16_t> apply_permute(const std::vector<uint16_t>& lhs, const std::vector<uint16_t>& rhs) {
+        std::vector<uint16_t> result;
+        for (auto& v : lhs) {
+            result.push_back(rhs[v]);
+        }
+        return result;
+    }
+
     // We need to specify the output idx based on input position
     static std::string get_idx_calculation(data_types dt, format::type fmt, const std::vector<uint16_t>& permute_order)
     {
@@ -92,13 +123,16 @@ struct permute_gpu : typed_primitive_impl<permute>
             // 0 - batch (b), 1 - feature (f), 2, 3 - spatial (x -> 2, y -> 3)
             // for example permute[0] = 3 means that batch will be replaced with spatial y
 
+            auto permute_order_format = get_permute_order(fmt);
+            auto calc_order_perm = apply_permute(permute_order_format, apply_permute(permute_order, permute_order_format));
+
             auto calc_order_fmt = get_calculation_order(dt, fmt);
-            std::vector<uint32_t> new_calc_order(calc_order_fmt);
+            auto new_calc_order(calc_order_fmt);
 
             for (size_t i = 0; i < new_calc_order.size(); i++)
             {
                 auto pos = std::distance(calc_order_fmt.begin(), std::find(calc_order_fmt.begin(), calc_order_fmt.end(), i));
-                new_calc_order[pos] = permute_order[i];
+                new_calc_order[pos] = calc_order_perm[i];
             }
 
             return "return lpad[" + std::to_string(calc_order_fmt[0]) + "] + pos[" + std::to_string(new_calc_order[0]) +
@@ -113,7 +147,7 @@ struct permute_gpu : typed_primitive_impl<permute>
     }
 
     // To read input memory linearly we need to specify the order of reading
-    static std::vector<uint32_t> get_calculation_order(data_types /*dt*/, format::type fmt)
+    static std::vector<uint16_t> get_calculation_order(data_types /*dt*/, format::type fmt)
     {
         switch(fmt)
         {
@@ -163,8 +197,10 @@ struct permute_gpu : typed_primitive_impl<permute>
         auto input_use_half = input_layout.data_type == cldnn::data_types::f16;
         auto output_use_half = output_layout.data_type == cldnn::data_types::f16;
         int input_output_type_cvt = input_use_half != output_use_half;
-        auto lower_padding = output_layout.data_padding.lower_size();
-        auto upper_padding = output_layout.data_padding.upper_size();
+        auto output_lower_padding = output_layout.data_padding.lower_size();
+        auto output_upper_padding = output_layout.data_padding.upper_size();
+        auto input_lower_padding = input_layout.data_padding.lower_size();
+        auto input_upper_padding = input_layout.data_padding.upper_size();
 
         if (!engine_info.supports_fp16 && (input_use_half || output_use_half))
             throw std::invalid_argument("GPU device does not support half precision floating-point formats (cl_khr_fp16 extension)");
@@ -183,38 +219,13 @@ struct permute_gpu : typed_primitive_impl<permute>
             gpu::make_jit_constant("SRC_TYPE", input_use_half ? "ushort" : std::string("float")),
             gpu::make_jit_constant("DEST_TYPE", output_use_half ? "ushort" : std::string("float")),
             gpu::make_jit_constant("SRC_DEST_TYPE_CVT", input_output_type_cvt),
-            gpu::make_jit_constant("FP16_SUPPORTED", static_cast<int>(engine_info.supports_fp16))
+            gpu::make_jit_constant("FP16_SUPPORTED", static_cast<int>(engine_info.supports_fp16)),
+            gpu::make_jit_constant("SIZE", gpu::get_offsets_string(input_dimensions, input_buffer_size)),
+            gpu::make_jit_constant("OUTPUT_LOWER_PADDING", gpu::get_offsets_string(output_dimensions, output_lower_padding)),
+            gpu::make_jit_constant("OUTPUT_UPPER_PADDING", gpu::get_offsets_string(output_dimensions, output_upper_padding)),
+            gpu::make_jit_constant("INPUT_LOWER_PADDING", gpu::get_offsets_string(input_dimensions, input_lower_padding)),
+            gpu::make_jit_constant("INPUT_UPPER_PADDING", gpu::get_offsets_string(input_dimensions, input_upper_padding))
         };
-        {
-            std::stringstream s;
-            s << "(uint[]){ ";
-            for (uint32_t i = 0; i < input_dimensions; i++)
-            {
-                s << static_cast<uint32_t>(input_buffer_size.raw[i]) << ", ";
-            }
-            s << " }";
-            mem_consts.add_constant(gpu::make_jit_constant("SIZE", s.str()));
-        }
-        {
-            std::stringstream s;
-            s << "(uint[]){ ";
-            for (uint32_t i = 0; i < output_dimensions; i++)
-            {
-                s << static_cast<uint32_t>(lower_padding.raw[i]) << ", ";
-            }
-            s << " }";
-            mem_consts.add_constant(gpu::make_jit_constant("LOWER_PADDING", s.str()));
-        }
-        {
-            std::stringstream s;
-            s << "(uint[]){ ";
-            for (uint32_t i = 0; i < output_dimensions; i++)
-            {
-                s << static_cast<uint32_t>(upper_padding.raw[i]) << ", ";
-            }
-            s << " }";
-            mem_consts.add_constant(gpu::make_jit_constant("UPPER_PADDING", s.str()));
-        }
 
         return mem_consts;
     }

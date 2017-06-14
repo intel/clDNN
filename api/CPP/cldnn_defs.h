@@ -50,11 +50,11 @@
 *  - Detection output
 *
 *  With this primitive set, user can build and execute most common image recognition, semantic segmentation and object detection networks topologies like:
-*   - Alexnet* 
-*   - Googlenet*(v1,v2)
-*   - ResNet*
-*   - VGG*
-*   - faster-rCNN* 
+*   - Alexnet 
+*   - Googlenet(v1-v3)
+*   - ResNet
+*   - VGG
+*   - faster-rCNN 
 * and other.
 *  
 *

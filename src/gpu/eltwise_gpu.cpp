@@ -28,6 +28,7 @@ namespace neural
 // Kernel names.
 static const std::string kernel_name = "eltwise_gpu";
 static const std::string kernel_name_bfyx = "eltwise_gpu_bfyx";
+static const std::string kernel_name_vload8 = "eltwise_gpu_vload8";
 
 struct eltwise_gpu : typed_primitive_impl<eltwise>
 {
@@ -52,25 +53,19 @@ struct eltwise_gpu : typed_primitive_impl<eltwise>
     {
         auto output_layout = outer.get_output_layout(); // output
 
-        if (outer.has_padded_dependency())
-        {
-            throw std::runtime_error("Input padding for eltwise not yet supported");
-        }
-
         kernel_data kd;
 
         kd.fp16_unit_used = output_layout.data_type == cldnn::data_types::f16;
 
         // Determine global work sizes.
         kd.gws0 = output_layout.count();
-        // Find largest positive local work size that is divider for global work size.
-        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
-        while (kd.gws0 % kd.lws0 != 0)
-        {
-            --kd.lws0;
-        }
 
-        if (output_layout.format == cldnn::format::bfyx)
+        if (!outer.has_padded_dependency() && !outer.is_padded() && (output_layout.count() % 8 == 0))
+        {
+            kd.gws0 = output_layout.count() / 8;
+            kd.kernel_name = kernel_name_vload8;
+        }
+        else if (output_layout.format == cldnn::format::bfyx)
         {
             kd.kernel_name = kernel_name_bfyx;
         }
@@ -79,7 +74,17 @@ struct eltwise_gpu : typed_primitive_impl<eltwise>
             if (outer.is_padded())
                 throw std::runtime_error("Output padding for eltwise is not yet supported for not-bfyx input");
 
+            if (outer.has_padded_dependency())
+                throw std::runtime_error("Input padding for eltwise is not yet supported for not-bfyx input");
+
             kd.kernel_name = kernel_name;
+        }
+
+        // Find largest positive local work size that is divider for global work size.
+        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
+        while (kd.gws0 % kd.lws0 != 0)
+        {
+            --kd.lws0;
         }
 
         return kd;
@@ -96,11 +101,12 @@ struct eltwise_gpu : typed_primitive_impl<eltwise>
         auto input2_layout = outer.input2().get_output_layout();
         auto output_layout = outer.get_output_layout();
 
-        return{
+        gpu::jit_constants mem_consts{
             gpu::make_jit_constant("INPUT",                 input_layout.size),
             gpu::make_jit_constant("OUTPUT",                output_layout.size),
             gpu::make_jit_constant("INPUT2" ,               input2_layout.size),
             gpu::make_jit_constant("OUTPUT_PADDING",        outer.get_output_layout().data_padding),
+            gpu::make_jit_constant("INPUT_PADDING",         outer.input().get_output_layout().data_padding),
             gpu::make_jit_constant("FP16_SUPPORTED",        static_cast<int>(engine_info.supports_fp16)),
             gpu::make_jit_constant("FP16_UNIT_USED",        static_cast<int>(data.fp16_unit_used)),
             gpu::make_jit_constant("UNIT_TYPE",             data.fp16_unit_used ? "half" : "float"),
@@ -111,6 +117,13 @@ struct eltwise_gpu : typed_primitive_impl<eltwise>
             gpu::make_jit_constant("RELU",                  static_cast<int>(outer.get_primitive()->with_activation)),
             gpu::make_jit_constant("NEGATIVE_SLOPE",        outer.get_primitive()->activation_negative_slope),
         };
+
+        if (data.kernel_name == kernel_name_vload8)
+        {
+            mem_consts.add_constant(gpu::make_jit_constant("ELEMENTS_COUNT", outer.get_output_layout().count()));
+        }
+
+        return mem_consts;
     }
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, eltwise_inst& instance) override
