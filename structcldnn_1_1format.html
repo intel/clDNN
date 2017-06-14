@@ -91,7 +91,7 @@ $(document).ready(function(){initNavTree('structcldnn_1_1format.html','');});
 <div class="contents">
 
 <p>Represents memory formats (orders). <br />
- In CNN most of data is describe as 4 dimensional blocks. In Intel(R) clDNN library we describe memory with 4 letters.  
+ In CNN most of data is described as 4 dimensional blocks. In Intel(R) clDNN library we describe memory with 4 letters.  
  <a href="structcldnn_1_1format.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>&gt;</code></p>
@@ -106,10 +106,11 @@ Public Types</h2></td></tr>
 <br />
 &#160;&#160;<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6aad3e2022d8522230aaa9a23d28070783">os_iyx_osv16</a> = cldnn_format_os_iyx_osv16, 
 <a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a5433802a572839c129d6d42ef6f8e362">bs_xs_xsv8_bsv8</a> = cldnn_format_bs_xs_xsv8_bsv8, 
+<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a0ccefb70ea52a57f7b72eca65b31b114">bs_xs_xsv8_bsv16</a> = cldnn_format_bs_xs_xsv8_bsv16, 
 <a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6ac8993da5ea821d3e667115a5cb7336d1">bs_x_bsv16</a> = cldnn_format_bs_x_bsv16, 
-<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470">format_num</a> = cldnn_format_format_num, 
 <br />
-&#160;&#160;<b>any</b> = cldnn_format_any
+&#160;&#160;<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470">format_num</a> = cldnn_format_format_num, 
+<b>any</b> = cldnn_format_any
 <br />
  }</td></tr>
 <tr class="separator:a018851934d0e0137b01f068dcbc5e3b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -196,7 +197,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents memory formats (orders). <br />
- In CNN most of data is describe as 4 dimensional blocks. In Intel(R) clDNN library we describe memory with 4 letters. </p>
+ In CNN most of data is described as 4 dimensional blocks. In Intel(R) clDNN library we describe memory with 4 letters. </p>
 <ul>
 <li>b - number of blocks in batch. For weights formats: output features - conv, neurons - inner product</li>
 <li>f - number of feature maps, features or channels. For weights formats: input features - conv, inputs, inner product</li>
@@ -249,6 +250,11 @@ Public Attributes</h2></td></tr>
 <tr><td class="fieldname"><a id="a018851934d0e0137b01f068dcbc5e3b6a5433802a572839c129d6d42ef6f8e362"></a>bs_xs_xsv8_bsv8&#160;</td><td class="fielddoc"><p>format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice. <br />
  </p><div class="image">
 <img src="bs_xs_xsv8_bsv8.jpg" alt="bs_xs_xsv8_bsv8.jpg"/>
+</div>
+ </td></tr>
+<tr><td class="fieldname"><a id="a018851934d0e0137b01f068dcbc5e3b6a0ccefb70ea52a57f7b72eca65b31b114"></a>bs_xs_xsv8_bsv16&#160;</td><td class="fielddoc"><p>format used only for fully connected weights: bs - batch slice, xs - x slice, bsv16 - 16 values of single slice. <br />
+ </p><div class="image">
+<img src="bs_xs_xsv8_bsv16.jpg" alt="bs_xs_xsv8_bsv16.jpg"/>
 </div>
  </td></tr>
 <tr><td class="fieldname"><a id="a018851934d0e0137b01f068dcbc5e3b6ac8993da5ea821d3e667115a5cb7336d1"></a>bs_x_bsv16&#160;</td><td class="fielddoc"><p>format used only for fully connected weights fp16 batch=1 : bs - batch slice (responses slice), bsv16 - 16 values of single batch slice, x - flattened plane of (fyx). <br />

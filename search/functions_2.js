@@ -1,7 +1,7 @@
 var searchData=
 [
   ['cldnn_5fadd_5fevent_5fhandler',['cldnn_add_event_handler',['../group__c__network.html#ga5939b2da1e42e8c8686ac40c38eb01c0',1,'cldnn.h']]],
-  ['cldnn_5fadd_5fprimitive',['cldnn_add_primitive',['../group__c__topology.html#gad04071970103df1e9d76fa36bd5cdba1',1,'cldnn.h']]],
+  ['cldnn_5fadd_5fprimitive',['cldnn_add_primitive',['../group__c__topology.html#gac858b96c7f9464b74a2ab3ce6150c87d',1,'cldnn.h']]],
   ['cldnn_5fallocate_5fmemory',['cldnn_allocate_memory',['../group__c__memory.html#gad70342ac7adeeb85b0a2c906ffa8bf64',1,'cldnn.h']]],
   ['cldnn_5fallocate_5fnetwork',['cldnn_allocate_network',['../group__c__network.html#ga8264cec035bb91ad0bb48ecca3b2eace',1,'cldnn.h']]],
   ['cldnn_5fattach_5fmemory',['cldnn_attach_memory',['../group__c__memory.html#gacac80f71ca3df67fc525423d9a2d7c3e',1,'cldnn.h']]],
@@ -26,7 +26,7 @@ var searchData=
   ['cldnn_5fget_5fprimitive_5fids',['cldnn_get_primitive_ids',['../group__c__topology.html#ga54b4c45b9275a63fabf70ac53aa59137',1,'cldnn.h']]],
   ['cldnn_5fget_5fprimitive_5finfo',['cldnn_get_primitive_info',['../group__c__network.html#ga61cb6d34456a57a351cabbde735bea88',1,'cldnn.h']]],
   ['cldnn_5fhalf_5fto_5ffloat',['cldnn_half_to_float',['../group__c__memory.html#ga936ffe29b1e8b3afec82ba23f5019dd9',1,'cldnn.h']]],
-  ['cldnn_5fis_5fthe_5fsame_5fbuffer',['cldnn_is_the_same_buffer',['../group__c__memory.html#gae05faba04aed075a9cc12b602facda1c',1,'cldnn.h']]],
+  ['cldnn_5fis_5fthe_5fsame_5fbuffer',['cldnn_is_the_same_buffer',['../group__c__memory.html#ga74781046a020008e981ae1a5eb465861',1,'cldnn.h']]],
   ['cldnn_5flock_5fmemory',['cldnn_lock_memory',['../group__c__memory.html#ga5fc5b34e34af1cbc1937b443d2565599',1,'cldnn.h']]],
   ['cldnn_5frelease_5fengine',['cldnn_release_engine',['../group__c__engine.html#gab87f9f18e309a52c140dcc3d1e060a73',1,'cldnn.h']]],
   ['cldnn_5frelease_5fevent',['cldnn_release_event',['../group__c__network.html#ga174f4e6ffe30de7a0c156ddf74c57e16',1,'cldnn.h']]],

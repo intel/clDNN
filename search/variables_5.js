@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['feature',['feature',['../structcldnn_1_1tensor.html#a52c3964fee6ec53d73446c3b1a3621d6',1,'cldnn::tensor']]],
+  ['feature',['feature',['../structcldnn_1_1tensor.html#a077e5c97879663e4b5c5c69aa78a7190',1,'cldnn::tensor']]],
   ['feature_5fnum',['feature_num',['../structcldnn_1_1format__traits.html#aa485d2f4cc27eec992f2a4631f7e2cf6',1,'cldnn::format_traits']]],
   ['filling_5fvalue',['filling_value',['../group__c__memory.html#af74194ae35a78d80fc74ce2c24fb5ce9',1,'cldnn_padding']]],
   ['flip',['flip',['../group__c__primitives.html#ad41bf4a9ac533d957e71a2817c1a593f',1,'cldnn_prior_box_desc::flip()'],['../structcldnn_1_1prior__box.html#a21f1da325fc57fd1f331493185f08fe7',1,'cldnn::prior_box::flip()']]],

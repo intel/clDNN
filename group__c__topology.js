@@ -24,7 +24,7 @@ var group__c__topology =
     [ "cldnn_primitive_id", "group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db", null ],
     [ "cldnn_primitive_type_id", "group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e", null ],
     [ "cldnn_topology", "group__c__topology.html#gab4b09dc560126a85fc71468301ac7ef3", null ],
-    [ "cldnn_add_primitive", "group__c__topology.html#gad04071970103df1e9d76fa36bd5cdba1", null ],
+    [ "cldnn_add_primitive", "group__c__topology.html#gac858b96c7f9464b74a2ab3ce6150c87d", null ],
     [ "cldnn_create_topology", "group__c__topology.html#ga8b1fe78bd2f1a6f47a8799e33c476852", null ],
     [ "cldnn_get_primitive_ids", "group__c__topology.html#ga54b4c45b9275a63fabf70ac53aa59137", null ],
     [ "cldnn_release_topology", "group__c__topology.html#ga4deb67ff35712ea37fbcc21bbbaf58ff", null ],

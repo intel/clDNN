@@ -3,7 +3,8 @@ var group__c__engine =
     [ "cldnn_engine_configuration", "group__c__engine.html#structcldnn__engine__configuration", [
       [ "compiler_options", "group__c__engine.html#a8ce78e1ed23f87a8ee00252e85e3bd3a", null ],
       [ "enable_profiling", "group__c__engine.html#ac0f6ced9f9b06e459589e88b87419baf", null ],
-      [ "meaningful_kernels_names", "group__c__engine.html#a47e35e895b6220b99dbdc6b2f8d3a504", null ]
+      [ "meaningful_kernels_names", "group__c__engine.html#a47e35e895b6220b99dbdc6b2f8d3a504", null ],
+      [ "single_kernel_name", "group__c__engine.html#a6844fced17db9591815ab43a30662e78", null ]
     ] ],
     [ "cldnn_engine_info", "group__c__engine.html#structcldnn__engine__info", [
       [ "core_frequency", "group__c__engine.html#a441d7014c65f3e8d0cbc77acaf13742d", null ],

@@ -26,8 +26,8 @@ var structcldnn_1_1tensor =
     [ "operator<", "structcldnn_1_1tensor.html#a7c5143f80078618b8a465515061cd7a5", null ],
     [ "operator<<", "structcldnn_1_1tensor.html#ae21d5d617db73d4f65c4271f373e0eef", null ],
     [ "operator==", "structcldnn_1_1tensor.html#a4d83ded7e646bc751b09c52bf08890f5", null ],
-    [ "batch", "structcldnn_1_1tensor.html#a9ce5dfc7e9eab413936cf396fbee60cb", null ],
-    [ "feature", "structcldnn_1_1tensor.html#a52c3964fee6ec53d73446c3b1a3621d6", null ],
-    [ "raw", "structcldnn_1_1tensor.html#ade562cc622abfb45f1ab200dff8be312", null ],
-    [ "spatial", "structcldnn_1_1tensor.html#a2910e446899768593464fbdcc3ead97f", null ]
+    [ "batch", "structcldnn_1_1tensor.html#aeadc5bb5b386c806a144443b67a1ea90", null ],
+    [ "feature", "structcldnn_1_1tensor.html#a077e5c97879663e4b5c5c69aa78a7190", null ],
+    [ "raw", "structcldnn_1_1tensor.html#a49fa10f39e88475db6fb7525502b1751", null ],
+    [ "spatial", "structcldnn_1_1tensor.html#a4985c789e1a859219f88f8da99926576", null ]
 ];

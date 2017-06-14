@@ -3,9 +3,12 @@ var group__cpp__primitives =
     [ "activation", "structcldnn_1_1activation.html", [
       [ "dto", "structcldnn_1_1activation.html#a65f99cf56381dea5dd1e9659dd864a54", null ],
       [ "activation", "structcldnn_1_1activation.html#a9f52e7e62ef43222bc43f9dd29509298", null ],
+      [ "activation", "structcldnn_1_1activation.html#a0d4ce16f23a842c33950306b0ebe6316", null ],
       [ "activation", "structcldnn_1_1activation.html#a1adaabafd023e520b4bcd7b1ce3f1125", null ],
+      [ "get_dependencies", "structcldnn_1_1activation.html#a670cd491d8cd12267fe4e0353c0bddc5", null ],
       [ "update_dto", "structcldnn_1_1activation.html#a31657a15c13671b039e840d621c6ba40", null ],
-      [ "negative_slope", "structcldnn_1_1activation.html#adf9dc38d57d7383e78a6738103e556ea", null ]
+      [ "negative_slope", "structcldnn_1_1activation.html#adf9dc38d57d7383e78a6738103e556ea", null ],
+      [ "negative_slope_input", "structcldnn_1_1activation.html#afebb29e72e29a5cd491531248c3a805d", null ]
     ] ],
     [ "batch_norm", "structcldnn_1_1batch__norm.html", [
       [ "dto", "structcldnn_1_1batch__norm.html#acf37717bdabc3becfe58be124c42079c", null ],
@@ -65,7 +68,7 @@ var group__cpp__primitives =
     ] ],
     [ "deconvolution", "structcldnn_1_1deconvolution.html", [
       [ "dto", "structcldnn_1_1deconvolution.html#ac68def38089a84b271d7857c0167ed4a", null ],
-      [ "deconvolution", "structcldnn_1_1deconvolution.html#a9a13856efd71cbe5aa01d5f1ca6c5e1d", null ],
+      [ "deconvolution", "structcldnn_1_1deconvolution.html#affb912aae9112619fb05d7a8a9ae8b87", null ],
       [ "deconvolution", "structcldnn_1_1deconvolution.html#a61abbc0033815e4b9bf59e9e2b7ff3b1", null ],
       [ "get_dependencies", "structcldnn_1_1deconvolution.html#a6870b67cf04915e86ccb61c5cc8e92db", null ],
       [ "split", "structcldnn_1_1deconvolution.html#a74d5202944385ce474928c2d6de5089c", null ],
@@ -176,6 +179,20 @@ var group__cpp__primitives =
       [ "step_width", "structcldnn_1_1prior__box.html#a6d24119c48ffeab9ec4e6279bc4fc8b2", null ],
       [ "variance", "structcldnn_1_1prior__box.html#aeeb51aef5477c9eeed470ba71a72d8a4", null ]
     ] ],
+    [ "proposal", "structcldnn_1_1proposal.html", [
+      [ "dto", "structcldnn_1_1proposal.html#a399311a43a1754c0de298ac8769827de", null ],
+      [ "proposal", "structcldnn_1_1proposal.html#a79f8ea0f6e95280bfaf15b1a5d2955c3", null ],
+      [ "proposal", "structcldnn_1_1proposal.html#a8bae45fd10c86745536a6f459dbdfced", null ],
+      [ "update_dto", "structcldnn_1_1proposal.html#a93fa3da8a1461068864ae6cbf751058a", null ],
+      [ "feature_stride", "structcldnn_1_1proposal.html#a5eca924eebe75b8eb769caff2ca22ad6", null ],
+      [ "iou_threshold", "structcldnn_1_1proposal.html#a42fc0a083eb8de8ae286702b487aaac3", null ],
+      [ "max_proposals", "structcldnn_1_1proposal.html#aa063380b40ddd1b6c26d38fde2150238", null ],
+      [ "min_bbox_size", "structcldnn_1_1proposal.html#a990ef2584d239d2efdf67e87bad2fff2", null ],
+      [ "post_nms_topn", "structcldnn_1_1proposal.html#aedd04fa1c16e7170c905f0056905450b", null ],
+      [ "pre_nms_topn", "structcldnn_1_1proposal.html#a3048531fd37a0a7209a284a0ec69e2d7", null ],
+      [ "ratios", "structcldnn_1_1proposal.html#adbe4e73da63ee7c4bd11a0e6580fda7c", null ],
+      [ "scales", "structcldnn_1_1proposal.html#a35db722591bac6d48eeab8aab00ff684", null ]
+    ] ],
     [ "reorder", "structcldnn_1_1reorder.html", [
       [ "dto", "structcldnn_1_1reorder.html#aa024ac96b1d8981c299a299f0b8fbfa3", null ],
       [ "reorder", "structcldnn_1_1reorder.html#acc1be23244e0e5dbdc69fde6296557a9", null ],
@@ -199,9 +216,11 @@ var group__cpp__primitives =
     ] ],
     [ "roi_pooling", "structcldnn_1_1roi__pooling.html", [
       [ "dto", "structcldnn_1_1roi__pooling.html#aa45e47ee5b2c206c7502ea15ea9a15c8", null ],
-      [ "roi_pooling", "structcldnn_1_1roi__pooling.html#a9c799d36278f88c316e2b9ce22d27c91", null ],
+      [ "roi_pooling", "structcldnn_1_1roi__pooling.html#a70b75386bb202f084eec90231ca1c046", null ],
       [ "roi_pooling", "structcldnn_1_1roi__pooling.html#aad7ba2a91baaee5745e315087c219303", null ],
       [ "update_dto", "structcldnn_1_1roi__pooling.html#a2d0e293b90dca76e3223240f8ec84d18", null ],
+      [ "group_sz", "structcldnn_1_1roi__pooling.html#a54a2cd49ab304ef34ca0f7e5c7413551", null ],
+      [ "mode", "structcldnn_1_1roi__pooling.html#a7a606d5ea0d2963e203bd6339b19fc46", null ],
       [ "pooled_height", "structcldnn_1_1roi__pooling.html#addf043f28dcf5cc0b89f6b9250ff8409", null ],
       [ "pooled_width", "structcldnn_1_1roi__pooling.html#a935a7810502d8bc0d93ecc437e495130", null ],
       [ "spatial_scale", "structcldnn_1_1roi__pooling.html#aaadd4bf64df9477c73f6a15648558942", null ]
@@ -216,23 +235,20 @@ var group__cpp__primitives =
       [ "bias", "structcldnn_1_1scale.html#a2b4906d13d629ebf5fea7cd0a8112dee", null ],
       [ "scale_input", "structcldnn_1_1scale.html#a87813a0881ad2cf7d92a7929cd27c612", null ]
     ] ],
-    [ "simpler_nms", "structcldnn_1_1simpler__nms.html", [
-      [ "dto", "structcldnn_1_1simpler__nms.html#ac95bbd7adacde797a91e6d7a19a56c9e", null ],
-      [ "simpler_nms", "structcldnn_1_1simpler__nms.html#ac0ed282f6c044be78ea447e09d875eb2", null ],
-      [ "simpler_nms", "structcldnn_1_1simpler__nms.html#a3998d5138feccef1005b9034a7ae3f21", null ],
-      [ "update_dto", "structcldnn_1_1simpler__nms.html#ad3f37e88686fc38e12dcbf1a4f175025", null ],
-      [ "feature_stride", "structcldnn_1_1simpler__nms.html#a506e32b6faa933ed9488b217b5847725", null ],
-      [ "iou_threshold", "structcldnn_1_1simpler__nms.html#ad75401e9d33a37aeb5eea7802bc3c83f", null ],
-      [ "max_proposals", "structcldnn_1_1simpler__nms.html#ad6d1b8c48dfa4cea766b7c0ef9144576", null ],
-      [ "min_bbox_size", "structcldnn_1_1simpler__nms.html#a77162ca30d524ae7b8e9f21d5bce64f6", null ],
-      [ "post_nms_topn", "structcldnn_1_1simpler__nms.html#aca5025e77dc56abad2ece5385e0dd264", null ],
-      [ "pre_nms_topn", "structcldnn_1_1simpler__nms.html#ae029b38b556d93a8992ace74e45a4485", null ],
-      [ "scales", "structcldnn_1_1simpler__nms.html#af68e5dfcc635ec2b7de221545a8e84f8", null ]
-    ] ],
     [ "softmax", "structcldnn_1_1softmax.html", [
       [ "dto", "structcldnn_1_1softmax.html#a9108705c93899223b27670c5e84a00e9", null ],
-      [ "softmax", "structcldnn_1_1softmax.html#aa265671133f220e39c8acab87572b5ab", null ],
-      [ "softmax", "structcldnn_1_1softmax.html#ae8ed6f0a59550b68b9f34a77e73c26ce", null ]
+      [ "dimension_t", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79", [
+        [ "normalize_b", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a8ab037ff3d6d50e1ec113c7ad0e30c0b", null ],
+        [ "normalize_f", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a62648bf0040e5e27d03db33b02f4d4ac", null ],
+        [ "normalize_x", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79aec4bcfd42b60e9d48c39867d17bcf516", null ],
+        [ "normalize_y", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a7d8ce88f47c43339f1b0262841a2ca78", null ],
+        [ "normalize_yx", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79acadfa96e70b85bf55defdec718f6c4d8", null ],
+        [ "normalize_fyx", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a94d34463ff528d05947b2c048b21076e", null ],
+        [ "normalize_bfyx", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79aeef2b56be55f369ee4b7029d9bc654ff", null ]
+      ] ],
+      [ "softmax", "structcldnn_1_1softmax.html#a8fd42124f28e4cc3bb0f3505d3dc1ccd", null ],
+      [ "softmax", "structcldnn_1_1softmax.html#ae8ed6f0a59550b68b9f34a77e73c26ce", null ],
+      [ "dimension", "structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc", null ]
     ] ],
     [ "eltwise_mode", "group__cpp__primitives.html#gaa0a55214d8b45e135a753957707dace3", [
       [ "sum", "group__cpp__primitives.html#ggaa0a55214d8b45e135a753957707dace3a1d623b89683f9ce4e074de1676d12416", null ],

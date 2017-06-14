@@ -1,5 +1,7 @@
 var searchData=
 [
+  ['primitives_20and_20topology',['Primitives and topology',['../c2.html',1,'tutorial']]],
+  ['performance_20building_20option_2e',['Performance building option.',['../c5.html',1,'tutorial']]],
   ['primitives',['Primitives',['../group__c__primitives.html',1,'']]],
   ['primitives',['Primitives',['../group__cpp__primitives.html',1,'']]],
   ['program_20compilation',['Program compilation',['../group__cpp__program.html',1,'']]],
@@ -7,6 +9,8 @@ var searchData=
   ['permute',['permute',['../structcldnn_1_1permute.html',1,'cldnn::permute'],['../structcldnn_1_1permute.html#afc6626924f3591d8010c4cbdcf2ec593',1,'cldnn::permute::permute(const primitive_id &amp;id, const primitive_id &amp;input, const std::vector&lt; uint16_t &gt; &amp;permute_order={}, const padding &amp;output_padding=padding())'],['../structcldnn_1_1permute.html#a17410c191978aa842a3338399dcc6fd8',1,'cldnn::permute::permute(const dto *dto)']]],
   ['permute_5forder',['permute_order',['../group__c__primitives.html#a32f01e413e12653b9defb013524f8c6b',1,'cldnn_permute_desc::permute_order()'],['../structcldnn_1_1permute.html#a1328e9c8004e7f040bf69c9bc1826d30',1,'cldnn::permute::permute_order()']]],
   ['pointer',['pointer',['../structcldnn_1_1pointer.html',1,'cldnn::pointer&lt; T &gt;'],['../structcldnn_1_1pointer.html#a36c3cddce208e6be595bf644cee3fdd3',1,'cldnn::pointer::pointer(const memory &amp;mem)'],['../structcldnn_1_1pointer.html#a70bc7441daecbd1092002e5760d21e9d',1,'cldnn::pointer::pointer(const pointer &amp;other)']]],
+  ['pooled_5fheight',['pooled_height',['../group__c__primitives.html#aa7b5f4d5141b281aaaaf6110e93487ec',1,'cldnn_roi_pooling_desc']]],
+  ['pooled_5fwidth',['pooled_width',['../group__c__primitives.html#a04ad84eb249390ea2881f7cd09119c06',1,'cldnn_roi_pooling_desc']]],
   ['pooling',['pooling',['../structcldnn_1_1pooling.html',1,'cldnn::pooling'],['../structcldnn_1_1pooling.html#afce3673f9e933d9b31eeeab75310021e',1,'cldnn::pooling::pooling(const primitive_id &amp;id, const primitive_id &amp;input, pooling_mode mode, const tensor &amp;size, const tensor &amp;stride, const tensor &amp;input_offset={ 0, 0, 0, 0 }, const padding &amp;output_padding=padding())'],['../structcldnn_1_1pooling.html#a9fcf38dbda7d9b8898fb75f3e95c946d',1,'cldnn::pooling::pooling(const dto *dto)']]],
   ['pooling_5fmode',['pooling_mode',['../group__cpp__primitives.html#ga44a38e1c6afb8bfb7f74d0c20cd0fba3',1,'cldnn']]],
   ['primitive',['primitive',['../structcldnn_1_1primitive.html',1,'cldnn::primitive'],['../structcldnn_1_1primitive.html#a031bcf80d61b33d8ee5e5706d022dac1',1,'cldnn::primitive::primitive()']]],
@@ -27,11 +31,11 @@ var searchData=
   ['primitive_5fbase_3c_20permute_2c_20cldnn_5fpermute_5fdesc_20_3e',['primitive_base&lt; permute, cldnn_permute_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20pooling_2c_20cldnn_5fpooling_5fdesc_20_3e',['primitive_base&lt; pooling, cldnn_pooling_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20prior_5fbox_2c_20cldnn_5fprior_5fbox_5fdesc_20_3e',['primitive_base&lt; prior_box, cldnn_prior_box_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
+  ['primitive_5fbase_3c_20proposal_2c_20cldnn_5fproposal_5fdesc_20_3e',['primitive_base&lt; proposal, cldnn_proposal_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20reorder_2c_20cldnn_5freorder_5fdesc_20_3e',['primitive_base&lt; reorder, cldnn_reorder_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20reshape_2c_20cldnn_5freshape_5fdesc_20_3e',['primitive_base&lt; reshape, cldnn_reshape_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20roi_5fpooling_2c_20cldnn_5froi_5fpooling_5fdesc_20_3e',['primitive_base&lt; roi_pooling, cldnn_roi_pooling_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20scale_2c_20cldnn_5fscale_5fdesc_20_3e',['primitive_base&lt; scale, cldnn_scale_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
-  ['primitive_5fbase_3c_20simpler_5fnms_2c_20cldnn_5fsimpler_5fnms_5fdesc_20_3e',['primitive_base&lt; simpler_nms, cldnn_simpler_nms_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20softmax_2c_20cldnn_5fsoftmax_5fdesc_20_3e',['primitive_base&lt; softmax, cldnn_softmax_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fid',['primitive_id',['../group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221',1,'cldnn']]],
   ['primitive_5fid_5farr',['primitive_id_arr',['../structcldnn_1_1primitive_1_1primitive__id__arr.html',1,'cldnn::primitive']]],
@@ -45,5 +49,6 @@ var searchData=
   ['profiling_5finterval',['profiling_interval',['../group__cpp__event.html#structcldnn_1_1instrumentation_1_1profiling__interval',1,'cldnn::instrumentation']]],
   ['profiling_5fperiod',['profiling_period',['../structcldnn_1_1instrumentation_1_1profiling__period.html',1,'cldnn::instrumentation']]],
   ['profiling_5fperiod_5fbasic',['profiling_period_basic',['../structcldnn_1_1instrumentation_1_1profiling__period__basic.html',1,'cldnn::instrumentation::profiling_period_basic'],['../structcldnn_1_1instrumentation_1_1profiling__period__basic.html#a5b1f77edcc19cda5696aeda6503aaae9',1,'cldnn::instrumentation::profiling_period_basic::profiling_period_basic()']]],
-  ['program',['program',['../structcldnn_1_1program.html',1,'cldnn::program'],['../structcldnn_1_1program.html#ab8dbb058a4a5771b582eb9abd9993cd0',1,'cldnn::program::program(engine const &amp;engine, topology const &amp;topology, build_options const &amp;options=build_options())'],['../structcldnn_1_1program.html#a2b44019f6ee85666bbcfda18d1ce05c8',1,'cldnn::program::program(program const &amp;other)']]]
+  ['program',['program',['../structcldnn_1_1program.html',1,'cldnn::program'],['../structcldnn_1_1program.html#ab8dbb058a4a5771b582eb9abd9993cd0',1,'cldnn::program::program(engine const &amp;engine, topology const &amp;topology, build_options const &amp;options=build_options())'],['../structcldnn_1_1program.html#a2b44019f6ee85666bbcfda18d1ce05c8',1,'cldnn::program::program(program const &amp;other)']]],
+  ['proposal',['proposal',['../structcldnn_1_1proposal.html',1,'cldnn']]]
 ];

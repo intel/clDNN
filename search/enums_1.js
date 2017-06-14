@@ -6,5 +6,6 @@ var searchData=
   ['cldnn_5fengine_5ftype',['cldnn_engine_type',['../group__c__engine.html#ga19eadbc15cfc70c9cf4478fd20741af7',1,'cldnn.h']]],
   ['cldnn_5fformat_5ftype',['cldnn_format_type',['../group__c__memory.html#ga5513ccecf02f37962076358d18fad277',1,'cldnn.h']]],
   ['cldnn_5fpooling_5fmode',['cldnn_pooling_mode',['../group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee',1,'pooling.h']]],
-  ['cldnn_5fprior_5fbox_5fcode_5ftype',['cldnn_prior_box_code_type',['../group__c__primitives.html#ga637eb91f32b8d5da425c47ddaaa09c37',1,'detection_output.h']]]
+  ['cldnn_5fprior_5fbox_5fcode_5ftype',['cldnn_prior_box_code_type',['../group__c__primitives.html#ga637eb91f32b8d5da425c47ddaaa09c37',1,'detection_output.h']]],
+  ['cldnn_5fsoftmax_5fdimension',['cldnn_softmax_dimension',['../group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd',1,'softmax.h']]]
 ];

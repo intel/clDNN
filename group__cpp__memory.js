@@ -92,6 +92,7 @@ var group__cpp__memory =
         [ "fyxb", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6aaf5ed14f67f8fd7e736f8fb386da70b6", null ],
         [ "os_iyx_osv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6aad3e2022d8522230aaa9a23d28070783", null ],
         [ "bs_xs_xsv8_bsv8", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a5433802a572839c129d6d42ef6f8e362", null ],
+        [ "bs_xs_xsv8_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a0ccefb70ea52a57f7b72eca65b31b114", null ],
         [ "bs_x_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6ac8993da5ea821d3e667115a5cb7336d1", null ],
         [ "format_num", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470", null ],
         [ "any", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6adf9e9d74e7741bfa7c73a3561c548f1d", null ]
@@ -135,10 +136,10 @@ var group__cpp__memory =
       [ "operator<", "structcldnn_1_1tensor.html#a7c5143f80078618b8a465515061cd7a5", null ],
       [ "operator<<", "structcldnn_1_1tensor.html#ae21d5d617db73d4f65c4271f373e0eef", null ],
       [ "operator==", "structcldnn_1_1tensor.html#a4d83ded7e646bc751b09c52bf08890f5", null ],
-      [ "batch", "structcldnn_1_1tensor.html#a9ce5dfc7e9eab413936cf396fbee60cb", null ],
-      [ "feature", "structcldnn_1_1tensor.html#a52c3964fee6ec53d73446c3b1a3621d6", null ],
-      [ "raw", "structcldnn_1_1tensor.html#ade562cc622abfb45f1ab200dff8be312", null ],
-      [ "spatial", "structcldnn_1_1tensor.html#a2910e446899768593464fbdcc3ead97f", null ]
+      [ "batch", "structcldnn_1_1tensor.html#aeadc5bb5b386c806a144443b67a1ea90", null ],
+      [ "feature", "structcldnn_1_1tensor.html#a077e5c97879663e4b5c5c69aa78a7190", null ],
+      [ "raw", "structcldnn_1_1tensor.html#a49fa10f39e88475db6fb7525502b1751", null ],
+      [ "spatial", "structcldnn_1_1tensor.html#a4985c789e1a859219f88f8da99926576", null ]
     ] ],
     [ "data_types", "group__cpp__memory.html#ga978c06d1af08c83d1f5bfa33a76fdbc0", [
       [ "f16", "group__cpp__memory.html#gga978c06d1af08c83d1f5bfa33a76fdbc0aa2449b6477c1fef79be4202906486876", null ]

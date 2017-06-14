@@ -1,7 +1,7 @@
 var searchData=
 [
   ['background_5flabel_5fid',['background_label_id',['../group__c__primitives.html#a2d66d970dc59b511d23ca9cdddf0e5ed',1,'cldnn_detection_output_desc::background_label_id()'],['../structcldnn_1_1detection__output.html#a33fcf148a39bdf6548f3ea27fe1b319b',1,'cldnn::detection_output::background_label_id()']]],
-  ['batch',['batch',['../structcldnn_1_1tensor.html#a9ce5dfc7e9eab413936cf396fbee60cb',1,'cldnn::tensor']]],
+  ['batch',['batch',['../structcldnn_1_1tensor.html#aeadc5bb5b386c806a144443b67a1ea90',1,'cldnn::tensor']]],
   ['batch_5fnum',['batch_num',['../structcldnn_1_1format__traits.html#a3b72c9ed9a024e5e62a3d9ea12a35f56',1,'cldnn::format_traits']]],
   ['beta',['beta',['../group__c__primitives.html#adb41b9c9674b60c087920a65724ad895',1,'cldnn_lrn_desc::beta()'],['../structcldnn_1_1lrn.html#a9403f9cea5ddda6a0b3a8f79889cd52b',1,'cldnn::lrn::beta()']]],
   ['bias',['bias',['../group__c__primitives.html#a616dfdc926fa880a10b5e75310edaf8a',1,'cldnn_convolution_desc::bias()'],['../group__c__primitives.html#a490f3cdbd1452355743b3df631deff8e',1,'cldnn_deconvolution_desc::bias()'],['../group__c__primitives.html#ac452897d40d09bdcd9b4242c89e869b5',1,'cldnn_fully_connected_desc::bias()'],['../group__c__primitives.html#a28487cbc149f055fb5cd2add3d464240',1,'cldnn_scale_desc::bias()'],['../structcldnn_1_1convolution.html#ab0554bdb627676d621822fd08d7259c7',1,'cldnn::convolution::bias()'],['../structcldnn_1_1deconvolution.html#ad3bc935c4e018cc7b230a3819a233d49',1,'cldnn::deconvolution::bias()'],['../structcldnn_1_1fully__connected.html#ad48a7de228eb40d161f6e9c2ffd131eb',1,'cldnn::fully_connected::bias()'],['../structcldnn_1_1scale.html#a2b4906d13d629ebf5fea7cd0a8112dee',1,'cldnn::scale::bias()']]]

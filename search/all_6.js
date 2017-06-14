@@ -14,5 +14,6 @@ var searchData=
   ['get_5foutput_5fids',['get_output_ids',['../structcldnn_1_1network.html#a4db8e987e7500a1c9fcfd5bb15e56ae7',1,'cldnn::network']]],
   ['get_5fprofiling_5finfo',['get_profiling_info',['../structcldnn_1_1event.html#ade344488e8b412df4fd6a85974e0c677',1,'cldnn::event']]],
   ['get_5fprogram',['get_program',['../structcldnn_1_1network.html#aa3128d6452f8bdb174529366e934074f',1,'cldnn::network']]],
-  ['get_5ftype',['get_type',['../structcldnn_1_1engine.html#a03c1a753123b855f1ad1326d9a679697',1,'cldnn::engine']]]
+  ['get_5ftype',['get_type',['../structcldnn_1_1engine.html#a03c1a753123b855f1ad1326d9a679697',1,'cldnn::engine']]],
+  ['group_5fsz',['group_sz',['../group__c__primitives.html#a3bf3fd84db297ceac09f0129a0897254',1,'cldnn_roi_pooling_desc']]]
 ];

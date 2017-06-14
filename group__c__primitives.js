@@ -4,6 +4,7 @@ var group__c__primitives =
       [ "id", "group__c__primitives.html#ae74ea8b73805d142ded7cf59ba765e68", null ],
       [ "input", "group__c__primitives.html#a774348f36554b6d4acdd84deaa3dfab0", null ],
       [ "negative_slope", "group__c__primitives.html#a98e3a82707b65bbd06e69d9b9ac1c827", null ],
+      [ "negative_slope_input", "group__c__primitives.html#ab0074c1f48f086b75892e4310e3d5ee6", null ],
       [ "output_padding", "group__c__primitives.html#ad839ab66a588f125d6c09009f6d75766", null ],
       [ "type", "group__c__primitives.html#a82eb033b5bad3aa8a8eae8ce7b0a5c7d", null ]
     ] ],
@@ -162,6 +163,20 @@ var group__c__primitives =
       [ "type", "group__c__primitives.html#a876e8716b5bd9bb5dbbc86790862a843", null ],
       [ "variance", "group__c__primitives.html#a6568a35ab55abec0561413bd1ffd5142", null ]
     ] ],
+    [ "cldnn_proposal_desc", "group__c__primitives.html#structcldnn__proposal__desc", [
+      [ "feature_stride", "group__c__primitives.html#ad7e957461812a7bf256fd464092e5337", null ],
+      [ "id", "group__c__primitives.html#a04b5e11da26dac16a0cc7089296503e5", null ],
+      [ "input", "group__c__primitives.html#abb4741aa37716e2ad798dea306646f06", null ],
+      [ "iou_threshold", "group__c__primitives.html#a492ff6368679df604646cac4bb2a4e09", null ],
+      [ "max_proposals", "group__c__primitives.html#a45177ead4193bb445b004a678b4ba39d", null ],
+      [ "min_bbox_size", "group__c__primitives.html#a9947c5862e66ebeb1ecfbfeaad524531", null ],
+      [ "output_padding", "group__c__primitives.html#a5948966e4cd64066e76d7a3d815f9ccb", null ],
+      [ "post_nms_topn", "group__c__primitives.html#acdec965758d134707d89fcd9eafd4f7b", null ],
+      [ "pre_nms_topn", "group__c__primitives.html#a9393bd47672f59480e361a9e1b1d9ad1", null ],
+      [ "ratios", "group__c__primitives.html#a3ec27c5167acf3fdeb07f8e1e29d1954", null ],
+      [ "scales", "group__c__primitives.html#a522066e34b9986dd52c6d72918d24fdf", null ],
+      [ "type", "group__c__primitives.html#a3ba6f38fec92277a0935dfec05f32742", null ]
+    ] ],
     [ "cldnn_reorder_desc", "group__c__primitives.html#structcldnn__reorder__desc", [
       [ "id", "group__c__primitives.html#a345b50f391501a306c0d8fbfa6e7747c", null ],
       [ "input", "group__c__primitives.html#aeaec0a34fa60aa6e8cabfe9715fe9ff5", null ],
@@ -180,8 +195,10 @@ var group__c__primitives =
       [ "type", "group__c__primitives.html#ac691246e0c298a846f868f2c5a050f09", null ]
     ] ],
     [ "cldnn_roi_pooling_desc", "group__c__primitives.html#structcldnn__roi__pooling__desc", [
+      [ "group_sz", "group__c__primitives.html#a3bf3fd84db297ceac09f0129a0897254", null ],
       [ "id", "group__c__primitives.html#a344d366103ae0e1e02be04a1e46491b9", null ],
       [ "input", "group__c__primitives.html#addb29d922b152edff0bb7d27139bf9d0", null ],
+      [ "mode", "group__c__primitives.html#a2621fb0207b5d3acf996b41e65f98760", null ],
       [ "output_padding", "group__c__primitives.html#a6539e004bb32810b3ac83925607b23ca", null ],
       [ "pooled_height", "group__c__primitives.html#aa7b5f4d5141b281aaaaf6110e93487ec", null ],
       [ "pooled_width", "group__c__primitives.html#a04ad84eb249390ea2881f7cd09119c06", null ],
@@ -196,20 +213,8 @@ var group__c__primitives =
       [ "scale_input", "group__c__primitives.html#ab544ee6c4f2473baf3925a49bba2f387", null ],
       [ "type", "group__c__primitives.html#a8cdc63d947d0c8e7f85d9233eeefa78b", null ]
     ] ],
-    [ "cldnn_simpler_nms_desc", "group__c__primitives.html#structcldnn__simpler__nms__desc", [
-      [ "feature_stride", "group__c__primitives.html#a43d2853e6a78636cded06c63c97321c4", null ],
-      [ "id", "group__c__primitives.html#a98a409398486f47ac6feaf91f9425854", null ],
-      [ "input", "group__c__primitives.html#a02741097477926ed2894c4f09c58f806", null ],
-      [ "iou_threshold", "group__c__primitives.html#aa78c04af30a09c690006e0c9561ca969", null ],
-      [ "max_proposals", "group__c__primitives.html#a41e664021356810f6a58becf72d9dc64", null ],
-      [ "min_bbox_size", "group__c__primitives.html#a753874d0222c2e45018e792b8e24f74e", null ],
-      [ "output_padding", "group__c__primitives.html#aa1c9ba983a9f3e5e060f28bbc3c2c37a", null ],
-      [ "post_nms_topn", "group__c__primitives.html#a2f4f3bd38d3ed5113312c435468c912f", null ],
-      [ "pre_nms_topn", "group__c__primitives.html#a876fa6d5f78bee9eb9e7a5630dd2ff84", null ],
-      [ "scales", "group__c__primitives.html#af35cbd432c03540e60c61f12f9e0e484", null ],
-      [ "type", "group__c__primitives.html#ae372a771bda83415dd523ec2198dfd62", null ]
-    ] ],
     [ "cldnn_softmax_desc", "group__c__primitives.html#structcldnn__softmax__desc", [
+      [ "dimension", "group__c__primitives.html#a8e42a43d3e3024058669fa77cf4962e0", null ],
       [ "id", "group__c__primitives.html#aacaec04670a0715004453914959e6745", null ],
       [ "input", "group__c__primitives.html#a1422665ef7f60cfffbcbf2ac2af90857", null ],
       [ "output_padding", "group__c__primitives.html#aca3394881502c324d3dd59e0690416e8", null ],
@@ -225,5 +230,6 @@ var group__c__primitives =
       [ "cldnn_pooling_max", "group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eeaf935f12e5c61a444763e6e3df0dc7a8d", null ],
       [ "cldnn_pooling_average", "group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eea5bbac492392f6225648fe7b4c8e434c4", null ]
     ] ],
-    [ "cldnn_prior_box_code_type", "group__c__primitives.html#ga637eb91f32b8d5da425c47ddaaa09c37", null ]
+    [ "cldnn_prior_box_code_type", "group__c__primitives.html#ga637eb91f32b8d5da425c47ddaaa09c37", null ],
+    [ "cldnn_softmax_dimension", "group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd", null ]
 ];

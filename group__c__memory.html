@@ -146,10 +146,11 @@ Enumerations</h2></td></tr>
 <br />
 &#160;&#160;<a class="el" href="group__c__memory.html#gga5513ccecf02f37962076358d18fad277a2303c481ba0dc26f97d7637426a322f5">cldnn_format_os_iyx_osv16</a>, 
 <a class="el" href="group__c__memory.html#gga5513ccecf02f37962076358d18fad277ae81de0615eaa9bce4a2611f82fc5b117">cldnn_format_bs_xs_xsv8_bsv8</a>, 
+<a class="el" href="group__c__memory.html#gga5513ccecf02f37962076358d18fad277adc23fee7e8db6730c9e57b6693220f21">cldnn_format_bs_xs_xsv8_bsv16</a>, 
 <a class="el" href="group__c__memory.html#gga5513ccecf02f37962076358d18fad277afb374cb745c1ea442e90a588777e931a">cldnn_format_bs_x_bsv16</a>, 
-<a class="el" href="group__c__memory.html#gga5513ccecf02f37962076358d18fad277a2dfbc2e088c451486cdfe4839cb8cb88">cldnn_format_format_num</a>, 
 <br />
-&#160;&#160;<b>cldnn_format_any</b> = -1
+&#160;&#160;<a class="el" href="group__c__memory.html#gga5513ccecf02f37962076358d18fad277a2dfbc2e088c451486cdfe4839cb8cb88">cldnn_format_format_num</a>, 
+<b>cldnn_format_any</b> = -1
 <br />
  }<tr class="memdesc:ga5513ccecf02f37962076358d18fad277"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents memory formats (orders). <br />
  In CNN most of data is describe as 4 dimensional blocks. In Intel(R) clDNN library we describe memory with 4 letters.  <a href="group__c__memory.html#ga5513ccecf02f37962076358d18fad277">More...</a><br /></td></tr>
@@ -171,10 +172,10 @@ CLDNN_API <a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d9057637698
 <tr class="memitem:gacac80f71ca3df67fc525423d9a2d7c3e"><td class="memItemLeft" align="right" valign="top">CLDNN_API <a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__memory.html#gacac80f71ca3df67fc525423d9a2d7c3e">cldnn_attach_memory</a> (<a class="el" href="group__c__memory.html#structcldnn__layout">cldnn_layout</a> layout, void *pointer, size_t size, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="memdesc:gacac80f71ca3df67fc525423d9a2d7c3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create memory object attached to the buffer allocated by user.  <a href="#gacac80f71ca3df67fc525423d9a2d7c3e">More...</a><br /></td></tr>
 <tr class="separator:gacac80f71ca3df67fc525423d9a2d7c3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gae05faba04aed075a9cc12b602facda1c"><td class="memItemLeft" align="right" valign="top"><a id="gae05faba04aed075a9cc12b602facda1c"></a>
-CLDNN_API bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__memory.html#gae05faba04aed075a9cc12b602facda1c">cldnn_is_the_same_buffer</a> (<a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a> mem1, <a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a> mem2, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
-<tr class="memdesc:gae05faba04aed075a9cc12b602facda1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if two memory objects refer to the same underlaying buffer. <br /></td></tr>
-<tr class="separator:gae05faba04aed075a9cc12b602facda1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga74781046a020008e981ae1a5eb465861"><td class="memItemLeft" align="right" valign="top"><a id="ga74781046a020008e981ae1a5eb465861"></a>
+CLDNN_API int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__memory.html#ga74781046a020008e981ae1a5eb465861">cldnn_is_the_same_buffer</a> (<a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a> mem1, <a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a> mem2, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="memdesc:ga74781046a020008e981ae1a5eb465861"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if two memory objects refer to the same underlaying buffer. <br /></td></tr>
+<tr class="separator:ga74781046a020008e981ae1a5eb465861"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga06b49f1a10d50cf42b19bc758f462369"><td class="memItemLeft" align="right" valign="top"><a id="ga06b49f1a10d50cf42b19bc758f462369"></a>
 CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__memory.html#ga06b49f1a10d50cf42b19bc758f462369">cldnn_retain_memory</a> (<a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a> memory, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="memdesc:ga06b49f1a10d50cf42b19bc758f462369"><td class="mdescLeft">&#160;</td><td class="mdescRight">Increment reference counter for the memory object. <br /></td></tr>
@@ -218,7 +219,7 @@ CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 </div><div class="memdoc">
 <div class="textblock"><p>N-dimensional vector. Mostly used to represent memory size. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00217">217</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00220">220</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -262,7 +263,7 @@ spatial_num</td>
 </div><div class="memdoc">
 <div class="textblock"><p>Padding information. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00226">226</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00229">229</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_padding:</div>
 <div class="dyncontent">
@@ -309,7 +310,7 @@ Upper padding sizes. For spatials, it means size of right (X) and bottom (Y) pad
 </div><div class="memdoc">
 <div class="textblock"><p>Memory layout description. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00244">244</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00247">247</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_layout:</div>
 <div class="dyncontent">
@@ -404,6 +405,11 @@ N-dimensional vector describes size (in elements) of memory (excluding padding).
 <img src="bs_xs_xsv8_bsv8.jpg" alt="bs_xs_xsv8_bsv8.jpg"/>
 </div>
  </td></tr>
+<tr><td class="fieldname"><a id="gga5513ccecf02f37962076358d18fad277adc23fee7e8db6730c9e57b6693220f21"></a>cldnn_format_bs_xs_xsv8_bsv16&#160;</td><td class="fielddoc"><p>format used only for fully connected weights: bs - batch slice, xs - x slice, bsv16 - 16 values of single slice. <br />
+ </p><div class="image">
+<img src="bs_xs_xsv8_bsv16.jpg" alt="bs_xs_xsv8_bsv16.jpg"/>
+</div>
+ </td></tr>
 <tr><td class="fieldname"><a id="gga5513ccecf02f37962076358d18fad277afb374cb745c1ea442e90a588777e931a"></a>cldnn_format_bs_x_bsv16&#160;</td><td class="fielddoc"><p>format used only for fully connected weights fp16 batch=1 : bs - batch slice (responses slice), bsv16 - 16 values of single batch slice, x - flattened plane of (fyx). <br />
  </p><div class="image">
 <img src="bs_x_bsv16.jpg" alt="bs_x_bsv16.jpg"/>
@@ -413,7 +419,7 @@ N-dimensional vector describes size (in elements) of memory (excluding padding).
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00193">193</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00194">194</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 
 </div>
 </div>

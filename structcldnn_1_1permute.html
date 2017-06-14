@@ -168,7 +168,7 @@ static <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c292302189
 Public Attributes</h2></td></tr>
 <tr class="memitem:a1328e9c8004e7f040bf69c9bc1826d30"><td class="memItemLeft" align="right" valign="top"><a id="a1328e9c8004e7f040bf69c9bc1826d30"></a>
 std::vector&lt; uint16_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1permute.html#a1328e9c8004e7f040bf69c9bc1826d30">permute_order</a></td></tr>
-<tr class="memdesc:a1328e9c8004e7f040bf69c9bc1826d30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array of permuted output order. <br /></td></tr>
+<tr class="memdesc:a1328e9c8004e7f040bf69c9bc1826d30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array of permuted output order in bfyx format. <br /></td></tr>
 <tr class="separator:a1328e9c8004e7f040bf69c9bc1826d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structcldnn_1_1primitive"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structcldnn_1_1primitive')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structcldnn_1_1primitive.html">cldnn::primitive</a></td></tr>
 <tr class="memitem:ad0d17abd63bd3e4d63a7b226d8bddc7b inherit pub_attribs_structcldnn_1_1primitive"><td class="memItemLeft" align="right" valign="top"><a id="ad0d17abd63bd3e4d63a7b226d8bddc7b"></a>
@@ -214,7 +214,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Permutes data in the memory, with respect to provided order. </p>
-<p>Permute order is set as vector with positions meaning corresponding to tensor. Vector values represent dimensions to be permuted. For example: <br />
+<p>Permute order is set as vector with positions meaning corresponding to tensor. Vector values represent dimensions to be permuted in bfyx format. For example: <br />
  input_dimensions = tensor{ 5, 3, 6, 3 } <br />
  permute_order = { 2, 3, 1, 0 } <br />
  output_dimensions = { 6, 3, 3, 5 } <br />
@@ -274,7 +274,7 @@ Additional Inherited Members</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
     <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
-    <tr><td class="paramname">permute_order</td><td>Array of permuted output order. </td></tr>
+    <tr><td class="paramname">permute_order</td><td>Array of permuted output order in bfyx format. </td></tr>
   </table>
   </dd>
 </dl>

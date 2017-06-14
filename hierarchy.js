@@ -32,11 +32,11 @@ var hierarchy =
     [ "cldnn_primitive_id_arr", "group__c__topology.html#structcldnn__primitive__id__arr", null ],
     [ "cldnn_prior_box_desc", "group__c__primitives.html#structcldnn__prior__box__desc", null ],
     [ "cldnn_profiling_interval", "group__c__network.html#structcldnn__profiling__interval", null ],
+    [ "cldnn_proposal_desc", "group__c__primitives.html#structcldnn__proposal__desc", null ],
     [ "cldnn_reorder_desc", "group__c__primitives.html#structcldnn__reorder__desc", null ],
     [ "cldnn_reshape_desc", "group__c__primitives.html#structcldnn__reshape__desc", null ],
     [ "cldnn_roi_pooling_desc", "group__c__primitives.html#structcldnn__roi__pooling__desc", null ],
     [ "cldnn_scale_desc", "group__c__primitives.html#structcldnn__scale__desc", null ],
-    [ "cldnn_simpler_nms_desc", "group__c__primitives.html#structcldnn__simpler__nms__desc", null ],
     [ "cldnn_softmax_desc", "group__c__primitives.html#structcldnn__softmax__desc", null ],
     [ "cldnn_tensor", "group__c__memory.html#structcldnn__tensor", null ],
     [ "cldnn_uint16_t_arr", "group__c__topology.html#structcldnn__uint16__t__arr", null ],
@@ -117,6 +117,9 @@ var hierarchy =
       [ "cldnn::primitive_base< prior_box, cldnn_prior_box_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::prior_box", "structcldnn_1_1prior__box.html", null ]
       ] ],
+      [ "cldnn::primitive_base< proposal, cldnn_proposal_desc >", "classcldnn_1_1primitive__base.html", [
+        [ "cldnn::proposal", "structcldnn_1_1proposal.html", null ]
+      ] ],
       [ "cldnn::primitive_base< reorder, cldnn_reorder_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::reorder", "structcldnn_1_1reorder.html", null ]
       ] ],
@@ -128,9 +131,6 @@ var hierarchy =
       ] ],
       [ "cldnn::primitive_base< scale, cldnn_scale_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::scale", "structcldnn_1_1scale.html", null ]
-      ] ],
-      [ "cldnn::primitive_base< simpler_nms, cldnn_simpler_nms_desc >", "classcldnn_1_1primitive__base.html", [
-        [ "cldnn::simpler_nms", "structcldnn_1_1simpler__nms.html", null ]
       ] ],
       [ "cldnn::primitive_base< softmax, cldnn_softmax_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::softmax", "structcldnn_1_1softmax.html", null ]

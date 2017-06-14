@@ -95,9 +95,9 @@ $(document).ready(function(){initNavTree('structcldnn_1_1engine__configuration.h
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a48c81891a4a684efcbac62b48173adb2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a48c81891a4a684efcbac62b48173adb2">engine_configuration</a> (bool <a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba3cdda3e94e1b3dfd218a9d60b8139968">profiling</a>=false, bool decorate_kernel_names=false, const std::string &amp;options=std::string())</td></tr>
-<tr class="memdesc:a48c81891a4a684efcbac62b48173adb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs engine configuration with specified options.  <a href="#a48c81891a4a684efcbac62b48173adb2">More...</a><br /></td></tr>
-<tr class="separator:a48c81891a4a684efcbac62b48173adb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e14ba251bcdc0393547a59777bed5dd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a7e14ba251bcdc0393547a59777bed5dd">engine_configuration</a> (bool <a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba3cdda3e94e1b3dfd218a9d60b8139968">profiling</a>=false, bool decorate_kernel_names=false, const std::string &amp;options=std::string(), const std::string &amp;single_kernel=std::string())</td></tr>
+<tr class="memdesc:a7e14ba251bcdc0393547a59777bed5dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs engine configuration with specified options.  <a href="#a7e14ba251bcdc0393547a59777bed5dd">More...</a><br /></td></tr>
+<tr class="separator:a7e14ba251bcdc0393547a59777bed5dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa2a8c438b09dc7aa1260c9a8ab6d90c"><td class="memItemLeft" align="right" valign="top"><a id="afa2a8c438b09dc7aa1260c9a8ab6d90c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>engine_configuration</b> (const <a class="el" href="group__c__engine.html#structcldnn__engine__configuration">cldnn_engine_configuration</a> &amp;c_conf)</td></tr>
 <tr class="separator:afa2a8c438b09dc7aa1260c9a8ab6d90c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,14 +120,18 @@ const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href
 const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a50822b299ebceebdbf12102c8421eb44">compiler_options</a></td></tr>
 <tr class="memdesc:a50822b299ebceebdbf12102c8421eb44"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenCL compiler options string. <br /></td></tr>
 <tr class="separator:a50822b299ebceebdbf12102c8421eb44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c555b0303ab67bbbb17434b6b5f3810"><td class="memItemLeft" align="right" valign="top"><a id="a2c555b0303ab67bbbb17434b6b5f3810"></a>
+const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a2c555b0303ab67bbbb17434b6b5f3810">single_kernel_name</a></td></tr>
+<tr class="memdesc:a2c555b0303ab67bbbb17434b6b5f3810"><td class="mdescLeft">&#160;</td><td class="mdescRight">If provided, runs specific layer. <br /></td></tr>
+<tr class="separator:a2c555b0303ab67bbbb17434b6b5f3810"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Configuration parameters for created engine. </p>
 
 <p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00037">37</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a48c81891a4a684efcbac62b48173adb2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a48c81891a4a684efcbac62b48173adb2">&#9670;&nbsp;</a></span>engine_configuration()</h2>
+<a id="a7e14ba251bcdc0393547a59777bed5dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e14ba251bcdc0393547a59777bed5dd">&#9670;&nbsp;</a></span>engine_configuration()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -151,7 +155,13 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>options</em> = <code>std::string()</code>&#160;</td>
+          <td class="paramname"><em>options</em> = <code>std::string()</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>single_kernel</em> = <code>std::string()</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -172,11 +182,12 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
     <tr><td class="paramname">profiling</td><td>Enable per-primitive profiling. </td></tr>
     <tr><td class="paramname">decorate_kernel_names</td><td>Generate meaniful names fo OpenCL kernels. </td></tr>
     <tr><td class="paramname">options</td><td>OpenCL compiler options string. </td></tr>
+    <tr><td class="paramname">single_kernel</td><td>If provided, runs specific layer. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00047">47</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00049">49</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
 
 </div>
 </div>

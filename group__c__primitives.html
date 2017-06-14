@@ -101,7 +101,7 @@ Collaboration diagram for Primitives:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:structcldnn__activation__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__activation__desc">cldnn_activation_desc</a></td></tr>
-<tr class="memdesc:structcldnn__activation__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Activiation using rectified linear unit.  <a href="group__c__primitives.html#structcldnn__activation__desc">More...</a><br /></td></tr>
+<tr class="memdesc:structcldnn__activation__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Activation using rectified linear unit or parameterized rectified linear unit.  <a href="group__c__primitives.html#structcldnn__activation__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__activation__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcldnn__batch__norm__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__batch__norm__desc">cldnn_batch_norm_desc</a></td></tr>
 <tr class="memdesc:structcldnn__batch__norm__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Batch normalization primitive.  <a href="group__c__primitives.html#structcldnn__batch__norm__desc">More...</a><br /></td></tr>
@@ -147,6 +147,8 @@ Classes</h2></td></tr>
 <tr class="memitem:structcldnn__prior__box__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__prior__box__desc">cldnn_prior_box_desc</a></td></tr>
 <tr class="memdesc:structcldnn__prior__box__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates a set of default bounding boxes with different sizes and aspect ratios.  <a href="group__c__primitives.html#structcldnn__prior__box__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__prior__box__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__proposal__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__proposal__desc">cldnn_proposal_desc</a></td></tr>
+<tr class="separator:structcldnn__proposal__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcldnn__reorder__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__reorder__desc">cldnn_reorder_desc</a></td></tr>
 <tr class="memdesc:structcldnn__reorder__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Changes how data is ordered in memory. Value type is not changed &amp; all information is preserved.  <a href="group__c__primitives.html#structcldnn__reorder__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__reorder__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,10 +160,8 @@ Classes</h2></td></tr>
 <tr class="memitem:structcldnn__scale__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__scale__desc">cldnn_scale_desc</a></td></tr>
 <tr class="memdesc:structcldnn__scale__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs elementwise product of input and scale_input.  <a href="group__c__primitives.html#structcldnn__scale__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__scale__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:structcldnn__simpler__nms__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__simpler__nms__desc">cldnn_simpler_nms_desc</a></td></tr>
-<tr class="separator:structcldnn__simpler__nms__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcldnn__softmax__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__softmax__desc">cldnn_softmax_desc</a></td></tr>
-<tr class="memdesc:structcldnn__softmax__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalizes results so they sum to 1.  <a href="group__c__primitives.html#structcldnn__softmax__desc">More...</a><br /></td></tr>
+<tr class="memdesc:structcldnn__softmax__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalizes results so they sum to 1. The scope of normalization is defined by a member <code>dimension</code>.  <a href="group__c__primitives.html#structcldnn__softmax__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__softmax__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -200,6 +200,19 @@ Enumerations</h2></td></tr>
  }<tr class="memdesc:ga083b7f10c26345d6afb7d88718e8f2ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select method for Pooling layer ( <a class="el" href="group__c__primitives.html#structcldnn__pooling__desc">cldnn_pooling_desc</a> ).  <a href="group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:ga083b7f10c26345d6afb7d88718e8f2ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga913f194198a0de9f3b10a6ad1ed5d5bd"><td class="memItemLeft" align="right" valign="top"><a id="ga913f194198a0de9f3b10a6ad1ed5d5bd"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_dimension</a> { <br />
+&#160;&#160;<b>cldnn_softmax_normalize_b</b>, 
+<b>cldnn_softmax_normalize_f</b>, 
+<b>cldnn_softmax_normalize_x</b>, 
+<b>cldnn_softmax_normalize_y</b>, 
+<br />
+&#160;&#160;<b>cldnn_softmax_normalize_yx</b>, 
+<b>cldnn_softmax_normalize_fyx</b>, 
+<b>cldnn_softmax_normalize_bfyx</b>
+<br />
+ }<tr class="memdesc:ga913f194198a0de9f3b10a6ad1ed5d5bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enum type to specify softmax's normalization scope (see <a class="el" href="group__c__primitives.html#a8e42a43d3e3024058669fa77cf4962e0" title="Defines a scope of a single softmax normalization. ">cldnn_softmax_desc::dimension</a>). <br /></td></tr>
+</td></tr>
+<tr class="separator:ga913f194198a0de9f3b10a6ad1ed5d5bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -251,6 +264,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga98d6228bc9964905ece85530acba6242"><td class="memItemLeft" align="right" valign="top"><a id="ga98d6228bc9964905ece85530acba6242"></a>
 <a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_prior_box_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="separator:ga98d6228bc9964905ece85530acba6242"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaafef0daf012aa327f1bdae21902d5a87"><td class="memItemLeft" align="right" valign="top"><a id="gaafef0daf012aa327f1bdae21902d5a87"></a>
+<a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_proposal_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="separator:gaafef0daf012aa327f1bdae21902d5a87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3af516fe46028275cf80c130a7ecc2a8"><td class="memItemLeft" align="right" valign="top"><a id="ga3af516fe46028275cf80c130a7ecc2a8"></a>
 <a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_reorder_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="separator:ga3af516fe46028275cf80c130a7ecc2a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -263,9 +279,6 @@ Functions</h2></td></tr>
 <tr class="memitem:ga0a0a007adc32e41780a56682fa173e87"><td class="memItemLeft" align="right" valign="top"><a id="ga0a0a007adc32e41780a56682fa173e87"></a>
 <a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_scale_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="separator:ga0a0a007adc32e41780a56682fa173e87"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga381c15e795e48bbb8f7d62b24938ad97"><td class="memItemLeft" align="right" valign="top"><a id="ga381c15e795e48bbb8f7d62b24938ad97"></a>
-<a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_simpler_nms_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
-<tr class="separator:ga381c15e795e48bbb8f7d62b24938ad97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga13db68dc141877ed37890f0b5eb742f5"><td class="memItemLeft" align="right" valign="top"><a id="ga13db68dc141877ed37890f0b5eb742f5"></a>
 <a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_softmax_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="separator:ga13db68dc141877ed37890f0b5eb742f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -283,9 +296,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"><p>Activiation using rectified linear unit. </p>
+<div class="textblock"><p>Activation using rectified linear unit or parameterized rectified linear unit. </p>
+<p>Can get one negative slope or negative slope per channel. </p><dl class="section user"><dt>Algorithm:</dt><dd>out(i,x,y) = max(0, in(i,x,y)) + slope(i) * min(0, in(i,x,y)) </dd></dl>
+<dl class="section user"><dt>Where:</dt><dd><ul>
+<li>out(i,x,y) : value at x, y from i-th feature map after activation. </li>
+<li>in(i,x,y) : value at x, y from i-th feature map before activation. </li>
+<li>slope(i) : the slope value of the i-th feature map (can be shared across channels or one slope per channel). </li>
+</ul>
+</dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="activation_8h_source.html#l00034">34</a> of file <a class="el" href="activation_8h_source.html">activation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="activation_8h_source.html#l00041">41</a> of file <a class="el" href="activation_8h_source.html">activation.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_activation_desc:</div>
 <div class="dyncontent">
@@ -316,6 +336,12 @@ Input primitives ids. </td></tr>
 negative_slope</td>
 <td class="fielddoc">
 Activation negative slope. </td></tr>
+<tr><td class="fieldtype">
+<a id="ab0074c1f48f086b75892e4310e3d5ee6"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
+<td class="fieldname">
+negative_slope_input</td>
+<td class="fielddoc">
+PRelu activation slope input primitive id. Input x dimension should be equal to input feature size (one slope per channel). All other dimensions should be 1. </td></tr>
 <tr><td class="fieldtype">
 <a id="ad839ab66a588f125d6c09009f6d75766"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
 <td class="fieldname">
@@ -772,7 +798,7 @@ Relu activation slope. </td></tr>
 <td class="fieldname">
 bias</td>
 <td class="fielddoc">
-Array of primitive ids containing bias data. Size of array should be equivalent to <code>split</code>. </td></tr>
+Array of primitive ids containing bias data. Size of array should be equivalent to <code>split</code> or should be empty (if not using bias). </td></tr>
 <tr><td class="fieldtype">
 <a id="a768f96b5e54251d7c47cd4705110f5df"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
 <td class="fieldname">
@@ -1363,7 +1389,7 @@ Primitive type identificator. </td></tr>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Permutes data in the memory, with respect to provided order. </p>
-<p>Permute order is set as vector with positions meaning corresponding to tensor. Vector values represent dimensions to be permuted. For example: <br />
+<p>Permute order is set as vector with positions meaning corresponding to tensor. Vector values represent dimensions to be permuted in bfyx format. For example: <br />
  input_dimensions = tensor{ 5, 3, 6, 3 } <br />
  permute_order = { 2, 3, 1, 0 } <br />
  output_dimensions = { 6, 3, 3, 5 } <br />
@@ -1407,7 +1433,7 @@ Output padding information. </td></tr>
 <td class="fieldname">
 permute_order</td>
 <td class="fielddoc">
-Array of permuted output order. </td></tr>
+Array of permuted output order in bfyx format. </td></tr>
 <tr><td class="fieldtype">
 <a id="a331b3531b6d65fb82366c3cab24d51a0"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
 <td class="fieldname">
@@ -1613,6 +1639,108 @@ Variance for adjusting the prior boxes. </td></tr>
 
 </div>
 </div>
+<a name="structcldnn__proposal__desc" id="structcldnn__proposal__desc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__proposal__desc">&#9670;&nbsp;</a></span>cldnn_proposal_desc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_proposal_desc</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock">
+<p class="definition">Definition at line <a class="el" href="proposal_8h_source.html#l00035">35</a> of file <a class="el" href="proposal_8h_source.html">proposal.h</a>.</p>
+</div><div class="dynheader">
+Collaboration diagram for cldnn_proposal_desc:</div>
+<div class="dyncontent">
+<div class="center"><img src="structcldnn__proposal__desc__coll__graph.png" border="0" usemap="#cldnn__proposal__desc_coll__map" alt="Collaboration graph"/></div>
+<map name="cldnn__proposal__desc_coll__map" id="cldnn__proposal__desc_coll__map">
+<area shape="rect" id="node2" href="group__c__topology.html#structcldnn__float__arr" title="Represents reference to an array of floats. " alt="" coords="5,109,112,136"/>
+<area shape="rect" id="node3" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="137,109,242,136"/>
+<area shape="rect" id="node4" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="141,5,237,32"/>
+<area shape="rect" id="node5" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="267,109,413,136"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
+<table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="ad7e957461812a7bf256fd464092e5337"></a>int</td>
+<td class="fieldname">
+feature_stride</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a04b5e11da26dac16a0cc7089296503e5"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
+<td class="fieldname">
+id</td>
+<td class="fielddoc">
+Primitive id unique within a topology. </td></tr>
+<tr><td class="fieldtype">
+<a id="abb4741aa37716e2ad798dea306646f06"></a><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td>
+<td class="fieldname">
+input</td>
+<td class="fielddoc">
+Input primitives ids. </td></tr>
+<tr><td class="fieldtype">
+<a id="a492ff6368679df604646cac4bb2a4e09"></a>float</td>
+<td class="fieldname">
+iou_threshold</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a45177ead4193bb445b004a678b4ba39d"></a>int</td>
+<td class="fieldname">
+max_proposals</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9947c5862e66ebeb1ecfbfeaad524531"></a>int</td>
+<td class="fieldname">
+min_bbox_size</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a5948966e4cd64066e76d7a3d815f9ccb"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
+<td class="fieldname">
+output_padding</td>
+<td class="fielddoc">
+Output padding information. </td></tr>
+<tr><td class="fieldtype">
+<a id="acdec965758d134707d89fcd9eafd4f7b"></a>int</td>
+<td class="fieldname">
+post_nms_topn</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9393bd47672f59480e361a9e1b1d9ad1"></a>int</td>
+<td class="fieldname">
+pre_nms_topn</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3ec27c5167acf3fdeb07f8e1e29d1954"></a><a class="el" href="group__c__topology.html#structcldnn__float__arr">cldnn_float_arr</a></td>
+<td class="fieldname">
+ratios</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a522066e34b9986dd52c6d72918d24fdf"></a><a class="el" href="group__c__topology.html#structcldnn__float__arr">cldnn_float_arr</a></td>
+<td class="fieldname">
+scales</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3ba6f38fec92277a0935dfec05f32742"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
+<td class="fieldname">
+type</td>
+<td class="fielddoc">
+Primitive type identificator. </td></tr>
+</table>
+
+</div>
+</div>
 <a name="structcldnn__reorder__desc" id="structcldnn__reorder__desc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structcldnn__reorder__desc">&#9670;&nbsp;</a></span>cldnn_reorder_desc</h2>
 
@@ -1780,6 +1908,12 @@ Collaboration diagram for cldnn_roi_pooling_desc:</div>
 <table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
+<a id="a3bf3fd84db297ceac09f0129a0897254"></a>int</td>
+<td class="fieldname">
+group_sz</td>
+<td class="fielddoc">
+Group size as defined by PSRoIPooling when &gt; 0, else if 0 means regular RoIPooling. </td></tr>
+<tr><td class="fieldtype">
 <a id="a344d366103ae0e1e02be04a1e46491b9"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
 <td class="fieldname">
 id</td>
@@ -1792,6 +1926,12 @@ input</td>
 <td class="fielddoc">
 Input primitives ids. </td></tr>
 <tr><td class="fieldtype">
+<a id="a2621fb0207b5d3acf996b41e65f98760"></a>int32_t</td>
+<td class="fieldname">
+mode</td>
+<td class="fielddoc">
+Pooling method. See <a class="el" href="group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee" title="Select method for Pooling layer ( cldnn_pooling_desc ). ">cldnn_pooling_mode</a>. </td></tr>
+<tr><td class="fieldtype">
 <a id="a6539e004bb32810b3ac83925607b23ca"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
 <td class="fieldname">
 output_padding</td>
@@ -1802,19 +1942,19 @@ Output padding information. </td></tr>
 <td class="fieldname">
 pooled_height</td>
 <td class="fielddoc">
-</td></tr>
+Output height. </td></tr>
 <tr><td class="fieldtype">
 <a id="a04ad84eb249390ea2881f7cd09119c06"></a>int</td>
 <td class="fieldname">
 pooled_width</td>
 <td class="fielddoc">
-</td></tr>
+Output width. </td></tr>
 <tr><td class="fieldtype">
 <a id="a6bcec056ca587d086735c16d5317281e"></a>float</td>
 <td class="fieldname">
 spatial_scale</td>
 <td class="fielddoc">
-</td></tr>
+Ratio of the coordinates used in RoIs to the width (and height) of the input data. </td></tr>
 <tr><td class="fieldtype">
 <a id="ab8dbab4a1ace9df41bb35e46ab800202"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
 <td class="fieldname">
@@ -1902,102 +2042,6 @@ Primitive type identificator. </td></tr>
 
 </div>
 </div>
-<a name="structcldnn__simpler__nms__desc" id="structcldnn__simpler__nms__desc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__simpler__nms__desc">&#9670;&nbsp;</a></span>cldnn_simpler_nms_desc</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">struct cldnn_simpler_nms_desc</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="simpler__nms_8h_source.html#l00035">35</a> of file <a class="el" href="simpler__nms_8h_source.html">simpler_nms.h</a>.</p>
-</div><div class="dynheader">
-Collaboration diagram for cldnn_simpler_nms_desc:</div>
-<div class="dyncontent">
-<div class="center"><img src="structcldnn__simpler__nms__desc__coll__graph.png" border="0" usemap="#cldnn__simpler__nms__desc_coll__map" alt="Collaboration graph"/></div>
-<map name="cldnn__simpler__nms__desc_coll__map" id="cldnn__simpler__nms__desc_coll__map">
-<area shape="rect" id="node2" href="group__c__topology.html#structcldnn__float__arr" title="Represents reference to an array of floats. " alt="" coords="5,109,112,136"/>
-<area shape="rect" id="node3" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="137,109,242,136"/>
-<area shape="rect" id="node4" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="141,5,237,32"/>
-<area shape="rect" id="node5" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="267,109,413,136"/>
-</map>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
-<table class="fieldtable">
-<tr><th colspan="3">Class Members</th></tr>
-<tr><td class="fieldtype">
-<a id="a43d2853e6a78636cded06c63c97321c4"></a>int</td>
-<td class="fieldname">
-feature_stride</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a98a409398486f47ac6feaf91f9425854"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
-<td class="fieldname">
-id</td>
-<td class="fielddoc">
-Primitive id unique within a topology. </td></tr>
-<tr><td class="fieldtype">
-<a id="a02741097477926ed2894c4f09c58f806"></a><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td>
-<td class="fieldname">
-input</td>
-<td class="fielddoc">
-Input primitives ids. </td></tr>
-<tr><td class="fieldtype">
-<a id="aa78c04af30a09c690006e0c9561ca969"></a>float</td>
-<td class="fieldname">
-iou_threshold</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a41e664021356810f6a58becf72d9dc64"></a>int</td>
-<td class="fieldname">
-max_proposals</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a753874d0222c2e45018e792b8e24f74e"></a>int</td>
-<td class="fieldname">
-min_bbox_size</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
-<a id="aa1c9ba983a9f3e5e060f28bbc3c2c37a"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
-<td class="fieldname">
-output_padding</td>
-<td class="fielddoc">
-Output padding information. </td></tr>
-<tr><td class="fieldtype">
-<a id="a2f4f3bd38d3ed5113312c435468c912f"></a>int</td>
-<td class="fieldname">
-post_nms_topn</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a876fa6d5f78bee9eb9e7a5630dd2ff84"></a>int</td>
-<td class="fieldname">
-pre_nms_topn</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
-<a id="af35cbd432c03540e60c61f12f9e0e484"></a><a class="el" href="group__c__topology.html#structcldnn__float__arr">cldnn_float_arr</a></td>
-<td class="fieldname">
-scales</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ae372a771bda83415dd523ec2198dfd62"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
-<td class="fieldname">
-type</td>
-<td class="fielddoc">
-Primitive type identificator. </td></tr>
-</table>
-
-</div>
-</div>
 <a name="structcldnn__softmax__desc" id="structcldnn__softmax__desc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structcldnn__softmax__desc">&#9670;&nbsp;</a></span>cldnn_softmax_desc</h2>
 
@@ -2009,7 +2053,7 @@ Primitive type identificator. </td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"><p>Normalizes results so they sum to 1. </p>
+<div class="textblock"><p>Normalizes results so they sum to 1. The scope of normalization is defined by a member <code>dimension</code>. </p>
 <dl class="section user"><dt>Algorithm:</dt><dd>b = e^a/sum(N-1; j=0; e^j) </dd></dl>
 <dl class="section user"><dt>Where:</dt><dd><ul>
 <li>N : number of values to normalize </li>
@@ -2018,7 +2062,7 @@ Primitive type identificator. </td></tr>
 </ul>
 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="softmax_8h_source.html#l00041">41</a> of file <a class="el" href="softmax_8h_source.html">softmax.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="softmax_8h_source.html#l00053">53</a> of file <a class="el" href="softmax_8h_source.html">softmax.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_softmax_desc:</div>
 <div class="dyncontent">
@@ -2031,6 +2075,21 @@ Collaboration diagram for cldnn_softmax_desc:</div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="a8e42a43d3e3024058669fa77cf4962e0"></a><a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_dimension</a></td>
+<td class="fieldname">
+dimension</td>
+<td class="fielddoc">
+Defines a scope of a single softmax normalization. <p>Being given a 4-dimensional input, which consists of b,f,y,x dimensions, softmax normalizes data which are divided into multiple independent sets. Specific behaviour is determined by this parameter, as follows:</p><ul>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_x </a> each input row is normalized independently,</li>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_y </a> each input column is normalized independently,</li>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_f </a> each in-depth vector of input is normalized independently,</li>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_b </a> each pixel from a single 3d image is normalized toghether with corresponding pixels from other images within processing batch,</li>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normallize_yx </a> each 2d image within input is normalized independently,</li>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_fyx </a> each 3d image within input is normalized independently,</li>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_bfyx </a> whole input is normalized as one data set. </li>
+</ul>
+</td></tr>
 <tr><td class="fieldtype">
 <a id="aacaec04670a0715004453914959e6745"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
 <td class="fieldname">

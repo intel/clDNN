@@ -83,6 +83,7 @@ $(document).ready(function(){initNavTree('structcldnn_1_1softmax.html','');});
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structcldnn_1_1softmax-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">cldnn::softmax Struct Reference<div class="ingroups"><a class="el" href="group__cpp__api.html">C++ API</a> &raquo; <a class="el" href="group__cpp__topology.html">Network Topology</a> &raquo; <a class="el" href="group__cpp__primitives.html">Primitives</a></div></div>  </div>
@@ -117,15 +118,28 @@ Collaboration diagram for cldnn::softmax:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
+<tr class="memitem:a24fa7bcf94a3c32e0c3d306585a73a79"><td class="memItemLeft" align="right" valign="top"><a id="a24fa7bcf94a3c32e0c3d306585a73a79"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">dimension_t</a> { <br />
+&#160;&#160;<b>normalize_b</b> = cldnn_softmax_normalize_b, 
+<b>normalize_f</b> = cldnn_softmax_normalize_f, 
+<b>normalize_x</b> = cldnn_softmax_normalize_x, 
+<b>normalize_y</b> = cldnn_softmax_normalize_y, 
+<br />
+&#160;&#160;<b>normalize_yx</b> = cldnn_softmax_normalize_yx, 
+<b>normalize_fyx</b> = cldnn_softmax_normalize_fyx, 
+<b>normalize_bfyx</b> = cldnn_softmax_normalize_bfyx
+<br />
+ }<tr class="memdesc:a24fa7bcf94a3c32e0c3d306585a73a79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enum type to specify softmax's normalization scope (see <a class="el" href="structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc" title="Defines a scope of a single softmax normalization. ">dimension</a>). <br /></td></tr>
+</td></tr>
+<tr class="separator:a24fa7bcf94a3c32e0c3d306585a73a79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9108705c93899223b27670c5e84a00e9"><td class="memItemLeft" align="right" valign="top"><a id="a9108705c93899223b27670c5e84a00e9"></a>
 typedef <a class="el" href="group__c__primitives.html#structcldnn__softmax__desc">cldnn_softmax_desc</a>&#160;</td><td class="memItemRight" valign="bottom"><b>dto</b></td></tr>
 <tr class="separator:a9108705c93899223b27670c5e84a00e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aa265671133f220e39c8acab87572b5ab"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html#aa265671133f220e39c8acab87572b5ab">softmax</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
-<tr class="memdesc:aa265671133f220e39c8acab87572b5ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs softmax primitive.  <a href="#aa265671133f220e39c8acab87572b5ab">More...</a><br /></td></tr>
-<tr class="separator:aa265671133f220e39c8acab87572b5ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fd42124f28e4cc3bb0f3505d3dc1ccd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html#a8fd42124f28e4cc3bb0f3505d3dc1ccd">softmax</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">dimension_t</a> <a class="el" href="structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc">dimension</a>=normalize_fyx, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
+<tr class="memdesc:a8fd42124f28e4cc3bb0f3505d3dc1ccd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs softmax primitive.  <a href="#a8fd42124f28e4cc3bb0f3505d3dc1ccd">More...</a><br /></td></tr>
+<tr class="separator:a8fd42124f28e4cc3bb0f3505d3dc1ccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8ed6f0a59550b68b9f34a77e73c26ce"><td class="memItemLeft" align="right" valign="top"><a id="ae8ed6f0a59550b68b9f34a77e73c26ce"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html#ae8ed6f0a59550b68b9f34a77e73c26ce">softmax</a> (const <a class="el" href="group__c__primitives.html#structcldnn__softmax__desc">dto</a> *<a class="el" href="group__c__primitives.html#structcldnn__softmax__desc">dto</a>)</td></tr>
 <tr class="memdesc:ae8ed6f0a59550b68b9f34a77e73c26ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a copy from C API <a class="el" href="group__c__primitives.html#structcldnn__softmax__desc">cldnn_softmax_desc</a>. <br /></td></tr>
@@ -162,8 +176,11 @@ Static Public Member Functions</h2></td></tr>
 static <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c29230218950acda0">primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>type_id</b> ()</td></tr>
 <tr class="separator:a03e175be0d917694a635624ea22b0171"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ac2f6ddd9596a81745d0ae9c672d52adc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">dimension_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc">dimension</a></td></tr>
+<tr class="memdesc:ac2f6ddd9596a81745d0ae9c672d52adc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines a scope of a single softmax normalization.  <a href="#ac2f6ddd9596a81745d0ae9c672d52adc">More...</a><br /></td></tr>
+<tr class="separator:ac2f6ddd9596a81745d0ae9c672d52adc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structcldnn_1_1primitive"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structcldnn_1_1primitive')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structcldnn_1_1primitive.html">cldnn::primitive</a></td></tr>
 <tr class="memitem:ad0d17abd63bd3e4d63a7b226d8bddc7b inherit pub_attribs_structcldnn_1_1primitive"><td class="memItemLeft" align="right" valign="top"><a id="ad0d17abd63bd3e4d63a7b226d8bddc7b"></a>
 const <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c29230218950acda0">primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1primitive.html#ad0d17abd63bd3e4d63a7b226d8bddc7b">type</a></td></tr>
@@ -181,6 +198,9 @@ const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016d
 <a class="el" href="structcldnn_1_1padding.html">padding</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a></td></tr>
 <tr class="memdesc:a467fdbfc24a6ba6767476ab5cac430f5 inherit pub_attribs_structcldnn_1_1primitive"><td class="mdescLeft">&#160;</td><td class="mdescRight">Requested output padding. <br /></td></tr>
 <tr class="separator:a467fdbfc24a6ba6767476ab5cac430f5 inherit pub_attribs_structcldnn_1_1primitive"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_methods_classcldnn_1_1primitive__base"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classcldnn_1_1primitive__base')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classcldnn_1_1primitive__base.html">cldnn::primitive_base&lt; softmax, cldnn_softmax_desc &gt;</a></td></tr>
 <tr class="memitem:a1e9da3de786448c3c1f34366aeb98311 inherit pro_methods_classcldnn_1_1primitive__base"><td class="memItemLeft" align="right" valign="top"><a id="a1e9da3de786448c3c1f34366aeb98311"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>primitive_base</b> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
@@ -209,8 +229,8 @@ virtual std::vector&lt; std::reference_wrapper&lt; const <a class="el" href="gro
 
 <p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00039">39</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="aa265671133f220e39c8acab87572b5ab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa265671133f220e39c8acab87572b5ab">&#9670;&nbsp;</a></span>softmax()</h2>
+<a id="a8fd42124f28e4cc3bb0f3505d3dc1ccd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8fd42124f28e4cc3bb0f3505d3dc1ccd">&#9670;&nbsp;</a></span>softmax()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -229,6 +249,12 @@ virtual std::vector&lt; std::reference_wrapper&lt; const <a class="el" href="gro
           <td></td>
           <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
           <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">dimension_t</a>&#160;</td>
+          <td class="paramname"><em>dimension</em> = <code>normalize_fyx</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -254,11 +280,40 @@ virtual std::vector&lt; std::reference_wrapper&lt; const <a class="el" href="gro
   <table class="params">
     <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
     <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
+    <tr><td class="paramname">dimension</td><td>Defines a scope of normalization (see <a class="el" href="structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc" title="Defines a scope of a single softmax normalization. ">dimension</a>). </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00046">46</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00059">59</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="ac2f6ddd9596a81745d0ae9c672d52adc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2f6ddd9596a81745d0ae9c672d52adc">&#9670;&nbsp;</a></span>dimension</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">dimension_t</a> cldnn::softmax::dimension</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defines a scope of a single softmax normalization. </p>
+<p>Being given a 4-dimensional input, which consists of b,f,y,x dimensions, softmax normalizes data which are divided into multiple independent sets. Specific behaviour is determined by this parameter, as follows:</p><ul>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_x </a> each input row is normalized independently,</li>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_y </a> each input column is normalized independently,</li>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_f </a> each in-depth vector of input is normalized independently,</li>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_b </a> each pixel from a single 3d image is normalized toghether with corresponding pixels from other images within batch,</li>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normallize_yx </a> each 2d image within input is normalized independently,</li>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_fyx </a> each 3d image within input is normalized independently,</li>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_bfyx </a> whole input is normalized as one data set. </li>
+</ul>
+
+<p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00086">86</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
 
 </div>
 </div>

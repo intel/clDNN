@@ -120,9 +120,9 @@ typedef <a class="el" href="group__c__primitives.html#structcldnn__roi__pooling_
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9c799d36278f88c316e2b9ce22d27c91"><td class="memItemLeft" align="right" valign="top"><a id="a9c799d36278f88c316e2b9ce22d27c91"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>roi_pooling</b> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;input_data, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;input_rois, int pooled_width, int pooled_height, float spatial_scale, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
-<tr class="separator:a9c799d36278f88c316e2b9ce22d27c91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70b75386bb202f084eec90231ca1c046"><td class="memItemLeft" align="right" valign="top"><a id="a70b75386bb202f084eec90231ca1c046"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>roi_pooling</b> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;input_data, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;input_rois, <a class="el" href="group__cpp__primitives.html#ga44a38e1c6afb8bfb7f74d0c20cd0fba3">pooling_mode</a> mode, int pooled_width, int pooled_height, float spatial_scale, int group_sz=0, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
+<tr class="separator:a70b75386bb202f084eec90231ca1c046"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad7ba2a91baaee5745e315087c219303"><td class="memItemLeft" align="right" valign="top"><a id="aad7ba2a91baaee5745e315087c219303"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>roi_pooling</b> (const <a class="el" href="group__c__primitives.html#structcldnn__roi__pooling__desc">dto</a> *<a class="el" href="group__c__primitives.html#structcldnn__roi__pooling__desc">dto</a>)</td></tr>
 <tr class="separator:aad7ba2a91baaee5745e315087c219303"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -160,6 +160,9 @@ static <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c292302189
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr class="memitem:a7a606d5ea0d2963e203bd6339b19fc46"><td class="memItemLeft" align="right" valign="top"><a id="a7a606d5ea0d2963e203bd6339b19fc46"></a>
+<a class="el" href="group__cpp__primitives.html#ga44a38e1c6afb8bfb7f74d0c20cd0fba3">pooling_mode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>mode</b></td></tr>
+<tr class="separator:a7a606d5ea0d2963e203bd6339b19fc46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a935a7810502d8bc0d93ecc437e495130"><td class="memItemLeft" align="right" valign="top"><a id="a935a7810502d8bc0d93ecc437e495130"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>pooled_width</b></td></tr>
 <tr class="separator:a935a7810502d8bc0d93ecc437e495130"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,6 +172,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>pooled_height</b></td>
 <tr class="memitem:aaadd4bf64df9477c73f6a15648558942"><td class="memItemLeft" align="right" valign="top"><a id="aaadd4bf64df9477c73f6a15648558942"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>spatial_scale</b></td></tr>
 <tr class="separator:aaadd4bf64df9477c73f6a15648558942"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54a2cd49ab304ef34ca0f7e5c7413551"><td class="memItemLeft" align="right" valign="top"><a id="a54a2cd49ab304ef34ca0f7e5c7413551"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>group_sz</b></td></tr>
+<tr class="separator:a54a2cd49ab304ef34ca0f7e5c7413551"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structcldnn_1_1primitive"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structcldnn_1_1primitive')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structcldnn_1_1primitive.html">cldnn::primitive</a></td></tr>
 <tr class="memitem:ad0d17abd63bd3e4d63a7b226d8bddc7b inherit pub_attribs_structcldnn_1_1primitive"><td class="memItemLeft" align="right" valign="top"><a id="ad0d17abd63bd3e4d63a7b226d8bddc7b"></a>
 const <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c29230218950acda0">primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1primitive.html#ad0d17abd63bd3e4d63a7b226d8bddc7b">type</a></td></tr>
@@ -213,7 +219,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="roi__pooling_8hpp_source.html#l00031">31</a> of file <a class="el" href="roi__pooling_8hpp_source.html">roi_pooling.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="roi__pooling_8hpp_source.html#l00033">33</a> of file <a class="el" href="roi__pooling_8hpp_source.html">roi_pooling.hpp</a>.</p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>C:/ML/OpenSource/clDNN/api/CPP/<a class="el" href="roi__pooling_8hpp_source.html">roi_pooling.hpp</a></li>
 </ul>

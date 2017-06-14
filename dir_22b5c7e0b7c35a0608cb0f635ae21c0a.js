@@ -27,11 +27,11 @@ var dir_22b5c7e0b7c35a0608cb0f635ae21c0a =
     [ "prior_box.hpp", "prior__box_8hpp_source.html", null ],
     [ "profiling.hpp", "profiling_8hpp_source.html", null ],
     [ "program.hpp", "program_8hpp_source.html", null ],
+    [ "proposal.hpp", "proposal_8hpp_source.html", null ],
     [ "reorder.hpp", "reorder_8hpp_source.html", null ],
     [ "reshape.hpp", "reshape_8hpp_source.html", null ],
     [ "roi_pooling.hpp", "roi__pooling_8hpp_source.html", null ],
     [ "scale.hpp", "scale_8hpp_source.html", null ],
-    [ "simpler_nms.hpp", "simpler__nms_8hpp_source.html", null ],
     [ "softmax.hpp", "softmax_8hpp_source.html", null ],
     [ "tensor.hpp", "tensor_8hpp_source.html", null ],
     [ "topology.hpp", "topology_8hpp_source.html", null ]

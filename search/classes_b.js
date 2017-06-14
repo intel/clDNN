@@ -22,11 +22,11 @@ var searchData=
   ['primitive_5fbase_3c_20permute_2c_20cldnn_5fpermute_5fdesc_20_3e',['primitive_base&lt; permute, cldnn_permute_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20pooling_2c_20cldnn_5fpooling_5fdesc_20_3e',['primitive_base&lt; pooling, cldnn_pooling_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20prior_5fbox_2c_20cldnn_5fprior_5fbox_5fdesc_20_3e',['primitive_base&lt; prior_box, cldnn_prior_box_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
+  ['primitive_5fbase_3c_20proposal_2c_20cldnn_5fproposal_5fdesc_20_3e',['primitive_base&lt; proposal, cldnn_proposal_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20reorder_2c_20cldnn_5freorder_5fdesc_20_3e',['primitive_base&lt; reorder, cldnn_reorder_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20reshape_2c_20cldnn_5freshape_5fdesc_20_3e',['primitive_base&lt; reshape, cldnn_reshape_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20roi_5fpooling_2c_20cldnn_5froi_5fpooling_5fdesc_20_3e',['primitive_base&lt; roi_pooling, cldnn_roi_pooling_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20scale_2c_20cldnn_5fscale_5fdesc_20_3e',['primitive_base&lt; scale, cldnn_scale_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
-  ['primitive_5fbase_3c_20simpler_5fnms_2c_20cldnn_5fsimpler_5fnms_5fdesc_20_3e',['primitive_base&lt; simpler_nms, cldnn_simpler_nms_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20softmax_2c_20cldnn_5fsoftmax_5fdesc_20_3e',['primitive_base&lt; softmax, cldnn_softmax_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fid_5farr',['primitive_id_arr',['../structcldnn_1_1primitive_1_1primitive__id__arr.html',1,'cldnn::primitive']]],
   ['prior_5fbox',['prior_box',['../structcldnn_1_1prior__box.html',1,'cldnn']]],
@@ -34,5 +34,6 @@ var searchData=
   ['profiling_5finterval',['profiling_interval',['../group__cpp__event.html#structcldnn_1_1instrumentation_1_1profiling__interval',1,'cldnn::instrumentation']]],
   ['profiling_5fperiod',['profiling_period',['../structcldnn_1_1instrumentation_1_1profiling__period.html',1,'cldnn::instrumentation']]],
   ['profiling_5fperiod_5fbasic',['profiling_period_basic',['../structcldnn_1_1instrumentation_1_1profiling__period__basic.html',1,'cldnn::instrumentation']]],
-  ['program',['program',['../structcldnn_1_1program.html',1,'cldnn']]]
+  ['program',['program',['../structcldnn_1_1program.html',1,'cldnn']]],
+  ['proposal',['proposal',['../structcldnn_1_1proposal.html',1,'cldnn']]]
 ];

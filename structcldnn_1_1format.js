@@ -7,6 +7,7 @@ var structcldnn_1_1format =
       [ "fyxb", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6aaf5ed14f67f8fd7e736f8fb386da70b6", null ],
       [ "os_iyx_osv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6aad3e2022d8522230aaa9a23d28070783", null ],
       [ "bs_xs_xsv8_bsv8", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a5433802a572839c129d6d42ef6f8e362", null ],
+      [ "bs_xs_xsv8_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a0ccefb70ea52a57f7b72eca65b31b114", null ],
       [ "bs_x_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6ac8993da5ea821d3e667115a5cb7336d1", null ],
       [ "format_num", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470", null ],
       [ "any", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6adf9e9d74e7741bfa7c73a3561c548f1d", null ]

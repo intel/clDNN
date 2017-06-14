@@ -17,10 +17,10 @@ var dir_228ce68e57c4051c288f029802a99152 =
     [ "permute.h", "permute_8h_source.html", null ],
     [ "pooling.h", "pooling_8h_source.html", null ],
     [ "prior_box.h", "prior__box_8h_source.html", null ],
+    [ "proposal.h", "proposal_8h_source.html", null ],
     [ "reorder.h", "reorder_8h_source.html", null ],
     [ "reshape.h", "reshape_8h_source.html", null ],
     [ "roi_pooling.h", "roi__pooling_8h_source.html", null ],
     [ "scale.h", "scale_8h_source.html", null ],
-    [ "simpler_nms.h", "simpler__nms_8h_source.html", null ],
     [ "softmax.h", "softmax_8h_source.html", null ]
 ];

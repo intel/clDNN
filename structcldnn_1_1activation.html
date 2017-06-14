@@ -91,7 +91,7 @@ $(document).ready(function(){initNavTree('structcldnn_1_1activation.html','');})
 </div><!--header-->
 <div class="contents">
 
-<p>Activiation using rectified linear unit.  
+<p>Activation using rectified linear unit or parameterized rectified linear unit.  
  <a href="structcldnn_1_1activation.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="activation_8hpp_source.html">activation.hpp</a>&gt;</code></p>
@@ -126,8 +126,11 @@ typedef <a class="el" href="group__c__primitives.html#structcldnn__activation__d
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a9f52e7e62ef43222bc43f9dd29509298"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1activation.html#a9f52e7e62ef43222bc43f9dd29509298">activation</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, float slope, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
-<tr class="memdesc:a9f52e7e62ef43222bc43f9dd29509298"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs activation primitive.  <a href="#a9f52e7e62ef43222bc43f9dd29509298">More...</a><br /></td></tr>
+<tr class="memdesc:a9f52e7e62ef43222bc43f9dd29509298"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs Relu primitive.  <a href="#a9f52e7e62ef43222bc43f9dd29509298">More...</a><br /></td></tr>
 <tr class="separator:a9f52e7e62ef43222bc43f9dd29509298"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d4ce16f23a842c33950306b0ebe6316"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1activation.html#a0d4ce16f23a842c33950306b0ebe6316">activation</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;slope_input, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
+<tr class="memdesc:a0d4ce16f23a842c33950306b0ebe6316"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs Parameterized Relu primitive.  <a href="#a0d4ce16f23a842c33950306b0ebe6316">More...</a><br /></td></tr>
+<tr class="separator:a0d4ce16f23a842c33950306b0ebe6316"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1adaabafd023e520b4bcd7b1ce3f1125"><td class="memItemLeft" align="right" valign="top"><a id="a1adaabafd023e520b4bcd7b1ce3f1125"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1activation.html#a1adaabafd023e520b4bcd7b1ce3f1125">activation</a> (const <a class="el" href="group__c__primitives.html#structcldnn__activation__desc">dto</a> *<a class="el" href="group__c__primitives.html#structcldnn__activation__desc">dto</a>)</td></tr>
 <tr class="memdesc:a1adaabafd023e520b4bcd7b1ce3f1125"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a copy from basic C API <a class="el" href="group__c__primitives.html#structcldnn__activation__desc">cldnn_activation_desc</a>. <br /></td></tr>
@@ -170,6 +173,10 @@ Public Attributes</h2></td></tr>
 float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1activation.html#adf9dc38d57d7383e78a6738103e556ea">negative_slope</a></td></tr>
 <tr class="memdesc:adf9dc38d57d7383e78a6738103e556ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Relu activation slope. <br /></td></tr>
 <tr class="separator:adf9dc38d57d7383e78a6738103e556ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afebb29e72e29a5cd491531248c3a805d"><td class="memItemLeft" align="right" valign="top"><a id="afebb29e72e29a5cd491531248c3a805d"></a>
+<a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1activation.html#afebb29e72e29a5cd491531248c3a805d">negative_slope_input</a></td></tr>
+<tr class="memdesc:afebb29e72e29a5cd491531248c3a805d"><td class="mdescLeft">&#160;</td><td class="mdescRight">PRelu activation slope input primitive id. Input x dimension should be equal to input feature size (one slope per channel). All other dimensions should be 1. <br /></td></tr>
+<tr class="separator:afebb29e72e29a5cd491531248c3a805d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structcldnn_1_1primitive"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structcldnn_1_1primitive')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structcldnn_1_1primitive.html">cldnn::primitive</a></td></tr>
 <tr class="memitem:ad0d17abd63bd3e4d63a7b226d8bddc7b inherit pub_attribs_structcldnn_1_1primitive"><td class="memItemLeft" align="right" valign="top"><a id="ad0d17abd63bd3e4d63a7b226d8bddc7b"></a>
 const <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c29230218950acda0">primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1primitive.html#ad0d17abd63bd3e4d63a7b226d8bddc7b">type</a></td></tr>
@@ -190,6 +197,9 @@ const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016d
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
+<tr class="memitem:a670cd491d8cd12267fe4e0353c0bddc5"><td class="memItemLeft" align="right" valign="top"><a id="a670cd491d8cd12267fe4e0353c0bddc5"></a>
+std::vector&lt; std::reference_wrapper&lt; const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get_dependencies</b> () const override</td></tr>
+<tr class="separator:a670cd491d8cd12267fe4e0353c0bddc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31657a15c13671b039e840d621c6ba40"><td class="memItemLeft" align="right" valign="top"><a id="a31657a15c13671b039e840d621c6ba40"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>update_dto</b> (<a class="el" href="group__c__primitives.html#structcldnn__activation__desc">dto</a> &amp;<a class="el" href="group__c__primitives.html#structcldnn__activation__desc">dto</a>) const override</td></tr>
 <tr class="separator:a31657a15c13671b039e840d621c6ba40"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -200,10 +210,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>update_dto</b> (<a cl
 <tr class="memitem:af99aa53fe8ebff1b115de7faffcd6834 inherit pro_methods_classcldnn_1_1primitive__base"><td class="memItemLeft" align="right" valign="top"><a id="af99aa53fe8ebff1b115de7faffcd6834"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>primitive_base</b> (const <a class="el" href="group__c__primitives.html#structcldnn__activation__desc">cldnn_activation_desc</a> *dto)</td></tr>
 <tr class="separator:af99aa53fe8ebff1b115de7faffcd6834 inherit pro_methods_classcldnn_1_1primitive__base"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_methods_structcldnn_1_1primitive"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_structcldnn_1_1primitive')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="structcldnn_1_1primitive.html">cldnn::primitive</a></td></tr>
-<tr class="memitem:a7d86052e63100e6b14afe9c2771e7bcb inherit pro_methods_structcldnn_1_1primitive"><td class="memItemLeft" align="right" valign="top"><a id="a7d86052e63100e6b14afe9c2771e7bcb"></a>
-virtual std::vector&lt; std::reference_wrapper&lt; const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get_dependencies</b> () const</td></tr>
-<tr class="separator:a7d86052e63100e6b14afe9c2771e7bcb inherit pro_methods_structcldnn_1_1primitive"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -213,12 +219,19 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:adda97e5cd9a137cfc71c4a9fb1a09249 inherit pro_attribs_structcldnn_1_1primitive"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Activiation using rectified linear unit. </p>
+<div class="textblock"><p>Activation using rectified linear unit or parameterized rectified linear unit. </p>
+<p>Can get one negative slope or negative slope per channel. </p><dl class="section user"><dt>Algorithm:</dt><dd>out(i,x,y) = <a class="el" href="group__cpp__primitives.html#ggaa0a55214d8b45e135a753957707dace3a2ffe4e77325d9a7152f7086ea7aa5114" title="Eltwise max. ">max(0, in(i,x,y))</a> + slope(i) * min(0, in(i,x,y)) </dd></dl>
+<dl class="section user"><dt>Where:</dt><dd><ul>
+<li>out(i,x,y) : value at x, y from i-th feature map after activation. </li>
+<li>in(i,x,y) : value at x, y from i-th feature map before activation. </li>
+<li>slope(i) : the slope value of the i-th feature map (can be shared across channels or one slope per channel). </li>
+</ul>
+</dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="activation_8hpp_source.html#l00032">32</a> of file <a class="el" href="activation_8hpp_source.html">activation.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="activation_8hpp_source.html#l00039">39</a> of file <a class="el" href="activation_8hpp_source.html">activation.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a9f52e7e62ef43222bc43f9dd29509298"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f52e7e62ef43222bc43f9dd29509298">&#9670;&nbsp;</a></span>activation()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f52e7e62ef43222bc43f9dd29509298">&#9670;&nbsp;</a></span>activation() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -263,7 +276,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Constructs activation primitive. </p>
+<p>Constructs Relu primitive. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
@@ -273,7 +286,67 @@ Additional Inherited Members</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="activation_8hpp_source.html#l00040">40</a> of file <a class="el" href="activation_8hpp_source.html">activation.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="activation_8hpp_source.html#l00047">47</a> of file <a class="el" href="activation_8hpp_source.html">activation.hpp</a>.</p>
+
+</div>
+</div>
+<a id="a0d4ce16f23a842c33950306b0ebe6316"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d4ce16f23a842c33950306b0ebe6316">&#9670;&nbsp;</a></span>activation() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">cldnn::activation::activation </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>slope_input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_padding</em> = <code><a class="el" href="structcldnn_1_1padding.html">padding</a>()</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs Parameterized Relu primitive. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
+    <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
+    <tr><td class="paramname">slope_input</td><td>PRelu activation slopes input primitive id. Input x dimension should be equal to input feature size (one slope per channel). All other dimensions should be 1. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="activation_8hpp_source.html#l00065">65</a> of file <a class="el" href="activation_8hpp_source.html">activation.hpp</a>.</p>
 
 </div>
 </div>

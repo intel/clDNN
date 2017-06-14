@@ -1,7 +1,7 @@
 var structcldnn_1_1deconvolution =
 [
     [ "dto", "structcldnn_1_1deconvolution.html#ac68def38089a84b271d7857c0167ed4a", null ],
-    [ "deconvolution", "structcldnn_1_1deconvolution.html#a9a13856efd71cbe5aa01d5f1ca6c5e1d", null ],
+    [ "deconvolution", "structcldnn_1_1deconvolution.html#affb912aae9112619fb05d7a8a9ae8b87", null ],
     [ "deconvolution", "structcldnn_1_1deconvolution.html#a61abbc0033815e4b9bf59e9e2b7ff3b1", null ],
     [ "get_dependencies", "structcldnn_1_1deconvolution.html#a6870b67cf04915e86ccb61c5cc8e92db", null ],
     [ "split", "structcldnn_1_1deconvolution.html#a74d5202944385ce474928c2d6de5089c", null ],

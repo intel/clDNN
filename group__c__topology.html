@@ -154,9 +154,9 @@ Functions</h2></td></tr>
 CLDNN_API <a class="el" href="group__c__topology.html#gab4b09dc560126a85fc71468301ac7ef3">cldnn_topology</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga8b1fe78bd2f1a6f47a8799e33c476852">cldnn_create_topology</a> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="memdesc:ga8b1fe78bd2f1a6f47a8799e33c476852"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create empty network topology. <br /></td></tr>
 <tr class="separator:ga8b1fe78bd2f1a6f47a8799e33c476852"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad04071970103df1e9d76fa36bd5cdba1"><td class="memItemLeft" align="right" valign="top">CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#gad04071970103df1e9d76fa36bd5cdba1">cldnn_add_primitive</a> (<a class="el" href="group__c__topology.html#gab4b09dc560126a85fc71468301ac7ef3">cldnn_topology</a> topology, const <a class="el" href="group__c__topology.html#structcldnn__primitive__desc">cldnn_primitive_desc</a> *dto, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
-<tr class="memdesc:gad04071970103df1e9d76fa36bd5cdba1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add new primitive to the topology.  <a href="#gad04071970103df1e9d76fa36bd5cdba1">More...</a><br /></td></tr>
-<tr class="separator:gad04071970103df1e9d76fa36bd5cdba1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac858b96c7f9464b74a2ab3ce6150c87d"><td class="memItemLeft" align="right" valign="top">CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#gac858b96c7f9464b74a2ab3ce6150c87d">cldnn_add_primitive</a> (<a class="el" href="group__c__topology.html#gab4b09dc560126a85fc71468301ac7ef3">cldnn_topology</a> topology, const struct <a class="el" href="group__c__topology.html#structcldnn__primitive__desc">cldnn_primitive_desc</a> *dto, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="memdesc:gac858b96c7f9464b74a2ab3ce6150c87d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add new primitive to the topology.  <a href="#gac858b96c7f9464b74a2ab3ce6150c87d">More...</a><br /></td></tr>
+<tr class="separator:gac858b96c7f9464b74a2ab3ce6150c87d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga54b4c45b9275a63fabf70ac53aa59137"><td class="memItemLeft" align="right" valign="top">CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga54b4c45b9275a63fabf70ac53aa59137">cldnn_get_primitive_ids</a> (<a class="el" href="group__c__topology.html#gab4b09dc560126a85fc71468301ac7ef3">cldnn_topology</a> topology, char *ids, size_t size, size_t *size_ret, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="memdesc:ga54b4c45b9275a63fabf70ac53aa59137"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return all primitives id from topology.  <a href="#ga54b4c45b9275a63fabf70ac53aa59137">More...</a><br /></td></tr>
 <tr class="separator:ga54b4c45b9275a63fabf70ac53aa59137"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,7 +184,7 @@ CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of floats. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00257">257</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00260">260</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -216,7 +216,7 @@ Size (in floats) of the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of uint16_t. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00264">264</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00267">267</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -248,7 +248,7 @@ Size (in uint16_t) of the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of primitive ids. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00277">277</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00280">280</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -280,7 +280,7 @@ Number of ids in the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Basic primitive descriptor structure. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00303">303</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00306">306</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_primitive_desc:</div>
 <div class="dyncontent">
@@ -341,13 +341,13 @@ Primitive type identificator. </td></tr>
 <p>Begin primitive description definition. </p>
 <p>Defines <code>'cldnn_primitive_type_desc'</code> structure with first 5 fields common for all primitive descriptors. Other fields should be added after this macro. primitive descriptor definition should be closed by <a class="el" href="group__c__topology.html#ga62762eae9738ae5bfceca3a258a02cd1">CLDNN_END_PRIMITIVE_DESC</a>. Output padding information. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00287">287</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00290">290</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="gad04071970103df1e9d76fa36bd5cdba1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gad04071970103df1e9d76fa36bd5cdba1">&#9670;&nbsp;</a></span>cldnn_add_primitive()</h2>
+<a id="gac858b96c7f9464b74a2ab3ce6150c87d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac858b96c7f9464b74a2ab3ce6150c87d">&#9670;&nbsp;</a></span>cldnn_add_primitive()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -361,7 +361,7 @@ Primitive type identificator. </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="group__c__topology.html#structcldnn__primitive__desc">cldnn_primitive_desc</a> *&#160;</td>
+          <td class="paramtype">const struct <a class="el" href="group__c__topology.html#structcldnn__primitive__desc">cldnn_primitive_desc</a> *&#160;</td>
           <td class="paramname"><em>dto</em>, </td>
         </tr>
         <tr>
