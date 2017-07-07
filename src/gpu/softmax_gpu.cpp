@@ -87,10 +87,10 @@ struct softmax_gpu : typed_primitive_impl<softmax>
 
         switch (outer.get_primitive()->dimension)
         {
-        case softmax::normalize_bfyx:   kd.data_set_size *= input_size.batch[0];
-        case softmax::normalize_fyx:    kd.data_set_size *= input_size.feature[0];
-        case softmax::normalize_yx:     kd.data_set_size *= input_size.spatial[1];
-        case softmax::normalize_x:      kd.data_set_size *= input_size.spatial[0];
+        case softmax::normalize_bfyx:   kd.data_set_size *= input_size.batch[0]; /* fallthru */
+        case softmax::normalize_fyx:    kd.data_set_size *= input_size.feature[0]; /* fallthru */
+        case softmax::normalize_yx:     kd.data_set_size *= input_size.spatial[1]; /* fallthru */
+        case softmax::normalize_x:      kd.data_set_size *= input_size.spatial[0]; /* fallthru */
             use_naive = (input_layout.format != format::bfyx && outer.get_primitive()->dimension == softmax::normalize_x);
             kd.norm_index = (input_layout.format == format::bfyx ? 0 : 2);
             break;
