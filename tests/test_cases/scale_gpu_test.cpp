@@ -1145,7 +1145,9 @@ TEST(NegativeScaleTest, TestAll) {
     for (unsigned i = 0; i < good_ts.size(); ++i)
     for (unsigned j = 0; j < good_ts.size(); ++j)
         if (i != j)
+        {
             ASSERT_ANY_THROW(setup_scale_network(d, tensor(t), tensor(good_ts[i]), tensor(good_ts[j]), f, of, true));
+        }
 
 }
 

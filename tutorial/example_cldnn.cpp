@@ -147,15 +147,15 @@ int recognize_image(network& network, const memory& input_memory)
 // User-defined helpers which are out of this example scope
 // //////////////////////////////////////////////////////////////
 // Loads file to a vector of floats.
-vector<float> load_data(const string& filename) { return{ 0 }; }
+vector<float> load_data(const string&) { return{ 0 }; }
 
 // Allocates memory and loads data from file.
 // Memory layout is taken from file.
-memory load_mem(const engine& engine, const string& filename) { return{ 0 }; }
+memory load_mem(const engine&, const string&) { return{ 0 }; }
 
 // Load image, resize to [x,y] and store in a vector of floats
 // in the order "bfyx".
-vector<float> load_image_bfyx(const string& str, int x, int y) { return{ 0 }; }
+vector<float> load_image_bfyx(const string&, int, int) { return{ 0 }; }
 // //////////////////////////////////////////////////////////////
 
 int main_func()
