@@ -75,6 +75,9 @@ set(CLDNN__COMMON_DIR    "${CMAKE_CURRENT_SOURCE_DIR}/common")
 # Path which points to directory with interface for framework.
 set(CLDNN__API_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/api")
 
+# Path which points to directory with interface for framework.
+set(CLDNN__KERNEL_SELECTOR_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/kernel_selector")
+
 # Path which points to directory with binaries for Intel OpenCL SDK ICD (Installable Client Driver).
 set(CLDNN__IOCL_ICD_DIR  "${CLDNN__COMMON_DIR}/intel_ocl_icd")
 
@@ -361,9 +364,6 @@ endif()
 if(DEFINED CLDNN__OUTPUT_DIR)
   set(CLDNN__OUTPUT_BIN_DIR "${CLDNN__OUTPUT_DIR}" CACHE PATH "Output directory path where the final exetuables, examples and tests will be stored.")
   set(CLDNN__OUTPUT_LIB_DIR "${CLDNN__OUTPUT_DIR}" CACHE PATH "Output directory path where the final libraries will be stored.")
-elseif(CLDNN_BUILT_FROM_OPENVX)
-  set(CLDNN__OUTPUT_BIN_DIR "${CMAKE_BIN_DIR}/${CMAKE_BUILD_TYPE}" CACHE PATH "Output directory path where the final exetuables, examples and tests will be stored.")
-  set(CLDNN__OUTPUT_LIB_DIR "${CMAKE_LIB_DIR}/${CMAKE_BUILD_TYPE}" CACHE PATH "Output directory path where the final libraries will be stored.")
 else()
   # Output directory path where the final libraries, examples and tests will be stored.
   if(CLDNN__MULTI_CFG_GEN)
@@ -397,9 +397,15 @@ set_property(CACHE CLDNN__BOOST_VERSION PROPERTY STRINGS ${__CLDNN_BoostVersions
 
 # ======================================================================================================
 
-# Include and build: Examples of usage of clDNN framework.
+# Include and build: Core of clDNN.
 set(CLDNN__INCLUDE_CORE ON CACHE BOOL "Include and build: clDNN core.")
 mark_as_advanced(CLDNN__INCLUDE_CORE)
+
+# ======================================================================================================
+
+# Include and build: kernel selector.
+set(CLDNN__INCLUDE_KERNEL_SELECTOR ON CACHE BOOL "Include and build: clDNN kernel selector.")
+mark_as_advanced(CLDNN__INCLUDE_KERNEL_SELECTOR)
 
 # ======================================================================================================
 
@@ -413,7 +419,9 @@ mark_as_advanced(CLDNN__INCLUDE_TESTS)
 set(CLDNN__INCLUDE_TUTORIAL ON CACHE BOOL "Include and build: clDNN Tutorial.")
 mark_as_advanced(CLDNN__INCLUDE_TUTORIAL)
 
-# ======================================================================================================# Run (requires CLDNN__INCLUDE_TESTS to be true): Tests (unit tests and small acceptance tests) for clDNN framework.
+# ======================================================================================================
+
+# Run (requires CLDNN__INCLUDE_TESTS to be true): Tests (unit tests and small acceptance tests) for clDNN framework.
 set(CLDNN__RUN_TESTS OFF CACHE BOOL "Run: clDNN framework's tests.")
 mark_as_advanced(CLDNN__RUN_TESTS)
 
@@ -627,8 +635,10 @@ endif()
 message(STATUS "[clDNN]  - boost ver. used to build:      ${CLDNN__BOOST_VERSION}")
 message(STATUS "[clDNN]")
 message(STATUS "[clDNN]  - Include/Build cldnn core:      ${CLDNN__INCLUDE_CORE}")
+message(STATUS "[clDNN]  - Include/Build kernel selector: ${CLDNN__INCLUDE_KERNEL_SELECTOR}")
 message(STATUS "[clDNN]  - Include/Build tests:           ${CLDNN__INCLUDE_TESTS}")
 message(STATUS "[clDNN]  - Include/Build tutorial:        ${CLDNN__INCLUDE_TUTORIAL}")
+message(STATUS "[clDNN]")
 message(STATUS "[clDNN]  - Run tests:                     ${CLDNN__RUN_TESTS}")
 message(STATUS "[clDNN]")
 message(STATUS "[clDNN]  - Use static C++ Runtime:        ${CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME}")
@@ -1084,7 +1094,9 @@ endif()
 if(CLDNN__INCLUDE_TESTS)
   add_subdirectory(tests)
 endif()
-
+if(CLDNN__INCLUDE_KERNEL_SELECTOR)
+  add_subdirectory(kernel_selector)
+endif()
 if(CLDNN__INCLUDE_TUTORIAL)
   add_subdirectory(tutorial)
 endif()

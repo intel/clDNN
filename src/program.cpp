@@ -32,7 +32,12 @@
 
 #include "convolution_inst.h"
 #include "concatenation_inst.h"
+#include "deconvolution_inst.h"
+#include "detection_output_inst.h"
+#include "crop_inst.h"
 
+#include "kernel_selector_helper.h"
+#include "sliding_window_utils.h"
 
 namespace cldnn
 {
@@ -188,11 +193,81 @@ layout program_node::get_output_layout()
 }
 
 program_impl::program_impl(engine_impl::ptr engine, topology_impl const& topology, build_options const& options)
-    : engine(engine), options(options)
+    : engine(engine), options(options), output_size_handling_enabled(true)
 {
     init_graph(topology);
-    optimize_graph();
+    pre_optimize_graph();
     compile_graph();
+    post_optimize_graph();
+}
+
+// TODO: Remove once we will get full support for input/output padding in all primitive implementations.
+void program_impl::analyze_output_size_handling_need()
+{
+    bool handling_needed = false;
+
+    // Calculate output size and compare with specified.
+    for (const auto& node : processing_order)
+    {
+        if (node->is_type<convolution>())
+        {
+            auto& prim_node = node->as<convolution>();
+            const auto& prim = prim_node.get_primitive();
+
+            if (!prim->with_output_size)
+                continue;
+
+            tensor specified_output_range({0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1]}, 1);
+
+            auto filter_size = prim_node.weights(0).get_output_layout().size;
+
+            auto calc_output_range = calc_sliding_window_output_range<swor_mode::all>(
+                prim_node.input().get_output_layout().size,
+                filter_size, prim->input_offset, prim->stride, prim->dilation, true, 1);
+
+            if (specified_output_range != calc_output_range)
+                handling_needed = true;
+        }
+        else if (node->is_type<deconvolution>())
+        {
+            auto& prim_node = node->as<deconvolution>();
+            const auto& prim = prim_node.get_primitive();
+
+            if (!prim->with_output_size)
+                continue;
+
+            tensor specified_output_range({0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1]}, 1);
+
+            auto filter_size = prim_node.weights(0).get_output_layout().size;
+
+            auto calc_output_range = calc_sliding_window_needed_input_range(
+                prim_node.input().get_output_layout().size,
+                filter_size, prim->input_offset, prim->stride, {1, 1, 1, 1}, true, 1);
+
+            if (specified_output_range != calc_output_range)
+                handling_needed = true;
+        }
+        else if (node->is_type<pooling>())
+        {
+            auto& prim_node = node->as<pooling>();
+            const auto& prim = prim_node.get_primitive();
+
+            if (!prim->with_output_size)
+                continue;
+
+            tensor specified_output_range({0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1]}, 1);
+
+            // TODO: Check compatibility of output size calculation (with caffe).
+            auto calc_output_range = calc_sliding_window_output_range<swor_mode::exceed_once_data>(
+                prim_node.input().get_output_layout().size,
+                prim->size, prim->input_offset, prim->stride, {1, 1, 1, 1}, true, 1);
+
+            if (specified_output_range != calc_output_range)
+                handling_needed = true;
+        }
+    }
+
+    output_size_handling_enabled = handling_needed;
 }
 
 std::list<std::shared_ptr<program_node>> program_impl::get_nodes() const
@@ -245,15 +320,18 @@ void program_impl::init_graph(topology_impl const& topology)
     calc_processing_order();
 }
 
-void program_impl::optimize_graph()
+void program_impl::pre_optimize_graph()
 {
     trim_to_outputs();
 
+    analyze_output_size_handling_need();
+
     if (options.get<build_option_type::optimize_data>()->enabled())
     {
-        layout_optimizer lo(engine);
+        layout_optimizer lo(engine, true, output_size_handling_enabled);
         reorder_inputs(lo);
-        optimize_weights(lo);
+        // this code should move to post compilation after kernel selector will support handling reorder bias
+        pre_optimize_bias(lo);
     }
 
     prepare_padding();
@@ -263,6 +341,13 @@ void program_impl::optimize_graph()
     {
         prepare_buffer_fusing();
     }
+}
+
+void program_impl::post_optimize_graph()
+{
+    layout_optimizer lo(engine);
+    post_optimize_weights(lo);
+    //prepare_padding(); - TODO: padding should be prepare according to the kernels needs
 }
 
 void program_impl::compile_graph()
@@ -409,45 +494,73 @@ void program_impl::reorder_inputs(layout_optimizer& lo)
                     new_input = nullptr;
                 }
             }
+
+            input_node.recalc_output_layout();
         }
 
         if (new_input)
+        {
             add_intermediate(new_input, conv_node, 0);
+            conv_node.recalc_output_layout();
+        }
     };
 
-    for (auto& p : nodes_map)
+    const auto reorder_input_detection_output = [this, &lo](typed_program_node<detection_output>& detection_output_node)
     {
-        auto& prim = *p.second;
+        auto detection_output_prim = detection_output_node.get_primitive();
+         
+        for (size_t i = 0; i < detection_output_node.get_dependencies().size(); i++)
+        {
+            auto& input = detection_output_node.get_dependency(i);
+            std::shared_ptr<reorder> new_input = lo.get_reorder(
+                input.get_output_layout(),
+                input.id(),
+                layout_optimizer::data_type::input,
+                detection_output_prim).first;
 
+            if (new_input)
+            {
+                add_intermediate(new_input, detection_output_node, i);
+            }
+        }
+    };
+
+    for (auto& prim : processing_order)
+    {
         //there's an assumption that only convolution will take data/input_layout as input
         //exception to that rule would be a convolution which takes a reorder as input - see reoder_input above
-        do_for_types<convolution>(prim,
-            reorder_input       //case for convolution
+        do_for_types<convolution, detection_output>(*prim,
+            reorder_input,                  //case for convolution
+            reorder_input_detection_output  //case for detection-output
             );
     }
 }
 
-void program_impl::optimize_weights(layout_optimizer& lo)
+void program_impl::pre_optimize_bias(layout_optimizer& lo)
 {
     std::list<program_node*> outputs_to_recalc;
 
     //lambda function which finds weights primitive with given pimitive_id and adds it to weights_optimizer
     //this function is reused in all cases (convolution weights, convolution bias, fc weights and fc bias) and does
     //some basic sanity checks about existence of the primitive and it's type. throws std::logic_error
-    const auto add_weights = [this, &lo, &outputs_to_recalc](program_node& weights, layout_optimizer::data_type weights_type, auto& node, layout const& output_layout, size_t dep_idx)
+    const auto add_bias = [this, &lo, &outputs_to_recalc](program_node& bias, auto& node, layout const& output_layout, size_t dep_idx)
     {
-        if (weights.type() == data::type_id())
+        const auto bias_type = layout_optimizer::data_type::bias;
+        if (bias.type() == data::type_id())
         {
-            lo.add_weights_for_optimization(weights.as<data>().typed_desc(), weights_type,
-                node.get_primitive(), output_layout);
-            outputs_to_recalc.push_back(&weights);
+            lo.add_weights_for_optimization(
+                bias.as<data>().typed_desc(),
+                bias_type,
+                node.get_primitive(),
+                output_layout);
+            outputs_to_recalc.push_back(&bias);
         }
-        else if (weights.type() == input_layout::type_id())
+        else if (bias.type() == input_layout::type_id())
         {
             auto reorder = lo.get_reorder(
-                weights.as<input_layout>().typed_desc()->layout,
-                weights.id(),
-                weights_type,
+                bias.as<input_layout>().typed_desc()->layout,
+                bias.id(),
+                bias_type,
                 node.get_primitive(),
                 output_layout);
 
@@ -464,30 +577,37 @@ void program_impl::optimize_weights(layout_optimizer& lo)
     //argument should match few requirements:
     // - it should be of a form 'typed_program_node<T>&'
     // - both 'T.weights' and 'T.bias' should be either of type 'primitive_id' or 'std::vector<primitive_id>'
-    const auto prep_opt = [this, &add_weights](auto& node) -> void
+    const auto prep_opt = [this, &add_bias, &outputs_to_recalc](auto& node) -> void
     {
         auto output_layout = node.get_output_layout();
 
         auto weights_offset = node.get_primitive()->input.size();
         auto bias_offset = weights_offset + wrap_if_single(node.get_primitive()->weights).size();
-        auto i = weights_offset;
-        while (i < node.get_dependencies().size())
+        for (auto i = weights_offset; i < bias_offset; ++i)
         {
-            auto data_type = i < bias_offset ? layout_optimizer::data_type::weights : layout_optimizer::data_type::bias;
-            add_weights(node.get_dependency(i), data_type, node, output_layout, i);
-            ++i;
+            outputs_to_recalc.push_back(&node.get_dependency(i));
+        }
+        for (auto i = bias_offset; i < node.get_dependencies().size(); ++i)
+        {
+            add_bias(node.get_dependency(i), node, output_layout, i);
         }
     };
 
     for (auto& p : nodes_map)
     {
         auto& prim = *p.second;
-
-        do_for_types<convolution, fully_connected, deconvolution>(prim,
-            prep_opt,   //case for convolution
-            prep_opt,   //case for fully_connected
-            prep_opt    //case for deconvolution
-            );
+        if (prim.type() == convolution::type_id())
+        {
+            prep_opt(prim.as<convolution>());
+        }
+        else if (prim.type() == deconvolution::type_id())
+        {
+            prep_opt(prim.as<deconvolution>());
+        }
+        else if (prim.type() == fully_connected::type_id())
+        {
+            prep_opt(prim.as<fully_connected>());
+        }
     }
 
     //all optimizing primitives has been added and inputs for all primitives has been updated.
@@ -498,8 +618,160 @@ void program_impl::optimize_weights(layout_optimizer& lo)
         dnode->recalc_output_layout();
 }
 
+void program_impl::post_optimize_weights(layout_optimizer& lo)
+{
+    //lambda function which finds weights primitive with given pimitive_id and adds it to weights_optimizer
+    //this function is reused in all cases (convolution weights, convolution bias, fc weights and fc bias) and does
+    //some basic sanity checks about existence of the primitive and it's type. throws std::logic_error
+    const auto add_weights = [this, &lo](program_node const& weights, auto& node, size_t dep_idx)
+    {
+        auto wtype = weights.type();
+        auto* impl = node.get_selected_impl().get();
+        auto output_layout = node.get_output_layout();
+        const auto weights_type = layout_optimizer::data_type::weights;
+        if (wtype == data::type_id())
+        {
+            lo.add_weights_for_optimization(
+                impl->_kernel_data.weightsReorderParams,
+                weights.as<data>().typed_desc(),
+                weights_type);
+        }
+        else if (wtype == input_layout::type_id())
+        {
+            auto reorders = lo.get_generic_layer(
+                impl->_kernel_data.weightsReorderParams,
+                weights.as<input_layout>().typed_desc()->id,
+                output_layout,
+                weights_type);
+
+            for (auto& reorder : reorders)
+            {
+                this->add_intermediate(reorder.first, node, dep_idx);
+            }
+        }
+    };
+
+    //generic lambda function which prepares given primitive for weights optimization
+    //it deduces the type of weights from the type of the argument and calls 'add_weights' for all
+    //weights used by given primitive.
+    //argument should match few requirements:
+    // - it should be of a form 'typed_program_node<T>&'
+    // - 'T.weights' should be either of type 'primitive_id' or 'std::vector<primitive_id>'
+    const auto prep_opt = [this, &add_weights](auto& node) -> void
+    {
+        auto weights_offset = node.get_primitive()->input.size();
+        auto bias_offset = weights_offset + wrap_if_single(node.get_primitive()->weights).size();
+        for (auto i = weights_offset; i < bias_offset; i++)
+        {
+            add_weights(node.get_dependency(i), node, i);
+        }
+    };
+
+    for (auto& p : nodes_map)
+    {
+        auto& prim = *p.second;
+        if (prim.type() == convolution::type_id())
+        {
+            prep_opt(prim.as<convolution>());
+        }
+        else if (prim.type() == deconvolution::type_id())
+        {
+            prep_opt(prim.as<deconvolution>());
+        }
+        else if (prim.type() == fully_connected::type_id())
+        {
+            prep_opt(prim.as<fully_connected>());
+        }
+    }
+
+    //all optimizing primitives has been added and inputs for all primitives has been updated.
+    //run reorders now
+    lo.optimize();
+}
+
+void program_impl::apply_needed_padding(program_node& node, program_node& prev_node,
+                                                const padding& needed_padding)
+{
+    auto target_layout = prev_node.get_output_layout();
+
+    // Short circuit if padding did not change.
+    if (target_layout.data_padding == needed_padding)
+        return;
+
+    // Special handling for input nodes.
+    if (prev_node.is_type<input_layout>())
+    {
+        target_layout.data_padding = needed_padding;
+
+        auto r_prim = std::make_shared<reorder>("reorder_" + prev_node.id(), prev_node.id(), target_layout);
+        add_intermediate(r_prim, node, 0);
+        return;
+    }
+
+    prev_node.merge_output_padding(needed_padding);
+}
+
 void program_impl::prepare_padding()
 {
+    if (output_size_handling_enabled)
+    {
+        // Prepare upper padding for primitives that support output_size parameter.
+        for (const auto& node : processing_order)
+        {
+            if (node->is_type<convolution>())
+            {
+                auto& prim_node = node->as<convolution>();
+                const auto& prim = prim_node.get_primitive();
+
+                if (!prim->with_output_size)
+                    continue;
+
+                auto filter_size = prim_node.weights(0).get_output_layout().size;
+
+                auto needed_padding = calc_sliding_window_needed_input_padding(
+                    prim_node.input().get_output_layout(),
+                    prim->output_size, filter_size, prim->input_offset, prim->stride, prim->dilation, false, 1);
+
+                apply_needed_padding(prim_node, prim_node.input(), needed_padding);
+            }
+            else if (node->is_type<deconvolution>())
+            {
+                auto& prim_node = node->as<deconvolution>();
+                const auto& prim = prim_node.get_primitive();
+
+                if (!prim->with_output_size)
+                    continue;
+
+                auto filter_size = prim_node.weights(0).get_output_layout().size;
+
+                auto needed_padding = calc_sliding_window_needed_input_padding(
+                    prim_node.input().get_output_layout(),
+                    prim->output_size, filter_size, prim->input_offset, prim->stride, {1, 1, 1, 1}, true, 1);
+
+                apply_needed_padding(prim_node, prim_node.input(), needed_padding);
+            }
+            else if (node->is_type<pooling>())
+            {
+                auto& prim_node = node->as<pooling>();
+                const auto& prim = prim_node.get_primitive();
+
+                if (!prim->with_output_size)
+                    continue;
+
+                // NOTE: Currently there is no pooling implementation/pooling mode which does not check input data range.
+                // There is no need to add padding requirements on pooling inputs.
+                //auto needed_padding = calc_sliding_window_needed_input_padding(
+                //    prim_node.input().get_output_layout(),
+                //    prim->output_size, prim->size, prim->input_offset, prim->stride, {1, 1, 1, 1}, false, 1);
+                auto needed_padding = prim_node.input().get_output_layout().data_padding;
+
+                apply_needed_padding(prim_node, prim_node.input(), needed_padding);
+            }
+        }
+    }
+
+
+    // Prepare optimized padding for bfyx convolution.
     for (auto& pair : nodes_map)
     {
         if (pair.second->get_primitive()->type != convolution::type_id())
@@ -548,8 +820,9 @@ void program_impl::prepare_padding()
         //right_padding = needed_buffer_size_x - left_padding - prev_prim_output_layout.size.spatial[0];
 
         cldnn::padding needed_padding({ 0, 0, left_padding, top_padding }, { 0, 0, right_padding, bottom_padding }, 0);
+        needed_padding = padding::max(prev_prim_output_layout.data_padding, needed_padding);
 
-        conv_input_node.merge_output_padding(needed_padding);
+        apply_needed_padding(node, conv_input_node, needed_padding);
     }
 }
 
@@ -568,7 +841,7 @@ void program_impl::prepare_buffer_fusing()
             //       per single input rather than all/none
             // + restrict input types to pooling, convolution and activation only due to problems with output padding on b and f
             for (auto const& input : node.get_dependencies())
-                if (input->get_users().size() > 1 || (!input->is_type<pooling>() && ! input->is_type<convolution>() && !input->is_type<activation>()))
+                if (input->get_users().size() > 1 || (!input->is_type<pooling>() && !input->is_type<convolution>() && !input->is_type<activation>()))
                     return;
 
             // buffer fusing should not be performed if one of inputs produces padded output since
@@ -615,6 +888,50 @@ void program_impl::prepare_buffer_fusing()
             
             node.can_be_optimized(true);
         });
+
+        // zero copy 
+        do_for_types<crop>(*node, [this](crop_node& node)
+        {
+            if (node.get_dependencies().size() == 1 &&
+                node.get_users().size() > 0)
+            {
+                // optimization is avaiable for croping across depth(features) only
+                // if output padding has defined padding accross featuers already it wouldn't 
+                // work because it expect to have zeros in the padded area.
+                auto format = node.get_output_layout().format;
+                auto crop_prim = node.get_primitive();
+                auto input_layout = node.get_dependency(0).get_output_layout();
+                auto in_place_layout = node.get_output_layout();
+                auto out_padd = node.get_output_layout().data_padding;
+                if (format == format::bfyx &&
+                    crop_prim->reference_input.batch[0] == input_layout.size.batch[0] &&
+                    crop_prim->reference_input.spatial[0] == input_layout.size.spatial[0] &&
+                    crop_prim->reference_input.spatial[1] == input_layout.size.spatial[1] &&
+                    out_padd.lower_size().feature[0] == 0 &&
+                    out_padd.upper_size().feature[0] == 0)
+                {
+                    //  Regular crop
+                    //  crop input buffer
+                    //  |___________data____________|
+                    //  
+                    //  crop output buffer
+                    //  |-------->| offsets[f]  |<--|
+                    //            |_____data____|
+                    //             <------------>
+                    //           reference size
+                    //
+                    //  Inplace crop
+                    //  crop output buffer
+                    //  |_low_pad_|__data_size__|___|<-upper pad
+
+                    node.set_output_padding(padding(
+                    { out_padd.lower_size().batch[0], crop_prim->offsets.feature[0], out_padd.lower_size().spatial[0], out_padd.lower_size().spatial[1] },
+                    { out_padd.upper_size().batch[0], in_place_layout.size.feature[0] - crop_prim->offsets.feature[0] - crop_prim->reference_input.feature[0],
+                        out_padd.upper_size().spatial[0], out_padd.upper_size().spatial[1] }));
+                    node.can_be_optimized(true);
+                }
+            }
+        });
     }
 }
 
@@ -635,6 +952,7 @@ void program_impl::add_intermediate(program_node& node, program_node& next, size
     //firstly add connection, later replace dependency, so 'prev' won't become dangling and therefore removed
     add_connection(prev, node);
     next.replace_dependency(prev_idx, node);
+    node.processing_itr = processing_order.insert(next.processing_itr, &node);
 }
 
 void program_impl::remove_if_dangling(program_node& node)

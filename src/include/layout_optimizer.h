@@ -26,7 +26,12 @@
 #include "api/CPP/convolution.hpp"
 #include "api/CPP/deconvolution.hpp"
 #include "api/CPP/fully_connected.hpp"
+#include "api/CPP/detection_output.hpp"
 
+#include "generic_layer.hpp"
+
+#include "kernel_selector_common.h"
+#include "kernel_selector_helper.h"
 #include <boost/optional.hpp>
 
 #include <vector>
@@ -72,6 +77,8 @@ private:
     topology_impl _topology;
     engine_impl::ptr _engine;
     optimization_attributes _optimization_attributes;
+    // TODO: Remove once we will get full support for input/output padding in all primitive implementations.
+    bool _output_size_handling_enabled;
 
     struct cache_key
     {
@@ -97,18 +104,23 @@ private:
     };
 
     std::map<cache_key, std::shared_ptr<reorder>> _cached_reorders;
+    std::map<cache_key, std::shared_ptr<generic_layer>> _cached_generic_layers;
 
     layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const convolution> prim, boost::optional<layout> const& output_layout);
     layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const fully_connected> prim, boost::optional<layout> const& output_layout);
     layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const deconvolution> prim, boost::optional<layout> const& output_layout);
+    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const detection_output> prim, boost::optional<layout> const& output_layout);
 
     //pair.first is reorder (may be nullptr if reorder is not needed), pair.second tells if returned reorder was cached (no need to add it to 'ouputs' etc.)
     //for pair.first == nullptr, pair.second == true
     std::pair<std::shared_ptr<cldnn::reorder>, bool>
     create_reorder_if_needed(const layout& current_layout, const cldnn::primitive_id& memid, layout const& expected_layout);
 
+    std::pair<std::shared_ptr<cldnn::generic_layer>, bool>
+    create_reorder_from_given_source(const cldnn::primitive_id& memid, layout const& expected_layout, const kernel_selector::weights_reorder_params& reorder_params);
+
 public:
-    explicit layout_optimizer(engine_impl::ptr eng, bool enabled = true);
+    explicit layout_optimizer(engine_impl::ptr eng, bool enabled = true, bool output_size_handling_enabled = true);
 
     //this method creates reorder for data, which is currently in 'data_layout' format, to best format in context of 'user' primitive.
     //data is used by 'user' in a way described by 'type' (i.e. weights/bias/input).
@@ -128,7 +140,7 @@ public:
                      std::shared_ptr<const T> user,
                      boost::optional<layout> user_layout = boost::optional<layout>())
         -> std::enable_if_t<
-            meta::is_any_of_v<T, convolution, fully_connected, deconvolution>,
+            meta::is_any_of_v<T, convolution, fully_connected, deconvolution, detection_output>,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
         >
     {
@@ -147,12 +159,70 @@ public:
                      std::shared_ptr<const T> user,
                      boost::optional<layout> user_layout = boost::optional<layout>())
         -> std::enable_if_t<
-            !meta::is_any_of_v<T, convolution, fully_connected, deconvolution>,
+            !meta::is_any_of_v<T, convolution, fully_connected, deconvolution, detection_output>,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
         >
     {
         static_assert(meta::always_false_v<T>, "Layout optimization for given primitive type is currently unsupported!");
         return meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>();
+    }
+
+    auto get_generic_layer(
+        const kernel_selector::weights_reorder_params& reorder_params,
+        primitive_id input_id,
+        const layout& old_layout,
+        data_type type)
+    {
+        std::vector<std::pair<std::shared_ptr<primitive>, bool>> ret;
+
+        if (reorder_params.engine != kernel_selector::weights_reorder_params::Engine::NONE &&
+            type == data_type::weights &&
+            _enabled)
+        {
+            if (reorder_params.engine == kernel_selector::weights_reorder_params::Engine::CPU &&
+                reorder_params.cpuKernel != nullptr)
+            {
+                const auto intermediate_format = to_weights_layout(reorder_params.cpuKernel->GetInputLayout());
+                if (intermediate_format != old_layout.format)
+                {
+                    const layout intermediate_layout = { old_layout.data_type, intermediate_format, old_layout.size.transform(intermediate_format, 1) };
+
+                    auto reorder = create_reorder_if_needed(old_layout, input_id, intermediate_layout);
+                    if (reorder.first)
+                    {
+                        ret.push_back(reorder);
+                        input_id = reorder.first->id;
+                    }
+                }
+            }
+
+            auto new_dtype = from_weights_type(reorder_params.dtype);
+            const auto bpp = data_type_traits::size_of(new_dtype);
+            layout expected_layout = {
+                new_dtype, format::bfyx, // simple linear format (flatten to x channel)
+                { 1,1,1,(tensor::value_type)(reorder_params.newBufferSize / bpp) }
+            };
+            auto reorder = create_reorder_from_given_source(input_id, expected_layout, reorder_params);
+            if (reorder.first)
+            {
+                ret.push_back(reorder);
+            }
+        }
+
+        return std::move(ret);
+    }
+
+    template <typename T>
+    void add_reoder_to_topology(T& reorder, const std::shared_ptr<data> src_data)
+    {
+        if (reorder.first)
+        {
+            _topology.add(src_data);
+            if (!reorder.second) //returned reorder is a new primitive (i.e. not cached), add it to topology and as an output
+            {
+                _topology.add(reorder.first);
+            }
+        }
     }
 
     template <class T>
@@ -162,14 +232,20 @@ public:
                                       boost::optional<layout> user_layout = boost::optional<layout>())
     {
         auto reorder = get_reorder(data_prim->mem.get_layout(), data_prim->id, type, user, user_layout);
-        if (reorder.first)
-        {
-            _topology.add(data_prim);
-            if (!reorder.second) //returned reorder is a new primitive (i.e. not cached), add it to topology and as an output
-                _topology.add(reorder.first);
-        }
-
+        add_reoder_to_topology(reorder, data_prim);
         return reorder;
+    }
+
+    void add_weights_for_optimization(
+        const kernel_selector::weights_reorder_params& reorder_params,
+        const std::shared_ptr<data> data_prim,
+        data_type type)
+    {
+        auto reorders = get_generic_layer(reorder_params, data_prim->id, data_prim->mem.get_layout(), type);
+        for (auto& reorder : reorders)
+        {
+            add_reoder_to_topology(reorder, data_prim);
+        }
     }
 
     void set_optimization_attribute(optimization_attributes_type attribute, int32_t val)

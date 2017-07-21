@@ -169,5 +169,7 @@ engine_info_internal::engine_info_internal(const gpu_toolkit& context)
 
     supports_fp16 = extensions.find("cl_khr_fp16 ") != std::string::npos;
     supports_fp16_denorms = supports_fp16 && (context.device().getInfo<CL_DEVICE_HALF_FP_CONFIG>() & CL_FP_DENORM) != 0;
+
+    supports_subgroups_short = extensions.find("cl_intel_subgroups_short") != std::string::npos;
 }
 }}

@@ -213,7 +213,7 @@ void generic_convolution_test(cldnn::format test_input_fmt, cldnn::format test_f
             { 1,1,dilation_x, dilation_y },
             false,
             0,
-            { { 0,0,output_padding_x, output_padding_y }, 0 })
+            padding{ { 0,0,output_padding_x, output_padding_y }, 0 })
     );
 
     for (int s = 0; s < split; ++s) {
@@ -628,7 +628,7 @@ TEST(convolution_f32_fw_gpu, basic_convolution_input_padding) {
             { 1, 1, 1, 1 },
             false,
             0,
-            { { 0,0,0,0 }, 0 })
+            padding{ { 0,0,0,0 }, 0 })
     );
 
     network network(engine, topology);
@@ -720,6 +720,8 @@ TEST(convolution_f32_fw_gpu, basic_convolution_input_and_output_padding) {
         { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
         { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f } };
 
+    const int x_pad = 2;
+    const int y_pad = 1;
     topology topology(
         input_layout("input", input.get_layout()),
         data("weights", weights),
@@ -734,7 +736,7 @@ TEST(convolution_f32_fw_gpu, basic_convolution_input_and_output_padding) {
             { 1, 1, 1, 1 },
             false,
             0,
-            { { 0,0,-2,-1 }, 0 })
+            padding{ { 0,0,-x_pad,-y_pad }, 0 })
     );
 
     network network(engine, topology);
@@ -759,8 +761,10 @@ TEST(convolution_f32_fw_gpu, basic_convolution_input_and_output_padding) {
     EXPECT_EQ(f_size, 1);
     EXPECT_EQ(b_size, 1);
 
-    for (int y = 0; y < y_size; ++y) {
-        for (int x = 0; x < x_size; ++x) {
+    for (int y = y_pad; y < y_size - y_pad; ++y) 
+    {
+        for (int x = x_pad; x < x_size - x_pad; ++x) 
+        {
             EXPECT_EQ(output_vec[y][x], output_ptr[y * x_size + x]);
         }
     }
@@ -1299,7 +1303,7 @@ TEST(convolution_f32_fw_gpu, offsets_wsiz3x3_wstr2x2_in2x2x1x1_zeropad) {
             { 1, 1, 1, 1 },
             false,
             0,
-            { { 0,0,1,1 }, 0 })
+            padding{ { 0,0,1,1 }, 0 })
     );
 
     network network(engine, topology);
@@ -1313,7 +1317,7 @@ TEST(convolution_f32_fw_gpu, offsets_wsiz3x3_wstr2x2_in2x2x1x1_zeropad) {
 
     auto output_ptr = output_prim.pointer<float>();
 
-    EXPECT_FLOAT_EQ(2.0f, output_ptr[3]);
+    EXPECT_FLOAT_EQ(-7.25f, output_ptr[4]);
 }
 
 TEST(convolution_f32_fw_gpu, basic_wsiz2x2_wstr2x2_in4x4x2x1_nopad_split2) {

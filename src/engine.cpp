@@ -32,6 +32,7 @@ gpu_toolkit_config convert_configuration(const engine_configuration conf)
     result.compiler_options = conf.compiler_options;
     result.enable_profiling = conf.enable_profiling != 0;
     result.meaningful_kernels_names = conf.meaningful_kernels_names != 0;
+    result.dump_custom_program = conf.dump_custom_program != 0;
     result.single_kernel_name = conf.single_kernel_name;
     return result;
 }
@@ -65,9 +66,6 @@ memory_impl* engine_impl::reinterpret_buffer(memory_impl* memory, layout new_lay
 {
     if (memory->get_engine() != this)
         throw error("trying to reinterpret buffer allocated by a different engine", CLDNN_ERROR);
-
-    if (memory->get_layout() == new_layout)
-        return memory;
 
     return new neural::gpu::gpu_buffer(this, new_layout, reinterpret_cast<neural::gpu::gpu_buffer*>(memory)->get_buffer());
 }

@@ -81,8 +81,8 @@ void chapter_5(engine& engine, topology& topology)
         std::cout << p.name << ":" << std::endl;
         for (auto& q : p.intervals)
         {
-            std::cout << "\t" << q.name << ":" << std::chrono::duration_cast<std::chrono::duration<double, std::chrono::nanoseconds::period>>(q.value->value()).count()
-                << "nanoseconds" << std::endl;
+            std::cout << "\t" << q.name << ": " << std::chrono::duration_cast<std::chrono::duration<double, std::chrono::nanoseconds::period>>(q.value->value()).count()
+                << " nanoseconds" << std::endl;
         }
     }
 }

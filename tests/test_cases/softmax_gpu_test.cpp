@@ -260,7 +260,8 @@ TEST(softmax_gpu_bfyx_f32, normalize_fyx) {
     }
 }
 
-TEST(softmax_gpu_bfyx_f32, normalize_yx) {
+// normalize_yx should be dropped from the spec
+TEST(DISABLED_softmax_gpu_bfyx_f32, normalize_yx) {
     //  Input  : 2x3x2x2
     static const int32_t x_size = 2, y_size = 2, feature_num = 3,
         batch_num = 2, buf_size = x_size*y_size * batch_num * feature_num;

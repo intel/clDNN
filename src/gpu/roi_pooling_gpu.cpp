@@ -16,10 +16,9 @@
 
 #include "roi_pooling_inst.h"
 #include "kernel.h"
-#include "kd_selector.h"
 #include "implementation_map.h"
-
-#include <algorithm>
+#include "roi_pooling/roi_pooling_v1_kernel_selector.h"
+#include "kernel_selector_helper.h"
 
 using namespace cldnn;
 
@@ -32,137 +31,49 @@ static inline bool hasSingleBatchOutput(const program_node & node)
 
 namespace neural
 {
-static const std::string roi_pooling_kernel_name = "roi_pooling_gpu";
-
-template <>
-struct kd_default_value_selector<neural::gpu::engine_info_internal::architectures>
-{
-    static constexpr neural::gpu::engine_info_internal::architectures value = neural::gpu::engine_info_internal::architectures::GEN_UNKNOWN;
-};
-
-template <>
-struct kd_default_value_selector<neural::gpu::engine_info_internal::configurations>
-{
-    static constexpr neural::gpu::engine_info_internal::configurations value = neural::gpu::engine_info_internal::configurations::GT_UNKNOWN;
-};
 
 struct roi_pooling_gpu : typed_primitive_impl<roi_pooling>
 {
     const roi_pooling_node& outer;
-
-    gpu::engine_info_internal _engine_info;
-
-    struct kernel_data 
-    {
-        size_t gws0, gws1, gws2; ///< Local work sizes (3D).
-        size_t lws0, lws1, lws2; ///< Global work sizes (3D).
-        std::string kernel_name;
-        bool fp16_unit_used;
-    } _kernel_data;
     gpu::kernel _kernel;
 
-    static kd_selector_t<kernel_data, roi_pooling_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> ks;
-
-    roi_pooling_gpu(const roi_pooling_node& arg)
-        : outer(arg),
-        _engine_info(outer.get_program().get_engine()->get_context()->get_engine_info()),
-        _kernel_data(ks.get_kernel(
-            outer,
-            outer.input().get_output_layout().data_type,
-            outer.input().get_output_layout().format,
-            outer.input().get_output_layout().size.batch[0],
-            _engine_info.architecture,
-            _engine_info.configuration)),
-        _kernel(outer.get_program().get_engine()->get_context(), _kernel_data.kernel_name, get_jit_constants(outer, _kernel_data), outer.id())
-    {}
-
-    static kernel_data set_default(const roi_pooling_node& outer)
+    roi_pooling_gpu(const roi_pooling_node& arg, const kernel_selector::kernel_data& kd)
+        : outer(arg)
+        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
     {
-        kernel_data kd;
-
-        cldnn::data_types input_dt = outer.input().get_output_layout().data_type;
-       
-        kd.fp16_unit_used = (input_dt == cldnn::data_types::f16);
-
-        // Determine global work sizes.
-        kd.gws0 = outer.get_output_layout().get_buffer_size().count();
-        kd.gws1 = 1;
-        kd.gws2 = 1;
-
-        // Find largest positive local work size that is divider for global work size.
-        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
-        while (kd.gws0 % kd.lws0 != 0)
-        {
-            --kd.lws0;
-        }
-        kd.lws1 = 1;
-        kd.lws2 = 1;
-
-        kd.kernel_name = roi_pooling_kernel_name;
-
-        return kd;
-    }
-
-
-    static gpu::jit_constants get_jit_constants(const roi_pooling_node& outer, const kernel_data& data)
-    {
-        neural::gpu::engine_info_internal engine_info = outer.get_program().get_engine()->get_context()->get_engine_info();
-
-        if (!engine_info.supports_fp16 && data.fp16_unit_used)
-            throw std::invalid_argument("GPU device does not support half precision floating-point formats (cl_khr_fp16 extension)");
-
-        const cldnn::tensor& input_size = outer.input().get_output_layout().get_buffer_size();
-
-        gpu::jit_constants mem_consts{
-            gpu::make_jit_constant("INPUT",             input_size),
-            gpu::make_jit_constant("MAX_POOL",          outer.get_primitive()->mode == pooling_mode::max), //TODO(ruv): is it ok?
-            gpu::make_jit_constant("POOLED_HEIGHT",     outer.get_primitive()->pooled_height),
-            gpu::make_jit_constant("POOLED_WIDTH",      outer.get_primitive()->pooled_width),
-            gpu::make_jit_constant("SPATIAL_SCALE",     outer.get_primitive()->spatial_scale),
-            gpu::make_jit_constant("GROUP_SZ",          outer.get_primitive()->group_sz),
-            gpu::make_jit_constant("INPUT_PADDING",     outer.input().get_output_layout().data_padding),
-            gpu::make_jit_constant("OUTPUT_PADDING",    outer.get_output_layout().data_padding),
-            gpu::make_jit_constant("FP16_SUPPORTED",    static_cast<int>(engine_info.supports_fp16)),
-            gpu::make_jit_constant("FP16_UNIT_USED",    static_cast<int>(data.fp16_unit_used)),
-            gpu::make_jit_constant("UNIT_TYPE",         data.fp16_unit_used ? "half" : "float"),
-            gpu::make_jit_constant("UNIT_INIT_VAL_MAX", data.fp16_unit_used ? "HALF_MAX" : "FLT_MAX"),
-
-            gpu::make_jit_constant("USE_OLD_SCALE_AND_ROUNDING", !outer.get_primitive()->group_sz),
-        };
-        return mem_consts;
+        _kernel_data = kd;
     }
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, roi_pooling_inst& instance) override
     {
-        const kernel_data& kd = _kernel_data;
+        gpu::kernel::kernel_arguments_data args;
+        args.scalars = &_kernel_data.kernels[0].scalars;
+        args.inputs = { &instance.input_memory(), &instance.rois_memory() };
+        args.output = &instance.output_memory();
 
-        const cldnn::memory& input_data = instance.input_memory(); 
-        const cldnn::memory& input_rois = instance.rois_memory(); 
-        const cldnn::memory& output_mem = instance.output_memory(); 
-
-        return _kernel.run<gpu::input_mem, gpu::input_mem, gpu::output_mem >
-          ({{kd.gws0, kd.gws1, kd.gws2}, {kd.lws0, kd.lws1, kd.lws2}}, events, input_data, input_rois, output_mem);
+        return _kernel.run(_kernel_data.kernels[0], events, args);
     }
 
     static primitive_impl* create(const roi_pooling_node& arg)
     {
-        const auto & input_arg  = arg.input().get_output_layout();
-        const auto & output_arg = arg.get_output_layout();
+        const auto& input_layout    = arg.input().get_output_layout();
+        const auto& output_layout   = arg.get_output_layout();
+        const auto& rois_layout     = arg.rois().get_output_layout();
+        const auto& primitive       = arg.get_primitive();
 
-        const auto padding_filling_value = output_arg.data_padding.filling_value();
+        const auto padding_filling_value = output_layout.data_padding.filling_value();
 
         if (padding_filling_value != 0.0f) {
             throw std::logic_error("ROI pooling supports only zero padding.");
         }
 
-        if (input_arg.format != output_arg.format) {
+        if (input_layout.format != output_layout.format) {
             throw std::invalid_argument("ROI pooling input/output data format does not match.");
         }
 
-        auto group_sz = arg.get_primitive()->group_sz;
-        auto in_feat = input_arg.get_buffer_size().feature[0];
-        auto out_feat = output_arg.get_buffer_size().feature[0];
-
+        auto group_sz = primitive->group_sz;
+        auto in_feat = input_layout.get_buffer_size().feature[0];
+        auto out_feat = output_layout.get_buffer_size().feature[0];
 
         if (group_sz < 0 || (group_sz && in_feat != group_sz * group_sz * out_feat)) {
             throw std::invalid_argument("group_sz must be either 0 (For RoIPooling) or satisfy ifm == ofm * group_sz * group_sz (For PSRoIPooling)");
@@ -172,20 +83,33 @@ struct roi_pooling_gpu : typed_primitive_impl<roi_pooling>
             throw std::invalid_argument("PS/ RoI Pooling doesn't support batching.");
         }
         
-        return new roi_pooling_gpu(arg);
+        auto roi_params = get_default_params<kernel_selector::roi_pooling_v1_params>(arg);
+        auto roi_optional_params = get_default_optional_params<kernel_selector::roi_pooling_optional_params>(arg.get_program());
+        
+        const auto& out = roi_params.output;
+        
+        const auto roi_bfyx = convert_data_tensor(rois_layout);
+        const auto roi_bf = roi_bfyx.FlattenFeatureAndSpatials();
+        roi_params.inputs.push_back(roi_bf);
+        roi_params.output = { out.GetDims(), out.GetDType(), kernel_selector::data_layout::brfyx, out.GetViewOffset(), out.PhysicalSize(), out.GetPaddedVal() }; // TOOD: it's an hack - cldnn doesn't support roi pooling with batching
+        roi_params.roiParams.mode         = primitive->mode == pooling_mode::max ? kernel_selector::pool_type::MAX : kernel_selector::pool_type::AVG;
+        roi_params.roiParams.pooledWidth  = primitive->pooled_width;
+        roi_params.roiParams.pooledHeight = primitive->pooled_height;
+        roi_params.roiParams.spatialScale = primitive->spatial_scale;
+        roi_params.roiParams.groupSize    = group_sz;
+
+        auto& kernel_selector = kernel_selector::roi_pooling_v1_kernel_selector::Instance();
+        auto best_kernels = kernel_selector.GetBestKernels(roi_params, roi_optional_params);
+
+        if (best_kernels.empty())
+        {
+            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
+        }
+
+        auto roi_pool = new roi_pooling_gpu(arg, best_kernels[0]);
+
+        return roi_pool;
     }
-};
-
-
-kd_selector_t<roi_pooling_gpu::kernel_data, roi_pooling_node, 
-            data_types,
-            format::type,
-            kd_optional_selector_t, 
-            int, 
-            neural::gpu::engine_info_internal::architectures, 
-            neural::gpu::engine_info_internal::configurations> roi_pooling_gpu::ks = {
-    { std::make_tuple(data_types::f32, format::bfyx, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
-    { std::make_tuple(data_types::f16, format::bfyx, 0, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
 };
 
 namespace

@@ -16,140 +16,86 @@
 
 #include "eltwise_inst.h"
 #include "kernel.h"
-#include "kd_selector.h"
 #include "implementation_map.h"
-
-using namespace cldnn;
+#include "eltwise/eltwise_kernel_selector.h"
+#include "kernel_selector_helper.h"
 
 using namespace cldnn;
 
 namespace neural
 {
-// Kernel names.
-static const std::string kernel_name = "eltwise_gpu";
-static const std::string kernel_name_bfyx = "eltwise_gpu_bfyx";
-static const std::string kernel_name_vload8 = "eltwise_gpu_vload8";
 
 struct eltwise_gpu : typed_primitive_impl<eltwise>
 {
     const eltwise_node& outer;
-
-    struct kernel_data
-    {
-        size_t gws0;
-        size_t lws0;
-        std::string kernel_name;
-        bool fp16_unit_used;
-    } _kernel_data;
     gpu::kernel _kernel;
 
-    eltwise_gpu(const eltwise_node& arg)
-        : outer(arg),
-        _kernel_data(set_kernel_data(outer)),
-        _kernel(outer.get_program().get_engine()->get_context(), _kernel_data.kernel_name, get_jit_constants(outer, _kernel_data), outer.id())
-    {}
-
-    static kernel_data set_kernel_data(const eltwise_node& outer)
+    eltwise_gpu(const eltwise_node& arg, const kernel_selector::kernel_data& kd)
+        : outer(arg)
+        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
     {
-        auto output_layout = outer.get_output_layout(); // output
-
-        kernel_data kd;
-
-        kd.fp16_unit_used = output_layout.data_type == cldnn::data_types::f16;
-
-        // Determine global work sizes.
-        kd.gws0 = output_layout.count();
-
-        if (!outer.has_padded_dependency() && !outer.is_padded() && (output_layout.count() % 8 == 0))
-        {
-            kd.gws0 = output_layout.count() / 8;
-            kd.kernel_name = kernel_name_vload8;
-        }
-        else if (output_layout.format == cldnn::format::bfyx)
-        {
-            kd.kernel_name = kernel_name_bfyx;
-        }
-        else
-        {
-            if (outer.is_padded())
-                throw std::runtime_error("Output padding for eltwise is not yet supported for not-bfyx input");
-
-            if (outer.has_padded_dependency())
-                throw std::runtime_error("Input padding for eltwise is not yet supported for not-bfyx input");
-
-            kd.kernel_name = kernel_name;
-        }
-
-        // Find largest positive local work size that is divider for global work size.
-        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
-        while (kd.gws0 % kd.lws0 != 0)
-        {
-            --kd.lws0;
-        }
-
-        return kd;
+        _kernel_data = kd;
     }
 
-    static gpu::jit_constants get_jit_constants(const eltwise_node& outer, const kernel_data& data)
+    static inline kernel_selector::eltwise_mode convect_to_eltwise_mode(eltwise_mode mode)
     {
-        auto engine_info = outer.get_program().get_engine()->get_context()->get_engine_info();
-
-        if (!engine_info.supports_fp16 && data.fp16_unit_used)
-            throw std::invalid_argument("GPU device does not support half precision floating-point formats (cl_khr_fp16 extension)");
-
-        auto input_layout = outer.input().get_output_layout();
-        auto input2_layout = outer.input2().get_output_layout();
-        auto output_layout = outer.get_output_layout();
-
-        gpu::jit_constants mem_consts{
-            gpu::make_jit_constant("INPUT",                 input_layout.size),
-            gpu::make_jit_constant("OUTPUT",                output_layout.size),
-            gpu::make_jit_constant("INPUT2" ,               input2_layout.size),
-            gpu::make_jit_constant("OUTPUT_PADDING",        outer.get_output_layout().data_padding),
-            gpu::make_jit_constant("INPUT_PADDING",         outer.input().get_output_layout().data_padding),
-            gpu::make_jit_constant("FP16_SUPPORTED",        static_cast<int>(engine_info.supports_fp16)),
-            gpu::make_jit_constant("FP16_UNIT_USED",        static_cast<int>(data.fp16_unit_used)),
-            gpu::make_jit_constant("UNIT_TYPE",             data.fp16_unit_used ? "half" : "float"),
-            gpu::make_jit_constant("SUM_MODE_USED",         outer.get_primitive()->mode == cldnn::eltwise_mode::sum ? 1 : 0),
-            gpu::make_jit_constant("MAX_MODE_USED",         outer.get_primitive()->mode == cldnn::eltwise_mode::max ? 1 : 0),
-            gpu::make_jit_constant("SUB_MODE_USED",         outer.get_primitive()->mode == cldnn::eltwise_mode::sub ? 1 : 0),
-            gpu::make_jit_constant("PROD_MODE_USED",        outer.get_primitive()->mode == cldnn::eltwise_mode::prod ? 1 : 0),
-            gpu::make_jit_constant("RELU",                  static_cast<int>(outer.get_primitive()->with_activation)),
-            gpu::make_jit_constant("NEGATIVE_SLOPE",        outer.get_primitive()->activation_negative_slope),
-        };
-
-        if (data.kernel_name == kernel_name_vload8)
+        switch (mode)
         {
-            mem_consts.add_constant(gpu::make_jit_constant("ELEMENTS_COUNT", outer.get_output_layout().count()));
+        case eltwise_mode::sum:  return kernel_selector::eltwise_mode::ADD;
+        case eltwise_mode::sub:  return kernel_selector::eltwise_mode::SUB;
+        case eltwise_mode::max:  return kernel_selector::eltwise_mode::MAX;
+        case eltwise_mode::prod: return kernel_selector::eltwise_mode::MUL;
+        default:
+            return kernel_selector::eltwise_mode::ADD;
         }
-
-        return mem_consts;
     }
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, eltwise_inst& instance) override
     {
-        const auto& kd    = _kernel_data;
+        gpu::kernel::kernel_arguments_data args;
+        args.scalars = &_kernel_data.kernels[0].scalars;
+        args.inputs = { &instance.input_memory(), &instance.input2_memory() };
+        args.output = &instance.output_memory();
 
-        // input2_mem memory in bfyx or yxfb.
-        return _kernel.run<gpu::input_mem, gpu::output_mem, gpu::input_mem>(
-            {kd.gws0, kd.lws0},
-            events,
-            instance.input_memory(),
-            instance.output_memory(),
-            instance.input2_memory());
+        return _kernel.run(_kernel_data.kernels[0], events, args);
     }
 
-    static primitive_impl* create(const eltwise_node& outer) { return new eltwise_gpu(outer); }
+    static primitive_impl* create(const eltwise_node& arg) 
+    { 
+        auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
+        auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
+
+        ew_params.inputs.push_back(convert_data_tensor(arg.input2().get_output_layout()));
+        
+        const auto& primitive = arg.get_primitive();
+        convert_activation_func_params(primitive, ew_params);
+
+        ew_params.eltwiseParams.operations.push_back({ 
+            { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
+            convect_to_eltwise_mode(primitive->mode) });
+
+        auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
+        auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
+
+        if (best_kernels.empty())
+        {
+            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
+        }
+
+        auto eltwise = new eltwise_gpu(arg, best_kernels[0]);
+
+        return eltwise;
+    }
 };
 
 namespace {
     struct attach {
         attach() {
             implementation_map<eltwise>::add({
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), eltwise_gpu::create },
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), eltwise_gpu::create },
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), eltwise_gpu::create },
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), eltwise_gpu::create }
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), eltwise_gpu::create }
             });
         }
         ~attach() {}

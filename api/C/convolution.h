@@ -49,6 +49,10 @@ uint32_t with_activation;
 float activation_negative_slope;
 /// @brief On how many cards split the computation to.
 uint32_t split;
+/// @brief Indicates that the primitive has user-defined output size (non-zero value).
+uint32_t with_output_size;
+/// @brief User-defined output data size of the primitive (w/o padding).
+cldnn_tensor output_size;
 /// @brief Array of primitive ids containing weights data. Size of array should be equivalent to @p split.
 cldnn_primitive_id_arr weights;
 /// @brief Array of primitive ids containing bias data. Size of array should be equivalent to @p split.

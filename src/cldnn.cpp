@@ -180,7 +180,8 @@ cldnn_engine_info cldnn_get_engine_info(cldnn_engine engine, cldnn_status* statu
             info.max_work_group_size,
             info.max_local_mem_size,
             info.supports_fp16,
-            info.supports_fp16_denorms
+            info.supports_fp16_denorms,
+            info.supports_subgroups_short
        };
     });
 }
@@ -640,3 +641,5 @@ PRIMITIVE_TYPE_ID_CALL_IMPL(roi_pooling)
 PRIMITIVE_TYPE_ID_CALL_IMPL(prior_box)
 PRIMITIVE_TYPE_ID_CALL_IMPL(detection_output)
 PRIMITIVE_TYPE_ID_CALL_IMPL(normalize)
+PRIMITIVE_TYPE_ID_CALL_IMPL(generic_layer)
+PRIMITIVE_TYPE_ID_CALL_IMPL(custom_gpu_primitive)

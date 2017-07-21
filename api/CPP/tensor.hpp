@@ -609,6 +609,16 @@ public:
         return ret;
     }
 
+    /// @brief Returns a tensor containing values minimum from @p lhs and @p rhs.
+    static tensor min(tensor const& lhs, tensor const& rhs)
+    {
+        auto ret = lhs;
+        for (size_t i = 0; i < CLDNN_TENSOR_DIM_MAX; ++i)
+            ret._sizes[i] = std::min(ret._sizes[i], rhs._sizes[i]);
+
+        return ret;
+    }
+
 private:
 
     /// @brief Helper functions for tensor constructor using dim_vec_kinds

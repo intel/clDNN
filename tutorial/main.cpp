@@ -24,17 +24,20 @@
 * @subpage c3 <br>
 * @subpage c4 <br>
 * @subpage c5 <br>
+* @subpage c6 <br>
 *
 */
 #include <../api/CPP/engine.hpp>
 #include <../api/CPP/topology.hpp>
 
 
-cldnn::engine   chapter_1(); // Engine, layout, tensor, memory, data and input
-cldnn::topology chapter_2(cldnn::engine&); // Primitives and topology
-void            chapter_3(cldnn::engine&, cldnn::topology&); // Network and execution
-void            chapter_4(cldnn::engine&, cldnn::topology&); // Hidden layers access
-void            chapter_5(cldnn::engine&, cldnn::topology&); // Other building options
+cldnn::engine   chapter_1();                                    // Engine, layout, tensor, memory, data and input
+cldnn::topology chapter_2(cldnn::engine&);                      // Primitives and topology
+void            chapter_3(cldnn::engine&, cldnn::topology&);    // Network and execution
+void            chapter_4(cldnn::engine&, cldnn::topology&);    // Hidden layers access
+void            chapter_5(cldnn::engine&, cldnn::topology&);    // Other building options
+void            chapter_6(cldnn::engine&);                      // How to add a kernel to clDNN
+void            chapter_7(cldnn::engine&);                      // How to create a custom primitive (without changing clDNN)
 
 int main()
 {
@@ -44,6 +47,8 @@ int main()
         chapter_3(eng, topology);
         chapter_4(eng, topology);
         chapter_5(eng, topology);
+        chapter_6(eng);
+        chapter_7(eng);
     }
     catch (const std::exception& ex)
     {

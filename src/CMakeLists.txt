@@ -88,11 +88,13 @@ file(GLOB __CLDNN_Sources__ch_kernels
 set(__CLDNN_Directory__cg_cache        "${CLDNN__CODEGEN_INCDIR}")
 set(__CLDNN_CGDirectory__cg_cache      "${CLDNN__CODEGEN_DIR}/cache")
 set(__CLDNN_Label__cg_cache            "${__CLDNN_Label__cache}\\codegen")
-set(__CLDNN_File__cg_cache__prim_db    "primitive_db.inc")
-set(__CLDNN_Sources__cg_cache
-    "${__CLDNN_Directory__cg_cache}/${__CLDNN_File__cg_cache__prim_db}"
-  )
 
+set(__CLDNN_Directory__ks_main           "${CLDNN__KERNEL_SELECTOR_DIR}")
+set(__CLDNN_Directory__ks_core           "${CLDNN__KERNEL_SELECTOR_DIR}/core")
+set(__CLDNN_Directory__ks_common         "${CLDNN__KERNEL_SELECTOR_DIR}/common")
+set(__CLDNN_Directory__ks_core_common    "${__CLDNN_Directory__ks_core}/common")
+set(__CLDNN_Directory__ks_actual_kernels "${__CLDNN_Directory__ks_core}/actual_kernels")  
+set(__CLDNN_Directory__ks_cache          "${__CLDNN_Directory__ks_core}/cache")
 
 set(__CLDNN_AllSources
     ${__CLDNN_Headers__api}
@@ -126,6 +128,10 @@ include_directories(
     "${CLDNN__MAIN_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${__CLDNN_Directory__include}"
+    "${__CLDNN_Directory__ks_core}"
+    "${__CLDNN_Directory__ks_core}/common"
+    "${__CLDNN_Directory__ks_actual_kernels}"
+    "${__CLDNN_Directory__ks_common}"
   )
 
 # =================================== Link targets and dependencies ====================================
@@ -142,6 +148,7 @@ target_link_libraries("${CLDNN_BUILD__PROJ}"
     OpenCL
     Boost::filesystem
     Boost::system
+    cldnn_kernel_selector
   )
 
 if(WIN32)
@@ -149,20 +156,6 @@ if(WIN32)
 elseif(UNIX)
   target_link_libraries("${CLDNN_BUILD__PROJ}" pthread)
 endif()
-
-# =================================== Custom pre- and post-steps =======================================
-
-add_custom_command(OUTPUT "${__CLDNN_CGDirectory__cg_cache}/${__CLDNN_File__cg_cache__prim_db}"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${__CLDNN_CGDirectory__cg_cache}"
-    COMMAND "${PYTHON_EXECUTABLE}" "${__CLDNN_Directory__cache}/primitive_db_gen.py" "${__CLDNN_CGDirectory__cg_cache}" "${__CLDNN_Directory__ch_kernels}"
-    DEPENDS ${__CLDNN_Sources__ch_kernels} "${__CLDNN_Directory__cache}/primitive_db_gen.py"
-    COMMENT "Generating ${__CLDNN_File__cg_cache__prim_db} ..."
-  )
-add_custom_command(OUTPUT "${__CLDNN_Directory__cg_cache}/${__CLDNN_File__cg_cache__prim_db}"
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${__CLDNN_CGDirectory__cg_cache}/${__CLDNN_File__cg_cache__prim_db}" "${__CLDNN_Directory__cg_cache}/${__CLDNN_File__cg_cache__prim_db}"
-    DEPENDS "${__CLDNN_CGDirectory__cg_cache}/${__CLDNN_File__cg_cache__prim_db}" ${__CLDNN_Sources__ch_kernels} "${__CLDNN_Directory__cache}/primitive_db_gen.py"
-    COMMENT "Updating file if the file changed (${__CLDNN_File__cg_cache__prim_db}) ..."
-  )
 
 # ========================================== Installation ==============================================
 

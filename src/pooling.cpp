@@ -16,6 +16,7 @@
 
 #include "pooling_inst.h"
 #include "primitive_type_base.h"
+#include "sliding_window_utils.h"
 
 
 namespace cldnn
@@ -31,34 +32,36 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
     auto desc = node.get_primitive();
 
     auto input_layout = node.input().get_output_layout();
-    auto input_spatial_size = node.input().get_output_layout().size.spatial.size();
 
-    if (input_spatial_size != 2)
-        throw std::runtime_error("Only two dimensional spatials are supported by pooling");
+    auto input_offset = desc->input_offset;
+    auto stride = desc->stride;
+    auto window_size = desc->size;
 
-    auto input_offsets = desc->input_offset.sizes();
-    auto strides = desc->stride.sizes();
-    auto window_sizes = desc->size.sizes();
-    //TODO !!!implement correct output size calculation!!!
-    auto output_sizes = input_layout.size.sizes();
-    auto spatial_offset = CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX;
+    // TODO: Consider moving general parameter verification to arguments constructor.
+    if (stride.spatial[0] <= 0 || stride.spatial[1] <= 0)
+        throw std::runtime_error("Stride must be positive (>= 1)");
+    if (window_size.spatial[0] <= 0 || window_size.spatial[1] <= 0)
+        throw std::runtime_error("Size (of pooling window) must be positive (>= 1)");
+    if (2 * input_offset.spatial[0] > input_layout.size.spatial[0] || 2 * input_offset.spatial[1] > input_layout.size.spatial[1])
+        throw std::invalid_argument("Input offset is greater than input data range. There is no input data to process");
 
-    for (decltype(input_spatial_size) i = spatial_offset; i < input_spatial_size + spatial_offset; i++)
+    if (desc->with_output_size)
     {
-            // TODO: Consider moving general parameter verification to arguments constructor.
-            if (strides[i] <= 0)
-                throw std::runtime_error("Stride must be positive (>= 1)");
-            if (2 * input_offsets[i] >= output_sizes[i])
-                throw std::runtime_error("Input offset is greater than input data range. There is no input data to process");
+        if (desc->output_size.spatial[0] <= 0 || desc->output_size.spatial[1] <= 0)
+            throw std::invalid_argument("User-defined size of output layout must be positive (>= 1)");
 
-            output_sizes[i] = static_cast<cldnn::tensor::value_type>(
-                2 * input_offsets[i] < output_sizes[i]
-                // ? std::max(output_sizes[i] - 2 * input_offsets[i] - window_sizes[i], 0) / strides[i] + 1
-                ? ceil_div(std::max(output_sizes[i] - 2 * input_offsets[i] - window_sizes[i], 0), strides[i]) + 1
-                : 0);
+        tensor output_size(input_layout.size.batch[0], input_layout.size.feature[0],
+                           desc->output_size.spatial[0], desc->output_size.spatial[1]);
+        return { input_layout.data_type, input_layout.format, output_size };
     }
 
-    return{ input_layout.data_type, input_layout.format, output_sizes };
+    // TODO: Check compatibility of output size calculation (with caffe).
+    auto output_range = calc_sliding_window_output_range<swor_mode::exceed_once_data>(
+        input_layout.size, window_size, input_offset, stride, {1, 1, 1, 1}, true, 1);
+
+    tensor output_size(input_layout.size.batch[0], input_layout.size.feature[0],
+                       output_range.spatial[0], output_range.spatial[1]);
+    return{ input_layout.data_type, input_layout.format, output_size };
 }
 
 std::string pooling_inst::to_string(pooling_node const& node)
@@ -69,11 +72,13 @@ std::string pooling_inst::to_string(pooling_node const& node)
     auto strd           = desc->stride;
     auto kernel_size    = desc->size;
     auto mode           = desc->mode == pooling_mode::max ? "max" : "average";
+    auto ud_out_size    = desc->with_output_size ? " true" : "false";
 
     primitive_description << "id: " << desc->id << ", type: pooling, mode: " << mode <<
         "\n\tinput: "         << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
         "\n\tstride: "        << strd.spatial[0] << "x" << strd.spatial[1] << 
-        "\n\tkernel size: "   << kernel_size.spatial[0] << "x" << kernel_size.spatial[1] << 
+        "\n\tkernel size: "   << kernel_size.spatial[0] << "x" << kernel_size.spatial[1] <<
+        "\n\twith user-defined out size: " << ud_out_size << ", dims: " << desc->output_size.spatial[0] << "x" << desc->output_size.spatial[1] <<
         "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
         "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
         "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';

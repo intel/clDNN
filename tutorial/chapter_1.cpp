@@ -36,8 +36,13 @@ engine chapter_1()
 
     std::cout << std::endl << "-- Chapter 1 --" << std::endl;
     // To create memory we have to create engine first. Engine is responsible for memory and kernel handling (creation, compilation, allocation).
-    // Currently OCL backend implementaion only is avaiable.
-    engine engine;
+    // Currently OCL backend implementation only is available.
+
+    // Add profiling information
+    const bool profiling = true;
+
+    // Create an engine
+    engine engine(profiling);
     // We have to choose data type (f32 or f16):
     data_types data_type = data_types::f32;
     // Format (order of dimensions in memory), bfyx is the most optimal and common:
@@ -51,7 +56,7 @@ engine chapter_1()
         32); // height (spatial y)
 
     tensor tensor2(spatial(32, 32), batch(4), feature(1));
-    tensor tensor3(spatial(32, 32), batch(4)); // default value for non-initalized dimension is 1
+    tensor tensor3(spatial(32, 32), batch(4)); // default value for non-initialized dimension is 1
 
     std::cout << "Is tensor1 == tensor2 == tensor3?:" <<
         (((tensor1 == tensor2) && (tensor2 == tensor3)) ? "yes" : "no") << std::endl;

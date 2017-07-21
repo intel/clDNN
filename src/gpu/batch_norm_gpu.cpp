@@ -16,161 +16,85 @@
 
 #include "batch_norm_inst.h"
 #include "kernel.h"
-#include "kd_selector.h"
 #include "network_impl.h"
 #include "implementation_map.h"
-
-#include <algorithm>
-#include <stdexcept>
-#include <string>
+#include "kernel_selector_helper.h"
 
 using namespace cldnn;
 
 namespace neural
 {
 
-// Kernel names.
-static const std::string kernel_name = "batch_norm_gpu";
-static const std::string kernel_name_global_stats = "batch_norm_use_global_stats_gpu";
-
-template <>
-struct kd_default_value_selector<neural::gpu::engine_info_internal::architectures>
-{
-    static constexpr neural::gpu::engine_info_internal::architectures value = neural::gpu::engine_info_internal::architectures::GEN_UNKNOWN;
-};
-
-template <>
-struct kd_default_value_selector<neural::gpu::engine_info_internal::configurations>
-{
-    static constexpr neural::gpu::engine_info_internal::configurations value = neural::gpu::engine_info_internal::configurations::GT_UNKNOWN;
-};
-
 struct batch_norm_gpu : typed_primitive_impl<batch_norm>
 {
     const batch_norm_node& outer;
-    const layout input_layout;
-    const layout output_layout;
-
-    gpu::engine_info_internal _engine_info;
-
-    struct kernel_data
-    {
-        size_t gws0, gws1, gws2;
-        size_t lws0, lws1, lws2;
-        std::string kernel_name;
-        bool fp16_unit_used;
-        bool fp16_supported;
-    } _kernel_data;
     gpu::kernel _kernel;
 
-    static kd_selector_t<kernel_data, batch_norm_node, data_types, format::type, bool, kd_optional_selector_t, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> ks;
-
-    batch_norm_gpu(const batch_norm_node& arg):
-        outer(arg),
-        input_layout(arg.input().get_output_layout()),
-        output_layout(arg.get_output_layout()),
-        _engine_info(outer.get_program().get_engine()->get_context()->get_engine_info()),
-        _kernel_data(ks.get_kernel(
-            outer, 
-            input_layout.data_type,
-            input_layout.format,
-            outer.get_primitive()->use_global_stats,
-            _engine_info.architecture,
-            _engine_info.configuration)),
-        _kernel(outer.get_program().get_engine()->get_context(), _kernel_data.kernel_name, get_jit_constants(outer, _kernel_data), outer.id())
-    {}
-
-    static kernel_data set_kernel_data(const batch_norm_node& outer)
+    batch_norm_gpu(const batch_norm_node& arg, const kernel_selector::kernel_data& kd)
+        : outer(arg)
+        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
     {
-        auto engine_info = outer.get_program().get_engine()->get_context()->get_engine_info();
-
-        const auto& input_layout = outer.input().get_output_layout();  // input
-
-        kernel_data kd;
-
-        kd.fp16_unit_used = input_layout.data_type == cldnn::data_types::f16;
-        kd.fp16_supported = engine_info.supports_fp16 != 0;
-
-        // Determine global work sizes.
-        kd.gws0 = input_layout.size.batch[0];   // B
-        kd.gws1 = input_layout.size.feature[0]; // F
-        kd.gws2 = input_layout.size.spatial[0] * input_layout.size.spatial[1]; // X, Y
-        // Find largest positive local work size that is divider for global work size.
-        kd.lws2 = std::min(std::max(kd.gws2, static_cast<size_t>(1)), static_cast<size_t>(32));
-        while (kd.gws2 % kd.lws2 != 0)
-        {
-            --kd.lws2;
-        }
-        kd.lws1 = 1;
-        kd.lws0 = 1;
-
-        return kd;
-    }
-
-    static gpu::jit_constants get_jit_constants(const batch_norm_node& outer, const kernel_data& data)
-    {
-        if (!data.fp16_supported && data.fp16_unit_used)
-            throw std::invalid_argument("GPU device does not support half precision floating-point formats (cl_khr_fp16 extension)");
-
-        auto input_padding = outer.input().get_output_layout().data_padding;
-
-        gpu::jit_constants mem_consts {
-            gpu::make_jit_constant("INPUT",                 outer.input().get_output_layout().size),
-            gpu::make_jit_constant("OUTPUT",                outer.get_output_layout().size),
-            gpu::make_jit_constant("EPSILON",               data.fp16_unit_used ? 0.0f : outer.get_primitive()->epsilon),
-            gpu::make_jit_constant("FP16_UNIT_USED",        static_cast<int>(data.fp16_unit_used)),
-            gpu::make_jit_constant("UNIT_TYPE",             data.fp16_unit_used ? "half" : "float"),
-            gpu::make_jit_constant("UNIT_VAL_ZERO",         data.fp16_unit_used ? "0.0h" : "0.0f"),
-            gpu::make_jit_constant("UNIT_VAL_SQUARE",       data.fp16_unit_used ? "2.0h" : "2.0f"),
-            gpu::make_jit_constant("INPUT_PADDING",         input_padding),
-            gpu::make_jit_constant("OUTPUT_PADDING",        outer.get_output_layout().data_padding),
-            gpu::make_jit_constant("BFYX_USED",             static_cast<int>(outer.input().get_output_layout().format == cldnn::format::bfyx ? true : false)),
-        };
-
-        return mem_consts;
+        _kernel_data = kd;
     }
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, batch_norm_inst& instance) override
     {
-        const auto& kd = _kernel_data;
+        gpu::kernel::kernel_arguments_data args;
+        args.scalars = &_kernel_data.kernels[0].scalars;
+        args.inputs = { &instance.input_memory(), &instance.mean_memory(), &instance.variance_memory() };
+        args.output = &instance.output_memory();
 
-        return _kernel.run<gpu::input_mem, gpu::output_mem, gpu::input_mem, gpu::input_mem>(
-            {{ kd.gws0, kd.gws1, kd.gws2 }, {kd.lws0, kd.lws1, kd.lws2 }},
-            events,
-            instance.input_memory(),
-            instance.output_memory(),
-            instance.mean_memory(),
-            instance.variance_memory());
+        return _kernel.run(_kernel_data.kernels[0], events, args);
     }
 
-    static primitive_impl* create(const batch_norm_node &arg) { return new batch_norm_gpu(arg); };
-};
+    static primitive_impl* create(const batch_norm_node &arg) 
+    { 
+        if (arg.get_primitive()->use_global_stats == false)
+        {
+            throw std::runtime_error("no_global_stats is not supported - it's for training only.");
+        }
 
-batch_norm_gpu::kernel_data set_default_use_global_stats(const batch_norm_node& arg)
-{
-    batch_norm_gpu::kernel_data kd = batch_norm_gpu::set_kernel_data(arg);
-    kd.kernel_name = kernel_name_global_stats;
+        auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
+        auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
 
-    return kd;
-}
+        ew_params.inputs.push_back(convert_data_tensor(arg.mean().get_output_layout()));
+        ew_params.inputs.push_back(convert_data_tensor(arg.variance().get_output_layout()));
 
-batch_norm_gpu::kernel_data set_default(const batch_norm_node& arg)
-{
-    batch_norm_gpu::kernel_data kd = batch_norm_gpu::set_kernel_data(arg);
-    kd.kernel_name = kernel_name;
+        ew_params.eltwiseParams.operations.push_back({
+            { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
+            kernel_selector::eltwise_mode::SUB });
 
-    return kd;
-}
+        const float epsilon =
+            (arg.input().get_output_layout().data_type == data_types::f16) ?
+            0.f : arg.get_primitive()->epsilon;
+        
+        // TODO: why do we ignore epsilon in case of FP16?
+        ew_params.eltwiseParams.operations.push_back({
+            { kernel_selector::eltwise_params::InputType::Buffer(2), kernel_selector::eltwise_params::InputType::Scalar(epsilon) },
+            kernel_selector::eltwise_mode::ADD });
 
-kd_selector_t<batch_norm_gpu::kernel_data, batch_norm_node, data_types, format::type, bool, kd_optional_selector_t, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> batch_norm_gpu::ks = {
-    { std::make_tuple(data_types::f32, format::yxfb, false, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
-    { std::make_tuple(data_types::f32, format::yxfb, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
-    { std::make_tuple(data_types::f16, format::yxfb, false, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
-    { std::make_tuple(data_types::f16, format::yxfb, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
-    { std::make_tuple(data_types::f32, format::bfyx, false, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
-    { std::make_tuple(data_types::f32, format::bfyx, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
-    { std::make_tuple(data_types::f16, format::bfyx, false, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default },
-    { std::make_tuple(data_types::f16, format::bfyx, true, gpu::engine_info_internal::architectures::GEN_UNKNOWN, gpu::engine_info_internal::configurations::GT_UNKNOWN), set_default_use_global_stats },
+        ew_params.eltwiseParams.operations.push_back({
+            { kernel_selector::eltwise_params::InputType::Intermediate(1) },
+            kernel_selector::eltwise_mode::RSQRT });
+
+        ew_params.eltwiseParams.operations.push_back({
+            { kernel_selector::eltwise_params::InputType::Intermediate(0), kernel_selector::eltwise_params::InputType::Intermediate(2) },
+            kernel_selector::eltwise_mode::MUL });
+
+        ew_params.eltwiseParams.layoutBased = true;
+
+        auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
+        auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
+
+        if (best_kernels.empty())
+        {
+            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
+        }
+
+        auto norm = new batch_norm_gpu(arg, best_kernels[0]);
+
+        return norm;
+    };
 };
 
 namespace {

@@ -45,7 +45,7 @@ topology chapter_2(engine& engine)
     activation relu(
         "relu",  // primitive identifier
         "input", // identifier of input ( output of primitive with provided name is input to current )
-        0.0);    // slope
+        activation_relu);
 
     // Softmax is also very easy to create:
     softmax softmax(
@@ -75,7 +75,7 @@ topology chapter_2(engine& engine)
     // Now we are ready to create fc primitive.
     fully_connected fc(
         "fc",        // primitive identifier
-        "softmax",   // softmax will be input to softmax
+        "softmax",   // softmax will be input to fully connected
         "fc_weights",// weigths identifier
         "fc_bias"    // bias identifier
     );

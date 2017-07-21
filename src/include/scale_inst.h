@@ -33,6 +33,8 @@ public:
     auto& input() const { return get_dependency(0); }
     auto& scale_in() const { return get_dependency(1); }
     auto& bias() const { return get_dependency(2); }
+
+    bool bias_term() const { return get_dependencies().size() > 2; }
 };
 
 using scale_node = typed_program_node<scale>;

@@ -36,6 +36,7 @@
 #include "api/CPP/normalize.hpp"
 #include "api/CPP/convolution.hpp"
 #include "api/CPP/activation.hpp"
+#include "api/CPP/pooling.hpp"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -403,7 +404,16 @@ inline void PrintTupleTo(const std::tuple<tests::test_params*, cldnn::primitive*
     else if (primitive->type == cldnn::activation::type_id())
     {
         auto activation = static_cast<cldnn::activation*>(primitive);
-        str << "Negative slope: " << activation->negative_slope << " Negative slope input id: " << activation->negative_slope_input;
+        str << "Negative slope: " << activation->additional_params.a << " Negative slope input id: " << activation->additional_params_input;
+    }
+    else if (primitive->type == cldnn::pooling::type_id())
+    {
+        auto pooling = static_cast<cldnn::pooling*>(primitive);
+        std::string pooling_mode = (pooling->mode == cldnn::pooling_mode::max) ? "max" : "average";
+        str << "Pooling mode: " << pooling_mode
+            << " Input offset x: " << pooling->input_offset.spatial[0] << " Input offset y: " << pooling->input_offset.spatial[1]
+            << " Stride x: " << pooling->stride.spatial[0] << " Stride y: " << pooling->stride.spatial[1]
+            << " Size x: " << pooling->size.spatial[0] << " Size y: " << pooling->size.spatial[1];
     }
     else
     {

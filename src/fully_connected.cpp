@@ -41,13 +41,13 @@ bool is_batch_after_spatial(const std::string order)
             batch_found = true;
             if (spatial_found)
                 return true;
-            /* fallthru */
         case 'x':
         case 'y':
         case 'z':
         case 'w':
         case 's':
             spatial_found = true;
+            /* fallthru */
             if (batch_found)
                 return false;
         default: break;

@@ -21,17 +21,19 @@
 
 #include "api/CPP/data.hpp"
 #include "api/CPP/reorder.hpp"
+#include "generic_layer.hpp"
 #include <boost/filesystem.hpp>
 #include <sstream>
 
 using namespace cldnn;
 
-layout_optimizer::layout_optimizer(refcounted_obj_ptr<engine_impl> eng, bool enabled)
-    : _enabled(enabled), _topology(), _engine(eng), _optimization_attributes()
+layout_optimizer::layout_optimizer(refcounted_obj_ptr<engine_impl> eng, bool enabled, bool output_size_handling_enabled)
+    : _enabled(enabled), _topology(), _engine(eng), _optimization_attributes(),
+      _output_size_handling_enabled(output_size_handling_enabled)
 {
 }
 
-layout layout_optimizer::get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const convolution>, boost::optional<layout> const& output_layout)
+layout layout_optimizer::get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const convolution> prim, boost::optional<layout> const& output_layout)
 {
     auto expected_tensor = current_layout.size;
     auto expected_data_type = current_layout.data_type;
@@ -53,25 +55,12 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
         expected_format = cldnn::format::bfyx;
         break;
 
-    case data_type::weights: //convolution weights
-        if (batch < 32 || expected_data_type != data_types::f16 || !_optimization_attributes.splitted_convolution)
-        {
-            expected_tensor = current_layout.size;
-            expected_format = cldnn::format::os_iyx_osv16;
-        }
-        else
-        {
-            expected_tensor = current_layout.size;
-            expected_format = cldnn::format::yxfb;
-        }
-
-        break;
-
     case data_type::input: //convolution input
         if (current_layout.format.dimension() != 4)
             throw std::runtime_error("Convolution input not 4-dimensional?");
 
-        if (expected_data_type != data_types::f16 || batch < 32 || !_optimization_attributes.splitted_convolution)
+        if (expected_data_type != data_types::f16 || batch < 32 || !_optimization_attributes.splitted_convolution
+            || (_output_size_handling_enabled && prim->with_output_size))
         {
             expected_tensor = current_layout.size;
             expected_format = cldnn::format::bfyx;
@@ -96,12 +85,10 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
     auto expected_tensor = current_layout.size;
     auto expected_data_type = current_layout.data_type;
     auto expected_format = current_layout.format;
-    auto batch = current_layout.size.batch[0];
 
     if (output_layout)
     {
         expected_data_type = output_layout.get().data_type;
-        batch = output_layout.get().size.batch[0];
     }
     else if (type != data_type::input)
         throw std::runtime_error("'output_layout' is required parameter for weights/bias optimization");
@@ -112,38 +99,6 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
         expected_tensor = cldnn::tensor(1, 1, static_cast<tensor::value_type>(current_layout.count()), 1);
         expected_format = cldnn::format::bfyx;
         break;
-
-    case data_type::weights: //fc weights
-    {
-        if (batch > 1 && !(expected_data_type == data_types::f16 && batch >= 16) && batch % 8 == 0)
-        {
-            expected_tensor = cldnn::tensor(
-                current_layout.size.batch[0], 1, current_layout.size.feature[0] * current_layout.size.spatial[0] * current_layout.size.spatial[1], 1
-            );
-            expected_format = cldnn::format::bs_xs_xsv8_bsv8;
-        }
-        else if (expected_data_type == data_types::f16 && batch == 16)
-        {
-            expected_tensor = cldnn::tensor(
-                current_layout.size.batch[0], 1, current_layout.size.feature[0] * current_layout.size.spatial[0] * current_layout.size.spatial[1], 1
-            );
-            expected_format = cldnn::format::bs_xs_xsv8_bsv16;
-        }
-        else if (batch == 1)
-        {
-            expected_tensor = cldnn::tensor(
-                current_layout.size.batch[0], 1, current_layout.size.feature[0] * current_layout.size.spatial[0] * current_layout.size.spatial[1], 1
-            );
-            expected_format = cldnn::format::bs_x_bsv16;
-        }
-        else
-        {
-            expected_tensor = current_layout.size;
-            expected_format = cldnn::format::yxfb;
-        }
-
-        break;
-    }
 
     default:
         throw std::runtime_error("Unsupported data type in layout_optimizer::get_expected_layout for fully-connected primitive");
@@ -172,13 +127,25 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
         expected_format = cldnn::format::bfyx;
         break;
 
-    case data_type::weights: //convolution weights
-        expected_tensor = current_layout.size;
-        expected_format = cldnn::format::bfyx;
-        break;
-
     default:
         throw std::runtime_error("Unsupported data type in layout_optimizer::get_expected_layout for convolution primitive");
+    }
+
+    return layout(expected_data_type, expected_format, expected_tensor);
+}
+
+layout layout_optimizer::get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const detection_output>, boost::optional<layout> const& output_layout)
+{
+    auto expected_tensor = current_layout.size;
+    auto expected_data_type = data_types::f32;
+    auto expected_format = current_layout.format;
+
+    if (type != data_type::input)
+        throw std::runtime_error("Unsupported data type in layout_optimizer::get_expected_layout for detection-output primitive");
+
+    if (output_layout)
+    {
+        expected_data_type = output_layout.get().data_type;
     }
 
     return layout(expected_data_type, expected_format, expected_tensor);
@@ -206,16 +173,41 @@ layout_optimizer::create_reorder_if_needed(const layout& current_layout, const c
     return std::make_pair(nullptr, true);
 }
 
+std::pair<std::shared_ptr<cldnn::generic_layer>, bool>
+layout_optimizer::create_reorder_from_given_source(const cldnn::primitive_id& memid, layout const& expected_layout, const kernel_selector::weights_reorder_params& reorder_params)
+{
+    cache_key ckey{ memid, expected_layout };
+    auto itr = _cached_generic_layers.find(ckey);
+    if (itr != _cached_generic_layers.end())
+        return std::make_pair(itr->second, true);
+
+    auto count = _cached_generic_layers.size();
+    std::stringstream ss;
+    ss << "generic_layer_" << count << "_" << memid;
+
+    auto reorder = std::make_shared<cldnn::generic_layer>(ss.str(), memid, expected_layout, reorder_params);
+    _cached_generic_layers[ckey] = reorder;
+    return std::make_pair(reorder, false);
+}
+
 void layout_optimizer::optimize() const
 {
-    if (!_enabled)
+    if (!_enabled || _topology.get_primitives().empty())
+    {
         return;
+    }
 
     network_impl net(_engine, _topology);
     net.execute(std::vector<refcounted_obj_ptr<event_impl>>());
     for (auto const& output : net.get_outputs())
     {
+        // in order to handle list of reorders
         auto input_id = output->dependencies().at(0)->id();
+        while (net.get_program()->get_node(input_id).get_dependencies().empty() == false)
+        {
+            input_id = net.get_program()->get_node(input_id).get_dependencies().at(0)->id();
+        }
+        
         auto& data_node = net.get_program()->get_node(input_id).as<data>();
         const_cast<data&>(*data_node.get_primitive()).mem = output->output_memory();
     }

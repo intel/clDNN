@@ -197,7 +197,6 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         std::string kernel_name;
         bool fp16_unit_used;
     } _kernel_data;
-    gpu::kernel _kernel;
 
     static kd_selector_t<kernel_data, proposal_node, data_types, format::type, kd_optional_selector_t, int, neural::gpu::engine_info_internal::architectures, neural::gpu::engine_info_internal::configurations> ks;
 
@@ -210,8 +209,7 @@ struct proposal_gpu : typed_primitive_impl<proposal>
             outer.cls_score().get_output_layout().format,
             outer.cls_score().get_output_layout().size.batch[0],
             _engine_info.architecture,
-            _engine_info.configuration)),
-        _kernel(outer.get_program().get_engine()->get_context(), _kernel_data.kernel_name, get_jit_constants(outer, _kernel_data))
+            _engine_info.configuration))
     {}
 
     static kernel_data set_default(const proposal_node& outer)
@@ -235,16 +233,6 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         kd.kernel_name = "warm_up_gpu";
 
         return kd;
-    }
-
-    static gpu::jit_constants get_jit_constants(const proposal_node& outer, const kernel_data& data)
-    {   
-        gpu::jit_constants foo{
-            gpu::make_jit_constant("INPUT", outer.cls_score().get_output_layout().get_buffer_size()),
-            gpu::make_jit_constant("UNIT_TYPE", data.fp16_unit_used ? "half" : "float")
-        };
-
-        return foo;     
     }
 
     template<typename dtype>

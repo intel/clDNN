@@ -17,6 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "deconvolution_inst.h"
 #include "primitive_type_base.h"
+#include "sliding_window_utils.h"
 
 namespace cldnn
 {
@@ -32,23 +33,32 @@ layout deconvolution_inst::calc_output_layout(deconvolution_node const& node)
 
     auto input_layout = node.input().get_output_layout();
     auto weights_layout = node.weights(0).get_output_layout(); //weights are stored after inputs
+
     auto input_offset = desc->input_offset;
     auto strd = desc->stride;
     auto split = desc->weights.size();
 
-    //compute output_dim <= stride * (input_size - 1) + kernel_size + 2 * input_offset;
-    auto kernel_xy = weights_layout.size.spatial;
-    if (kernel_xy.size() != 2) 
-        throw std::runtime_error("Weights have to have 2 dimensions in spatial domain.");
-
-    auto output_spatial_x = strd.spatial[0] * (input_layout.size.spatial[0] - 1) + kernel_xy[0] + 2 * input_offset.spatial[0];
-    auto output_spatial_y = strd.spatial[1] * (input_layout.size.spatial[1] - 1) + kernel_xy[1] + 2 * input_offset.spatial[1];
     auto number_of_features = weights_layout.size.batch[0] * static_cast<int32_t>(split);
 
-    tensor output_size(input_layout.size.batch[0], number_of_features, output_spatial_x, output_spatial_y);
+    if (desc->with_output_size)
+    {
+        if (desc->output_size.spatial[0] <= 0 || desc->output_size.spatial[1] <= 0)
+            throw std::invalid_argument("User-defined size of output layout must be positive (>= 1)");
 
-    auto result = layout({ input_layout.data_type, input_layout.format, output_size });
-    return result;
+        tensor output_size(input_layout.size.batch[0], number_of_features,
+                           desc->output_size.spatial[0], desc->output_size.spatial[1]);
+        return { input_layout.data_type, input_layout.format, output_size };
+    }
+
+    //compute output_dim <= stride * (input_size - 1) + kernel_size + 2 * input_offset;
+    auto filter_size = weights_layout.size;
+
+    auto output_range = calc_sliding_window_needed_input_range(
+        input_layout.size, filter_size, input_offset, strd, {1, 1, 1, 1}, true, 1);
+
+    tensor output_size(input_layout.size.batch[0], number_of_features,
+                       output_range.spatial[0], output_range.spatial[1]);
+    return { input_layout.data_type, input_layout.format, output_size };
 }
 
 std::string deconvolution_inst::to_string(deconvolution_node const& node)
@@ -58,6 +68,7 @@ std::string deconvolution_inst::to_string(deconvolution_node const& node)
     auto input                  = node.input();
     auto strd                   = desc->stride;
     auto activation             = desc->with_activation ? " true" : "false";
+    auto ud_out_size            = desc->with_output_size ? " true" : "false";
     std::stringstream           ss_weights, ss_biases;
     for (size_t i = 0; i < desc->weights.size(); ++i)
     {
@@ -81,6 +92,7 @@ std::string deconvolution_inst::to_string(deconvolution_node const& node)
         "\n\tbiases: " << ss_biases.str() << 
         "\n\tstride: " << strd.spatial[0] << "x" << strd.spatial[1] <<
         "\n\twith activation: " << activation << ", slope: " << desc->activation_negative_slope <<
+        "\n\twith user-defined out size: " << ud_out_size << ", dims: " << desc->output_size.spatial[0] << "x" << desc->output_size.spatial[1] <<
         "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
         "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
         "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';

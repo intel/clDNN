@@ -38,8 +38,10 @@ std::string activation_inst::to_string(activation_node const& node)
 
     primitive_description << "id: " << desc->id << ", type: activation" <<
         "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: "  << input.get_output_layout().size <<
-        "\n\tslope: " << desc->negative_slope <<
-        "\n\tslope input: " << desc->negative_slope_input <<
+        "\n\tactivation_func: " << desc->activation_func <<
+        "\n\tadditional_params.a: " << desc->additional_params.a <<
+        "\n\tadditional_params.b: " << desc->additional_params.b <<
+        "\n\tadditional_params input: " << desc->additional_params_input <<
         "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
         "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
         "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
@@ -48,7 +50,7 @@ std::string activation_inst::to_string(activation_node const& node)
 }
 
 activation_inst::typed_primitive_inst(network_impl& network, activation_node const& node)
-    :parent(network, node)
+    : parent(network, node)
 {
     auto input_arg  = input_memory().get_layout();
     auto output_arg = output_memory().get_layout();
@@ -62,7 +64,7 @@ activation_inst::typed_primitive_inst(network_impl& network, activation_node con
         auto slope_input_size = slope_memory().get_layout().size;
         auto input_feature_size = input_memory().get_layout().size.feature[0];
 
-        if (slope_input_size.spatial[0] != input_feature_size)
+        if (slope_input_size.spatial[0] < input_feature_size)
         {
             throw std::invalid_argument("Dimensions mismatch between input and slope input in Activation layer (slope x size should be equal to input feature size)!");
         }

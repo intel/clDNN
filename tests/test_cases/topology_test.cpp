@@ -240,7 +240,7 @@ protected:
                 // todo: randomize params
                 cldnn::primitive_id input_id = topology_generator::CreateLayerId();
                 input_layouts.push_back({ input_id, output_layout });
-                topology.add(cldnn::activation(id, input_id, 0.0f));
+                topology.add(cldnn::activation(id, input_id, activation_relu));
                 return true;
             }
         };

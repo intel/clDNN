@@ -116,6 +116,7 @@ typedef struct
 {
     uint32_t enable_profiling;         ///< Enable per-primitive profiling.
     uint32_t meaningful_kernels_names; ///< Generate meaniful names fo OpenCL kernels.
+    uint32_t dump_custom_program;      ///< dump the custom generated program to files 
     const char* compiler_options;      ///< OpenCL compiler options string.
     const char* single_kernel_name;    ///< If provided, runs specific layer.
 }  cldnn_engine_configuration;
@@ -132,6 +133,7 @@ typedef struct
     // Flags (for layout compatibility fixed size types are used).
     uint8_t supports_fp16;             ///< Does engine support FP16.
     uint8_t supports_fp16_denorms;     ///< Does engine support denormalized FP16.
+    uint8_t supports_subgroups_short;  ///< Does engine support cl_intel_subgroups_short.
 }  cldnn_engine_info;
 /// @}
 
@@ -282,6 +284,59 @@ typedef struct
     const cldnn_primitive_id* data; ///< Pointer to ids array.
     size_t size;                    ///< Number of ids in the array.
 } cldnn_primitive_id_arr;
+
+/// @brief Custom primitive kernel source code
+typedef const char*  cldnn_kernel_code;
+/// @brief Custom primitive kernel source code array
+typedef cldnn_kernel_code* cldnn_kernels_code;
+/// @brief Custom primitive kernel entry point
+typedef const char*  cldnn_kernel_entry_point;
+/// @brief Custom primitive kernel build options
+typedef const char*  cldnn_kernel_build_options;
+/// @brief Custom primitive kernel workgroup sizes
+typedef const size_t*  cldnn_work_group_sizes;
+
+/// @brief Custom primitive kernel argument type
+typedef enum cldnn_arg_type_t
+{
+    arg_input,
+    arg_output,
+} cldnn_arg_type;
+
+/// @brief Custom primitive kernel argument index
+typedef uint32_t cldnn_arg_index;
+
+/// @brief Custom primitive kernel argument type
+typedef struct cldnn_arg_t
+{
+    cldnn_arg_type arg_type;
+    cldnn_arg_index index;
+} cldnn_arg;
+
+/// @brief Custom primitive kernel argument array
+typedef const cldnn_arg* cldnn_kernel_arguments;
+
+/// @brief activation functions
+typedef enum cldnn_activation_func_t
+{
+    activation_none,                    // val
+    activation_logistic,                // 1/(1 + exp(-val))
+    activation_hyperbolic_tan,          // tanh(val)
+    activation_relu,                    // max(0, val)
+    activation_relu_negative_slope,     // max(0, val) + a * min(0, val)    (a is additional param)
+    activation_brelu,                   // max(0, min(a, val)               (a is additional param)
+    activation_softrelu,                // log(1 + exp(val))
+    activation_abs,                     // abs(val)
+    activation_linear,                  // a*val + b                        (a,b are additional params) 
+    activation_square,                  // val*val
+    activation_sqrt,                    // sqrt(val)
+} cldnn_activation_func;
+
+/// @brief activation additional params
+typedef struct cldnn_activation_additional_params_t
+{
+    float a, b;
+} cldnn_activation_additional_params;
 
 /// @brief Begin primitive description definition
 /// @details Defines @p 'cldnn_primitive_type_desc' structure with first 5 fields

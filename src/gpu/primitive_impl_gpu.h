@@ -56,7 +56,6 @@ namespace neural { namespace gpu
     {
         const Prim& _outer;
         gpu::kernel _kernel;
-        gpu::kernel_execution_options _exec_options;
         std::vector<std::shared_ptr<kernel_arg>> _kernel_args;
 
         static void implementation(const void* ptr)
@@ -77,7 +76,6 @@ namespace neural { namespace gpu
             : is_an_implementation(type_id)
             , _outer(arg)
             , _kernel(Child::select_kernel_name(arg), Child::get_jit_constants(arg))
-            , _exec_options(Child::get_execution_options(arg))
             , _kernel_args(Child::get_kernel_args(arg))
         {}
     };

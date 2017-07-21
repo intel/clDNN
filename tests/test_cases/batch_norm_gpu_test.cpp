@@ -29,7 +29,7 @@
 using namespace cldnn;
 using namespace tests;
 
-TEST(batch_normalization_gpu, basic_in2x3x2x2_no_global_stats) {
+TEST(batch_normalization_gpu, DISABLED_basic_in2x3x2x2_no_global_stats) {
     //  Mean   : 3x2x2
     //  Input  : 2x3x2x2
     //  Output : 2x3x2x2

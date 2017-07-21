@@ -33,8 +33,10 @@ enum class pooling_mode : int32_t
 {
     /// @brief Maximum-pooling method.
     max     = cldnn_pooling_max,
-    /// @brief Average-pooling method.
-    average = cldnn_pooling_average
+    /// @brief Average-pooling method - values 
+    average = cldnn_pooling_average,
+    /// @brief Average-pooling method without values which are outside of the input.
+    average_no_padding = cldnn_pooling_average_no_padding
 };
 
 /// @brief Performs "pooling" operation which is a form of non-linear down-sampling.
@@ -63,6 +65,33 @@ struct pooling : public primitive_base<pooling, CLDNN_PRIMITIVE_DESC(pooling)>
         , input_offset(input_offset)
         , stride(stride)
         , size(size)
+        , with_output_size(false)
+    {}
+
+    /// @brief Constructs pooling primitive (computes input paddings to match output size).
+    /// @param id This primitive id.
+    /// @param input Input primitive id.
+    /// @param mode Pooling mode.
+    /// @param stride Defines shift in input buffer between adjacent calculations of output values.
+    /// @param size Pooling kernel size.
+    /// @param output_size User-defined output data size of the primitive (w/o padding).
+    pooling(
+        const primitive_id& id,
+        const primitive_id& input,
+        pooling_mode mode,
+        const tensor& size,
+        const tensor& stride,
+        const tensor& input_offset,
+        tensor output_size,
+        const padding& output_padding = padding()
+        )
+        : primitive_base(id, {input}, output_padding)
+        , mode(static_cast<pooling_mode>(mode))
+        , input_offset(input_offset)
+        , stride(stride)
+        , size(size)
+        , with_output_size(true)
+        , output_size(output_size)
     {}
 
     /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{pooling}
@@ -72,7 +101,31 @@ struct pooling : public primitive_base<pooling, CLDNN_PRIMITIVE_DESC(pooling)>
         , input_offset(dto->input_offset)
         , stride(dto->stride)
         , size(dto->size)
+        , with_output_size(dto->with_output_size != 0)
+        , output_size(dto->output_size)
     {}
+
+    /// @brief Constructs pooling primitive (computes input paddings to match output size).
+    /// @param id This primitive id.
+    /// @param input Input primitive id.
+    /// @param mode Pooling mode.
+    /// @param stride Defines shift in input buffer between adjacent calculations of output values.
+    /// @param size Pooling kernel size.
+    /// @param output_size User-defined output data size of the primitive (w/o padding).
+    /// @return Pooling primitive with specified settings.
+    static pooling create_with_output_size(
+        const primitive_id& id,
+        const primitive_id& input,
+        tensor output_size,
+        pooling_mode mode,
+        const tensor& size,
+        const tensor& stride,
+        const tensor& input_offset = { 0,0,0,0 },
+        const padding& output_padding = padding()
+    )
+    {
+        return pooling(id, input, mode, size, stride, input_offset, output_size, output_padding);
+    }
 
     /// @brief Pooling mode.
     pooling_mode mode;
@@ -82,6 +135,10 @@ struct pooling : public primitive_base<pooling, CLDNN_PRIMITIVE_DESC(pooling)>
     tensor stride;
     /// @brief Pooling kernel size.
     tensor size;
+    /// @brief Indicates that the primitive has user-defined output size (non-zero value).
+    bool with_output_size;
+    /// @brief User-defined output data size of the primitive (w/o padding).
+    tensor output_size;
 
 protected:
     void update_dto(dto& dto) const override
@@ -90,6 +147,8 @@ protected:
         dto.input_offset = input_offset;
         dto.stride = stride;
         dto.size = size;
+        dto.with_output_size = with_output_size;
+        dto.output_size = output_size;
     }
 };
 /// @}

@@ -31,7 +31,7 @@ public:
 
     auto& input() const { return get_dependency(0); }
 
-    auto& weights(size_t idx) const
+    auto& weights(size_t idx = 0) const
     {
         if (idx >= typed_desc()->weights.size())
             throw std::range_error("weights offset too big");
@@ -39,7 +39,7 @@ public:
         return get_dependency(1 + idx);
     }
 
-    auto& bias(size_t idx) const 
+    auto& bias(size_t idx = 0) const 
     { 
         if (idx >= typed_desc()->bias.size()) 
             throw std::range_error("bias offset too big");

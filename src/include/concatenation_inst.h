@@ -30,7 +30,7 @@ struct typed_program_node<concatenation> : public typed_program_node_base<concat
 public:
     using parent::parent;
 
-    auto& input(size_t idx) const { return get_dependency(idx); }
+    auto& input(size_t idx = 0) const { return get_dependency(idx); }
 
     auto inputs_count() const { return desc->input.size(); }
 

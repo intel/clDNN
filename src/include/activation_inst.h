@@ -33,7 +33,7 @@ public:
     auto& input() const { return get_dependency(0); }
     auto& slope_input() const { return get_dependency(1); }
 
-    bool is_parameterized() const { return !typed_desc()->negative_slope_input.empty(); }
+    bool is_parameterized() const { return !typed_desc()->additional_params_input.empty(); }
 };
 
 using activation_node = typed_program_node<activation>;
@@ -52,7 +52,7 @@ public:
     const memory& input_memory() const { return dep_memory(0); }
     const memory& slope_memory() const { return dep_memory(1); }
 
-    bool is_parameterized() const { return !argument.negative_slope_input.empty(); }
+    bool is_parameterized() const { return !argument.additional_params_input.empty(); }
 };
 
 using activation_inst = typed_primitive_inst<activation>;

@@ -29,12 +29,43 @@ primitive_type_id permute_type_id()
     return &instance;
 }
 
+static std::vector<uint16_t> get_permute_order(format::type fmt)
+{
+    switch (fmt)
+    {
+        // For input formats:
+        // 0 - batch (b), 1 - feature (f), 2, 3 - spatial (x -> 2, y -> 3)
+    case format::byxf:
+        return{ 0, 3, 2, 1 };
+
+    case format::yxfb:
+        return{ 3, 2, 1, 0 };
+
+    case format::bfyx:
+        return{ 0, 1, 3, 2 };
+
+    case format::fyxb:
+        return{ 1, 3, 2, 0 };
+
+    default:
+        throw std::invalid_argument("This format is not supported in GPU permute_inst");
+    }
+}
+
 layout permute_inst::calc_output_layout(permute_node const& node)
 {
     auto input_layout = node.input().get_output_layout();
     auto permute_order = node.get_primitive()->permute_order;
-    auto input_size = tensor(input_layout.size.raw[permute_order[0]], input_layout.size.raw[permute_order[1]],
-        input_layout.size.raw[permute_order[2]], input_layout.size.raw[permute_order[3]]);
+    auto input_sizes_ordered = input_layout.size.sizes(input_layout.format);
+
+    const auto& fmt_2_bfxy = get_permute_order(input_layout.format);
+    std::vector<tensor::value_type> output_sizes;
+    for (auto i : fmt_2_bfxy)
+    {
+        output_sizes.push_back(input_sizes_ordered[permute_order[i]]);
+    }
+
+    auto input_size = tensor(output_sizes);
     auto op = node.get_primitive()->output_padding;
 
     return layout(input_layout.data_type, input_layout.format, input_size, op);

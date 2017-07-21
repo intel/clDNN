@@ -16,6 +16,7 @@
 
 #include "crop_inst.h"
 #include "primitive_type_base.h"
+#include "memory_impl.h"
 
 namespace cldnn
 {
@@ -81,5 +82,27 @@ crop_inst::typed_primitive_inst(network_impl& network, crop_node const& node)
         throw std::runtime_error("Invalid X offset: negative value or exceeds data for output!");
     if (((offsets.spatial[1] < 0) || (input_sizes.spatial[1] - offsets.spatial[1]) < reference_input_sizes.spatial[1]))
         throw std::runtime_error("Invalid Y offset: negative value or exceeds data for output!");
+
+    if (node.can_be_optimized())
+    {
+        reuse_input();
+    }
+}
+
+
+void crop_inst::on_execute()
+{
+    if (!node.can_be_optimized())
+        return;
+
+    if (_output && _output->is_the_same_buffer(input_memory()))
+        return;
+
+    reuse_input();
+}
+
+void crop_inst::reuse_input()
+{
+    _output = api_cast(_network.get_engine()->reinterpret_buffer(api_cast(input_memory().get()), node.get_output_layout()));
 }
 }

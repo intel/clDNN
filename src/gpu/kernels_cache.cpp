@@ -21,275 +21,243 @@
 #include <cassert>
 #include <sstream>
 #include <fstream>
+#include <set>
+
+#include "kernel_selector_helper.h"
+
+#ifndef NDEBUG
+#define OUT_PORGRAM_TO_FILE
+#endif
 
 namespace neural { namespace gpu {
 
-const char program_dump_file_name[] = "clDNN_program.cl";
+const char program_dump_file_name[] = "clDNN_program";
 
-static const char* kernels_header = R"__krnl(
-#define CAT(x, y) x##y
-#define LOOP1(VAR, STMT) (STMT); (VAR)++;
-#define LOOP2(VAR, STMT) LOOP1(VAR, STMT); (STMT); (VAR)++;
-#define LOOP3(VAR, STMT) LOOP2(VAR, STMT); (STMT); (VAR)++;
-#define LOOP4(VAR, STMT) LOOP3(VAR, STMT); (STMT); (VAR)++;
-#define LOOP5(VAR, STMT) LOOP4(VAR, STMT); (STMT); (VAR)++;
-#define LOOP6(VAR, STMT) LOOP5(VAR, STMT); (STMT); (VAR)++;
-#define LOOP7(VAR, STMT) LOOP6(VAR, STMT); (STMT); (VAR)++;
-#define LOOP8(VAR, STMT) LOOP7(VAR, STMT); (STMT); (VAR)++;
-#define LOOP9(VAR, STMT) LOOP8(VAR, STMT); (STMT); (VAR)++;
-#define LOOP10(VAR, STMT) LOOP9(VAR, STMT); (STMT); (VAR)++;
-#define LOOP11(VAR, STMT) LOOP10(VAR, STMT); (STMT); (VAR)++;
-#define LOOP12(VAR, STMT) LOOP11(VAR, STMT); (STMT); (VAR)++;
-#define LOOP13(VAR, STMT) LOOP12(VAR, STMT); (STMT); (VAR)++;
-#define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))
-
-#define TRANSPOSE_BLOCK_8( _block )   \
-        (float8)( intel_sub_group_shuffle( _block, 0 ), \
-                  intel_sub_group_shuffle( _block, 1 ), \
-                  intel_sub_group_shuffle( _block, 2 ), \
-                  intel_sub_group_shuffle( _block, 3 ), \
-                  intel_sub_group_shuffle( _block, 4 ), \
-                  intel_sub_group_shuffle( _block, 5 ), \
-                  intel_sub_group_shuffle( _block, 6 ), \
-                  intel_sub_group_shuffle( _block, 7 ) );
-
-#define TRANSPOSE_BLOCK_8_FP16( _block )   \
-        (half8)( intel_sub_group_shuffle( _block, 0 ), \
-                  intel_sub_group_shuffle( _block, 1 ), \
-                  intel_sub_group_shuffle( _block, 2 ), \
-                  intel_sub_group_shuffle( _block, 3 ), \
-                  intel_sub_group_shuffle( _block, 4 ), \
-                  intel_sub_group_shuffle( _block, 5 ), \
-                  intel_sub_group_shuffle( _block, 6 ), \
-                  intel_sub_group_shuffle( _block, 7 ) );
-
-#define TRANSPOSE_BLOCK_8_COL( _block, _col )   \
-        (float8)( intel_sub_group_shuffle( _block.s0, _col ), \
-                  intel_sub_group_shuffle( _block.s1, _col ), \
-                  intel_sub_group_shuffle( _block.s2, _col ), \
-                  intel_sub_group_shuffle( _block.s3, _col ), \
-                  intel_sub_group_shuffle( _block.s4, _col ), \
-                  intel_sub_group_shuffle( _block.s5, _col ), \
-                  intel_sub_group_shuffle( _block.s6, _col ), \
-                  intel_sub_group_shuffle( _block.s7, _col ) );
-
-#define TRANSPOSE_BLOCK_8_COL_FP16( _block, _col )   \
-        (half8)( intel_sub_group_shuffle( _block.s0, _col ), \
-                  intel_sub_group_shuffle( _block.s1, _col ), \
-                  intel_sub_group_shuffle( _block.s2, _col ), \
-                  intel_sub_group_shuffle( _block.s3, _col ), \
-                  intel_sub_group_shuffle( _block.s4, _col ), \
-                  intel_sub_group_shuffle( _block.s5, _col ), \
-                  intel_sub_group_shuffle( _block.s6, _col ), \
-                  intel_sub_group_shuffle( _block.s7, _col ) );
-
-#define TRANSPOSE_BLOCK_16_FP16(_block)  \
-        (half16)(as_half2(intel_sub_group_shuffle(_block, 0)),  \
-                 as_half2(intel_sub_group_shuffle(_block, 1)),  \
-                 as_half2(intel_sub_group_shuffle(_block, 2)),  \
-                 as_half2(intel_sub_group_shuffle(_block, 3)),  \
-                 as_half2(intel_sub_group_shuffle(_block, 4)),  \
-                 as_half2(intel_sub_group_shuffle(_block, 5)),  \
-                 as_half2(intel_sub_group_shuffle(_block, 6)),  \
-                 as_half2(intel_sub_group_shuffle(_block, 7)));
-
-#define TRANSPOSE_BLOCK_16_FP16_HALF_TYPE(_block)  \
-        (half16)(intel_sub_group_shuffle(_block, 0),  \
-                 intel_sub_group_shuffle(_block, 1),  \
-                 intel_sub_group_shuffle(_block, 2),  \
-                 intel_sub_group_shuffle(_block, 3),  \
-                 intel_sub_group_shuffle(_block, 4),  \
-                 intel_sub_group_shuffle(_block, 5),  \
-                 intel_sub_group_shuffle(_block, 6),  \
-                 intel_sub_group_shuffle(_block, 7),  \
-                 intel_sub_group_shuffle(_block, 8),  \
-                 intel_sub_group_shuffle(_block, 9),  \
-                 intel_sub_group_shuffle(_block, 10),  \
-                 intel_sub_group_shuffle(_block, 11),  \
-                 intel_sub_group_shuffle(_block, 12),  \
-                 intel_sub_group_shuffle(_block, 13),  \
-                 intel_sub_group_shuffle(_block, 14),  \
-                 intel_sub_group_shuffle(_block, 15));
-
-#define DOT_PRODUCT_8( _result, _rowA, colB )    \
-{   \
-        _result.s0 = mad( _rowA, intel_sub_group_shuffle( colB, 0 ), _result.s0 );  \
-        _result.s1 = mad( _rowA, intel_sub_group_shuffle( colB, 1 ), _result.s1 );  \
-        _result.s2 = mad( _rowA, intel_sub_group_shuffle( colB, 2 ), _result.s2 );  \
-        _result.s3 = mad( _rowA, intel_sub_group_shuffle( colB, 3 ), _result.s3 );  \
-        _result.s4 = mad( _rowA, intel_sub_group_shuffle( colB, 4 ), _result.s4 );  \
-        _result.s5 = mad( _rowA, intel_sub_group_shuffle( colB, 5 ), _result.s5 );  \
-        _result.s6 = mad( _rowA, intel_sub_group_shuffle( colB, 6 ), _result.s6 );  \
-        _result.s7 = mad( _rowA, intel_sub_group_shuffle( colB, 7 ), _result.s7 );  \
-}
-
-#define ADD_BIAS_8( _result, _biasVal) \
-{ \
-    _result.s0 += intel_sub_group_shuffle( _biasVal, 0 ); \
-    _result.s1 += intel_sub_group_shuffle( _biasVal, 1 ); \
-    _result.s2 += intel_sub_group_shuffle( _biasVal, 2 ); \
-    _result.s3 += intel_sub_group_shuffle( _biasVal, 3 ); \
-    _result.s4 += intel_sub_group_shuffle( _biasVal, 4 ); \
-    _result.s5 += intel_sub_group_shuffle( _biasVal, 5 ); \
-    _result.s6 += intel_sub_group_shuffle( _biasVal, 6 ); \
-    _result.s7 += intel_sub_group_shuffle( _biasVal, 7 ); \
-}
-
-#define ADD_BIAS_16_FP16( _result, _biasVal) \
-{ \
-    _result.s01 += as_half2(intel_sub_group_shuffle(_biasVal, 0)); \
-    _result.s23 += as_half2(intel_sub_group_shuffle(_biasVal, 1)); \
-    _result.s45 += as_half2(intel_sub_group_shuffle(_biasVal, 2)); \
-    _result.s67 += as_half2(intel_sub_group_shuffle(_biasVal, 3)); \
-    _result.s89 += as_half2(intel_sub_group_shuffle(_biasVal, 4)); \
-    _result.sab += as_half2(intel_sub_group_shuffle(_biasVal, 5)); \
-    _result.scd += as_half2(intel_sub_group_shuffle(_biasVal, 6)); \
-    _result.sef += as_half2(intel_sub_group_shuffle(_biasVal, 7)); \
-}
-
-#define OFFSET_GLOBAL_PTR(elem_type, ptr, byte_offset) ((__global elem_type*)((__global char*)(ptr) + byte_offset))
-
-#define MULTIPLY_OFFSET(elem_type, byte_offset) (byte_offset * sizeof(elem_type))
-
-)__krnl";
-
-std::vector<std::string> kernels_cache::get_program_source() const {
-    std::vector<std::string> source{ kernels_header };
-    for (auto& code : _kernel_codes) {
-        source.push_back(code.second);
-    }
-    return source;
-}
-
-namespace {
-
-    class code_builder
+namespace 
+{
+    std::string get_undef_jit(kernels_cache::source_code org_source_code)
     {
-        std::ostringstream oss;
-        std::string code;
-        std::vector<std::string> defined_macroses;
+        const std::string white_space_with_new_lines = " \t\r\n";
+        const std::string white_space = " \t";
 
-        code_builder& register_macro(const std::string& name)
+        size_t current_pos = 0;
+
+        const std::string define = "define";
+
+        std::set<std::string> to_undef;
+        for (const auto& source : org_source_code)
         {
-            assert(std::count(defined_macroses.begin(), defined_macroses.end(), name) == 0);
-            defined_macroses.push_back(name);
-            return *this;
+            do
+            {
+                size_t index_to_hash = source.find_first_not_of(white_space_with_new_lines, current_pos);
+                if (index_to_hash != std::string::npos &&
+                    source[index_to_hash] == '#')
+                {
+                    size_t index_define = source.find_first_not_of(white_space, index_to_hash + 1);
+
+                    if (index_define != std::string::npos &&
+                        !source.compare(index_define, define.size(), define))
+                    {
+                        size_t index_to_name = source.find_first_not_of(white_space, index_define + define.size());
+                        if (index_to_name != std::string::npos)
+                        {
+                            size_t index_to_end_name = source.find_first_of(white_space_with_new_lines + "(", index_to_name);
+                            if (index_to_end_name == std::string::npos)
+                            {
+                                index_to_end_name = source.size();
+                            }
+                            std::string name = source.substr(index_to_name, index_to_end_name - index_to_name);
+                            to_undef.insert(name);
+                        }
+                    }
+                }
+
+                current_pos = source.find_first_of('\n', current_pos + 1);
+            } while (current_pos != std::string::npos);
         }
 
-    public:
-        code_builder& set_code(const std::string& c)
+        std::string undefs;
+        for (const auto& name : to_undef)
         {
-            assert(code.empty());
-            code = c;
-            return *this;
+            undefs += "#ifdef " + name + "\n";
+            undefs += "#undef " + name + "\n";
+            undefs += "#endif\n";
         }
 
-        code_builder& add_line(const std::string& line) {
-            oss << line << "\n";
-            return *this;
-        }
+        return std::move(undefs);
+    }
 
-        code_builder& decoration_macro(const std::string& name, const std::string& prefix, const std::string& postfix, const std::string& name_prefix = std::string())
+    std::string reroder_options(const std::string& org_options)
+    {
+        std::stringstream ss(org_options);
+        std::set<std::string> sorted_options;
+
+        while (ss.good())
         {
-            oss << "#define " << name << "(name) " << prefix << " " + name_prefix + "_##" + "name" << (postfix.empty() ? "" : "##_") << postfix << std::endl;
-            return register_macro(name);
+            std::string word;
+            ss >> word;
+            sorted_options.insert(word);
         }
 
+        std::string options;
 
-        code_builder& value_macro(const std::string& name, const std::string& value)
+        for (const auto& o : sorted_options)
         {
-            oss << "#define " << name << " " << value << std::endl;
-            return register_macro(name.substr(0, name.find('(')));
+            options += o + " ";
         }
+        
+        return options;
+    }
 
-        std::string str()
+    inline bool does_options_support_batch_compilation(const std::string& options)
+    {
+        return
+            options.find("-D") == std::string::npos &&
+            options.find("-I") == std::string::npos;
+    }
+}
+
+kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code& kernels_source_code) const 
+{
+    sorted_code scode;
+
+    for (const auto& code : kernels_source_code)
+    {
+        const source_code   org_source_code     = { code.second.kernel_strings->jit, code.second.kernel_strings->str };
+        std::string         entry_point         = code.second.kernel_strings->entry_point;
+        std::string         options             = code.second.kernel_strings->options;
+        bool                batch_compilation   = code.second.kernel_strings->batch_compilation;
+        bool                dump_custom_program = code.second.dump_custom_program;
+
+        batch_compilation &= does_options_support_batch_compilation(options);
+
+        if (batch_compilation)
         {
-            std::ostringstream os;
-            os << oss.str();
-            os << code << std::endl;
-            std::for_each(std::crbegin(defined_macroses), std::crend(defined_macroses), [&](const std::string& name) { os << "#undef " << name << std::endl; });
-            return os.str();
+            options = reroder_options(options);
         }
-    };
 
+        std::string key = options;
+
+        if (batch_compilation == false)
+        {
+            key += " __PROGRAM__" + std::to_string(scode.size());
+        }
+
+        if (dump_custom_program)
+        {
+            key += " __DUMP_CUSTOM_PROGRAM__"; // Adding label to key so it would be separated from other programs
+        }
+
+        auto& current_bucket = scode[key];
+        current_bucket.dump_custom_program = dump_custom_program;
+
+        if (current_bucket.source.empty())
+        {
+            current_bucket.options = options;
+        }
+
+        current_bucket.entry_point_to_id[entry_point] = code.second.id;
+
+        source_code new_source_code = org_source_code;
+
+        if (batch_compilation)
+        {
+            new_source_code.push_back(get_undef_jit(org_source_code));
+        }
+
+        for (auto& s : new_source_code)
+        {
+            current_bucket.source.push_back(std::move(s));
+        }
+    }
+
+    return std::move(scode);
 }
 
 kernels_cache::kernels_cache(gpu_toolkit& context): _context(context) {}
 
-kernels_cache::kernel_id kernels_cache::create_kernel_from_template(const std::string& template_name, jit_definitions definitions, std::string kernel_name) {
-    // TODO: FIXIT: more than one kernel can be created for same template_name and definitions
-
-    std::string primitive_name = kernel_name;
-    std::replace(kernel_name.begin(), kernel_name.end(), '.', '_');
-    auto kernel_num = definitions.empty() ? "" : std::to_string(_kernel_codes.size());
-
-    if (kernel_name.empty() || !_context.get_configuration().meaningful_kernels_names)
-        kernel_name = template_name;
-
-    kernel_name += (kernel_num.empty() ? "" : "_") + kernel_num;
+kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program)
+{
+    kernels_cache::kernel_id id;
     
-    class code_builder code;
-    code.add_line("\n//====================================================")
-        .add_line("// Kernel template: " + template_name + " ")
-        .add_line("// Kernel name: " + kernel_name)
-        .add_line("// Primitive id: " + primitive_name)
-        .value_macro("KERNEL(name)", "__kernel void " + kernel_name)
-        .decoration_macro("FUNC", "", kernel_num)
-        .decoration_macro("FUNC_CALL", "", kernel_num);
-    for (auto& definition : definitions) {
-        code.value_macro(definition.first, definition.second);
-    }
-    code.set_code(_database.get(template_name).at(0));
-
-    auto kernel_code = code.str();
+    // same kernel_string == same kernel
+    const auto key = kernel_string.get();
 
     std::lock_guard<std::mutex> lock(_mutex);
-    _kernel_codes[kernel_name] = kernel_code;
-    _modified = true;
-    return kernel_name;
+
+    const auto it = _kernels_code.find(key);
+
+    if (it == _kernels_code.end())
+    {
+        // we need unique id in order to avoid conflict across topologies.
+        const auto kernel_num = _kernels.size() + _kernels_code.size(); 
+        id = kernel_string->entry_point + "_" + std::to_string(kernel_num);
+        _kernels_code[key] = { kernel_string, id, dump_custom_program };
+    }
+    else
+    {
+        id = it->second.id;
+    }
+
+    assert(_kernels.find(id) == _kernels.end());
+
+    return id;
 }
 
-void kernels_cache::build_program() {
-    try {
-        std::lock_guard<std::mutex> lock(_mutex);
-        if (_modified) {
-            auto program_source = get_program_source();
-#ifndef NDEBUG
-            {
-                std::ofstream os(program_dump_file_name);
-                for (auto& s : program_source)
-                    os << s;
-            }
+kernels_cache::kernels_map kernels_cache::build_program(const program_code& program_source) const
+{
+    static uint32_t current_file_index = 0;
+    const std::string current_program_dump_file_name = program_dump_file_name + std::to_string(current_file_index) + ".cl";
+
+    try 
+    {
+#ifndef OUT_PORGRAM_TO_FILE
+        if (program_source.dump_custom_program)
 #endif
-            cl::Program program(_context.context(), program_source);
-            program.build({ _context.device() }, "-cl-mad-enable");
-#ifndef NDEBUG
-            {
-                std::ofstream os(program_dump_file_name, std::ios_base::app);
-                os << "\n/* Build Log:\n";
-                for (auto& p : program.getBuildInfo<CL_PROGRAM_BUILD_LOG>()) {
-                    os << p.second << "\n";
-                }
-                os << "*/\n";
-            }
-#endif
-            cl::vector<cl::Kernel> kernels;
-            program.createKernels(&kernels);
-            _kernels.clear();
-            for(auto& k : kernels)
-            {
-                auto kernel_name = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
-                _kernels.emplace(kernel_name, k);
-            }
+        {
+            current_file_index++;
+            std::ofstream os(current_program_dump_file_name);
+            for (auto& s : program_source.source)
+                os << s;
         }
-        _modified = false;
+
+        cl::Program program(_context.context(), program_source.source);
+        program.build({ _context.device() }, program_source.options.c_str());
+
+#ifndef OUT_PORGRAM_TO_FILE
+        if (program_source.dump_custom_program)
+#endif
+        {
+            std::ofstream os(current_program_dump_file_name, std::ios_base::app);
+            os << "\n/* Build Log:\n";
+            for (auto& p : program.getBuildInfo<CL_PROGRAM_BUILD_LOG>()) {
+                os << p.second << "\n";
+            }
+            os << "*/\n";
+        }
+
+        cl::vector<cl::Kernel> kernels;
+        program.createKernels(&kernels);
+        kernels_map kmap;
+
+        for (auto& k : kernels)
+        {
+            auto kernel_name = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
+            kmap.emplace(kernel_name, k);
+        }
+
+        return std::move(kmap);
     }
-    catch (const cl::BuildError& err) {
+    catch (const cl::BuildError& err) 
+    {
         std::string build_log{"Build program error "};
         build_log += err.what();
-#ifndef NDEBUG
+
+#ifndef OUT_PORGRAM_TO_FILE
+        if (program_source.dump_custom_program)
+#endif
         {
-            std::ofstream os(program_dump_file_name, std::ios_base::app);
+            std::ofstream os(current_program_dump_file_name, std::ios_base::app);
             os << "\n/* Build Log:\n";
             for (auto& p : err.getBuildLog()) {
                 os << p.second << "\n";
@@ -297,13 +265,34 @@ void kernels_cache::build_program() {
             }
             os << "*/\n";
         }
-#endif
+
         throw std::runtime_error(build_log);
     }
 }
 
-kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id) {
-    build_program();
+kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id) 
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    
+    if (_kernels_code.empty() == false) 
+    {
+        auto sorted_program_code = get_program_source(_kernels_code);
+
+        for (auto& program : sorted_program_code)
+        {
+            auto kernels = build_program(program.second);
+
+            for (auto& k : kernels)
+            {
+                const auto& entry_point = k.first;
+                const auto& k_id = program.second.entry_point_to_id[entry_point];
+                _kernels[k_id] = k.second;
+            }
+        }
+
+        _kernels_code.clear();
+    }
+
     return _kernels.at(id);
 }
 

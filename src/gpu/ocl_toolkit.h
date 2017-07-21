@@ -35,6 +35,7 @@ struct configuration {
 
     bool enable_profiling;
     bool meaningful_kernels_names;
+    bool dump_custom_program;
     device_types device_type;
     uint32_t device_vendor;
     std::string compiler_options;
@@ -82,6 +83,7 @@ class gpu_toolkit {
     cl::CommandQueue _command_queue;
     engine_info_internal _engine_info;
     kernels_cache _kernels_cache;
+    std::string extensions;
 
     friend class context_holder;
 public:
@@ -95,6 +97,7 @@ public:
     kernels_cache& get_kernels_cache() { return _kernels_cache; }
 
     engine_info_internal get_engine_info() const { return _engine_info; }
+    inline bool extension_supported(const std::string ext) { return extensions.find(ext) != std::string::npos; }
 
     gpu_toolkit(const gpu_toolkit& other) = delete;
     gpu_toolkit(gpu_toolkit&& other) = delete;

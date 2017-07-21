@@ -25,27 +25,60 @@
 
 #include "primitive_inst.h"
 #include "input_layout_inst.h"
-
+#include "kernel_selector_helper.h"
 #include "gpu/kernel.h"
 
 #include <algorithm>
 
 namespace cldnn
 {
-const char warmup_kernel_name[] = "warm_up_gpu";
 
 network_impl::network_impl(program_impl::cptr program)
     : _program(program)
 {
     for (auto const& node : _program->get_nodes())
         allocate_primitive_instance(*node);
+    
+    kernel_selector::cl_kernel_data cl_kernel;
+    cl_kernel.kernelString = std::make_shared<kernel_selector::kernel_string>();
+    cl_kernel.kernelString->str = R"(
+        __kernel void warm_up_gpu(int c, int a, int b, __global int* out)
+        {
+            int res = (get_global_id(0) * a + get_global_id(1)) * b + get_global_id(2);
+            if(a >> 3)
+                res += get_local_id(1);
+            if(c)
+                out[get_local_id(0)] = res;
+        }
+    )";
 
+    cl_kernel.kernelString->entry_point = "warm_up_gpu";
+    cl_kernel.workGroups.global = { 1024, 8 };
+    cl_kernel.scalars = {
+        { kernel_selector::kernel_scalar_argument_types::INT32, (int32_t)0 },
+        { kernel_selector::kernel_scalar_argument_types::INT32, (int32_t)111 },
+        { kernel_selector::kernel_scalar_argument_types::INT32, (int32_t)7 }
+    };
+    cl_kernel.arguments = {
+        { kernel_selector::kernel_argument_types::SCALAR, 0 },
+        { kernel_selector::kernel_argument_types::SCALAR, 1 },
+        { kernel_selector::kernel_argument_types::SCALAR, 2 },
+        { kernel_selector::kernel_argument_types::OUTPUT, 0 },
+    };
+
+    auto eimpl      = _program->get_engine().get();
+    auto context    = eimpl->get_context();
+    auto api_engine = *reinterpret_cast<engine*>(&eimpl);
+    auto out        = memory::allocate(api_engine, { data_types::f32 ,format::bfyx,{ 1,1,1,1 } });
 
     //pre-compile program and warm-up
-    auto context = _program->get_engine()->get_context();
-    neural::gpu::kernel warmup_kernel(context, warmup_kernel_name);
-    cl::Buffer out(context->context(), CL_MEM_WRITE_ONLY, 1);
-    warmup_kernel.run<cl_int, cl_int, cl_int, cl::Buffer>({ 1024, 8 }, {}, 0, 111, 7, out);
+    neural::gpu::kernel warmup_kernel(context, cl_kernel.kernelString);
+    neural::gpu::kernel::kernel_arguments_data args;
+    args.output = &out;
+    args.scalars = &cl_kernel.scalars;
+
+    warmup_kernel.run(cl_kernel, {}, args);
+
     context->queue().finish();
 }
 

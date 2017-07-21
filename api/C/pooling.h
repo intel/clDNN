@@ -36,7 +36,9 @@ typedef enum /*:int32_t*/
     /// @brief Maximum-pooling method.
     cldnn_pooling_max,
     /// @brief Average-pooling method.
-    cldnn_pooling_average
+    cldnn_pooling_average,
+    /// @brief Average-pooling method without values which are outside of the input.
+    cldnn_pooling_average_no_padding
 } cldnn_pooling_mode;
 
 /// @brief Performs "pooling" operation which is a form of non-linear down-sampling.
@@ -50,6 +52,10 @@ cldnn_tensor input_offset;
 cldnn_tensor stride;
 /// @brief Pooling kernel size.
 cldnn_tensor size;
+/// @brief Indicates that the primitive has user-defined output size (non-zero value).
+uint32_t with_output_size;
+/// @brief User-defined output data size of the primitive (w/o padding).
+cldnn_tensor output_size;
 CLDNN_END_PRIMITIVE_DESC(pooling)
 
 CLDNN_DECLARE_PRIMITIVE_TYPE_ID(pooling);

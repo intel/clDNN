@@ -32,6 +32,7 @@ public:
     auto& input() const { return get_dependency(0); }
     auto& weights() const { return get_dependency(1); }
     auto& bias() const { return get_dependency(2); }
+    bool bias_term() const { return !get_primitive()->bias.empty(); }
 };
 
 using fully_connected_node = typed_program_node<fully_connected>;

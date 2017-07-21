@@ -179,7 +179,6 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_offsets) {
         4.f, -0.5f, 8.f, 8.f,
         -14.f, -15.f, -16.f, -17.f };
     set_values(input, input_vec);
-    set_values(input, input_vec);
 
     network network(engine, topology);
 
@@ -202,3 +201,161 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_offsets) {
         }
     }
 }
+
+TEST(crop_gpu, basic_in1x4x1x1_split) {
+    // Tests split with crop implementation
+    //                 _CROP_1(1x3x1x1,offset(0x0x0x0))
+    //                |
+    //  INPUT(1x4x1x1)  
+    //                |_
+    //                  CROP_2(1x1x1x1,offset(0x3x0x0))
+    //
+    //  Reference1  : 1x3x1x1
+    //  Offsets1    : 0x0x0x0
+    //  Reference2  : 1x1x1x1
+    //  Offsets2    : 0x3x0x0
+    //  Input       : 1x4x1x1
+    //  Output1     : 1x3x1x1
+    //  Output2     : 1x1x1x1
+
+    //  Input:
+    //  f0: -1.0
+    //  f1:  2.0
+    //  f2: -3.0
+    //  f3:  4.0
+
+    //  Out1:
+    //  f0: -1.0
+    //  f1:  2.0
+    //  f2: -3.0
+
+    //  Out2:
+    //  f0: 4.0
+    engine engine;
+
+    auto batch_num = 1;
+    auto feature_num = 4;
+    auto x_size = 1;
+    auto y_size = 1;
+
+    auto crop_batch_num = 1;
+    auto crop_feature_num_1 = 3;
+    auto crop_feature_num_2 = 1;
+    auto crop_x_size = 1;
+    auto crop_y_size = 1;
+    auto feature_offset_1 = 0;
+    auto feature_offset_2 = 3;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(crop("crop1", "input", tensor(batch(crop_batch_num), spatial(crop_x_size, crop_y_size), feature(crop_feature_num_1)), { tensor(feature(feature_offset_1), spatial(0,0),batch(0)) }));
+    topology.add(crop("crop2", "input", tensor(batch(crop_batch_num), spatial(crop_x_size, crop_y_size), feature(crop_feature_num_2)), { tensor(feature(feature_offset_2), spatial(0,0),batch(0)) }));
+
+    std::vector<float> input_vec = { -1.f, 2.f, -3.f, 4.f };
+    std::vector<float> out1 = { -1.f, 2.f,-3.f };
+    std::vector<float> out2 = { 4.f, };
+    set_values(input, input_vec);
+    build_options bo;
+    bo.set_option(build_option::optimize_data(true));
+    bo.set_option(build_option::outputs(topology.get_primitive_ids()));
+
+    network network(engine, topology, bo);
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("crop1").get_memory();
+    auto output_ptr = output.pointer<float>();
+
+    for (size_t i = 0; i < out1.size();i++)
+        EXPECT_EQ(output_ptr[i], out1[i]);
+
+    std::cout << std::endl;
+    auto output_2 = outputs.at("crop2").get_memory();
+    auto output_ptr_2 = output_2.pointer<float>();
+
+    for (size_t i = 0; i < out2.size();i++)
+        EXPECT_EQ(output_ptr_2[i], out2[i]);
+}
+
+TEST(crop_gpu, basic_in1x4x1x1_split_w_relu) {
+    // Tests split with crop implementation
+    //                        _ CROP_1(1x3x1x1,offset(0x0x0x0)) --> RELU
+    //                       |
+    //  INPUT(1x4x1x1)--RELU  
+    //                       |_
+    //                          CROP_2(1x1x1x1,offset(0x3x0x0)) --> RELU
+    //
+    //  Reference1  : 1x3x1x1
+    //  Offsets1    : 0x0x0x0
+    //  Reference2  : 1x1x1x1
+    //  Offsets2    : 0x3x0x0
+    //  Input       : 1x4x1x1
+    //  Output1     : 1x3x1x1
+    //  Output2     : 1x1x1x1
+
+    //  Input:
+    //  f0: -1.0
+    //  f1:  2.0
+    //  f2: -3.0
+    //  f3:  4.0
+
+    //  Out1:
+    //  f0: 0.0
+    //  f1: 2.0
+    //  f2: 0.0
+
+    //  Out2:
+    //  f0: 4.0
+
+    engine engine;
+    auto batch_num = 1;
+    auto feature_num = 4;
+    auto x_size = 1;
+    auto y_size = 1;
+    auto crop_batch_num = 1;
+    auto crop_feature_num_1 = 3;
+    auto crop_feature_num_2 = 1;
+    auto crop_x_size = 1;
+    auto crop_y_size = 1;
+    auto feature_offset_1 = 0;
+    auto feature_offset_2 = 3;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(activation("relu", "input", activation_relu));
+    topology.add(crop("crop1", "relu", tensor(batch(crop_batch_num), spatial(crop_x_size, crop_y_size), feature(crop_feature_num_1)), { tensor(feature(feature_offset_1), spatial(0,0),batch(0)) }));
+    topology.add(crop("crop2", "relu", tensor(batch(crop_batch_num), spatial(crop_x_size, crop_y_size), feature(crop_feature_num_2)), { tensor(feature(feature_offset_2), spatial(0,0),batch(0)) }));
+    topology.add(activation("relu1", "crop1", activation_relu));
+    topology.add(activation("relu2", "crop2", activation_relu));
+
+    std::vector<float> input_vec = { -1.f, 2.f, -3.f, 4.f };
+    std::vector<float> out1 = { 0.f, 2.f,0.f };
+    std::vector<float> out2 = { 4.f, };
+    set_values(input, input_vec);
+    build_options bo;
+    bo.set_option(build_option::optimize_data(true));
+    bo.set_option(build_option::outputs(topology.get_primitive_ids()));
+
+    network network(engine, topology, bo);
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("relu1").get_memory();
+    auto output_ptr = output.pointer<float>();
+
+    // check if crop has been executed in place
+    auto in_place = outputs.at("crop1").get_memory().is_the_same_buffer(outputs.at("relu").get_memory());
+    EXPECT_TRUE(in_place);
+
+    for (size_t i = 0; i < out1.size();i++)
+        EXPECT_EQ(output_ptr[i], out1[i]);
+
+    auto output_2 = outputs.at("relu2").get_memory();
+    auto output_ptr_2 = output_2.pointer<float>();
+
+    for (size_t i = 0; i < out2.size();i++)
+        EXPECT_EQ(output_ptr_2[i], out2[i]);
+}
+

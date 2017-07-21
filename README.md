@@ -95,11 +95,13 @@ in CMake 3.4.3 and with CheckCXXCompilerFlag module in CMake 3.5.2, we strongly 
 
 ---
 
-The software was validated on:
-- CentOS\* 7 with GNU\* Compiler Collection 5.2 (64-bit only)
-- Windows® 10 and Windows® Server 2012 R2 with MSVC 14.0
+- The software was validated on:
+    * CentOS* 7.2 with GNU* Compiler Collection 5.2 (64-bit only), using Intel® intel-opencl-r.5.0 (SRB5.0) [Linux driver package](https://software.intel.com/en-us/articles/opencl-drivers) .
+    * Windows® 10 and Windows® Server 2012 R2 with MSVC 14.0, using [Intel® Graphics Driver for Windows* [15.46] driver package](https://downloadcenter.intel.com/download/26941).
 
-We have validated using [Intel® intel-opencl-r4.1 (SRB4.1) Linux driver package](http://registrationcenter-download.intel.com/akdlm/irc_nas/11396/SRB4.1_linux64.zip).
+	More information on Intel® OpenCL™ drivers can be found [here](https://software.intel.com/en-us/articles/opencl-drivers).
+
+We recommend to use SRB5.0 for Linux and 15.46 driver for Windows.
 
 ## Installation
 

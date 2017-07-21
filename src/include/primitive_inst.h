@@ -23,6 +23,7 @@
 #include "event_impl.h"
 #include "program_impl.h"
 #include "meta_utils.h"
+#include "kernel_selector_helper.h"
 
 #include <memory>
 #include <vector>
@@ -47,6 +48,8 @@ struct primitive_impl
     virtual ~primitive_impl() = default;
 
     virtual event_impl::ptr execute(const std::vector<event_impl::ptr>& events, primitive_inst& instance) = 0;
+
+    kernel_selector::kernel_data _kernel_data;
 };
 
 /*
