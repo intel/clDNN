@@ -13,7 +13,7 @@ this project to enable the DL community to innovate on Intel® processors.
 
 **Usages supported:** Image recognition, image detection, and image segmentation.
 
-**Topologies:** AlexNet\*, VGG\*, GoogleNet\* and ResNet\*.
+**Validated Topologies:** AlexNet\*, VGG(16,19)\*, GoogleNet(v1,v2,v3)\*, ResNet(50,101,152)\* Faster R-CNN\*, Squeezenet\*, SSD_googlenet\*, SSD_VGG\*, PVANET\*, PVANET_REID\*, age_gender\*, FCN\* and yolo\*.
 
 As with any technical preview, APIs may change in future updates.
 
@@ -33,6 +33,27 @@ The latest clDNN documentation is at [GitHub pages](https://01org.github.io/clDN
 There is also inline documentation available that can be [generated with Doxygen](#generating-documentation).
 
 Accelerate Deep Learning Inference with Intel® Processor Graphics whitepaper [link](https://software.intel.com/en-us/articles/accelerating-deep-learning-inference-with-intel-processor-graphics).
+
+## Changelog
+
+### Drop 3.0
+	Added:
+	- kernel selector
+	- custom layer
+	Changed:
+	- performance improvments
+	- bug fixes (deconvolution, softmax, reshape)
+	- apply fixes from community reported issues
+
+### Drop 2.0
+	Added:
+	- step by step tutorial
+	Changed:
+	- perfomance optimization for: softmax, fully connected, eltwise, reshape
+	- bug fixes (conformance)
+
+### Drop 1.0
+	- initial drop of clDNN
 
 ## Support
 Please report issues and suggestions 
