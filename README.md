@@ -52,7 +52,7 @@ are necessary, may provide feedback to guide you. When accepted, your pull
 request will be merged into our internal and GitHub repositories.
 
 ## System Requirements
-clDNN supports Intel® HD Graphics and Intel® Iris® Graphics and is optimized for
+clDNN supports / is optimized for the following Intel® HD Graphics and Intel® Iris® Graphics:
 - Codename *Skylake*:
     * Intel® HD Graphics 510 (GT1, *client* market)
     * Intel® HD Graphics 515 (GT2, *client* market)
