@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['optimize_5fdata',['optimize_data',['../group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53ebacda398d685778cf3be3e5cb2785f8479',1,'cldnn']]],
-  ['os_5fiyx_5fosv16',['os_iyx_osv16',['../structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6aad3e2022d8522230aaa9a23d28070783',1,'cldnn::format']]],
-  ['outputs',['outputs',['../group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba25bef4f25b60430e2ef377f1a2b97577',1,'cldnn']]]
+  ['max',['max',['../group__cpp__primitives.html#ggaa0a55214d8b45e135a753957707dace3a2ffe4e77325d9a7152f7086ea7aa5114',1,'cldnn::max()'],['../group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a2ffe4e77325d9a7152f7086ea7aa5114',1,'cldnn::max()']]]
 ];

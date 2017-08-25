@@ -115,7 +115,7 @@ Collaboration diagram for cldnn::convolution:</div>
 <area shape="rect" id="node4" href="structcldnn_1_1primitive_1_1fixed__size__vector__ref.html" title="Initialize fields common for all primitives. " alt="" coords="15,5,158,47"/>
 <area shape="rect" id="node5" href="structcldnn_1_1padding.html" title="Represents data padding information. " alt="" coords="33,71,140,98"/>
 <area shape="rect" id="node6" href="structcldnn_1_1primitive_1_1primitive__id__arr.html" title="cldnn::primitive::primitive\l_id_arr" alt="" coords="5,123,168,164"/>
-<area shape="rect" id="node7" href="structcldnn_1_1tensor.html" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="489,137,587,163"/>
+<area shape="rect" id="node7" href="structcldnn_1_1tensor.html" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="489,150,587,177"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -131,8 +131,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a29163f5a52029d2a969410a38af4af8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs convolution primitive.  <a href="#a29163f5a52029d2a969410a38af4af8c">More...</a><br /></td></tr>
 <tr class="separator:a29163f5a52029d2a969410a38af4af8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f902a541a227966be0436fe37b00619"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#a9f902a541a227966be0436fe37b00619">convolution</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1convolution.html#a6202c303f4dc772628e4e8abcf94c67d">weights</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#aacc647576b9c08876477f2ef6b5b71ca">stride</a>={ 1, 1, 1, 1 }, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a4d68caebe6bc7fe76299590d5a8b1240">input_offset</a>={ 0, 0, 0, 0 }, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a78ce3522c15682f411aea1a821372568">dilation</a>={ 1, 1, 1, 1 }, bool <a class="el" href="structcldnn_1_1convolution.html#ac2bef4d0b99c32955531e7a3518c54d6">with_activation</a>=false, float activation_slp=0.0f, const padding &amp;output_padding=padding())</td></tr>
-<tr class="memdesc:a9f902a541a227966be0436fe37b00619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs convolution primitive.  <a href="#a9f902a541a227966be0436fe37b00619">More...</a><br /></td></tr>
+<tr class="memdesc:a9f902a541a227966be0436fe37b00619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs convolution primitive (w/o bias).  <a href="#a9f902a541a227966be0436fe37b00619">More...</a><br /></td></tr>
 <tr class="separator:a9f902a541a227966be0436fe37b00619"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c36917337cf4c446ee3071bdc9e0af4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#a3c36917337cf4c446ee3071bdc9e0af4">convolution</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1convolution.html#a6202c303f4dc772628e4e8abcf94c67d">weights</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1convolution.html#ab0554bdb627676d621822fd08d7259c7">bias</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#aacc647576b9c08876477f2ef6b5b71ca">stride</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a4d68caebe6bc7fe76299590d5a8b1240">input_offset</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a78ce3522c15682f411aea1a821372568">dilation</a>, bool <a class="el" href="structcldnn_1_1convolution.html#ac2bef4d0b99c32955531e7a3518c54d6">with_activation</a>, float activation_slp, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#adcff753b4243a0e537c23f27bdccc725">output_size</a>, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
+<tr class="memdesc:a3c36917337cf4c446ee3071bdc9e0af4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs convolution primitive (computes input paddings to match output size).  <a href="#a3c36917337cf4c446ee3071bdc9e0af4">More...</a><br /></td></tr>
+<tr class="separator:a3c36917337cf4c446ee3071bdc9e0af4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcaf2a9bb6abf7c3df6f980a7662a597"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#afcaf2a9bb6abf7c3df6f980a7662a597">convolution</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1convolution.html#a6202c303f4dc772628e4e8abcf94c67d">weights</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#aacc647576b9c08876477f2ef6b5b71ca">stride</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a4d68caebe6bc7fe76299590d5a8b1240">input_offset</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a78ce3522c15682f411aea1a821372568">dilation</a>, bool <a class="el" href="structcldnn_1_1convolution.html#ac2bef4d0b99c32955531e7a3518c54d6">with_activation</a>, float activation_slp, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#adcff753b4243a0e537c23f27bdccc725">output_size</a>, const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a467fdbfc24a6ba6767476ab5cac430f5">output_padding</a>=<a class="el" href="structcldnn_1_1padding.html">padding</a>())</td></tr>
+<tr class="memdesc:afcaf2a9bb6abf7c3df6f980a7662a597"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs convolution primitive (w/o bias; computes input paddings to match output size).  <a href="#afcaf2a9bb6abf7c3df6f980a7662a597">More...</a><br /></td></tr>
+<tr class="separator:afcaf2a9bb6abf7c3df6f980a7662a597"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ab5d5557a1cd714aa22237a359e54bd"><td class="memItemLeft" align="right" valign="top"><a id="a1ab5d5557a1cd714aa22237a359e54bd"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#a1ab5d5557a1cd714aa22237a359e54bd">convolution</a> (const <a class="el" href="group__c__primitives.html#structcldnn__convolution__desc">dto</a> *<a class="el" href="group__c__primitives.html#structcldnn__convolution__desc">dto</a>)</td></tr>
 <tr class="memdesc:a1ab5d5557a1cd714aa22237a359e54bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a copy from C API <a class="el" href="group__c__primitives.html#structcldnn__convolution__desc">cldnn_convolution_desc</a>. <br /></td></tr>
@@ -172,6 +178,12 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ada7cf82b20779da02b6007d2c6acc4f1"><td class="memItemLeft" align="right" valign="top"><a id="ada7cf82b20779da02b6007d2c6acc4f1"></a>
 static <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c29230218950acda0">primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>type_id</b> ()</td></tr>
 <tr class="separator:ada7cf82b20779da02b6007d2c6acc4f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b19bdcb51b52e9a5426928b29dc3a3c"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="structcldnn_1_1convolution.html">convolution</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#a6b19bdcb51b52e9a5426928b29dc3a3c">create_with_output_size</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1convolution.html#a6202c303f4dc772628e4e8abcf94c67d">weights</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1convolution.html#ab0554bdb627676d621822fd08d7259c7">bias</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#adcff753b4243a0e537c23f27bdccc725">output_size</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#aacc647576b9c08876477f2ef6b5b71ca">stride</a>={ 1, 1, 1, 1 }, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a4d68caebe6bc7fe76299590d5a8b1240">input_offset</a>={ 0, 0, 0, 0 }, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a78ce3522c15682f411aea1a821372568">dilation</a>={ 1, 1, 1, 1 }, bool <a class="el" href="structcldnn_1_1convolution.html#ac2bef4d0b99c32955531e7a3518c54d6">with_activation</a>=false, float activation_slp=0.0f, const padding &amp;output_padding=padding())</td></tr>
+<tr class="memdesc:a6b19bdcb51b52e9a5426928b29dc3a3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs convolution primitive (computes input paddings to match output size).  <a href="#a6b19bdcb51b52e9a5426928b29dc3a3c">More...</a><br /></td></tr>
+<tr class="separator:a6b19bdcb51b52e9a5426928b29dc3a3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70f18660e15d133427acb117545c67f8"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="structcldnn_1_1convolution.html">convolution</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#a70f18660e15d133427acb117545c67f8">create_with_output_size</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a4307e769ab1a54658183d9fcb4501693">id</a>, const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;<a class="el" href="structcldnn_1_1primitive.html#a74ad43197c486b4292afbd0652d986cb">input</a>, const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;<a class="el" href="structcldnn_1_1convolution.html#a6202c303f4dc772628e4e8abcf94c67d">weights</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#adcff753b4243a0e537c23f27bdccc725">output_size</a>, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#aacc647576b9c08876477f2ef6b5b71ca">stride</a>={ 1, 1, 1, 1 }, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a4d68caebe6bc7fe76299590d5a8b1240">input_offset</a>={ 0, 0, 0, 0 }, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> <a class="el" href="structcldnn_1_1convolution.html#a78ce3522c15682f411aea1a821372568">dilation</a>={ 1, 1, 1, 1 }, bool <a class="el" href="structcldnn_1_1convolution.html#ac2bef4d0b99c32955531e7a3518c54d6">with_activation</a>=false, float activation_slp=0.0f, const padding &amp;output_padding=padding())</td></tr>
+<tr class="memdesc:a70f18660e15d133427acb117545c67f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs convolution primitive (w/o bias; computes input paddings to match output size).  <a href="#a70f18660e15d133427acb117545c67f8">More...</a><br /></td></tr>
+<tr class="separator:a70f18660e15d133427acb117545c67f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -203,6 +215,14 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#aa74c4c95099f5ceb10b4bec9235bdba1">activation_negative_slope</a></td></tr>
 <tr class="memdesc:aa74c4c95099f5ceb10b4bec9235bdba1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Relu activation slope. <br /></td></tr>
 <tr class="separator:aa74c4c95099f5ceb10b4bec9235bdba1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7a156cb5e7378969f24ff0069a0f944"><td class="memItemLeft" align="right" valign="top"><a id="ad7a156cb5e7378969f24ff0069a0f944"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#ad7a156cb5e7378969f24ff0069a0f944">with_output_size</a></td></tr>
+<tr class="memdesc:ad7a156cb5e7378969f24ff0069a0f944"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates that the primitive has user-defined output size (non-zero value). <br /></td></tr>
+<tr class="separator:ad7a156cb5e7378969f24ff0069a0f944"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcff753b4243a0e537c23f27bdccc725"><td class="memItemLeft" align="right" valign="top"><a id="adcff753b4243a0e537c23f27bdccc725"></a>
+<a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1convolution.html#adcff753b4243a0e537c23f27bdccc725">output_size</a></td></tr>
+<tr class="memdesc:adcff753b4243a0e537c23f27bdccc725"><td class="mdescLeft">&#160;</td><td class="mdescRight">User-defined output data size of the primitive (w/o padding). <br /></td></tr>
+<tr class="separator:adcff753b4243a0e537c23f27bdccc725"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structcldnn_1_1primitive"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structcldnn_1_1primitive')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structcldnn_1_1primitive.html">cldnn::primitive</a></td></tr>
 <tr class="memitem:ad0d17abd63bd3e4d63a7b226d8bddc7b inherit pub_attribs_structcldnn_1_1primitive"><td class="memItemLeft" align="right" valign="top"><a id="ad0d17abd63bd3e4d63a7b226d8bddc7b"></a>
 const <a class="el" href="group__cpp__topology.html#ga68e8e91c37726c2c29230218950acda0">primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1primitive.html#ad0d17abd63bd3e4d63a7b226d8bddc7b">type</a></td></tr>
@@ -252,12 +272,12 @@ primitive_id_arr&#160;</td><td class="memItemRight" valign="bottom"><b>_bias</b>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Performs forward spatial convolution with weight sharing. Also supports built-in Relu <a class="el" href="group__c__primitives.html#structcldnn__activation__desc">cldnn_activation_desc</a> available by setting it in arguments. </p>
-<p>Parameters are defined in context of "direct" convolution, but actual algorithm is not implied. Look into docs/size_offset_stride_padding.html for description how size, offsets, stride &amp; padding parameters work. </p>
+<p>Parameters are defined in context of "direct" convolution, but actual algorithm is not implied. </p>
 
-<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00035">35</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00034">34</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a29163f5a52029d2a969410a38af4af8c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a29163f5a52029d2a969410a38af4af8c">&#9670;&nbsp;</a></span>convolution() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a29163f5a52029d2a969410a38af4af8c">&#9670;&nbsp;</a></span>convolution() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -345,7 +365,7 @@ primitive_id_arr&#160;</td><td class="memItemRight" valign="bottom"><b>_bias</b>
     <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
     <tr><td class="paramname">weights</td><td>List of primitive ids containing weights data. </td></tr>
     <tr><td class="paramname">bias</td><td>List of primitive ids containing bias data. </td></tr>
-    <tr><td class="paramname">input_padding</td><td>Input padding/offset. </td></tr>
+    <tr><td class="paramname">input_offset</td><td>Input padding/offset. </td></tr>
     <tr><td class="paramname">stride</td><td>Defines shift in input buffer between adjacent calculations of output values. </td></tr>
     <tr><td class="paramname">dilation</td><td>Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels. As an example in one dimension, a filter w of size 3 would compute over input x the following: w[0]*x[0] + w[1]*x[1] + w[2]*x[2] for dilation of 1. For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4]. </td></tr>
     <tr><td class="paramname">with_activation</td><td>Enable Relu activation. </td></tr>
@@ -354,12 +374,12 @@ primitive_id_arr&#160;</td><td class="memItemRight" valign="bottom"><b>_bias</b>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00051">51</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00050">50</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
 
 </div>
 </div>
 <a id="a9f902a541a227966be0436fe37b00619"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f902a541a227966be0436fe37b00619">&#9670;&nbsp;</a></span>convolution() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f902a541a227966be0436fe37b00619">&#9670;&nbsp;</a></span>convolution() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -434,13 +454,13 @@ primitive_id_arr&#160;</td><td class="memItemRight" valign="bottom"><b>_bias</b>
 </table>
 </div><div class="memdoc">
 
-<p>Constructs convolution primitive. </p>
+<p>Constructs convolution primitive (w/o bias). </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
     <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
     <tr><td class="paramname">weights</td><td>List of primitive ids containing weights data. </td></tr>
-    <tr><td class="paramname">input_padding</td><td>Input padding/offset. </td></tr>
+    <tr><td class="paramname">input_offset</td><td>Input padding/offset. </td></tr>
     <tr><td class="paramname">stride</td><td>Defines shift in input buffer between adjacent calculations of output values. </td></tr>
     <tr><td class="paramname">dilation</td><td>Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels. As an example in one dimension, a filter w of size 3 would compute over input x the following: w[0]*x[0] + w[1]*x[1] + w[2]*x[2] for dilation of 1. For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4]. </td></tr>
     <tr><td class="paramname">with_activation</td><td>Enable Relu activation. </td></tr>
@@ -450,6 +470,431 @@ primitive_id_arr&#160;</td><td class="memItemRight" valign="bottom"><b>_bias</b>
 </dl>
 
 <p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00089">89</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
+
+</div>
+</div>
+<a id="a3c36917337cf4c446ee3071bdc9e0af4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c36917337cf4c446ee3071bdc9e0af4">&#9670;&nbsp;</a></span>convolution() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">cldnn::convolution::convolution </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>weights</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bias</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>stride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>input_offset</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>dilation</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>with_activation</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>activation_slp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>output_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_padding</em> = <code><a class="el" href="structcldnn_1_1padding.html">padding</a>()</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs convolution primitive (computes input paddings to match output size). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
+    <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
+    <tr><td class="paramname">weights</td><td>List of primitive ids containing weights data. </td></tr>
+    <tr><td class="paramname">bias</td><td>List of primitive ids containing bias data. </td></tr>
+    <tr><td class="paramname">input_offset</td><td>Input padding/offset. </td></tr>
+    <tr><td class="paramname">stride</td><td>Defines shift in input buffer between adjacent calculations of output values. </td></tr>
+    <tr><td class="paramname">dilation</td><td>Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels. As an example in one dimension, a filter w of size 3 would compute over input x the following: w[0]*x[0] + w[1]*x[1] + w[2]*x[2] for dilation of 1. For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4]. </td></tr>
+    <tr><td class="paramname">with_activation</td><td>Enable Relu activation. </td></tr>
+    <tr><td class="paramname">activation_slp</td><td>Relu activation slope. </td></tr>
+    <tr><td class="paramname">output_size</td><td>User-defined output data size of the primitive (w/o padding). </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00127">127</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
+
+</div>
+</div>
+<a id="afcaf2a9bb6abf7c3df6f980a7662a597"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afcaf2a9bb6abf7c3df6f980a7662a597">&#9670;&nbsp;</a></span>convolution() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">cldnn::convolution::convolution </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>weights</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>stride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>input_offset</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>dilation</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>with_activation</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>activation_slp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>output_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_padding</em> = <code><a class="el" href="structcldnn_1_1padding.html">padding</a>()</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs convolution primitive (w/o bias; computes input paddings to match output size). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
+    <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
+    <tr><td class="paramname">weights</td><td>List of primitive ids containing weights data. </td></tr>
+    <tr><td class="paramname">input_offset</td><td>Input padding/offset. </td></tr>
+    <tr><td class="paramname">stride</td><td>Defines shift in input buffer between adjacent calculations of output values. </td></tr>
+    <tr><td class="paramname">dilation</td><td>Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels. As an example in one dimension, a filter w of size 3 would compute over input x the following: w[0]*x[0] + w[1]*x[1] + w[2]*x[2] for dilation of 1. For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4]. </td></tr>
+    <tr><td class="paramname">with_activation</td><td>Enable Relu activation. </td></tr>
+    <tr><td class="paramname">activation_slp</td><td>Relu activation slope. </td></tr>
+    <tr><td class="paramname">output_size</td><td>User-defined output data size of the primitive (w/o padding). </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00169">169</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a6b19bdcb51b52e9a5426928b29dc3a3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b19bdcb51b52e9a5426928b29dc3a3c">&#9670;&nbsp;</a></span>create_with_output_size() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="structcldnn_1_1convolution.html">convolution</a> cldnn::convolution::create_with_output_size </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>weights</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bias</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>output_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>stride</em> = <code>{&#160;1,&#160;1,&#160;1,&#160;1&#160;}</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>input_offset</em> = <code>{&#160;0,0,0,0&#160;}</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>dilation</em> = <code>{&#160;1,&#160;1,&#160;1,&#160;1&#160;}</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>with_activation</em> = <code>false</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>activation_slp</em> = <code>0.0f</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_padding</em> = <code><a class="el" href="structcldnn_1_1padding.html">padding</a>()</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs convolution primitive (computes input paddings to match output size). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
+    <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
+    <tr><td class="paramname">weights</td><td>List of primitive ids containing weights data. </td></tr>
+    <tr><td class="paramname">bias</td><td>List of primitive ids containing bias data. </td></tr>
+    <tr><td class="paramname">input_offset</td><td>Input padding/offset. </td></tr>
+    <tr><td class="paramname">stride</td><td>Defines shift in input buffer between adjacent calculations of output values. </td></tr>
+    <tr><td class="paramname">dilation</td><td>Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels. As an example in one dimension, a filter w of size 3 would compute over input x the following: w[0]*x[0] + w[1]*x[1] + w[2]*x[2] for dilation of 1. For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4]. </td></tr>
+    <tr><td class="paramname">with_activation</td><td>Enable Relu activation. </td></tr>
+    <tr><td class="paramname">activation_slp</td><td>Relu activation slope. </td></tr>
+    <tr><td class="paramname">output_size</td><td>User-defined output data size of the primitive (w/o padding). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Convolution primitive with specified settings. </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00229">229</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
+
+</div>
+</div>
+<a id="a70f18660e15d133427acb117545c67f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a70f18660e15d133427acb117545c67f8">&#9670;&nbsp;</a></span>create_with_output_size() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="structcldnn_1_1convolution.html">convolution</a> cldnn::convolution::create_with_output_size </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>weights</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>output_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>stride</em> = <code>{&#160;1,&#160;1,&#160;1,&#160;1&#160;}</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>input_offset</em> = <code>{&#160;0,0,0,0&#160;}</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td>
+          <td class="paramname"><em>dilation</em> = <code>{&#160;1,&#160;1,&#160;1,&#160;1&#160;}</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>with_activation</em> = <code>false</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>activation_slp</em> = <code>0.0f</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structcldnn_1_1padding.html">padding</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_padding</em> = <code><a class="el" href="structcldnn_1_1padding.html">padding</a>()</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs convolution primitive (w/o bias; computes input paddings to match output size). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>This primitive id. </td></tr>
+    <tr><td class="paramname">input</td><td>Input primitive id. </td></tr>
+    <tr><td class="paramname">weights</td><td>List of primitive ids containing weights data. </td></tr>
+    <tr><td class="paramname">input_offset</td><td>Input padding/offset. </td></tr>
+    <tr><td class="paramname">stride</td><td>Defines shift in input buffer between adjacent calculations of output values. </td></tr>
+    <tr><td class="paramname">dilation</td><td>Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels. As an example in one dimension, a filter w of size 3 would compute over input x the following: w[0]*x[0] + w[1]*x[1] + w[2]*x[2] for dilation of 1. For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4]. </td></tr>
+    <tr><td class="paramname">with_activation</td><td>Enable Relu activation. </td></tr>
+    <tr><td class="paramname">activation_slp</td><td>Relu activation slope. </td></tr>
+    <tr><td class="paramname">output_size</td><td>User-defined output data size of the primitive (w/o padding). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Convolution primitive with specified settings. </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="convolution_8hpp_source.html#l00260">260</a> of file <a class="el" href="convolution_8hpp_source.html">convolution.hpp</a>.</p>
 
 </div>
 </div>

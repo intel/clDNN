@@ -7,9 +7,11 @@ var group__c__primitives_structcldnn__convolution__desc =
     [ "input", "group__c__primitives.html#a15bfa6c002a836bbb0554cf3deff69f7", null ],
     [ "input_offset", "group__c__primitives.html#a10d4a54f56222b7aa7bd55a36b4510ee", null ],
     [ "output_padding", "group__c__primitives.html#a1dd48a3b08be1913777fe726afe35f16", null ],
+    [ "output_size", "group__c__primitives.html#a090d59db94bd91a8f6e3fa906a354450", null ],
     [ "split", "group__c__primitives.html#aed460d14bdfd85ed77fc2ee8509633ca", null ],
     [ "stride", "group__c__primitives.html#a74eb823fca1fda67754923e02779e9a6", null ],
     [ "type", "group__c__primitives.html#a33ecd3fefda893cf119344fac8bb27a1", null ],
     [ "weights", "group__c__primitives.html#a7b975ee01d40971d031b40ae15b7ae0f", null ],
-    [ "with_activation", "group__c__primitives.html#a702d61193c929a966cda3c53c5b30e3b", null ]
+    [ "with_activation", "group__c__primitives.html#a702d61193c929a966cda3c53c5b30e3b", null ],
+    [ "with_output_size", "group__c__primitives.html#ad1bfccdf824fa1b72432a863c8520ad5", null ]
 ];

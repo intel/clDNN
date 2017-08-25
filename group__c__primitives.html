@@ -114,6 +114,9 @@ Classes</h2></td></tr>
 <tr class="memitem:structcldnn__crop__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__crop__desc">cldnn_crop_desc</a></td></tr>
 <tr class="memdesc:structcldnn__crop__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs crop operation on input.  <a href="group__c__primitives.html#structcldnn__crop__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__crop__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__custom__gpu__primitive__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__custom__gpu__primitive__desc">cldnn_custom_gpu_primitive_desc</a></td></tr>
+<tr class="memdesc:structcldnn__custom__gpu__primitive__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">This primitive executes a custom kernel provided by the application.  <a href="group__c__primitives.html#structcldnn__custom__gpu__primitive__desc">More...</a><br /></td></tr>
+<tr class="separator:structcldnn__custom__gpu__primitive__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcldnn__data__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__data__desc">cldnn_data_desc</a></td></tr>
 <tr class="memdesc:structcldnn__data__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides input data to topology.  <a href="group__c__primitives.html#structcldnn__data__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__data__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -196,7 +199,8 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="separator:ga177ba1d29c3f65e5ceba2072589887d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga083b7f10c26345d6afb7d88718e8f2ee"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee">cldnn_pooling_mode</a> { <a class="el" href="group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eeaf935f12e5c61a444763e6e3df0dc7a8d">cldnn_pooling_max</a>, 
-<a class="el" href="group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eea5bbac492392f6225648fe7b4c8e434c4">cldnn_pooling_average</a>
+<a class="el" href="group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eea5bbac492392f6225648fe7b4c8e434c4">cldnn_pooling_average</a>, 
+<a class="el" href="group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eeaabee0714281e6f356c983237bc0d921d">cldnn_pooling_average_no_padding</a>
  }<tr class="memdesc:ga083b7f10c26345d6afb7d88718e8f2ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select method for Pooling layer ( <a class="el" href="group__c__primitives.html#structcldnn__pooling__desc">cldnn_pooling_desc</a> ).  <a href="group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:ga083b7f10c26345d6afb7d88718e8f2ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,6 +235,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gaf0eb6864571a481e49e5e7f07d8d756f"><td class="memItemLeft" align="right" valign="top"><a id="gaf0eb6864571a481e49e5e7f07d8d756f"></a>
 <a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_crop_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="separator:gaf0eb6864571a481e49e5e7f07d8d756f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab2bb212cdd57f52bf6d1c4e3a03a6e4e"><td class="memItemLeft" align="right" valign="top"><a id="gab2bb212cdd57f52bf6d1c4e3a03a6e4e"></a>
+<a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_custom_gpu_primitive_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="separator:gab2bb212cdd57f52bf6d1c4e3a03a6e4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac6deb8b90cf01da391697b500127f395"><td class="memItemLeft" align="right" valign="top"><a id="gac6deb8b90cf01da391697b500127f395"></a>
 <a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_data_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="separator:gac6deb8b90cf01da391697b500127f395"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -311,13 +318,32 @@ Collaboration diagram for cldnn_activation_desc:</div>
 <div class="dyncontent">
 <div class="center"><img src="structcldnn__activation__desc__coll__graph.png" border="0" usemap="#cldnn__activation__desc_coll__map" alt="Collaboration graph"/></div>
 <map name="cldnn__activation__desc_coll__map" id="cldnn__activation__desc_coll__map">
-<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="5,109,111,136"/>
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="5,117,111,143"/>
 <area shape="rect" id="node3" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="10,5,106,32"/>
-<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="135,109,282,136"/>
+<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="135,117,282,143"/>
+<area shape="rect" id="node5" href="group__c__topology.html#structcldnn__activation__additional__params" title="activation additional params " alt="" coords="306,109,482,151"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="a056add218eaa492d58dcf1449e4b50f4"></a><a class="el" href="group__c__topology.html#ga5488c3a630352fd2586b23d2e75fa4ea">cldnn_activation_func</a></td>
+<td class="fieldname">
+activation_func</td>
+<td class="fielddoc">
+activation function. </td></tr>
+<tr><td class="fieldtype">
+<a id="aa71adfc7f8f904407d13c3d4b12dda68"></a><a class="el" href="group__c__topology.html#structcldnn__activation__additional__params">cldnn_activation_additional_params</a></td>
+<td class="fieldname">
+additional_params</td>
+<td class="fielddoc">
+Activation additional params. activation_relu_negative_slope - additional_params.a is a negative slope activation_brelu - additional_params.a is a upper bound activation_linear - additional_params.a/b uses as a*val + b. </td></tr>
+<tr><td class="fieldtype">
+<a id="a85c7b5cfc4ec7a62cfe80f5ea82094c4"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
+<td class="fieldname">
+additional_params_input</td>
+<td class="fielddoc">
+Activation additional params stored on a memory object activation_relu_negative_slope - negative slope per feature map activation_brelu - upper bound per feature map activation_linear - a,b per feature map. </td></tr>
 <tr><td class="fieldtype">
 <a id="ae74ea8b73805d142ded7cf59ba765e68"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
 <td class="fieldname">
@@ -330,18 +356,6 @@ Primitive id unique within a topology. </td></tr>
 input</td>
 <td class="fielddoc">
 Input primitives ids. </td></tr>
-<tr><td class="fieldtype">
-<a id="a98e3a82707b65bbd06e69d9b9ac1c827"></a>float</td>
-<td class="fieldname">
-negative_slope</td>
-<td class="fielddoc">
-Activation negative slope. </td></tr>
-<tr><td class="fieldtype">
-<a id="ab0074c1f48f086b75892e4310e3d5ee6"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
-<td class="fieldname">
-negative_slope_input</td>
-<td class="fielddoc">
-PRelu activation slope input primitive id. Input x dimension should be equal to input feature size (one slope per channel). All other dimensions should be 1. </td></tr>
 <tr><td class="fieldtype">
 <a id="ad839ab66a588f125d6c09009f6d75766"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
 <td class="fieldname">
@@ -523,17 +537,17 @@ Primitive type identificator. </td></tr>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Performs forward spatial convolution with weight sharing. Also supports built-in Relu <a class="el" href="group__c__primitives.html#structcldnn__activation__desc">cldnn_activation_desc</a> available by setting it in arguments. </p>
-<p>Parameters are defined in context of "direct" convolution, but actual algorithm is not implied. Look into docs/size_offset_stride_padding.html for description how size, offsets, stride &amp; padding parameters work. </p>
+<p>Parameters are defined in context of "direct" convolution, but actual algorithm is not implied. </p>
 
-<p class="definition">Definition at line <a class="el" href="convolution_8h_source.html#l00037">37</a> of file <a class="el" href="convolution_8h_source.html">convolution.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="convolution_8h_source.html#l00036">36</a> of file <a class="el" href="convolution_8h_source.html">convolution.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_convolution_desc:</div>
 <div class="dyncontent">
 <div class="center"><img src="structcldnn__convolution__desc__coll__graph.png" border="0" usemap="#cldnn__convolution__desc_coll__map" alt="Collaboration graph"/></div>
 <map name="cldnn__convolution__desc_coll__map" id="cldnn__convolution__desc_coll__map">
-<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="101,118,206,145"/>
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="101,125,206,152"/>
 <area shape="rect" id="node3" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="5,5,101,32"/>
-<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="231,118,377,145"/>
+<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="231,125,377,152"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="fieldtable">
@@ -581,6 +595,12 @@ output_padding</td>
 <td class="fielddoc">
 Output padding information. </td></tr>
 <tr><td class="fieldtype">
+<a id="a090d59db94bd91a8f6e3fa906a354450"></a><a class="el" href="group__c__memory.html#structcldnn__tensor">cldnn_tensor</a></td>
+<td class="fieldname">
+output_size</td>
+<td class="fielddoc">
+User-defined output data size of the primitive (w/o padding). </td></tr>
+<tr><td class="fieldtype">
 <a id="aed460d14bdfd85ed77fc2ee8509633ca"></a>uint32_t</td>
 <td class="fieldname">
 split</td>
@@ -610,6 +630,12 @@ Array of primitive ids containing weights data. Size of array should be equivale
 with_activation</td>
 <td class="fielddoc">
 Enable Relu activation. </td></tr>
+<tr><td class="fieldtype">
+<a id="ad1bfccdf824fa1b72432a863c8520ad5"></a>uint32_t</td>
+<td class="fieldname">
+with_output_size</td>
+<td class="fielddoc">
+Indicates that the primitive has user-defined output size (non-zero value). </td></tr>
 </table>
 
 </div>
@@ -698,6 +724,123 @@ Primitive type identificator. </td></tr>
 
 </div>
 </div>
+<a name="structcldnn__custom__gpu__primitive__desc" id="structcldnn__custom__gpu__primitive__desc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__custom__gpu__primitive__desc">&#9670;&nbsp;</a></span>cldnn_custom_gpu_primitive_desc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_custom_gpu_primitive_desc</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>This primitive executes a custom kernel provided by the application. </p>
+<p>The application is required to provide all relevant details for executing the custom kernel such as: sources, entry point, work sizes and parameter bindings. </p>
+
+<p class="definition">Definition at line <a class="el" href="custom__gpu__primitive_8h_source.html#l00036">36</a> of file <a class="el" href="custom__gpu__primitive_8h_source.html">custom_gpu_primitive.h</a>.</p>
+</div><div class="dynheader">
+Collaboration diagram for cldnn_custom_gpu_primitive_desc:</div>
+<div class="dyncontent">
+<div class="center"><img src="structcldnn__custom__gpu__primitive__desc__coll__graph.png" border="0" usemap="#cldnn__custom__gpu__primitive__desc_coll__map" alt="Collaboration graph"/></div>
+<map name="cldnn__custom__gpu__primitive__desc_coll__map" id="cldnn__custom__gpu__primitive__desc_coll__map">
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__layout" title="Memory layout description. " alt="" coords="5,199,100,225"/>
+<area shape="rect" id="node3" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="96,109,201,136"/>
+<area shape="rect" id="node4" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="31,5,127,32"/>
+<area shape="rect" id="node5" href="group__c__topology.html#structcldnn__arg" title="Custom primitive kernel argument type. " alt="" coords="273,199,352,225"/>
+<area shape="rect" id="node6" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="377,199,523,225"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
+<table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="a43e924fb97d0d8abacde652f0d195b4b"></a><a class="el" href="group__c__topology.html#ga65a991c29ff5386e3478f208c0fb12a6">cldnn_kernel_build_options</a></td>
+<td class="fieldname">
+build_options</td>
+<td class="fielddoc">
+The kernel's build options. </td></tr>
+<tr><td class="fieldtype">
+<a id="a8b130803eff981e514e62f35213d328f"></a><a class="el" href="group__c__topology.html#ga9deadef40837b1ff1cd709597b4636b4">cldnn_work_group_sizes</a></td>
+<td class="fieldname">
+gws</td>
+<td class="fielddoc">
+The global working sizes. </td></tr>
+<tr><td class="fieldtype">
+<a id="a37d8bdb2cef6b4fab17a5d0c8bf4aa85"></a>int</td>
+<td class="fieldname">
+gws_num</td>
+<td class="fielddoc">
+The number of global work sizes. </td></tr>
+<tr><td class="fieldtype">
+<a id="a7f031deeaf01f411a412903a2d77cebf"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
+<td class="fieldname">
+id</td>
+<td class="fielddoc">
+Primitive id unique within a topology. </td></tr>
+<tr><td class="fieldtype">
+<a id="afc05e92d0038b8e0b29132e922608ada"></a><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td>
+<td class="fieldname">
+input</td>
+<td class="fielddoc">
+Input primitives ids. </td></tr>
+<tr><td class="fieldtype">
+<a id="ae6dbacd8d48cfc8368b69bc50feada5b"></a><a class="el" href="group__c__topology.html#ga094776c76a37837b38312840bfd342f5">cldnn_kernel_arguments</a></td>
+<td class="fieldname">
+kernel_arguments</td>
+<td class="fielddoc">
+Argument bindings for the entry point function. </td></tr>
+<tr><td class="fieldtype">
+<a id="a12f09660857476b4c5da930b2e09f60c"></a>int</td>
+<td class="fieldname">
+kernel_arguments_num</td>
+<td class="fielddoc">
+The number of arguments used by the kernel. </td></tr>
+<tr><td class="fieldtype">
+<a id="ac7211d9a60d4465bcc8d0ebf215522ef"></a><a class="el" href="group__c__topology.html#ga3bb4fa2bc98b2c10daedccef94a0a69f">cldnn_kernel_entry_point</a></td>
+<td class="fieldname">
+kernel_entry_point</td>
+<td class="fielddoc">
+The name of the entry point function in the kernel. </td></tr>
+<tr><td class="fieldtype">
+<a id="af05d9dde4b575bb8d1adaa5b8d689c94"></a><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td>
+<td class="fieldname">
+kernels_code</td>
+<td class="fielddoc">
+Source code for the kernel. </td></tr>
+<tr><td class="fieldtype">
+<a id="a7fb8ba8295af75eb11decec69f1a078d"></a><a class="el" href="group__c__topology.html#ga9deadef40837b1ff1cd709597b4636b4">cldnn_work_group_sizes</a></td>
+<td class="fieldname">
+lws</td>
+<td class="fielddoc">
+The local working sizes. </td></tr>
+<tr><td class="fieldtype">
+<a id="a2be7e4f365c8f0be5457274eac30e81f"></a>int</td>
+<td class="fieldname">
+lws_num</td>
+<td class="fielddoc">
+The number of local work sizes. </td></tr>
+<tr><td class="fieldtype">
+<a id="a3efede0d9744ca110a0970fdaa722e54"></a><a class="el" href="group__c__memory.html#structcldnn__layout">cldnn_layout</a></td>
+<td class="fieldname">
+output_layout</td>
+<td class="fielddoc">
+The output layout declared by the primitive. </td></tr>
+<tr><td class="fieldtype">
+<a id="af7c8dcac3f3263081ccaf3856aa6a98d"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
+<td class="fieldname">
+output_padding</td>
+<td class="fielddoc">
+Output padding information. </td></tr>
+<tr><td class="fieldtype">
+<a id="a732d30e19057d7a538c5d0e95bb08f79"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
+<td class="fieldname">
+type</td>
+<td class="fielddoc">
+Primitive type identificator. </td></tr>
+</table>
+
+</div>
+</div>
 <a name="structcldnn__data__desc" id="structcldnn__data__desc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structcldnn__data__desc">&#9670;&nbsp;</a></span>cldnn_data_desc</h2>
 
@@ -772,17 +915,17 @@ Primitive type identificator. </td></tr>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Performs transposed convolution. Also supports built-in Relu <a class="el" href="group__c__primitives.html#structcldnn__activation__desc">cldnn_activation_desc</a> available by setting it in arguments. </p>
-<p>Deconvolution is similar to convolution layer with the weights flipped on the axis and stride and input padding parameters used in opposite sense as in convolution. Look into docs/size_offset_stride_padding.html for description how size, offsets, stride &amp; padding parameter work. </p>
+<p>Deconvolution is similar to convolution layer with the weights flipped on the axis and stride and input padding parameters used in opposite sense as in convolution. </p>
 
-<p class="definition">Definition at line <a class="el" href="deconvolution_8h_source.html#l00037">37</a> of file <a class="el" href="deconvolution_8h_source.html">deconvolution.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="deconvolution_8h_source.html#l00036">36</a> of file <a class="el" href="deconvolution_8h_source.html">deconvolution.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_deconvolution_desc:</div>
 <div class="dyncontent">
 <div class="center"><img src="structcldnn__deconvolution__desc__coll__graph.png" border="0" usemap="#cldnn__deconvolution__desc_coll__map" alt="Collaboration graph"/></div>
 <map name="cldnn__deconvolution__desc_coll__map" id="cldnn__deconvolution__desc_coll__map">
-<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="101,111,206,137"/>
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="101,118,206,145"/>
 <area shape="rect" id="node3" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="5,5,101,32"/>
-<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="231,111,377,137"/>
+<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="231,118,377,145"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="fieldtable">
@@ -824,6 +967,12 @@ output_padding</td>
 <td class="fielddoc">
 Output padding information. </td></tr>
 <tr><td class="fieldtype">
+<a id="abd89d839d70ccdd68682f88707bdb9e6"></a><a class="el" href="group__c__memory.html#structcldnn__tensor">cldnn_tensor</a></td>
+<td class="fieldname">
+output_size</td>
+<td class="fielddoc">
+User-defined output data size of the primitive (w/o padding). </td></tr>
+<tr><td class="fieldtype">
 <a id="a3c958078a5f3952cd64da92ac06995d4"></a>uint32_t</td>
 <td class="fieldname">
 split</td>
@@ -853,6 +1002,12 @@ Array of primitive ids containing weights data. Size of array should be equivale
 with_activation</td>
 <td class="fielddoc">
 Enables Relu activation. </td></tr>
+<tr><td class="fieldtype">
+<a id="a3cdc77301655fe575d647001a81243e0"></a>uint32_t</td>
+<td class="fieldname">
+with_output_size</td>
+<td class="fielddoc">
+Indicates that the primitive has user-defined output size (non-zero value). </td></tr>
 </table>
 
 </div>
@@ -1020,12 +1175,6 @@ Primitive id unique within a topology. </td></tr>
 input</td>
 <td class="fielddoc">
 Input primitives ids. </td></tr>
-<tr><td class="fieldtype">
-<a id="a5c495fcc71dfe4c41f478c4f907de1c9"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
-<td class="fieldname">
-input2</td>
-<td class="fielddoc">
-Second input primitive id with values needed for eltwise computation. </td></tr>
 <tr><td class="fieldtype">
 <a id="ac17c9962f86e8ed833ff5a00a7c25a7f"></a>int32_t</td>
 <td class="fieldname">
@@ -1458,15 +1607,15 @@ Primitive type identificator. </td></tr>
 <div class="textblock"><p>Performs "pooling" operation which is a form of non-linear down-sampling. </p>
 <p>Pools the input image by taking the max, average, etc. within regions. </p>
 
-<p class="definition">Definition at line <a class="el" href="pooling_8h_source.html#l00044">44</a> of file <a class="el" href="pooling_8h_source.html">pooling.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="pooling_8h_source.html#l00046">46</a> of file <a class="el" href="pooling_8h_source.html">pooling.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_pooling_desc:</div>
 <div class="dyncontent">
 <div class="center"><img src="structcldnn__pooling__desc__coll__graph.png" border="0" usemap="#cldnn__pooling__desc_coll__map" alt="Collaboration graph"/></div>
 <map name="cldnn__pooling__desc_coll__map" id="cldnn__pooling__desc_coll__map">
-<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="101,118,206,145"/>
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="101,125,206,152"/>
 <area shape="rect" id="node3" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="5,5,101,32"/>
-<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="231,118,377,145"/>
+<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="231,125,377,152"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="fieldtable">
@@ -1502,6 +1651,12 @@ output_padding</td>
 <td class="fielddoc">
 Output padding information. </td></tr>
 <tr><td class="fieldtype">
+<a id="af6e35386bc0f0c42d957443b389422c7"></a><a class="el" href="group__c__memory.html#structcldnn__tensor">cldnn_tensor</a></td>
+<td class="fieldname">
+output_size</td>
+<td class="fielddoc">
+User-defined output data size of the primitive (w/o padding). </td></tr>
+<tr><td class="fieldtype">
 <a id="adf1abe774bc3c744d87d1dadd9b93aeb"></a><a class="el" href="group__c__memory.html#structcldnn__tensor">cldnn_tensor</a></td>
 <td class="fieldname">
 size</td>
@@ -1519,6 +1674,12 @@ Defines shift in input buffer between adjacent calculations of output values. </
 type</td>
 <td class="fielddoc">
 Primitive type identificator. </td></tr>
+<tr><td class="fieldtype">
+<a id="a95a481d5609245449830a0c8f1b76ecc"></a>uint32_t</td>
+<td class="fieldname">
+with_output_size</td>
+<td class="fielddoc">
+Indicates that the primitive has user-defined output size (non-zero value). </td></tr>
 </table>
 
 </div>
@@ -1986,10 +2147,12 @@ Primitive type identificator. </td></tr>
  1x1x1x5 - works the same as(axis == 3 == -1) in caffe<br />
  1x1x1x1 - works the same as empty shape(scalar) in caffe<br />
  When scale_input is the same as input, the behavior is the same as <a class="el" href="group__c__primitives.html#structcldnn__eltwise__desc">cldnn_eltwise_desc</a> with product operation.<br />
+ Performs scale over feature when the scale feature size is equal to input feature size.<br />
+ Performs scale over feature in batch when the scale feature and scale batch sizes are equal to input feature and input batch sizes.<br />
  Optionally it can also add provided biases by setting bias_term.<br />
  </p>
 
-<p class="definition">Definition at line <a class="el" href="scale_8h_source.html#l00044">44</a> of file <a class="el" href="scale_8h_source.html">scale.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="scale_8h_source.html#l00046">46</a> of file <a class="el" href="scale_8h_source.html">scale.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_scale_desc:</div>
 <div class="dyncontent">
@@ -2026,12 +2189,6 @@ Input primitives ids. </td></tr>
 output_padding</td>
 <td class="fielddoc">
 Output padding information. </td></tr>
-<tr><td class="fieldtype">
-<a id="ab544ee6c4f2473baf3925a49bba2f387"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
-<td class="fieldname">
-scale_input</td>
-<td class="fielddoc">
-Scale input primitive id with values needed for product computation. </td></tr>
 <tr><td class="fieldtype">
 <a id="a8cdc63d947d0c8e7f85d9233eeefa78b"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
 <td class="fieldname">
@@ -2164,6 +2321,8 @@ Primitive type identificator. </td></tr>
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga083b7f10c26345d6afb7d88718e8f2eeaf935f12e5c61a444763e6e3df0dc7a8d"></a>cldnn_pooling_max&#160;</td><td class="fielddoc"><p>Maximum-pooling method. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga083b7f10c26345d6afb7d88718e8f2eea5bbac492392f6225648fe7b4c8e434c4"></a>cldnn_pooling_average&#160;</td><td class="fielddoc"><p>Average-pooling method. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga083b7f10c26345d6afb7d88718e8f2eeaabee0714281e6f356c983237bc0d921d"></a>cldnn_pooling_average_no_padding&#160;</td><td class="fielddoc"><p>Average-pooling method without values which are outside of the input. </p>
 </td></tr>
 </table>
 

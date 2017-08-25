@@ -16,6 +16,7 @@ var group__cpp__network =
       [ "get_engine", "structcldnn_1_1network.html#a114520b5c711b5c86307b34d789575be", null ],
       [ "get_output", "structcldnn_1_1network.html#ad5669818ab7945693102dfdf9ffa08bd", null ],
       [ "get_output_ids", "structcldnn_1_1network.html#a4db8e987e7500a1c9fcfd5bb15e56ae7", null ],
+      [ "get_output_memory", "structcldnn_1_1network.html#a47c566b2d7667e2a6e53ce02f61c2fdb", null ],
       [ "get_primitive_info", "structcldnn_1_1network.html#a783587602e17d59bb979af94c5ab9451", null ],
       [ "get_program", "structcldnn_1_1network.html#aa3128d6452f8bdb174529366e934074f", null ],
       [ "operator=", "structcldnn_1_1network.html#a88123ef952a3297c03023684ba91e72c", null ],

@@ -129,9 +129,6 @@ Additional Inherited Members</h2></td></tr>
 static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a150cede9e377e69b011652d393e2c782">fusing</a> (bool enable=false)</td></tr>
 <tr class="memdesc:a150cede9e377e69b011652d393e2c782 inherit pub_static_methods_structcldnn_1_1build__option"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allow primitives fusing during program build (default: false). <br /></td></tr>
 <tr class="separator:a150cede9e377e69b011652d393e2c782 inherit pub_static_methods_structcldnn_1_1build__option"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44ce235269e53d69078de1f2fb5aa94c inherit pub_static_methods_structcldnn_1_1build__option"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a44ce235269e53d69078de1f2fb5aa94c">profiling</a> (bool enable=false)</td></tr>
-<tr class="memdesc:a44ce235269e53d69078de1f2fb5aa94c inherit pub_static_methods_structcldnn_1_1build__option"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable primitives profiling (default: false).  <a href="structcldnn_1_1build__option.html#a44ce235269e53d69078de1f2fb5aa94c">More...</a><br /></td></tr>
-<tr class="separator:a44ce235269e53d69078de1f2fb5aa94c inherit pub_static_methods_structcldnn_1_1build__option"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addad469cf8266da65513eaad772e67ef inherit pub_static_methods_structcldnn_1_1build__option"><td class="memItemLeft" align="right" valign="top"><a id="addad469cf8266da65513eaad772e67ef"></a>
 static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#addad469cf8266da65513eaad772e67ef">optimize_data</a> (bool enable=false)</td></tr>
 <tr class="memdesc:addad469cf8266da65513eaad772e67ef inherit pub_static_methods_structcldnn_1_1build__option"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable implicit reordering for user inputs (default: false). <br /></td></tr>
@@ -143,6 +140,13 @@ static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__optio
 static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#aee964ad20b17b918af74d36ce337460b">outputs</a> (const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;outs)</td></tr>
 <tr class="memdesc:aee964ad20b17b918af74d36ce337460b inherit pub_static_methods_structcldnn_1_1build__option"><td class="mdescLeft">&#160;</td><td class="mdescRight">User selected list of program outputs. <br /></td></tr>
 <tr class="separator:aee964ad20b17b918af74d36ce337460b inherit pub_static_methods_structcldnn_1_1build__option"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a995a38b29fdf819df2ce40751bf979d3 inherit pub_static_methods_structcldnn_1_1build__option"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a995a38b29fdf819df2ce40751bf979d3">tuning_config</a> (const <a class="el" href="structcldnn_1_1tuning__config__options.html">tuning_config_options</a> &amp;config=<a class="el" href="structcldnn_1_1tuning__config__options.html">tuning_config_options</a>())</td></tr>
+<tr class="memdesc:a995a38b29fdf819df2ce40751bf979d3 inherit pub_static_methods_structcldnn_1_1build__option"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tuning configuration (default: false).  <a href="structcldnn_1_1build__option.html#a995a38b29fdf819df2ce40751bf979d3">More...</a><br /></td></tr>
+<tr class="separator:a995a38b29fdf819df2ce40751bf979d3 inherit pub_static_methods_structcldnn_1_1build__option"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71e3a7cfb8ca453fc0c9dec912f4a83c inherit pub_static_methods_structcldnn_1_1build__option"><td class="memItemLeft" align="right" valign="top"><a id="a71e3a7cfb8ca453fc0c9dec912f4a83c"></a>
+static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a71e3a7cfb8ca453fc0c9dec912f4a83c">graph_dumps_dir</a> (const std::string &amp;dir_path)</td></tr>
+<tr class="memdesc:a71e3a7cfb8ca453fc0c9dec912f4a83c inherit pub_static_methods_structcldnn_1_1build__option"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies a directory to which stages of network compilation should be dumped (default: empty, i.e. no dumping) <br /></td></tr>
+<tr class="separator:a71e3a7cfb8ca453fc0c9dec912f4a83c inherit pub_static_methods_structcldnn_1_1build__option"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;build_option_type OptType&gt;<br />
@@ -150,7 +154,7 @@ struct cldnn::build_option_bool&lt; OptType &gt;</h3>
 
 <p><a class="el" href="structcldnn_1_1build__option.html">build_option</a> specialization for boolean options. </p>
 
-<p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00091">91</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00128">128</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a50846931ef4aa23d70e5abd8df7844fa"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a50846931ef4aa23d70e5abd8df7844fa">&#9670;&nbsp;</a></span>build_option_bool()</h2>
@@ -186,7 +190,7 @@ template&lt;build_option_type OptType&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00095">95</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00132">132</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
 
 </div>
 </div>

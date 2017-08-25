@@ -112,6 +112,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1crop.html">cldnn::crop</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs crop operation on input.  <a href="structcldnn_1_1crop.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1custom__gpu__primitive.html">cldnn::custom_gpu_primitive</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This primitive executes a custom kernel provided by the application.  <a href="structcldnn_1_1custom__gpu__primitive.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1data.html">cldnn::data</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides input data to topology.  <a href="structcldnn_1_1data.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,7 +181,8 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr class="separator:gaa0a55214d8b45e135a753957707dace3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga44a38e1c6afb8bfb7f74d0c20cd0fba3"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cpp__primitives.html#ga44a38e1c6afb8bfb7f74d0c20cd0fba3">cldnn::pooling_mode</a> : int32_t { <a class="el" href="group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a2ffe4e77325d9a7152f7086ea7aa5114">cldnn::pooling_mode::max</a> = cldnn_pooling_max, 
-<a class="el" href="group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a6927a3a7218a3195858411433ec20a21">cldnn::pooling_mode::average</a> = cldnn_pooling_average
+<a class="el" href="group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a6927a3a7218a3195858411433ec20a21">cldnn::pooling_mode::average</a> = cldnn_pooling_average, 
+<a class="el" href="group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a195162bdfea26e6b522a57dee456936e">cldnn::pooling_mode::average_no_padding</a> = cldnn_pooling_average_no_padding
  }<tr class="memdesc:ga44a38e1c6afb8bfb7f74d0c20cd0fba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select method for the pooling layer.  <a href="group__cpp__primitives.html#ga44a38e1c6afb8bfb7f74d0c20cd0fba3">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:ga44a38e1c6afb8bfb7f74d0c20cd0fba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -245,7 +249,9 @@ Enumerations</h2></td></tr>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga44a38e1c6afb8bfb7f74d0c20cd0fba3a2ffe4e77325d9a7152f7086ea7aa5114"></a>max&#160;</td><td class="fielddoc"><p>Maximum-pooling method. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="gga44a38e1c6afb8bfb7f74d0c20cd0fba3a6927a3a7218a3195858411433ec20a21"></a>average&#160;</td><td class="fielddoc"><p>Average-pooling method. </p>
+<tr><td class="fieldname"><a id="gga44a38e1c6afb8bfb7f74d0c20cd0fba3a6927a3a7218a3195858411433ec20a21"></a>average&#160;</td><td class="fielddoc"><p>Average-pooling method - values. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga44a38e1c6afb8bfb7f74d0c20cd0fba3a195162bdfea26e6b522a57dee456936e"></a>average_no_padding&#160;</td><td class="fielddoc"><p>Average-pooling method without values which are outside of the input. </p>
 </td></tr>
 </table>
 

@@ -14,6 +14,7 @@ var group__cpp__memory =
       [ "operator bool", "structcldnn_1_1padding.html#a4604b1b665be8f285856b315759a3348", null ],
       [ "operator cldnn_padding", "structcldnn_1_1padding.html#a94320e3597b83602912b98ff7b5918cf", null ],
       [ "upper_size", "structcldnn_1_1padding.html#a492cbd8d004d2f69b8740ad11857d532", null ],
+      [ "operator!=", "structcldnn_1_1padding.html#aa1d8f7b6dedcf81da9cc4e49c5990f3f", null ],
       [ "operator<", "structcldnn_1_1padding.html#a8e9653731a7da00ee86ebf6217232cfa", null ],
       [ "operator==", "structcldnn_1_1padding.html#ac6a89ab421aee929eeff65142039b36b", null ]
     ] ],
@@ -25,7 +26,9 @@ var group__cpp__memory =
       [ "count", "structcldnn_1_1layout.html#a487b8ed020768208a98a57cca81834dd", null ],
       [ "fused_format", "structcldnn_1_1layout.html#ab7a74013bdb30fd734f74e2779c439f4", null ],
       [ "get_buffer_size", "structcldnn_1_1layout.html#a2bdda0516074ddf5ff987e1d4b8846c9", null ],
+      [ "get_linear_offset", "structcldnn_1_1layout.html#aacc25224fb13ea23249f5f02c1d8835b", null ],
       [ "get_linear_size", "structcldnn_1_1layout.html#ada0f605a1226456592c301a3a7de430b", null ],
+      [ "get_pitches", "structcldnn_1_1layout.html#a318fb84cd4ae8090f8d9d0cb22d60601", null ],
       [ "has_fused_format", "structcldnn_1_1layout.html#a8a08cf0c6238da3d135db3bf8b7c89fd", null ],
       [ "operator cldnn_layout", "structcldnn_1_1layout.html#a01a8a38059f432498569ab79e491b4b1", null ],
       [ "operator=", "structcldnn_1_1layout.html#a6ae7da2def2525b732f32efae411b1f9", null ],
@@ -61,7 +64,6 @@ var group__cpp__memory =
       [ "operator==", "structcldnn_1_1pointer.html#a15397b2267bd44ac23686d7c294923b4", null ]
     ] ],
     [ "memory", "structcldnn_1_1memory.html", [
-      [ "memory", "structcldnn_1_1memory.html#ab884dda09c058536a0f16f03082b0159", null ],
       [ "memory", "structcldnn_1_1memory.html#a406ef99e04a434fe8e551c5a0b7d389c", null ],
       [ "~memory", "structcldnn_1_1memory.html#a7b44c6ac44f6e3a58d9b5f2556a1ad57", null ],
       [ "count", "structcldnn_1_1memory.html#afe8caf28ca85eca5642b7142e5122b40", null ],
@@ -73,7 +75,10 @@ var group__cpp__memory =
       [ "pointer", "structcldnn_1_1memory.html#ae2a2ed17bd593554a9a72689a0028de7", null ],
       [ "size", "structcldnn_1_1memory.html#a44322dceda61c0fa99f2b74dfbf8f27c", null ],
       [ "cldnn::pointer", "structcldnn_1_1memory.html#a368149efda195b7c49629422e248dfec", null ],
+      [ "data", "structcldnn_1_1memory.html#af9e652a62fb80ff8d98294ee353271a8", null ],
       [ "engine", "structcldnn_1_1memory.html#a4d7b208b49e22753f356d941b2207872", null ],
+      [ "network", "structcldnn_1_1memory.html#a92491e9c68c98ba70cba6b8e85602172", null ],
+      [ "network_output", "structcldnn_1_1memory.html#af90e3fa07009c87be93a041c3e26d54e", null ],
       [ "operator!=", "structcldnn_1_1memory.html#a9b2df6ed7e9786e3a68b362cef9dd4fe", null ],
       [ "operator==", "structcldnn_1_1memory.html#afb8394c02bd9bb70aa9c18366ce18eec", null ]
     ] ],
@@ -115,6 +120,7 @@ var group__cpp__memory =
       [ "tensor", "structcldnn_1_1tensor.html#aa9438f056886816baa34d4346007649b", null ],
       [ "tensor", "structcldnn_1_1tensor.html#ae0081a1593438e6f09ad61612c69f9b0", null ],
       [ "tensor", "structcldnn_1_1tensor.html#a65b7a4c850416fbd28e6895e0126c66c", null ],
+      [ "tensor", "structcldnn_1_1tensor.html#aa2b64950fe88867af8705f2b3acb3c3d", null ],
       [ "tensor", "structcldnn_1_1tensor.html#aa412882c7404bc9f5328f5ad548683be", null ],
       [ "tensor", "structcldnn_1_1tensor.html#a9811fb2c9e671e4914e12d91546d9570", null ],
       [ "add", "structcldnn_1_1tensor.html#a02cc4eda24e996cbe3fc6cc16a4d54ae", null ],

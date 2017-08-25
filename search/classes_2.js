@@ -1,11 +1,14 @@
 var searchData=
 [
+  ['cldnn_5factivation_5fadditional_5fparams',['cldnn_activation_additional_params',['../group__c__topology.html#structcldnn__activation__additional__params',1,'']]],
   ['cldnn_5factivation_5fdesc',['cldnn_activation_desc',['../group__c__primitives.html#structcldnn__activation__desc',1,'']]],
+  ['cldnn_5farg',['cldnn_arg',['../group__c__topology.html#structcldnn__arg',1,'']]],
   ['cldnn_5fbatch_5fnorm_5fdesc',['cldnn_batch_norm_desc',['../group__c__primitives.html#structcldnn__batch__norm__desc',1,'']]],
   ['cldnn_5fbuild_5foption',['cldnn_build_option',['../group__c__network.html#structcldnn__build__option',1,'']]],
   ['cldnn_5fconcatenation_5fdesc',['cldnn_concatenation_desc',['../group__c__primitives.html#structcldnn__concatenation__desc',1,'']]],
   ['cldnn_5fconvolution_5fdesc',['cldnn_convolution_desc',['../group__c__primitives.html#structcldnn__convolution__desc',1,'']]],
   ['cldnn_5fcrop_5fdesc',['cldnn_crop_desc',['../group__c__primitives.html#structcldnn__crop__desc',1,'']]],
+  ['cldnn_5fcustom_5fgpu_5fprimitive_5fdesc',['cldnn_custom_gpu_primitive_desc',['../group__c__primitives.html#structcldnn__custom__gpu__primitive__desc',1,'']]],
   ['cldnn_5fdata_5fdesc',['cldnn_data_desc',['../group__c__primitives.html#structcldnn__data__desc',1,'']]],
   ['cldnn_5fdeconvolution_5fdesc',['cldnn_deconvolution_desc',['../group__c__primitives.html#structcldnn__deconvolution__desc',1,'']]],
   ['cldnn_5fdetection_5foutput_5fdesc',['cldnn_detection_output_desc',['../group__c__primitives.html#structcldnn__detection__output__desc',1,'']]],
@@ -33,8 +36,10 @@ var searchData=
   ['cldnn_5fscale_5fdesc',['cldnn_scale_desc',['../group__c__primitives.html#structcldnn__scale__desc',1,'']]],
   ['cldnn_5fsoftmax_5fdesc',['cldnn_softmax_desc',['../group__c__primitives.html#structcldnn__softmax__desc',1,'']]],
   ['cldnn_5ftensor',['cldnn_tensor',['../group__c__memory.html#structcldnn__tensor',1,'']]],
+  ['cldnn_5ftuning_5fconfig',['cldnn_tuning_config',['../group__c__network.html#structcldnn__tuning__config',1,'']]],
   ['cldnn_5fuint16_5ft_5farr',['cldnn_uint16_t_arr',['../group__c__topology.html#structcldnn__uint16__t__arr',1,'']]],
   ['concatenation',['concatenation',['../structcldnn_1_1concatenation.html',1,'cldnn']]],
   ['convolution',['convolution',['../structcldnn_1_1convolution.html',1,'cldnn']]],
-  ['crop',['crop',['../structcldnn_1_1crop.html',1,'cldnn']]]
+  ['crop',['crop',['../structcldnn_1_1crop.html',1,'cldnn']]],
+  ['custom_5fgpu_5fprimitive',['custom_gpu_primitive',['../structcldnn_1_1custom__gpu__primitive.html',1,'cldnn']]]
 ];

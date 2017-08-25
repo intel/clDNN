@@ -172,11 +172,29 @@ compiler_options</td>
 <td class="fielddoc">
 OpenCL compiler options string. </td></tr>
 <tr><td class="fieldtype">
+<a id="a49e31e0c58f9e98545c6fb850c72d0de"></a>uint32_t</td>
+<td class="fieldname">
+dump_custom_program</td>
+<td class="fielddoc">
+dump the custom generated program to files </td></tr>
+<tr><td class="fieldtype">
+<a id="ac6293ac418080cefdb11cc868a53e0c0"></a>uint32_t</td>
+<td class="fieldname">
+enable_parallelisation</td>
+<td class="fielddoc">
+Enables parallel execution of primitives which don't depend on each other. Disabled by default. </td></tr>
+<tr><td class="fieldtype">
 <a id="ac0f6ced9f9b06e459589e88b87419baf"></a>uint32_t</td>
 <td class="fieldname">
 enable_profiling</td>
 <td class="fielddoc">
 Enable per-primitive profiling. </td></tr>
+<tr><td class="fieldtype">
+<a id="a054e25f0663e74e27dc28fdc43b53b81"></a>const char *</td>
+<td class="fieldname">
+engine_log</td>
+<td class="fielddoc">
+Specifies a file to which engine log should be dumped. Null/empty values means no logging. </td></tr>
 <tr><td class="fieldtype">
 <a id="a47e35e895b6220b99dbdc6b2f8d3a504"></a>uint32_t</td>
 <td class="fieldname">
@@ -189,6 +207,12 @@ Generate meaniful names fo OpenCL kernels. </td></tr>
 single_kernel_name</td>
 <td class="fielddoc">
 If provided, runs specific layer. </td></tr>
+<tr><td class="fieldtype">
+<a id="ab5e63f9c893076057fdd3d8417a07587"></a>const char *</td>
+<td class="fieldname">
+sources_dumps_dir</td>
+<td class="fielddoc">
+Specifies a directory where sources of <a class="el" href="structcldnn_1_1program.html" title="Compiled program build from topology by engine. ">cldnn::program</a> objects should be dumped. Null/empty values means no loggins. </td></tr>
 </table>
 
 </div>
@@ -206,7 +230,7 @@ If provided, runs specific layer. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Information about the engine returned by <a class="el" href="group__c__engine.html#ga36088c7d8dbd03b0a324f19101363594" title="Returns engine information. See cldnn_engine_info for details. ">cldnn_get_engine_info()</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00124">124</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00128">128</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -245,6 +269,12 @@ Does engine support FP16. </td></tr>
 supports_fp16_denorms</td>
 <td class="fielddoc">
 Does engine support denormalized FP16. </td></tr>
+<tr><td class="fieldtype">
+<a id="afcef051e0cd2753da3a5740930a4e6f9"></a>uint8_t</td>
+<td class="fieldname">
+supports_subgroups_short</td>
+<td class="fielddoc">
+Does engine support cl_intel_subgroups_short. </td></tr>
 </table>
 
 </div>

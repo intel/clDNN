@@ -4,5 +4,6 @@ var searchData=
   ['timer',['timer',['../classcldnn_1_1instrumentation_1_1timer.html#ab5edb7ed9100933c8def752878e5f711',1,'cldnn::instrumentation::timer']]],
   ['topology',['topology',['../structcldnn_1_1topology.html#a1c2e6afa56a08ddfc3fd5fc4c668b0f2',1,'cldnn::topology::topology()'],['../structcldnn_1_1topology.html#ab4b5af344a303d63113b09a7b966c8f5',1,'cldnn::topology::topology(const Args &amp;... args)'],['../structcldnn_1_1topology.html#a84b08e27220936da7cc4006abf76bf3f',1,'cldnn::topology::topology(const topology &amp;other)']]],
   ['traits',['traits',['../structcldnn_1_1format.html#ac812937339b15a193411945da5f3d317',1,'cldnn::format']]],
-  ['transform',['transform',['../structcldnn_1_1tensor.html#af934fe7b9c031c1d16d97d4d2132c9a1',1,'cldnn::tensor']]]
+  ['transform',['transform',['../structcldnn_1_1tensor.html#af934fe7b9c031c1d16d97d4d2132c9a1',1,'cldnn::tensor']]],
+  ['tuning_5fconfig',['tuning_config',['../structcldnn_1_1build__option.html#a995a38b29fdf819df2ce40751bf979d3',1,'cldnn::build_option']]]
 ];

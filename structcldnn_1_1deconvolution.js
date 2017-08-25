@@ -1,7 +1,10 @@
 var structcldnn_1_1deconvolution =
 [
     [ "dto", "structcldnn_1_1deconvolution.html#ac68def38089a84b271d7857c0167ed4a", null ],
-    [ "deconvolution", "structcldnn_1_1deconvolution.html#affb912aae9112619fb05d7a8a9ae8b87", null ],
+    [ "deconvolution", "structcldnn_1_1deconvolution.html#a9a13856efd71cbe5aa01d5f1ca6c5e1d", null ],
+    [ "deconvolution", "structcldnn_1_1deconvolution.html#aff161d641b3c7094035a94a477cdfa19", null ],
+    [ "deconvolution", "structcldnn_1_1deconvolution.html#a237f81997cceeca10c39713333fe563a", null ],
+    [ "deconvolution", "structcldnn_1_1deconvolution.html#ac52c7c5f49c9ed42008f59e2365899f7", null ],
     [ "deconvolution", "structcldnn_1_1deconvolution.html#a61abbc0033815e4b9bf59e9e2b7ff3b1", null ],
     [ "get_dependencies", "structcldnn_1_1deconvolution.html#a6870b67cf04915e86ccb61c5cc8e92db", null ],
     [ "split", "structcldnn_1_1deconvolution.html#a74d5202944385ce474928c2d6de5089c", null ],
@@ -11,7 +14,9 @@ var structcldnn_1_1deconvolution =
     [ "activation_negative_slope", "structcldnn_1_1deconvolution.html#a1a43650d43d584ee2da495f66c9fb0e0", null ],
     [ "bias", "structcldnn_1_1deconvolution.html#ad3bc935c4e018cc7b230a3819a233d49", null ],
     [ "input_offset", "structcldnn_1_1deconvolution.html#a1267616315a119082fbaf312c617f060", null ],
+    [ "output_size", "structcldnn_1_1deconvolution.html#aa505888dda1729eb8db1e7f5ea8342a6", null ],
     [ "stride", "structcldnn_1_1deconvolution.html#a4a0c4c58a7fdd662b0c63d3f9136e1a0", null ],
     [ "weights", "structcldnn_1_1deconvolution.html#a6031d714ea194fefa65df66e33df80e0", null ],
-    [ "with_activation", "structcldnn_1_1deconvolution.html#afca796423aed00c7d94db7f9d58bf90c", null ]
+    [ "with_activation", "structcldnn_1_1deconvolution.html#afca796423aed00c7d94db7f9d58bf90c", null ],
+    [ "with_output_size", "structcldnn_1_1deconvolution.html#a611c2d4f200bb5b7f89ac37ff0c5eace", null ]
 ];

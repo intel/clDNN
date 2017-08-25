@@ -6,6 +6,7 @@ var NAVTREE =
       [ "Programming Model", "index.html#model", null ],
       [ "C++ API Example MNIST network", "index.html#example", null ]
     ] ],
+    [ "Introduction to custom primitives.", "c7.html", null ],
     [ "clDNN Tutorial", "tutorial.html", "tutorial" ],
     [ "Modules", "modules.html", "modules" ],
     [ "Namespaces", null, [
@@ -21,7 +22,7 @@ var NAVTREE =
       [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
-        [ "Functions", "functions_func.html", null ],
+        [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", "functions_vars" ],
         [ "Typedefs", "functions_type.html", null ],
         [ "Enumerations", "functions_enum.html", null ],
@@ -38,10 +39,10 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"group__c__primitives.html#a298a99ca32be1dc42de98c78eeecaf80",
-"group__cpp__primitives.html#ggaa0a55214d8b45e135a753957707dace3ad6e4a9b6646c62fc48baa6dd6150d1f7",
-"structcldnn_1_1input__layout.html#a16faf7e0aa097ff8bcd26a8aa1e3e500",
-"structcldnn_1_1scale.html#abfc2ee0e3674d55444c016c00da90bb3"
+"group__c__network.html#gadfaeab3efab33303da4eaa37a07c424e",
+"group__c__program.html#ga212acf96f51eaa6cb5998792b214175f",
+"structcldnn_1_1deconvolution.html#a74d5202944385ce474928c2d6de5089c",
+"structcldnn_1_1pointer.html#afd7e317200c625980d47d2d15b784410"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

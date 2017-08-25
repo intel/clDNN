@@ -1,4 +1,6 @@
 <map id="cldnn::build_option" name="cldnn::build_option">
-<area shape="rect" id="node2" href="$structcldnn_1_1build__option__bool.html" title="build_option specialization for boolean options. " alt="" coords="5,80,136,121"/>
-<area shape="rect" id="node3" href="$structcldnn_1_1build__option__outputs.html" title="build_option specialization for program outputs list. " alt="" coords="160,80,291,121"/>
+<area shape="rect" id="node2" href="$structcldnn_1_1build__option__bool.html" title="build_option specialization for boolean options. " alt="" coords="195,5,325,47"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1build__option__directory.html" title="build_option specialization for selecting a directory. " alt="" coords="184,71,336,112"/>
+<area shape="rect" id="node4" href="$structcldnn_1_1build__option__outputs.html" title="build_option specialization for program outputs list. " alt="" coords="195,136,325,177"/>
+<area shape="rect" id="node5" href="$structcldnn_1_1build__option__tuning__config.html" title="build_option specialization for tuning config. " alt="" coords="195,201,325,243"/>
 </map>

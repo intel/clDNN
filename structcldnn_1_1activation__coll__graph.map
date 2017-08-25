@@ -4,4 +4,5 @@
 <area shape="rect" id="node4" href="$structcldnn_1_1primitive_1_1fixed__size__vector__ref.html" title="Initialize fields common for all primitives. " alt="" coords="15,5,158,47"/>
 <area shape="rect" id="node5" href="$structcldnn_1_1padding.html" title="Represents data padding information. " alt="" coords="33,71,140,98"/>
 <area shape="rect" id="node6" href="$structcldnn_1_1primitive_1_1primitive__id__arr.html" title="cldnn::primitive::primitive\l_id_arr" alt="" coords="5,123,168,164"/>
+<area shape="rect" id="node7" href="$group__c__topology.html#structcldnn__activation__additional__params" title="activation additional params " alt="" coords="473,137,649,179"/>
 </map>

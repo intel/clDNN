@@ -6,6 +6,7 @@ var dir_228ce68e57c4051c288f029802a99152 =
     [ "concatenation.h", "concatenation_8h_source.html", null ],
     [ "convolution.h", "convolution_8h_source.html", null ],
     [ "crop.h", "crop_8h_source.html", null ],
+    [ "custom_gpu_primitive.h", "custom__gpu__primitive_8h_source.html", null ],
     [ "data.h", "data_8h_source.html", null ],
     [ "deconvolution.h", "deconvolution_8h_source.html", null ],
     [ "detection_output.h", "detection__output_8h_source.html", null ],

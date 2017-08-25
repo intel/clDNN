@@ -4,5 +4,6 @@ var searchData=
   ['data_5fpadding',['data_padding',['../structcldnn_1_1layout.html#ad5d17021300788d15b06bfa1ae57a27c',1,'cldnn::layout']]],
   ['data_5ftype',['data_type',['../group__c__memory.html#a4cdf1101b4c57ec258dd4d23ccfd24ee',1,'cldnn_layout::data_type()'],['../structcldnn_1_1layout.html#a5832c02b2c3487c23000796c0e97dcf0',1,'cldnn::layout::data_type()']]],
   ['dilation',['dilation',['../group__c__primitives.html#aaadbd1628290b4b8eb540df4485eb9d5',1,'cldnn_convolution_desc::dilation()'],['../structcldnn_1_1convolution.html#a78ce3522c15682f411aea1a821372568',1,'cldnn::convolution::dilation()']]],
-  ['dimension',['dimension',['../group__c__primitives.html#a8e42a43d3e3024058669fa77cf4962e0',1,'cldnn_softmax_desc::dimension()'],['../structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc',1,'cldnn::softmax::dimension()']]]
+  ['dimension',['dimension',['../group__c__primitives.html#a8e42a43d3e3024058669fa77cf4962e0',1,'cldnn_softmax_desc::dimension()'],['../structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc',1,'cldnn::softmax::dimension()']]],
+  ['dump_5fcustom_5fprogram',['dump_custom_program',['../group__c__engine.html#a49e31e0c58f9e98545c6fb850c72d0de',1,'cldnn_engine_configuration::dump_custom_program()'],['../structcldnn_1_1engine__configuration.html#ae0d4e61480a4ff281d5e71d229bee728',1,'cldnn::engine_configuration::dump_custom_program()']]]
 ];

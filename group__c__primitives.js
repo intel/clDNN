@@ -1,10 +1,11 @@
 var group__c__primitives =
 [
     [ "cldnn_activation_desc", "group__c__primitives.html#structcldnn__activation__desc", [
+      [ "activation_func", "group__c__primitives.html#a056add218eaa492d58dcf1449e4b50f4", null ],
+      [ "additional_params", "group__c__primitives.html#aa71adfc7f8f904407d13c3d4b12dda68", null ],
+      [ "additional_params_input", "group__c__primitives.html#a85c7b5cfc4ec7a62cfe80f5ea82094c4", null ],
       [ "id", "group__c__primitives.html#ae74ea8b73805d142ded7cf59ba765e68", null ],
       [ "input", "group__c__primitives.html#a774348f36554b6d4acdd84deaa3dfab0", null ],
-      [ "negative_slope", "group__c__primitives.html#a98e3a82707b65bbd06e69d9b9ac1c827", null ],
-      [ "negative_slope_input", "group__c__primitives.html#ab0074c1f48f086b75892e4310e3d5ee6", null ],
       [ "output_padding", "group__c__primitives.html#ad839ab66a588f125d6c09009f6d75766", null ],
       [ "type", "group__c__primitives.html#a82eb033b5bad3aa8a8eae8ce7b0a5c7d", null ]
     ] ],
@@ -33,11 +34,13 @@ var group__c__primitives =
       [ "input", "group__c__primitives.html#a15bfa6c002a836bbb0554cf3deff69f7", null ],
       [ "input_offset", "group__c__primitives.html#a10d4a54f56222b7aa7bd55a36b4510ee", null ],
       [ "output_padding", "group__c__primitives.html#a1dd48a3b08be1913777fe726afe35f16", null ],
+      [ "output_size", "group__c__primitives.html#a090d59db94bd91a8f6e3fa906a354450", null ],
       [ "split", "group__c__primitives.html#aed460d14bdfd85ed77fc2ee8509633ca", null ],
       [ "stride", "group__c__primitives.html#a74eb823fca1fda67754923e02779e9a6", null ],
       [ "type", "group__c__primitives.html#a33ecd3fefda893cf119344fac8bb27a1", null ],
       [ "weights", "group__c__primitives.html#a7b975ee01d40971d031b40ae15b7ae0f", null ],
-      [ "with_activation", "group__c__primitives.html#a702d61193c929a966cda3c53c5b30e3b", null ]
+      [ "with_activation", "group__c__primitives.html#a702d61193c929a966cda3c53c5b30e3b", null ],
+      [ "with_output_size", "group__c__primitives.html#ad1bfccdf824fa1b72432a863c8520ad5", null ]
     ] ],
     [ "cldnn_crop_desc", "group__c__primitives.html#structcldnn__crop__desc", [
       [ "id", "group__c__primitives.html#ae5bcd868ae79ff3e61da713e3b211968", null ],
@@ -46,6 +49,22 @@ var group__c__primitives =
       [ "output_padding", "group__c__primitives.html#a741b3ae4603d042a8d0b91d500e35b2a", null ],
       [ "reference_input", "group__c__primitives.html#a22fabf0f6e9d1207da0beffc34ae370f", null ],
       [ "type", "group__c__primitives.html#ac5135def0a4115d7208180cd3e04f3fb", null ]
+    ] ],
+    [ "cldnn_custom_gpu_primitive_desc", "group__c__primitives.html#structcldnn__custom__gpu__primitive__desc", [
+      [ "build_options", "group__c__primitives.html#a43e924fb97d0d8abacde652f0d195b4b", null ],
+      [ "gws", "group__c__primitives.html#a8b130803eff981e514e62f35213d328f", null ],
+      [ "gws_num", "group__c__primitives.html#a37d8bdb2cef6b4fab17a5d0c8bf4aa85", null ],
+      [ "id", "group__c__primitives.html#a7f031deeaf01f411a412903a2d77cebf", null ],
+      [ "input", "group__c__primitives.html#afc05e92d0038b8e0b29132e922608ada", null ],
+      [ "kernel_arguments", "group__c__primitives.html#ae6dbacd8d48cfc8368b69bc50feada5b", null ],
+      [ "kernel_arguments_num", "group__c__primitives.html#a12f09660857476b4c5da930b2e09f60c", null ],
+      [ "kernel_entry_point", "group__c__primitives.html#ac7211d9a60d4465bcc8d0ebf215522ef", null ],
+      [ "kernels_code", "group__c__primitives.html#af05d9dde4b575bb8d1adaa5b8d689c94", null ],
+      [ "lws", "group__c__primitives.html#a7fb8ba8295af75eb11decec69f1a078d", null ],
+      [ "lws_num", "group__c__primitives.html#a2be7e4f365c8f0be5457274eac30e81f", null ],
+      [ "output_layout", "group__c__primitives.html#a3efede0d9744ca110a0970fdaa722e54", null ],
+      [ "output_padding", "group__c__primitives.html#af7c8dcac3f3263081ccaf3856aa6a98d", null ],
+      [ "type", "group__c__primitives.html#a732d30e19057d7a538c5d0e95bb08f79", null ]
     ] ],
     [ "cldnn_data_desc", "group__c__primitives.html#structcldnn__data__desc", [
       [ "id", "group__c__primitives.html#ae0e1c6a2d4bb307a88fe4cb3adca5272", null ],
@@ -61,11 +80,13 @@ var group__c__primitives =
       [ "input", "group__c__primitives.html#aa68c7f166c0b74bba0875edc0c989ead", null ],
       [ "input_offset", "group__c__primitives.html#a7a2d7196a211539f184f305cc9612017", null ],
       [ "output_padding", "group__c__primitives.html#a0423f7dfd41da443532c790bc15eec37", null ],
+      [ "output_size", "group__c__primitives.html#abd89d839d70ccdd68682f88707bdb9e6", null ],
       [ "split", "group__c__primitives.html#a3c958078a5f3952cd64da92ac06995d4", null ],
       [ "stride", "group__c__primitives.html#a41249bbd96eacadca2cb7ae2a05da19a", null ],
       [ "type", "group__c__primitives.html#a298a99ca32be1dc42de98c78eeecaf80", null ],
       [ "weights", "group__c__primitives.html#aa1de678f158143eeb265cb1a4cab7084", null ],
-      [ "with_activation", "group__c__primitives.html#a54f3f055139846e72ef12e1ca09413a2", null ]
+      [ "with_activation", "group__c__primitives.html#a54f3f055139846e72ef12e1ca09413a2", null ],
+      [ "with_output_size", "group__c__primitives.html#a3cdc77301655fe575d647001a81243e0", null ]
     ] ],
     [ "cldnn_detection_output_desc", "group__c__primitives.html#structcldnn__detection__output__desc", [
       [ "background_label_id", "group__c__primitives.html#a2d66d970dc59b511d23ca9cdddf0e5ed", null ],
@@ -87,7 +108,6 @@ var group__c__primitives =
       [ "activation_negative_slope", "group__c__primitives.html#af3780537e3dafb153fc9080ccf7f9ad9", null ],
       [ "id", "group__c__primitives.html#ad9f50fa2db4235898c02e11ff02618c9", null ],
       [ "input", "group__c__primitives.html#ad55dae0c1c994250f9e67246233908a4", null ],
-      [ "input2", "group__c__primitives.html#a5c495fcc71dfe4c41f478c4f907de1c9", null ],
       [ "mode", "group__c__primitives.html#ac17c9962f86e8ed833ff5a00a7c25a7f", null ],
       [ "output_padding", "group__c__primitives.html#a1cf5e590be11a316d2924e61b118b8d8", null ],
       [ "type", "group__c__primitives.html#add458d761b4cb9aae1dea2f8e388997c", null ],
@@ -143,9 +163,11 @@ var group__c__primitives =
       [ "input_offset", "group__c__primitives.html#aac2b372fcc2117d352a3e9e7b8a0484d", null ],
       [ "mode", "group__c__primitives.html#ae3057452b410f2a8590c3a0c2faadc07", null ],
       [ "output_padding", "group__c__primitives.html#aefe7bd09d4e15b6d7a011e5a951ae0a9", null ],
+      [ "output_size", "group__c__primitives.html#af6e35386bc0f0c42d957443b389422c7", null ],
       [ "size", "group__c__primitives.html#adf1abe774bc3c744d87d1dadd9b93aeb", null ],
       [ "stride", "group__c__primitives.html#a85d0d2c5f8d16f78d03c5fe84a1afea5", null ],
-      [ "type", "group__c__primitives.html#a3bfffc9c3adb7d7f38f9693b468fb93b", null ]
+      [ "type", "group__c__primitives.html#a3bfffc9c3adb7d7f38f9693b468fb93b", null ],
+      [ "with_output_size", "group__c__primitives.html#a95a481d5609245449830a0c8f1b76ecc", null ]
     ] ],
     [ "cldnn_prior_box_desc", "group__c__primitives.html#structcldnn__prior__box__desc", [
       [ "aspect_ratios", "group__c__primitives.html#ae60585c85091ff9f5bc3430d7b2425f5", null ],
@@ -210,7 +232,6 @@ var group__c__primitives =
       [ "id", "group__c__primitives.html#ac4d29c87aff8b946f3679d395a859d06", null ],
       [ "input", "group__c__primitives.html#af339dab9c14fb620f5eb4db63b8deae1", null ],
       [ "output_padding", "group__c__primitives.html#a2f1726cb7426f86bec0fff2f26670452", null ],
-      [ "scale_input", "group__c__primitives.html#ab544ee6c4f2473baf3925a49bba2f387", null ],
       [ "type", "group__c__primitives.html#a8cdc63d947d0c8e7f85d9233eeefa78b", null ]
     ] ],
     [ "cldnn_softmax_desc", "group__c__primitives.html#structcldnn__softmax__desc", [
@@ -228,7 +249,8 @@ var group__c__primitives =
     ] ],
     [ "cldnn_pooling_mode", "group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee", [
       [ "cldnn_pooling_max", "group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eeaf935f12e5c61a444763e6e3df0dc7a8d", null ],
-      [ "cldnn_pooling_average", "group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eea5bbac492392f6225648fe7b4c8e434c4", null ]
+      [ "cldnn_pooling_average", "group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eea5bbac492392f6225648fe7b4c8e434c4", null ],
+      [ "cldnn_pooling_average_no_padding", "group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eeaabee0714281e6f356c983237bc0d921d", null ]
     ] ],
     [ "cldnn_prior_box_code_type", "group__c__primitives.html#ga637eb91f32b8d5da425c47ddaaa09c37", null ],
     [ "cldnn_softmax_dimension", "group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd", null ]

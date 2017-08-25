@@ -103,6 +103,9 @@ Classes</h2></td></tr>
 <tr class="memitem:structcldnn__profiling__interval"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#structcldnn__profiling__interval">cldnn_profiling_interval</a></td></tr>
 <tr class="memdesc:structcldnn__profiling__interval"><td class="mdescLeft">&#160;</td><td class="mdescRight">Profiling information for an executed network primitive.  <a href="group__c__network.html#structcldnn__profiling__interval">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__profiling__interval"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__tuning__config"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#structcldnn__tuning__config">cldnn_tuning_config</a></td></tr>
+<tr class="memdesc:structcldnn__tuning__config"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tuning config.  <a href="group__c__network.html#structcldnn__tuning__config">More...</a><br /></td></tr>
+<tr class="separator:structcldnn__tuning__config"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcldnn__build__option"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#structcldnn__build__option">cldnn_build_option</a></td></tr>
 <tr class="memdesc:structcldnn__build__option"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents network build option.  <a href="group__c__network.html#structcldnn__build__option">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__build__option"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,15 +132,22 @@ typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 Enumerations</h2></td></tr>
 <tr class="memitem:ga334c5e65b07c273a0b951e37c97ce95e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#ga334c5e65b07c273a0b951e37c97ce95e">cldnn_build_option_type</a> { <br />
 &#160;&#160;<a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95ea6253d653807e201d6594d64d4da48e86">cldnn_build_option_fusing</a>, 
-<a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95ea69b354fc781f09795fe7f4360a78cd38">cldnn_build_option_profiling</a>, 
 <a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95ea8eaf60cd0aa3a1b6bf3bde7b53d874b8">cldnn_build_option_optimize_data</a>, 
 <a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95ea66cf183e05a3066926d7b07deac5fdeb">cldnn_build_option_debug</a>, 
+<a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95eae22313e914b8f2d2e506181c711b271f">cldnn_build_option_outputs</a>, 
 <br />
-&#160;&#160;<a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95eae22313e914b8f2d2e506181c711b271f">cldnn_build_option_outputs</a>
+&#160;&#160;<a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95ea49b54c04c314df5a28e765a6c8d6391c">cldnn_build_option_tuning_config</a>, 
+<a class="el" href="group__c__network.html#gga334c5e65b07c273a0b951e37c97ce95ea7d3a700c83a453d547cba3333941e5f6">cldnn_build_option_graph_dumps_dir</a>
 <br />
  }<tr class="memdesc:ga334c5e65b07c273a0b951e37c97ce95e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Network build option types.  <a href="group__c__network.html#ga334c5e65b07c273a0b951e37c97ce95e">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:ga334c5e65b07c273a0b951e37c97ce95e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga852cb83960f054ca475df4c74bb3f877"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#ga852cb83960f054ca475df4c74bb3f877">cldnn_tuning_mode_type</a> { <a class="el" href="group__c__network.html#gga852cb83960f054ca475df4c74bb3f877ac124b1c8da39b30dab716e360d4f742a">cldnn_tuning_disabled</a>, 
+<a class="el" href="group__c__network.html#gga852cb83960f054ca475df4c74bb3f877aac93c9a9e7981cb981b7aed418bd302a">cldnn_tuning_use_cache</a>, 
+<a class="el" href="group__c__network.html#gga852cb83960f054ca475df4c74bb3f877a4d00bdd9aa411c67afad75f3b07c539c">cldnn_tuning_tune_and_cache</a>
+ }<tr class="memdesc:ga852cb83960f054ca475df4c74bb3f877"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tuning modes.  <a href="group__c__network.html#ga852cb83960f054ca475df4c74bb3f877">More...</a><br /></td></tr>
+</td></tr>
+<tr class="separator:ga852cb83960f054ca475df4c74bb3f877"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -145,6 +155,10 @@ Functions</h2></td></tr>
 CLDNN_API <a class="el" href="group__c__network.html#gaff96a87e019fa627b1845df0f887c2be">cldnn_event</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#ga8154aceafa43eb18fedcb6d741644752">cldnn_create_user_event</a> (<a class="el" href="group__c__engine.html#ga7e3f9071cc9a29280c3bce812c7804e0">cldnn_engine</a> engine, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="memdesc:ga8154aceafa43eb18fedcb6d741644752"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an event which can be set by user. <br /></td></tr>
 <tr class="separator:ga8154aceafa43eb18fedcb6d741644752"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga130fcb4f35043397a0f6548719a19aaa"><td class="memItemLeft" align="right" valign="top"><a id="ga130fcb4f35043397a0f6548719a19aaa"></a>
+CLDNN_API int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#ga130fcb4f35043397a0f6548719a19aaa">cldnn_is_user_event</a> (<a class="el" href="group__c__network.html#gaff96a87e019fa627b1845df0f887c2be">cldnn_event</a> event, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="memdesc:ga130fcb4f35043397a0f6548719a19aaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if an event was created by user. <br /></td></tr>
+<tr class="separator:ga130fcb4f35043397a0f6548719a19aaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga977afaffc1fe4050f7ddada10a8677ff"><td class="memItemLeft" align="right" valign="top"><a id="ga977afaffc1fe4050f7ddada10a8677ff"></a>
 CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#ga977afaffc1fe4050f7ddada10a8677ff">cldnn_retain_event</a> (<a class="el" href="group__c__network.html#gaff96a87e019fa627b1845df0f887c2be">cldnn_event</a> event, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="memdesc:ga977afaffc1fe4050f7ddada10a8677ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Increment reference counter for the event object. <br /></td></tr>
@@ -204,6 +218,9 @@ CLDNN_API <a class="el" href="group__c__program.html#ga6c4f3f309765328934cd8a7ef
 <tr class="memitem:gadfaeab3efab33303da4eaa37a07c424e"><td class="memItemLeft" align="right" valign="top">CLDNN_API <a class="el" href="group__c__network.html#structcldnn__network__output">cldnn_network_output</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#gadfaeab3efab33303da4eaa37a07c424e">cldnn_get_network_output</a> (<a class="el" href="group__c__network.html#gae90353b2d66369e015b7f6e77f875e11">cldnn_network</a> network, const char *name, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="memdesc:gadfaeab3efab33303da4eaa37a07c424e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns executed network output information.  <a href="#gadfaeab3efab33303da4eaa37a07c424e">More...</a><br /></td></tr>
 <tr class="separator:gadfaeab3efab33303da4eaa37a07c424e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga093b8a64d396c13525e4bc88e5529e61"><td class="memItemLeft" align="right" valign="top">CLDNN_API <a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__network.html#ga093b8a64d396c13525e4bc88e5529e61">cldnn_get_network_output_memory</a> (<a class="el" href="group__c__network.html#gae90353b2d66369e015b7f6e77f875e11">cldnn_network</a> network, const char *name, <a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="memdesc:ga093b8a64d396c13525e4bc88e5529e61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns memory corresponding to output with <code>name</code>.  <a href="#ga093b8a64d396c13525e4bc88e5529e61">More...</a><br /></td></tr>
+<tr class="separator:ga093b8a64d396c13525e4bc88e5529e61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <hr/><h2 class="groupheader">Class Documentation</h2>
@@ -221,7 +238,7 @@ CLDNN_API <a class="el" href="group__c__program.html#ga6c4f3f309765328934cd8a7ef
 <div class="textblock"><p>Profiling information for an executed network primitive. </p>
 <p>Every <a class="el" href="group__c__network.html#gaff96a87e019fa627b1845df0f887c2be">cldnn_event</a> associated with <a class="el" href="group__c__network.html#structcldnn__network__output">cldnn_network_output</a>. can contain one or more profiling information intervals. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00147">147</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00152">152</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -240,6 +257,38 @@ nanoseconds</td>
 
 </div>
 </div>
+<a name="structcldnn__tuning__config" id="structcldnn__tuning__config"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__tuning__config">&#9670;&nbsp;</a></span>cldnn_tuning_config</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_tuning_config</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Tuning config. </p>
+
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00178">178</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="ab4156ddd0ac241fce5f80c1c90bf3be7"></a>const char *</td>
+<td class="fieldname">
+cache_file_path</td>
+<td class="fielddoc">
+A path to the tuning cache file. </td></tr>
+<tr><td class="fieldtype">
+<a id="a77be52a65339f77998c6a38dd33e7d16"></a>const int32_t</td>
+<td class="fieldname">
+mode</td>
+<td class="fielddoc">
+<a class="el" href="group__c__network.html#ga852cb83960f054ca475df4c74bb3f877" title="Tuning modes. ">cldnn_tuning_mode_type</a>. </td></tr>
+</table>
+
+</div>
+</div>
 <a name="structcldnn__build__option" id="structcldnn__build__option"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structcldnn__build__option">&#9670;&nbsp;</a></span>cldnn_build_option</h2>
 
@@ -253,7 +302,7 @@ nanoseconds</td>
 </div><div class="memdoc">
 <div class="textblock"><p>Represents network build option. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00165">165</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00185">185</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -286,7 +335,7 @@ type</td>
 <div class="textblock"><p>Output information for executed <em>cldnn_network</em>. </p>
 <p>User should wait for event before accessing the memory. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00173">173</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00193">193</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -323,17 +372,45 @@ memory</td>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga334c5e65b07c273a0b951e37c97ce95ea6253d653807e201d6594d64d4da48e86"></a>cldnn_build_option_fusing&#160;</td><td class="fielddoc"><p>Allow primitives fusing during network build. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="gga334c5e65b07c273a0b951e37c97ce95ea69b354fc781f09795fe7f4360a78cd38"></a>cldnn_build_option_profiling&#160;</td><td class="fielddoc"><p>Enable primitives profiling. </p>
-</td></tr>
 <tr><td class="fieldname"><a id="gga334c5e65b07c273a0b951e37c97ce95ea8eaf60cd0aa3a1b6bf3bde7b53d874b8"></a>cldnn_build_option_optimize_data&#160;</td><td class="fielddoc"><p>Enable implicit reordering for user input. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga334c5e65b07c273a0b951e37c97ce95ea66cf183e05a3066926d7b07deac5fdeb"></a>cldnn_build_option_debug&#160;</td><td class="fielddoc"><p>Enable debug mode. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga334c5e65b07c273a0b951e37c97ce95eae22313e914b8f2d2e506181c711b271f"></a>cldnn_build_option_outputs&#160;</td><td class="fielddoc"><p>User selected list of network outputs. </p>
 </td></tr>
+<tr><td class="fieldname"><a id="gga334c5e65b07c273a0b951e37c97ce95ea49b54c04c314df5a28e765a6c8d6391c"></a>cldnn_build_option_tuning_config&#160;</td><td class="fielddoc"><p>Tuning config. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga334c5e65b07c273a0b951e37c97ce95ea7d3a700c83a453d547cba3333941e5f6"></a>cldnn_build_option_graph_dumps_dir&#160;</td><td class="fielddoc"><p>Specifies a directory to which stages of network compilation should be dumped. </p>
+</td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00154">154</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00159">159</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+
+</div>
+</div>
+<a id="ga852cb83960f054ca475df4c74bb3f877"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga852cb83960f054ca475df4c74bb3f877">&#9670;&nbsp;</a></span>cldnn_tuning_mode_type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__c__network.html#ga852cb83960f054ca475df4c74bb3f877">cldnn_tuning_mode_type</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Tuning modes. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga852cb83960f054ca475df4c74bb3f877ac124b1c8da39b30dab716e360d4f742a"></a>cldnn_tuning_disabled&#160;</td><td class="fielddoc"><p>Tuning is disabled. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga852cb83960f054ca475df4c74bb3f877aac93c9a9e7981cb981b7aed418bd302a"></a>cldnn_tuning_use_cache&#160;</td><td class="fielddoc"><p>Tuning using the cached data (no on-line tuning for non-existing data). </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga852cb83960f054ca475df4c74bb3f877a4d00bdd9aa411c67afad75f3b07c539c"></a>cldnn_tuning_tune_and_cache&#160;</td><td class="fielddoc"><p>Tuning using the cached data if exist, tune and update cache otherwise. </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00170">170</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 
 </div>
 </div>
@@ -624,6 +701,49 @@ memory</td>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__c__network.html#structcldnn__network__output">cldnn_network_output</a> structure with the output information. To work with the result of this function, user should first wait for <a class="el" href="group__c__network.html#a7de27514419a31db527ae03038302e94" title="Event to be waited. ">cldnn_network_output::event</a> before getting an access to <a class="el" href="group__c__network.html#a16dd37c5975355503c4715ce3abb12de">cldnn_network_output::memory</a>. </dd></dl>
+
+</div>
+</div>
+<a id="ga093b8a64d396c13525e4bc88e5529e61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga093b8a64d396c13525e4bc88e5529e61">&#9670;&nbsp;</a></span>cldnn_get_network_output_memory()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">CLDNN_API <a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a> cldnn_get_network_output_memory </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__c__network.html#gae90353b2d66369e015b7f6e77f875e11">cldnn_network</a>&#160;</td>
+          <td class="paramname"><em>network</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *&#160;</td>
+          <td class="paramname"><em>status</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns memory corresponding to output with <code>name</code>. </p>
+<p>User can call this function even before calling <a class="el" href="group__c__network.html#ga98b3b37aeb59d04d19177240271fddb5" title="Executes network. ">cldnn_execute_network()</a>, but then content of memory is uninitialized. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>Output name to get the result. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__c__memory.html#ga5b57e95c1d26c30d905763769866cf2e">cldnn_memory</a> structure with the output information. </dd></dl>
 
 </div>
 </div>

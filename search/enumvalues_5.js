@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['max',['max',['../group__cpp__primitives.html#ggaa0a55214d8b45e135a753957707dace3a2ffe4e77325d9a7152f7086ea7aa5114',1,'cldnn::max()'],['../group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a2ffe4e77325d9a7152f7086ea7aa5114',1,'cldnn::max()']]]
+  ['graph_5fdumps_5fdir',['graph_dumps_dir',['../group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba864c686d08077d68235469f10b9cf915',1,'cldnn']]]
 ];

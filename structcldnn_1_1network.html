@@ -138,8 +138,12 @@ std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80
 <tr class="separator:a4db8e987e7500a1c9fcfd5bb15e56ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5669818ab7945693102dfdf9ffa08bd"><td class="memItemLeft" align="right" valign="top"><a id="ad5669818ab7945693102dfdf9ffa08bd"></a>
 <a class="el" href="structcldnn_1_1network__output.html">network_output</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1network.html#ad5669818ab7945693102dfdf9ffa08bd">get_output</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;output_id) const</td></tr>
-<tr class="memdesc:ad5669818ab7945693102dfdf9ffa08bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns <a class="el" href="structcldnn_1_1network__output.html">network_output</a> object for particular <code>output</code>. <br /></td></tr>
+<tr class="memdesc:ad5669818ab7945693102dfdf9ffa08bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns <a class="el" href="structcldnn_1_1network__output.html">network_output</a> object for particular <code>output</code>. Can't be called before network execution. <br /></td></tr>
 <tr class="separator:ad5669818ab7945693102dfdf9ffa08bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47c566b2d7667e2a6e53ce02f61c2fdb"><td class="memItemLeft" align="right" valign="top"><a id="a47c566b2d7667e2a6e53ce02f61c2fdb"></a>
+<a class="el" href="structcldnn_1_1memory.html">memory</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1network.html#a47c566b2d7667e2a6e53ce02f61c2fdb">get_output_memory</a> (const <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &amp;output_id) const</td></tr>
+<tr class="memdesc:a47c566b2d7667e2a6e53ce02f61c2fdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns <a class="el" href="structcldnn_1_1memory.html">memory</a> object for particular <code>output</code>. Can be called before network execution. <br /></td></tr>
+<tr class="separator:a47c566b2d7667e2a6e53ce02f61c2fdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa16123edb1ef1ce9849aa88818ea6746"><td class="memItemLeft" align="right" valign="top">std::map&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a>, <a class="el" href="structcldnn_1_1network__output.html">network_output</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1network.html#aa16123edb1ef1ce9849aa88818ea6746">execute</a> (const std::vector&lt; <a class="el" href="structcldnn_1_1event.html">event</a> &gt; &amp;dependencies={}) const</td></tr>
 <tr class="memdesc:aa16123edb1ef1ce9849aa88818ea6746"><td class="mdescLeft">&#160;</td><td class="mdescRight">Executes network and returns the list of <a class="el" href="structcldnn_1_1network__output.html">network_output</a>.  <a href="#aa16123edb1ef1ce9849aa88818ea6746">More...</a><br /></td></tr>
 <tr class="separator:aa16123edb1ef1ce9849aa88818ea6746"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -286,7 +290,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
 </dl>
 <dl class="section note"><dt>Note</dt><dd>User should call <a class="el" href="structcldnn_1_1network.html#a0fbfadf336a8c08bf4adc781afc6cf3c" title="Provides memory for input_layout primitives defined by user in source topology. ">set_input_data()</a> for every <a class="el" href="structcldnn_1_1input__layout.html">input_layout</a> defined in source <a class="el" href="structcldnn_1_1topology.html">topology</a> before network execution. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="network_8hpp_source.html#l00188">188</a> of file <a class="el" href="network_8hpp_source.html">network.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="network_8hpp_source.html#l00199">199</a> of file <a class="el" href="network_8hpp_source.html">network.hpp</a>.</p>
 
 </div>
 </div>

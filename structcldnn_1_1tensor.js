@@ -5,6 +5,7 @@ var structcldnn_1_1tensor =
     [ "tensor", "structcldnn_1_1tensor.html#aa9438f056886816baa34d4346007649b", null ],
     [ "tensor", "structcldnn_1_1tensor.html#ae0081a1593438e6f09ad61612c69f9b0", null ],
     [ "tensor", "structcldnn_1_1tensor.html#a65b7a4c850416fbd28e6895e0126c66c", null ],
+    [ "tensor", "structcldnn_1_1tensor.html#aa2b64950fe88867af8705f2b3acb3c3d", null ],
     [ "tensor", "structcldnn_1_1tensor.html#aa412882c7404bc9f5328f5ad548683be", null ],
     [ "tensor", "structcldnn_1_1tensor.html#a9811fb2c9e671e4914e12d91546d9570", null ],
     [ "add", "structcldnn_1_1tensor.html#a02cc4eda24e996cbe3fc6cc16a4d54ae", null ],

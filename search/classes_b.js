@@ -11,6 +11,7 @@ var searchData=
   ['primitive_5fbase_3c_20concatenation_2c_20cldnn_5fconcatenation_5fdesc_20_3e',['primitive_base&lt; concatenation, cldnn_concatenation_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20convolution_2c_20cldnn_5fconvolution_5fdesc_20_3e',['primitive_base&lt; convolution, cldnn_convolution_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20crop_2c_20cldnn_5fcrop_5fdesc_20_3e',['primitive_base&lt; crop, cldnn_crop_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
+  ['primitive_5fbase_3c_20custom_5fgpu_5fprimitive_2c_20cldnn_5fcustom_5fgpu_5fprimitive_5fdesc_20_3e',['primitive_base&lt; custom_gpu_primitive, cldnn_custom_gpu_primitive_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20data_2c_20cldnn_5fdata_5fdesc_20_3e',['primitive_base&lt; data, cldnn_data_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20deconvolution_2c_20cldnn_5fdeconvolution_5fdesc_20_3e',['primitive_base&lt; deconvolution, cldnn_deconvolution_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20detection_5foutput_2c_20cldnn_5fdetection_5foutput_5fdesc_20_3e',['primitive_base&lt; detection_output, cldnn_detection_output_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],

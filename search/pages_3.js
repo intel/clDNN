@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['network_20and_20execution_2e',['Network and execution.',['../c3.html',1,'tutorial']]]
+  ['introduction_20to_20custom_20primitives_2e',['Introduction to custom primitives.',['../c7.html',1,'']]]
 ];

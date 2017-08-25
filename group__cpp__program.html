@@ -98,6 +98,9 @@ Collaboration diagram for Program compilation:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1tuning__config__options.html">cldnn::tuning_config_options</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tuning configuration.  <a href="structcldnn_1_1tuning__config__options.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html">cldnn::build_option</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents user-provided program build option.  <a href="structcldnn_1_1build__option.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -106,6 +109,12 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option__outputs.html">cldnn::build_option_outputs</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcldnn_1_1build__option.html">build_option</a> specialization for program outputs list.  <a href="structcldnn_1_1build__option__outputs.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option__tuning__config.html">cldnn::build_option_tuning_config</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcldnn_1_1build__option.html">build_option</a> specialization for tuning config.  <a href="structcldnn_1_1build__option__tuning__config.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option__directory.html">cldnn::build_option_directory&lt; OptType &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structcldnn_1_1build__option.html">build_option</a> specialization for selecting a directory.  <a href="structcldnn_1_1build__option__directory.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcldnn_1_1build__options.html">cldnn::build_options</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents program build options list.  <a href="classcldnn_1_1build__options.html#details">More...</a><br /></td></tr>
@@ -118,15 +127,22 @@ Classes</h2></td></tr>
 Enumerations</h2></td></tr>
 <tr class="memitem:ga3848e071efdbd543eb28ff24d4cc53eb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cpp__program.html#ga3848e071efdbd543eb28ff24d4cc53eb">cldnn::build_option_type</a> { <br />
 &#160;&#160;<a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba4ebb0fdb5a7d19c6d95e191357ce3af6">cldnn::build_option_type::fusing</a> = cldnn_build_option_fusing, 
-<a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba3cdda3e94e1b3dfd218a9d60b8139968">cldnn::build_option_type::profiling</a> = cldnn_build_option_profiling, 
 <a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53ebacda398d685778cf3be3e5cb2785f8479">cldnn::build_option_type::optimize_data</a> = cldnn_build_option_optimize_data, 
 <a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53ebaad42f6697b035b7580e4fef93be20b4d">cldnn::build_option_type::debug</a> = cldnn_build_option_debug, 
+<a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba25bef4f25b60430e2ef377f1a2b97577">cldnn::build_option_type::outputs</a> = cldnn_build_option_outputs, 
 <br />
-&#160;&#160;<a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba25bef4f25b60430e2ef377f1a2b97577">cldnn::build_option_type::outputs</a> = cldnn_build_option_outputs
+&#160;&#160;<a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53ebabb5d0d5a6eccc3e692b393fb0d75b799">cldnn::build_option_type::tuning_config</a> = cldnn_build_option_tuning_config, 
+<a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba864c686d08077d68235469f10b9cf915">cldnn::build_option_type::graph_dumps_dir</a> = cldnn_build_option_graph_dumps_dir
 <br />
  }<tr class="memdesc:ga3848e071efdbd543eb28ff24d4cc53eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents user-provided program build option type.  <a href="group__cpp__program.html#ga3848e071efdbd543eb28ff24d4cc53eb">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:ga3848e071efdbd543eb28ff24d4cc53eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga93064220be2c8fc6d998dd9d15ca47c4"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cpp__program.html#ga93064220be2c8fc6d998dd9d15ca47c4">cldnn::tuning_mode</a> { <a class="el" href="group__cpp__program.html#gga93064220be2c8fc6d998dd9d15ca47c4a3d8ad94a9d5109669164e542486a4613">cldnn::tuning_mode::tuning_disabled</a> = cldnn_tuning_disabled, 
+<a class="el" href="group__cpp__program.html#gga93064220be2c8fc6d998dd9d15ca47c4a87fbcedb51d00397f48bbe8001c3a0fa">cldnn::tuning_mode::tuning_use_cache</a> = cldnn_tuning_use_cache, 
+<a class="el" href="group__cpp__program.html#gga93064220be2c8fc6d998dd9d15ca47c4afb7684e7e06ac4d3288d4a90ad23548d">cldnn::tuning_mode::tuning_tune_and_cache</a> = cldnn_tuning_tune_and_cache
+ }<tr class="memdesc:ga93064220be2c8fc6d998dd9d15ca47c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tuning mode.  <a href="group__cpp__program.html#ga93064220be2c8fc6d998dd9d15ca47c4">More...</a><br /></td></tr>
+</td></tr>
+<tr class="separator:ga93064220be2c8fc6d998dd9d15ca47c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
@@ -154,9 +170,6 @@ Enumerations</h2></td></tr>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga3848e071efdbd543eb28ff24d4cc53eba4ebb0fdb5a7d19c6d95e191357ce3af6"></a>fusing&#160;</td><td class="fielddoc"><p>Allow primitives fusing during program build (default: false). </p>
 </td></tr>
-<tr><td class="fieldname"><a id="gga3848e071efdbd543eb28ff24d4cc53eba3cdda3e94e1b3dfd218a9d60b8139968"></a>profiling&#160;</td><td class="fielddoc"><p>Enable primitives profiling (default: false). </p>
-<p>This option allows to collect profiling_interval for every program output. This option reduces performance. </p>
-</td></tr>
 <tr><td class="fieldname"><a id="gga3848e071efdbd543eb28ff24d4cc53ebacda398d685778cf3be3e5cb2785f8479"></a>optimize_data&#160;</td><td class="fielddoc"><p>Enable implicit reordering for user inputs (default: false). </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga3848e071efdbd543eb28ff24d4cc53ebaad42f6697b035b7580e4fef93be20b4d"></a>debug&#160;</td><td class="fielddoc"><p>Enable debug mode (default: false). </p>
@@ -164,9 +177,48 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="gga3848e071efdbd543eb28ff24d4cc53eba25bef4f25b60430e2ef377f1a2b97577"></a>outputs&#160;</td><td class="fielddoc"><p>User selected list of program outputs. </p>
 </td></tr>
+<tr><td class="fieldname"><a id="gga3848e071efdbd543eb28ff24d4cc53ebabb5d0d5a6eccc3e692b393fb0d75b799"></a>tuning_config&#160;</td><td class="fielddoc"><p>Tuning config (default: Tuning is disabled). </p>
+<p>The tuner will automatically find the optimal kernel/config for each node in the graph, by running multiple implementations and configurations per node and storing the optimal one in cache. Expect long execution time in the first run. After the first run a cache with the tuning results will be created in the path provided. This cache will be used in the next runs. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga3848e071efdbd543eb28ff24d4cc53eba864c686d08077d68235469f10b9cf915"></a>graph_dumps_dir&#160;</td><td class="fielddoc"><p>Specifies a directory to which stages of network compilation should be dumped. (default: empty, i.e. no dumping) </p>
+</td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00035">35</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
+
+</div>
+</div>
+<a id="ga93064220be2c8fc6d998dd9d15ca47c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga93064220be2c8fc6d998dd9d15ca47c4">&#9670;&nbsp;</a></span>tuning_mode</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__cpp__program.html#ga93064220be2c8fc6d998dd9d15ca47c4">cldnn::tuning_mode</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Tuning mode. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga93064220be2c8fc6d998dd9d15ca47c4a3d8ad94a9d5109669164e542486a4613"></a>tuning_disabled&#160;</td><td class="fielddoc"><p>Tuning is disabled. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga93064220be2c8fc6d998dd9d15ca47c4a87fbcedb51d00397f48bbe8001c3a0fa"></a>tuning_use_cache&#160;</td><td class="fielddoc"><p>Tuning using the cached data (no on-line tuning for non-existing data). </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga93064220be2c8fc6d998dd9d15ca47c4afb7684e7e06ac4d3288d4a90ad23548d"></a>tuning_tune_and_cache&#160;</td><td class="fielddoc"><p>Tuning using the cached data if exist, tune and update cache otherwise. </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00063">63</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
 
 </div>
 </div>

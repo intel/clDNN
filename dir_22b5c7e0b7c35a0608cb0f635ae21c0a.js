@@ -7,6 +7,7 @@ var dir_22b5c7e0b7c35a0608cb0f635ae21c0a =
     [ "concatenation.hpp", "concatenation_8hpp_source.html", null ],
     [ "convolution.hpp", "convolution_8hpp_source.html", null ],
     [ "crop.hpp", "crop_8hpp_source.html", null ],
+    [ "custom_gpu_primitive.hpp", "custom__gpu__primitive_8hpp_source.html", null ],
     [ "data.hpp", "data_8hpp_source.html", null ],
     [ "deconvolution.hpp", "deconvolution_8hpp_source.html", null ],
     [ "detection_output.hpp", "detection__output_8hpp_source.html", null ],

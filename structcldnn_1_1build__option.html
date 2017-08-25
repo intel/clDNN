@@ -96,8 +96,10 @@ Inheritance diagram for cldnn::build_option:</div>
 <div class="dyncontent">
 <div class="center"><img src="structcldnn_1_1build__option__inherit__graph.png" border="0" usemap="#cldnn_1_1build__option_inherit__map" alt="Inheritance graph"/></div>
 <map name="cldnn_1_1build__option_inherit__map" id="cldnn_1_1build__option_inherit__map">
-<area shape="rect" id="node2" href="structcldnn_1_1build__option__bool.html" title="build_option specialization for boolean options. " alt="" coords="5,80,136,121"/>
-<area shape="rect" id="node3" href="structcldnn_1_1build__option__outputs.html" title="build_option specialization for program outputs list. " alt="" coords="160,80,291,121"/>
+<area shape="rect" id="node2" href="structcldnn_1_1build__option__bool.html" title="build_option specialization for boolean options. " alt="" coords="195,5,325,47"/>
+<area shape="rect" id="node3" href="structcldnn_1_1build__option__directory.html" title="build_option specialization for selecting a directory. " alt="" coords="184,71,336,112"/>
+<area shape="rect" id="node4" href="structcldnn_1_1build__option__outputs.html" title="build_option specialization for program outputs list. " alt="" coords="195,136,325,177"/>
+<area shape="rect" id="node5" href="structcldnn_1_1build__option__tuning__config.html" title="build_option specialization for tuning config. " alt="" coords="195,201,325,243"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -107,9 +109,6 @@ Static Public Member Functions</h2></td></tr>
 static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a150cede9e377e69b011652d393e2c782">fusing</a> (bool enable=false)</td></tr>
 <tr class="memdesc:a150cede9e377e69b011652d393e2c782"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allow primitives fusing during program build (default: false). <br /></td></tr>
 <tr class="separator:a150cede9e377e69b011652d393e2c782"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44ce235269e53d69078de1f2fb5aa94c"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a44ce235269e53d69078de1f2fb5aa94c">profiling</a> (bool enable=false)</td></tr>
-<tr class="memdesc:a44ce235269e53d69078de1f2fb5aa94c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable primitives profiling (default: false).  <a href="#a44ce235269e53d69078de1f2fb5aa94c">More...</a><br /></td></tr>
-<tr class="separator:a44ce235269e53d69078de1f2fb5aa94c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addad469cf8266da65513eaad772e67ef"><td class="memItemLeft" align="right" valign="top"><a id="addad469cf8266da65513eaad772e67ef"></a>
 static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#addad469cf8266da65513eaad772e67ef">optimize_data</a> (bool enable=false)</td></tr>
 <tr class="memdesc:addad469cf8266da65513eaad772e67ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable implicit reordering for user inputs (default: false). <br /></td></tr>
@@ -121,11 +120,18 @@ static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__optio
 static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#aee964ad20b17b918af74d36ce337460b">outputs</a> (const std::vector&lt; <a class="el" href="group__cpp__topology.html#ga4bf7dd6b4335ad80c9a707016de4c221">primitive_id</a> &gt; &amp;outs)</td></tr>
 <tr class="memdesc:aee964ad20b17b918af74d36ce337460b"><td class="mdescLeft">&#160;</td><td class="mdescRight">User selected list of program outputs. <br /></td></tr>
 <tr class="separator:aee964ad20b17b918af74d36ce337460b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a995a38b29fdf819df2ce40751bf979d3"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a995a38b29fdf819df2ce40751bf979d3">tuning_config</a> (const <a class="el" href="structcldnn_1_1tuning__config__options.html">tuning_config_options</a> &amp;config=<a class="el" href="structcldnn_1_1tuning__config__options.html">tuning_config_options</a>())</td></tr>
+<tr class="memdesc:a995a38b29fdf819df2ce40751bf979d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tuning configuration (default: false).  <a href="#a995a38b29fdf819df2ce40751bf979d3">More...</a><br /></td></tr>
+<tr class="separator:a995a38b29fdf819df2ce40751bf979d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71e3a7cfb8ca453fc0c9dec912f4a83c"><td class="memItemLeft" align="right" valign="top"><a id="a71e3a7cfb8ca453fc0c9dec912f4a83c"></a>
+static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__option.html">build_option</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1build__option.html#a71e3a7cfb8ca453fc0c9dec912f4a83c">graph_dumps_dir</a> (const std::string &amp;dir_path)</td></tr>
+<tr class="memdesc:a71e3a7cfb8ca453fc0c9dec912f4a83c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies a directory to which stages of network compilation should be dumped (default: empty, i.e. no dumping) <br /></td></tr>
+<tr class="separator:a71e3a7cfb8ca453fc0c9dec912f4a83c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents user-provided program build option. </p>
 
-<p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00057">57</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="program_8hpp_source.html#l00088">88</a> of file <a class="el" href="program_8hpp_source.html">program.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="adb4d9b762ca029fdf14c66d49b9145fe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adb4d9b762ca029fdf14c66d49b9145fe">&#9670;&nbsp;</a></span>debug()</h2>
@@ -156,8 +162,8 @@ static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__optio
 
 </div>
 </div>
-<a id="a44ce235269e53d69078de1f2fb5aa94c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44ce235269e53d69078de1f2fb5aa94c">&#9670;&nbsp;</a></span>profiling()</h2>
+<a id="a995a38b29fdf819df2ce40751bf979d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a995a38b29fdf819df2ce40751bf979d3">&#9670;&nbsp;</a></span>tuning_config()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -166,10 +172,10 @@ static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__optio
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static std::shared_ptr&lt;const <a class="el" href="structcldnn_1_1build__option.html">build_option</a>&gt; cldnn::build_option::profiling </td>
+          <td class="memname">static std::shared_ptr&lt;const <a class="el" href="structcldnn_1_1build__option.html">build_option</a>&gt; cldnn::build_option::tuning_config </td>
           <td>(</td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>enable</em> = <code>false</code></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="structcldnn_1_1tuning__config__options.html">tuning_config_options</a> &amp;&#160;</td>
+          <td class="paramname"><em>config</em> = <code><a class="el" href="structcldnn_1_1tuning__config__options.html">tuning_config_options</a>()</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -180,8 +186,8 @@ static std::shared_ptr&lt; const <a class="el" href="structcldnn_1_1build__optio
 </table>
 </div><div class="memdoc">
 
-<p>Enable primitives profiling (default: false). </p>
-<p>This option allows to collect profiling_interval for every program output. This option reduces performance. </p>
+<p>Tuning configuration (default: false). </p>
+<p>This option will automatically find the optimal kernel/config for each node in the graph, by running multiple implementations and configurations per node and storing the optimal one in cache. Expect long execution time in the first run (unless the cache only mode is enabled). After the first run a cache with the tuning results will be created in the path provided. This cache will be used in the next runs. </p>
 
 </div>
 </div>

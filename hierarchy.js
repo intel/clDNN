@@ -2,16 +2,21 @@ var hierarchy =
 [
     [ "cldnn::build_option", "structcldnn_1_1build__option.html", [
       [ "cldnn::build_option_bool< OptType >", "structcldnn_1_1build__option__bool.html", null ],
-      [ "cldnn::build_option_outputs", "structcldnn_1_1build__option__outputs.html", null ]
+      [ "cldnn::build_option_directory< OptType >", "structcldnn_1_1build__option__directory.html", null ],
+      [ "cldnn::build_option_outputs", "structcldnn_1_1build__option__outputs.html", null ],
+      [ "cldnn::build_option_tuning_config", "structcldnn_1_1build__option__tuning__config.html", null ]
     ] ],
     [ "cldnn::detail::build_option_traits< OptType >", "structcldnn_1_1detail_1_1build__option__traits.html", null ],
     [ "cldnn::build_options", "classcldnn_1_1build__options.html", null ],
+    [ "cldnn_activation_additional_params", "group__c__topology.html#structcldnn__activation__additional__params", null ],
     [ "cldnn_activation_desc", "group__c__primitives.html#structcldnn__activation__desc", null ],
+    [ "cldnn_arg", "group__c__topology.html#structcldnn__arg", null ],
     [ "cldnn_batch_norm_desc", "group__c__primitives.html#structcldnn__batch__norm__desc", null ],
     [ "cldnn_build_option", "group__c__network.html#structcldnn__build__option", null ],
     [ "cldnn_concatenation_desc", "group__c__primitives.html#structcldnn__concatenation__desc", null ],
     [ "cldnn_convolution_desc", "group__c__primitives.html#structcldnn__convolution__desc", null ],
     [ "cldnn_crop_desc", "group__c__primitives.html#structcldnn__crop__desc", null ],
+    [ "cldnn_custom_gpu_primitive_desc", "group__c__primitives.html#structcldnn__custom__gpu__primitive__desc", null ],
     [ "cldnn_data_desc", "group__c__primitives.html#structcldnn__data__desc", null ],
     [ "cldnn_deconvolution_desc", "group__c__primitives.html#structcldnn__deconvolution__desc", null ],
     [ "cldnn_detection_output_desc", "group__c__primitives.html#structcldnn__detection__output__desc", null ],
@@ -39,6 +44,7 @@ var hierarchy =
     [ "cldnn_scale_desc", "group__c__primitives.html#structcldnn__scale__desc", null ],
     [ "cldnn_softmax_desc", "group__c__primitives.html#structcldnn__softmax__desc", null ],
     [ "cldnn_tensor", "group__c__memory.html#structcldnn__tensor", null ],
+    [ "cldnn_tuning_config", "group__c__network.html#structcldnn__tuning__config", null ],
     [ "cldnn_uint16_t_arr", "group__c__topology.html#structcldnn__uint16__t__arr", null ],
     [ "cldnn::data_type_to_type< Data_Type >", "group__cpp__memory.html#structcldnn_1_1data__type__to__type", null ],
     [ "cldnn::data_type_traits", "structcldnn_1_1data__type__traits.html", null ],
@@ -83,6 +89,9 @@ var hierarchy =
       ] ],
       [ "cldnn::primitive_base< crop, cldnn_crop_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::crop", "structcldnn_1_1crop.html", null ]
+      ] ],
+      [ "cldnn::primitive_base< custom_gpu_primitive, cldnn_custom_gpu_primitive_desc >", "classcldnn_1_1primitive__base.html", [
+        [ "cldnn::custom_gpu_primitive", "structcldnn_1_1custom__gpu__primitive.html", null ]
       ] ],
       [ "cldnn::primitive_base< data, cldnn_data_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::data", "structcldnn_1_1data.html", null ]
@@ -152,6 +161,7 @@ var hierarchy =
     [ "true_type", null, [
       [ "cldnn::meta::all< Values >", "structcldnn_1_1meta_1_1all.html", null ]
     ] ],
+    [ "cldnn::tuning_config_options", "structcldnn_1_1tuning__config__options.html", null ],
     [ "type", null, [
       [ "cldnn::meta::is_any_of< T, U, Rest... >", "structcldnn_1_1meta_1_1is__any__of_3_01_t_00_01_u_00_01_rest_8_8_8_01_4.html", null ]
     ] ],

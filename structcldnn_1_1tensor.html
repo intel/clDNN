@@ -118,6 +118,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a65b7a4c850416fbd28e6895e0126c66c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1tensor.html#a65b7a4c850416fbd28e6895e0126c66c">tensor</a> (const std::vector&lt; <a class="el" href="structcldnn_1_1tensor.html#a1e822dca3c7365bd41058907bf119fe2">value_type</a> &gt; &amp;<a class="el" href="structcldnn_1_1tensor.html#ad69a98cff1aa43117280977cbbf8e4ff">sizes</a>, <a class="el" href="structcldnn_1_1tensor.html#a1e822dca3c7365bd41058907bf119fe2">value_type</a> default_size=1)</td></tr>
 <tr class="memdesc:a65b7a4c850416fbd28e6895e0126c66c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs <code>tensor</code> using vector of sizes.  <a href="#a65b7a4c850416fbd28e6895e0126c66c">More...</a><br /></td></tr>
 <tr class="separator:a65b7a4c850416fbd28e6895e0126c66c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2b64950fe88867af8705f2b3acb3c3d"><td class="memItemLeft" align="right" valign="top"><a id="aa2b64950fe88867af8705f2b3acb3c3d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>tensor</b> (<a class="el" href="structcldnn_1_1format.html">format</a> fmt, const std::vector&lt; <a class="el" href="structcldnn_1_1tensor.html#a1e822dca3c7365bd41058907bf119fe2">value_type</a> &gt; &amp;<a class="el" href="structcldnn_1_1tensor.html#ad69a98cff1aa43117280977cbbf8e4ff">sizes</a>, <a class="el" href="structcldnn_1_1tensor.html#a1e822dca3c7365bd41058907bf119fe2">value_type</a> default_size=1)</td></tr>
+<tr class="separator:aa2b64950fe88867af8705f2b3acb3c3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa412882c7404bc9f5328f5ad548683be"><td class="memItemLeft" align="right" valign="top"><a id="aa412882c7404bc9f5328f5ad548683be"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1tensor.html#aa412882c7404bc9f5328f5ad548683be">tensor</a> (const <a class="el" href="group__c__memory.html#structcldnn__tensor">cldnn_tensor</a> &amp;other)</td></tr>
 <tr class="memdesc:aa412882c7404bc9f5328f5ad548683be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implicit conversion form C API :: <a class="el" href="group__c__memory.html#structcldnn__tensor" title="N-dimensional vector. Mostly used to represent memory size. ">cldnn_tensor</a>. <br /></td></tr>
@@ -179,6 +182,10 @@ Static Public Member Functions</h2></td></tr>
 static <a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1tensor.html#a3f6e289c067a925516a3df7728d470a6">max</a> (<a class="el" href="structcldnn_1_1tensor.html">tensor</a> const &amp;lhs, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> const &amp;rhs)</td></tr>
 <tr class="memdesc:a3f6e289c067a925516a3df7728d470a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a tensor containing values maximum from <code>lhs</code> and <code>rhs</code>. <br /></td></tr>
 <tr class="separator:a3f6e289c067a925516a3df7728d470a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a068a9a143da3abeacbdd6ffc7e4c5b32"><td class="memItemLeft" align="right" valign="top"><a id="a068a9a143da3abeacbdd6ffc7e4c5b32"></a>
+static <a class="el" href="structcldnn_1_1tensor.html">tensor</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1tensor.html#a068a9a143da3abeacbdd6ffc7e4c5b32">min</a> (<a class="el" href="structcldnn_1_1tensor.html">tensor</a> const &amp;lhs, <a class="el" href="structcldnn_1_1tensor.html">tensor</a> const &amp;rhs)</td></tr>
+<tr class="memdesc:a068a9a143da3abeacbdd6ffc7e4c5b32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a tensor containing values minimum from <code>lhs</code> and <code>rhs</code>. <br /></td></tr>
+<tr class="separator:a068a9a143da3abeacbdd6ffc7e4c5b32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -402,7 +409,7 @@ template&lt;typename ... KindInitTys, typename  = typename std::enable_if&lt;   
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00562">562</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00584">584</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
 
 </div>
 </div>
@@ -450,7 +457,7 @@ template&lt;typename ... KindInitTys, typename  = typename std::enable_if&lt;   
 </dl>
 <p>Example:</p>
 <div class="fragment"><div class="line">tensor my_tensor({ 2, 3, 4, 5 });</div><div class="line"><span class="keyword">auto</span> my_sizes = my_tensor.sizes();</div><div class="line">cout &lt;&lt; <span class="stringliteral">&quot;dims_num=&quot;</span> &lt;&lt; my_sizes.size() &lt;&lt; endl; <span class="comment">// dims_num=2</span></div><div class="line">cout &lt;&lt; <span class="stringliteral">&quot;b=&quot;</span> &lt;&lt; my_sizes[0] &lt;&lt; endl;            <span class="comment">// b=2</span></div><div class="line">cout &lt;&lt; <span class="stringliteral">&quot;f=&quot;</span> &lt;&lt; my_sizes[1] &lt;&lt; endl;            <span class="comment">// f=3</span></div><div class="line">cout &lt;&lt; <span class="stringliteral">&quot;x=&quot;</span> &lt;&lt; my_sizes[2] &lt;&lt; endl;            <span class="comment">// x=5</span></div><div class="line">cout &lt;&lt; <span class="stringliteral">&quot;y=&quot;</span> &lt;&lt; my_sizes[3] &lt;&lt; endl;            <span class="comment">// y=4</span></div><div class="line"><span class="keyword">auto</span> new_tensor = my_tensor.transform(<a class="code" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6ae0d35fc1dcf8e6b5522b798f67bc3e2b">format::yxfb</a>, 10);</div><div class="line"><span class="keyword">auto</span> new_sizes = new_tensor.sizes();</div><div class="line">cout &lt;&lt; <span class="stringliteral">&quot;new_num=&quot;</span> &lt;&lt; new_sizes.size() &lt;&lt; endl;   <span class="comment">// new_num=4</span></div><div class="line"><span class="keywordflow">for</span>(<span class="keyword">auto</span> dim : new_sizes) cout &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; dim;     <span class="comment">//  5 4 3 2</span></div><div class="line">cout &lt;&lt; endl;</div></div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00517">517</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00539">539</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
 
 </div>
 </div>

@@ -84,6 +84,7 @@ $(document).ready(function(){initNavTree('group__c__topology.html','');});
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">Network Topology<div class="ingroups"><a class="el" href="group__c__api.html">C API</a></div></div>  </div>
@@ -116,6 +117,12 @@ Classes</h2></td></tr>
 <tr class="memitem:structcldnn__primitive__id__arr"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td></tr>
 <tr class="memdesc:structcldnn__primitive__id__arr"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents reference to an array of primitive ids.  <a href="group__c__topology.html#structcldnn__primitive__id__arr">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__primitive__id__arr"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__arg"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#structcldnn__arg">cldnn_arg</a></td></tr>
+<tr class="memdesc:structcldnn__arg"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel argument type.  <a href="group__c__topology.html#structcldnn__arg">More...</a><br /></td></tr>
+<tr class="separator:structcldnn__arg"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__activation__additional__params"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#structcldnn__activation__additional__params">cldnn_activation_additional_params</a></td></tr>
+<tr class="memdesc:structcldnn__activation__additional__params"><td class="mdescLeft">&#160;</td><td class="mdescRight">activation additional params  <a href="group__c__topology.html#structcldnn__activation__additional__params">More...</a><br /></td></tr>
+<tr class="separator:structcldnn__activation__additional__params"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcldnn__primitive__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#structcldnn__primitive__desc">cldnn_primitive_desc</a></td></tr>
 <tr class="memdesc:structcldnn__primitive__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Basic primitive descriptor structure.  <a href="group__c__topology.html#structcldnn__primitive__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__primitive__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,6 +154,60 @@ typedef const struct cldnn_primitive_type *&#160;</td><td class="memItemRight" v
 typedef const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td></tr>
 <tr class="memdesc:ga196d92d00c39d1e4ec171924e65f30db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unique <code>id</code> of a primitive within a topology. <br /></td></tr>
 <tr class="separator:ga196d92d00c39d1e4ec171924e65f30db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga84cdcb599431141e121ea5f7ca736277"><td class="memItemLeft" align="right" valign="top"><a id="ga84cdcb599431141e121ea5f7ca736277"></a>
+typedef const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga84cdcb599431141e121ea5f7ca736277">cldnn_kernel_code</a></td></tr>
+<tr class="memdesc:ga84cdcb599431141e121ea5f7ca736277"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel source code. <br /></td></tr>
+<tr class="separator:ga84cdcb599431141e121ea5f7ca736277"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga388722848734124bd19974884455d3d4"><td class="memItemLeft" align="right" valign="top"><a id="ga388722848734124bd19974884455d3d4"></a>
+typedef <a class="el" href="group__c__topology.html#ga84cdcb599431141e121ea5f7ca736277">cldnn_kernel_code</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga388722848734124bd19974884455d3d4">cldnn_kernels_code</a></td></tr>
+<tr class="memdesc:ga388722848734124bd19974884455d3d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel source code array. <br /></td></tr>
+<tr class="separator:ga388722848734124bd19974884455d3d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3bb4fa2bc98b2c10daedccef94a0a69f"><td class="memItemLeft" align="right" valign="top"><a id="ga3bb4fa2bc98b2c10daedccef94a0a69f"></a>
+typedef const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga3bb4fa2bc98b2c10daedccef94a0a69f">cldnn_kernel_entry_point</a></td></tr>
+<tr class="memdesc:ga3bb4fa2bc98b2c10daedccef94a0a69f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel entry point. <br /></td></tr>
+<tr class="separator:ga3bb4fa2bc98b2c10daedccef94a0a69f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga65a991c29ff5386e3478f208c0fb12a6"><td class="memItemLeft" align="right" valign="top"><a id="ga65a991c29ff5386e3478f208c0fb12a6"></a>
+typedef const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga65a991c29ff5386e3478f208c0fb12a6">cldnn_kernel_build_options</a></td></tr>
+<tr class="memdesc:ga65a991c29ff5386e3478f208c0fb12a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel build options. <br /></td></tr>
+<tr class="separator:ga65a991c29ff5386e3478f208c0fb12a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9deadef40837b1ff1cd709597b4636b4"><td class="memItemLeft" align="right" valign="top"><a id="ga9deadef40837b1ff1cd709597b4636b4"></a>
+typedef const size_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga9deadef40837b1ff1cd709597b4636b4">cldnn_work_group_sizes</a></td></tr>
+<tr class="memdesc:ga9deadef40837b1ff1cd709597b4636b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel workgroup sizes. <br /></td></tr>
+<tr class="separator:ga9deadef40837b1ff1cd709597b4636b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga24338e55db741b4a1b5c9c3b4c0bcaf2"><td class="memItemLeft" align="right" valign="top"><a id="ga24338e55db741b4a1b5c9c3b4c0bcaf2"></a>
+typedef uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga24338e55db741b4a1b5c9c3b4c0bcaf2">cldnn_arg_index</a></td></tr>
+<tr class="memdesc:ga24338e55db741b4a1b5c9c3b4c0bcaf2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel argument index. <br /></td></tr>
+<tr class="separator:ga24338e55db741b4a1b5c9c3b4c0bcaf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga094776c76a37837b38312840bfd342f5"><td class="memItemLeft" align="right" valign="top"><a id="ga094776c76a37837b38312840bfd342f5"></a>
+typedef const <a class="el" href="group__c__topology.html#structcldnn__arg">cldnn_arg</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga094776c76a37837b38312840bfd342f5">cldnn_kernel_arguments</a></td></tr>
+<tr class="memdesc:ga094776c76a37837b38312840bfd342f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel argument array. <br /></td></tr>
+<tr class="separator:ga094776c76a37837b38312840bfd342f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:gae464b9c9be5eb0982d1493d1b5c15f80"><td class="memItemLeft" align="right" valign="top"><a id="gae464b9c9be5eb0982d1493d1b5c15f80"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#gae464b9c9be5eb0982d1493d1b5c15f80">cldnn_arg_type</a> { <b>arg_input</b>, 
+<b>arg_output</b>
+ }<tr class="memdesc:gae464b9c9be5eb0982d1493d1b5c15f80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom primitive kernel argument type. <br /></td></tr>
+</td></tr>
+<tr class="separator:gae464b9c9be5eb0982d1493d1b5c15f80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5488c3a630352fd2586b23d2e75fa4ea"><td class="memItemLeft" align="right" valign="top"><a id="ga5488c3a630352fd2586b23d2e75fa4ea"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#ga5488c3a630352fd2586b23d2e75fa4ea">cldnn_activation_func</a> { <br />
+&#160;&#160;<b>activation_none</b>, 
+<b>activation_logistic</b>, 
+<b>activation_hyperbolic_tan</b>, 
+<b>activation_relu</b>, 
+<br />
+&#160;&#160;<b>activation_relu_negative_slope</b>, 
+<b>activation_clamp</b>, 
+<b>activation_softrelu</b>, 
+<b>activation_abs</b>, 
+<br />
+&#160;&#160;<b>activation_linear</b>, 
+<b>activation_square</b>, 
+<b>activation_sqrt</b>
+<br />
+ }<tr class="memdesc:ga5488c3a630352fd2586b23d2e75fa4ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">activation functions <br /></td></tr>
+</td></tr>
+<tr class="separator:ga5488c3a630352fd2586b23d2e75fa4ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -184,7 +245,7 @@ CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of floats. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00260">260</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00280">280</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -216,7 +277,7 @@ Size (in floats) of the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of uint16_t. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00267">267</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00287">287</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -248,7 +309,7 @@ Size (in uint16_t) of the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of primitive ids. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00280">280</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00300">300</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -267,6 +328,70 @@ Number of ids in the array. </td></tr>
 
 </div>
 </div>
+<a name="structcldnn__arg" id="structcldnn__arg"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__arg">&#9670;&nbsp;</a></span>cldnn_arg</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_arg</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Custom primitive kernel argument type. </p>
+
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00328">328</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="a19dd34e99674d9ee90d0b339acce3449"></a><a class="el" href="group__c__topology.html#gae464b9c9be5eb0982d1493d1b5c15f80">cldnn_arg_type</a></td>
+<td class="fieldname">
+arg_type</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="af03d09b200e20bbbe11bc46991b4c34d"></a><a class="el" href="group__c__topology.html#ga24338e55db741b4a1b5c9c3b4c0bcaf2">cldnn_arg_index</a></td>
+<td class="fieldname">
+index</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<a name="structcldnn__activation__additional__params" id="structcldnn__activation__additional__params"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__activation__additional__params">&#9670;&nbsp;</a></span>cldnn_activation_additional_params</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_activation_additional_params</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>activation additional params </p>
+
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00354">354</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="ad0d3ef99db04126f6444ca703dc31ef1"></a>float</td>
+<td class="fieldname">
+a</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a916425961702c7853cdc70ff1e9b75b0"></a>float</td>
+<td class="fieldname">
+b</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
 <a name="structcldnn__primitive__desc" id="structcldnn__primitive__desc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structcldnn__primitive__desc">&#9670;&nbsp;</a></span>cldnn_primitive_desc</h2>
 
@@ -280,7 +405,7 @@ Number of ids in the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Basic primitive descriptor structure. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00306">306</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00379">379</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_primitive_desc:</div>
 <div class="dyncontent">
@@ -341,7 +466,7 @@ Primitive type identificator. </td></tr>
 <p>Begin primitive description definition. </p>
 <p>Defines <code>'cldnn_primitive_type_desc'</code> structure with first 5 fields common for all primitive descriptors. Other fields should be added after this macro. primitive descriptor definition should be closed by <a class="el" href="group__c__topology.html#ga62762eae9738ae5bfceca3a258a02cd1">CLDNN_END_PRIMITIVE_DESC</a>. Output padding information. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00290">290</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00363">363</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 
 </div>
 </div>

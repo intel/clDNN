@@ -95,9 +95,9 @@ $(document).ready(function(){initNavTree('structcldnn_1_1engine__configuration.h
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7e14ba251bcdc0393547a59777bed5dd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a7e14ba251bcdc0393547a59777bed5dd">engine_configuration</a> (bool <a class="el" href="group__cpp__program.html#gga3848e071efdbd543eb28ff24d4cc53eba3cdda3e94e1b3dfd218a9d60b8139968">profiling</a>=false, bool decorate_kernel_names=false, const std::string &amp;options=std::string(), const std::string &amp;single_kernel=std::string())</td></tr>
-<tr class="memdesc:a7e14ba251bcdc0393547a59777bed5dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs engine configuration with specified options.  <a href="#a7e14ba251bcdc0393547a59777bed5dd">More...</a><br /></td></tr>
-<tr class="separator:a7e14ba251bcdc0393547a59777bed5dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a437eb9bd9dcfef5707d7f952fb19765a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a437eb9bd9dcfef5707d7f952fb19765a">engine_configuration</a> (bool profiling=false, bool decorate_kernel_names=false, bool <a class="el" href="structcldnn_1_1engine__configuration.html#ae0d4e61480a4ff281d5e71d229bee728">dump_custom_program</a>=false, const std::string &amp;options=std::string(), const std::string &amp;single_kernel=std::string(), bool primitives_parallelisation=false, const std::string &amp;<a class="el" href="structcldnn_1_1engine__configuration.html#ac9f20113ee267fe4fa1cb80117c7dc0a">engine_log</a>=std::string(), const std::string &amp;<a class="el" href="structcldnn_1_1engine__configuration.html#afdd7c2afaea10876cbf68ed439bf94be">sources_dumps_dir</a>=std::string())</td></tr>
+<tr class="memdesc:a437eb9bd9dcfef5707d7f952fb19765a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs engine configuration with specified options.  <a href="#a437eb9bd9dcfef5707d7f952fb19765a">More...</a><br /></td></tr>
+<tr class="separator:a437eb9bd9dcfef5707d7f952fb19765a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa2a8c438b09dc7aa1260c9a8ab6d90c"><td class="memItemLeft" align="right" valign="top"><a id="afa2a8c438b09dc7aa1260c9a8ab6d90c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>engine_configuration</b> (const <a class="el" href="group__c__engine.html#structcldnn__engine__configuration">cldnn_engine_configuration</a> &amp;c_conf)</td></tr>
 <tr class="separator:afa2a8c438b09dc7aa1260c9a8ab6d90c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,6 +116,10 @@ const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href
 const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a556439fc2da89c0a2971424d6f7fa60b">meaningful_kernels_names</a></td></tr>
 <tr class="memdesc:a556439fc2da89c0a2971424d6f7fa60b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate meaniful names fo OpenCL kernels. <br /></td></tr>
 <tr class="separator:a556439fc2da89c0a2971424d6f7fa60b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0d4e61480a4ff281d5e71d229bee728"><td class="memItemLeft" align="right" valign="top"><a id="ae0d4e61480a4ff281d5e71d229bee728"></a>
+const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#ae0d4e61480a4ff281d5e71d229bee728">dump_custom_program</a></td></tr>
+<tr class="memdesc:ae0d4e61480a4ff281d5e71d229bee728"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dump the user OpenCL programs to files. <br /></td></tr>
+<tr class="separator:ae0d4e61480a4ff281d5e71d229bee728"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50822b299ebceebdbf12102c8421eb44"><td class="memItemLeft" align="right" valign="top"><a id="a50822b299ebceebdbf12102c8421eb44"></a>
 const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a50822b299ebceebdbf12102c8421eb44">compiler_options</a></td></tr>
 <tr class="memdesc:a50822b299ebceebdbf12102c8421eb44"><td class="mdescLeft">&#160;</td><td class="mdescRight">OpenCL compiler options string. <br /></td></tr>
@@ -124,14 +128,26 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
 const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a2c555b0303ab67bbbb17434b6b5f3810">single_kernel_name</a></td></tr>
 <tr class="memdesc:a2c555b0303ab67bbbb17434b6b5f3810"><td class="mdescLeft">&#160;</td><td class="mdescRight">If provided, runs specific layer. <br /></td></tr>
 <tr class="separator:a2c555b0303ab67bbbb17434b6b5f3810"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6ff193187258eef7005f6dc729ec9e4"><td class="memItemLeft" align="right" valign="top"><a id="ac6ff193187258eef7005f6dc729ec9e4"></a>
+const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#ac6ff193187258eef7005f6dc729ec9e4">enable_parallelisation</a></td></tr>
+<tr class="memdesc:ac6ff193187258eef7005f6dc729ec9e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables parallel execution of primitives which don't depend on each other. Disabled by default. <br /></td></tr>
+<tr class="separator:ac6ff193187258eef7005f6dc729ec9e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9f20113ee267fe4fa1cb80117c7dc0a"><td class="memItemLeft" align="right" valign="top"><a id="ac9f20113ee267fe4fa1cb80117c7dc0a"></a>
+const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#ac9f20113ee267fe4fa1cb80117c7dc0a">engine_log</a></td></tr>
+<tr class="memdesc:ac9f20113ee267fe4fa1cb80117c7dc0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies a file to which engine log should be dumped. Empty by default (means no logging). <br /></td></tr>
+<tr class="separator:ac9f20113ee267fe4fa1cb80117c7dc0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdd7c2afaea10876cbf68ed439bf94be"><td class="memItemLeft" align="right" valign="top"><a id="afdd7c2afaea10876cbf68ed439bf94be"></a>
+const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#afdd7c2afaea10876cbf68ed439bf94be">sources_dumps_dir</a></td></tr>
+<tr class="memdesc:afdd7c2afaea10876cbf68ed439bf94be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies a directory where sources of <a class="el" href="structcldnn_1_1program.html" title="Compiled program build from topology by engine. ">cldnn::program</a> objects should be dumped. Empty by default (means no dumping). <br /></td></tr>
+<tr class="separator:afdd7c2afaea10876cbf68ed439bf94be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Configuration parameters for created engine. </p>
 
 <p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00037">37</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a7e14ba251bcdc0393547a59777bed5dd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7e14ba251bcdc0393547a59777bed5dd">&#9670;&nbsp;</a></span>engine_configuration()</h2>
+<a id="a437eb9bd9dcfef5707d7f952fb19765a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a437eb9bd9dcfef5707d7f952fb19765a">&#9670;&nbsp;</a></span>engine_configuration()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -154,6 +170,12 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>dump_custom_program</em> = <code>false</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>options</em> = <code>std::string()</code>, </td>
         </tr>
@@ -161,7 +183,25 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>single_kernel</em> = <code>std::string()</code>&#160;</td>
+          <td class="paramname"><em>single_kernel</em> = <code>std::string()</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>primitives_parallelisation</em> = <code>false</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>engine_log</em> = <code>std::string()</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>sources_dumps_dir</em> = <code>std::string()</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -181,13 +221,14 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
   <table class="params">
     <tr><td class="paramname">profiling</td><td>Enable per-primitive profiling. </td></tr>
     <tr><td class="paramname">decorate_kernel_names</td><td>Generate meaniful names fo OpenCL kernels. </td></tr>
+    <tr><td class="paramname">dump_custom_program</td><td>Dump the custom OpenCL programs to files </td></tr>
     <tr><td class="paramname">options</td><td>OpenCL compiler options string. </td></tr>
     <tr><td class="paramname">single_kernel</td><td>If provided, runs specific layer. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00049">49</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00054">54</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
 
 </div>
 </div>
