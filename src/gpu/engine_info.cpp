@@ -29,7 +29,7 @@
 #include <fstream>
 #endif
 
-namespace neural { namespace gpu{
+namespace cldnn { namespace gpu{
 
 namespace {
 
@@ -135,7 +135,7 @@ const device_info& get_device_info(int device_id)
 {
 #define GEN_DEVICE(code, dev_id, model, arch, conf) { dev_id, {engine_info_internal::model, engine_info_internal::arch, engine_info_internal::conf, #code} },
     static const std::unordered_map<int, device_info> device_map{
-#include "devices.inc"
+#include "gpu_devices.inc"
     };
 #undef GEN_DEVICE
 

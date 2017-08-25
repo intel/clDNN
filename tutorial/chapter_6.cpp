@@ -81,8 +81,6 @@ void chapter_6(engine& engine)
     // Set option to optimize data.
     build_opt.set_option(build_option::optimize_data(true));
 
-    build_opt.set_option(build_option::profiling(true));
-
     network network(engine, topology, build_opt);
 
     // Set input.

@@ -17,6 +17,7 @@
 #include "crop_inst.h"
 #include "primitive_type_base.h"
 #include "memory_impl.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -37,7 +38,7 @@ std::string crop_inst::to_string(crop_node const& node)
 {
     std::stringstream               primitive_description;
     auto desc                       = node.get_primitive();
-    auto input                      = node.input();
+    auto& input                     = node.input();
     auto ref_input                  = desc->reference_input;
     auto offsets                    = desc->offsets;
     
@@ -60,28 +61,15 @@ crop_inst::typed_primitive_inst(network_impl& network, crop_node const& node)
     auto input_format = input_memory().get_layout().format;
     auto offsets = argument.offsets;
 
-    if ((input_format!= format::yxfb) && (input_format != format::bfyx))
-        throw std::runtime_error("Crop layer is only supported for yxfb and bfyx formats!");
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input format", input_format.value, "supported crop input formats", format::yxfb, format::bfyx );
 
     //check if output sizes matches reference input sizes
-    if (reference_input_sizes.batch[0] > input_sizes.batch[0])
-        throw std::runtime_error("Reference input batch dimension > input batch dimension!");
-    if (reference_input_sizes.feature[0] > input_sizes.feature[0])
-        throw std::runtime_error("Reference input feature dimension > input batch dimension!");
-    if (reference_input_sizes.spatial[0] > input_sizes.spatial[0])
-        throw std::runtime_error("Reference input X dimension > input batch dimension!");
-    if (reference_input_sizes.spatial[1] > input_sizes.spatial[1])
-        throw std::runtime_error("Reference input Y dimension > input batch dimension!");
-
+    CLDNN_ERROR_TENSOR_SIZES_GREATER_THAN(node.id(), "Reference input", reference_input_sizes, "input sizes", input_sizes, "Reference input tensor/ input tensor mismtach");
+    
     //check if offsets do not extend input sizes and if match the output sizes
-    if (((offsets.batch[0] < 0) || (input_sizes.batch[0] - offsets.batch[0]) < reference_input_sizes.batch[0]))
-        throw std::runtime_error("Invalid Batch offset: negative value or exceeds data for output!");
-    if (((offsets.feature[0] < 0) || (input_sizes.feature[0] - offsets.feature[0]) < reference_input_sizes.feature[0]))
-        throw std::runtime_error("Invalid Feature offset: negative value or exceeds data for output!");
-    if (((offsets.spatial[0] < 0) || (input_sizes.spatial[0] - offsets.spatial[0]) < reference_input_sizes.spatial[0]))
-        throw std::runtime_error("Invalid X offset: negative value or exceeds data for output!");
-    if (((offsets.spatial[1] < 0) || (input_sizes.spatial[1] - offsets.spatial[1]) < reference_input_sizes.spatial[1]))
-        throw std::runtime_error("Invalid Y offset: negative value or exceeds data for output!");
+    CLDNN_ERROR_TENSOR_SIZES_LESS_THAN(node.id(), "Batch offsets", offsets, "0 value", { 0, 0, 0, 0 }, "Invalid Batch offset: negative value");
+    auto input_size_sub_offsets = input_sizes - offsets;
+    CLDNN_ERROR_TENSOR_SIZES_LESS_THAN(node.id(), "input sizes - offsets", input_size_sub_offsets, "reference input sizes", reference_input_sizes, "Invalid Batch offset: exceeds data for output!");
 
     if (node.can_be_optimized())
     {
@@ -95,7 +83,7 @@ void crop_inst::on_execute()
     if (!node.can_be_optimized())
         return;
 
-    if (_output && _output->is_the_same_buffer(input_memory()))
+    if (_output && _network.get_engine().is_the_same_buffer(output_memory(), input_memory()))
         return;
 
     reuse_input();
@@ -103,6 +91,6 @@ void crop_inst::on_execute()
 
 void crop_inst::reuse_input()
 {
-    _output = api_cast(_network.get_engine()->reinterpret_buffer(api_cast(input_memory().get()), node.get_output_layout()));
+    _output = _network.get_engine().reinterpret_buffer(input_memory(), node.get_output_layout());
 }
 }

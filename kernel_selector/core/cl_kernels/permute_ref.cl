@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
-KERNEL (reshape_padding)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
+KERNEL (permute_ref)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
 {
     uint4 input_indices, output_indices;
     
@@ -28,7 +28,7 @@ KERNEL (reshape_padding)(const __global UNIT_TYPE* input, __global UNIT_TYPE* ou
     output_indices[2] = input_indices[PERMUTE_ORDER[2]];
     output_indices[3] = input_indices[PERMUTE_ORDER[3]];
     
-    uint input_offset =  INPUT_OFFSET +
+    uint input_offset =  INPUT0_OFFSET +
                          input_indices[0]*INPUT0_PITCHES[0] +
                          input_indices[1]*INPUT0_PITCHES[1] +
                          input_indices[2]*INPUT0_PITCHES[2] +
@@ -39,5 +39,5 @@ KERNEL (reshape_padding)(const __global UNIT_TYPE* input, __global UNIT_TYPE* ou
                          output_indices[2]*OUTPUT_PITCHES[2] +
                          output_indices[3]*OUTPUT_PITCHES[3];
 
-    output[output_offset] = input[input_offset];
+    output[output_offset] = ACTIVATION(input[input_offset], NL_M, NL_N);
 }

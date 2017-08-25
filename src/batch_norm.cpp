@@ -16,6 +16,7 @@
 
 #include "batch_norm_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -34,9 +35,9 @@ std::string batch_norm_inst::to_string(batch_norm_node const& node)
 {
     std::stringstream               primitive_description;
     auto desc                       = node.get_primitive();
-    auto input                      = node.input();
-    auto mean                       = node.mean();
-    auto variance                   = node.variance();
+    auto& input                     = node.input();
+    auto& mean                      = node.mean();
+    auto& variance                  = node.variance();
     auto global_stats               = desc->use_global_stats ? " true" : "false";
 
     primitive_description << "id: " << desc->id << ", type: batch_norm" << 
@@ -58,15 +59,7 @@ batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node con
     auto mean_format = mean_memory().get_layout().format;
     auto variance_format = variance_memory().get_layout().format;
 
-    if (mean_format != format::yxfb &&
-        mean_format != format::bfyx)
-    {
-        throw std::runtime_error("Mean is not in yxfb or bfyx format!");
-    }
-    if (variance_format != format::yxfb &&
-        variance_format != format::bfyx)
-    {
-        throw std::runtime_error("Variance is not in yxfb or bfyx format!");
-    }
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Mean format", mean_format.value, "supported mean formats", format::yxfb, format::bfyx );
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Variance format", variance_format.value, "supported variance formats", format::yxfb, format::bfyx );
 }
 }

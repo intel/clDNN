@@ -30,9 +30,9 @@ struct typed_program_node<scale> : public typed_program_node_base<scale>
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
-    auto& scale_in() const { return get_dependency(1); }
-    auto& bias() const { return get_dependency(2); }
+    decltype(auto) input() const { return get_dependency(0); }
+    decltype(auto) scale_in() const { return get_dependency(1); }
+    decltype(auto) bias() const { return get_dependency(2); }
 
     bool bias_term() const { return get_dependencies().size() > 2; }
 };
@@ -51,9 +51,8 @@ public:
 public:
     typed_primitive_inst(network_impl& network, scale_node const& desc);
 
-    const memory& input_memory() const { return dep_memory(0); }
-    const memory& scale_memory() const { return dep_memory(1); }
-    const memory& bias_memory() const { return dep_memory(2); }
+    decltype(auto) scale_memory() const { return dep_memory(1); }
+    decltype(auto) bias_memory() const { return dep_memory(2); }
 
     bool bias_term() const { return _deps.size() > 2; }
 };

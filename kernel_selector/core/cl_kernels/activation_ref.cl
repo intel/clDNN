@@ -14,17 +14,28 @@
 // limitations under the License.
 */
 
-#include "include/cnn_common.cl"
+#include "include/include_all.cl"
 
 // TODO: move it from layout based to memory based
 KERNEL(activation)(
-    __global DATA_TYPE* input, 
-    __global DATA_TYPE* output
+    __global UNIT_TYPE* input, 
+    __global UNIT_TYPE* output
 #ifdef PARAMETERIZED 
     , __global ADDITIONAL_PARAMS_TYPE* params
 #endif
     )
 {
+#if defined OUTPUT_LAYOUT_YXFB
+    const unsigned x = get_global_id(1);
+    const unsigned y = get_global_id(2);
+#if OUTPUT_BATCH_NUM == 1
+    const unsigned feature = get_global_id(0);
+    const unsigned batch = 0;
+#else
+    const unsigned feature = get_global_id(0) % OUTPUT_FEATURE_NUM;
+    const unsigned batch = get_global_id(0) / OUTPUT_FEATURE_NUM;
+#endif
+#else
     const unsigned x = get_global_id(0);
     const unsigned y = get_global_id(1);
 #if OUTPUT_BATCH_NUM == 1
@@ -34,8 +45,9 @@ KERNEL(activation)(
     const unsigned feature = get_global_id(2) % OUTPUT_FEATURE_NUM;
     const unsigned batch = get_global_id(2) / OUTPUT_FEATURE_NUM;
 #endif
+#endif
 
-    const unsigned src_index = batch*INPUT_BATCH_PITCH + feature*INPUT_FEATURE_PITCH + y*INPUT_Y_PITCH + x*INPUT_X_PITCH + INPUT_OFFSET;
+    const unsigned src_index = batch*INPUT0_BATCH_PITCH + feature*INPUT0_FEATURE_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH + INPUT0_OFFSET;
     const unsigned dst_index = batch*OUTPUT_BATCH_PITCH + feature*OUTPUT_FEATURE_PITCH + y*OUTPUT_Y_PITCH + x*OUTPUT_X_PITCH + OUTPUT_OFFSET;
 
 #if defined PARAMETERIZED
@@ -53,5 +65,5 @@ KERNEL(activation)(
     const float nl_m = (float)NL_M;
     const float nl_n = (float)NL_N;
 #endif
-    output[dst_index] = FUNC_CALL(activation_function)(input[src_index], nl_m, nl_n);
+    output[dst_index] = ACTIVATION(input[src_index], nl_m, nl_n);
 }

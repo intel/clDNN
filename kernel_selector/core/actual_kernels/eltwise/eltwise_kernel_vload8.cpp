@@ -32,16 +32,14 @@ namespace KernelSelector {
         return k;
     }
 
-    JitConstants EltwiseKernel_vload8::get_jit_constants(const EltwiseParams& params) const
+    JitConstants EltwiseKernel_vload8::GetJitConstants(const EltwiseParams& params) const
     {
-        auto jit = MakeEltwiseJitConstants(params);
-        jit.AddConstant(MakeJitConstant(toString(params.eltwiseParams.operations[0].mode) + "_MODE_USED", 1));
-        return jit;
+        return GetJitConstantsCommon(params, true);
     }
 
-    bool EltwiseKernel_vload8::Validate(const Params& params, const OptionalParams&) const
+    bool EltwiseKernel_vload8::Validate(const Params& params, const OptionalParams& o) const
     {
-        if (params.GetType() != KernelType::ELTWISE)
+        if (!EltwiseKernelBase::Validate(params, o))
         {
             return false;
         }
@@ -51,24 +49,19 @@ namespace KernelSelector {
         const auto count = output.PhysicalSize();
 
         const bool bSupportedCount = (count % 8) == 0;
-
-        if (!CheckActivationSupport(ewParams.activationFunc) ||
-            !CheckInputsOutputNoPitchSameDims(ewParams) ||
-            ewParams.eltwiseParams.operations.size() != 1 ||
-            ewParams.inputs.size() != 2 ||
-            !bSupportedCount)
+        
+        bool bCheckSizes = true;
+        for (size_t i = 0; i < ewParams.inputs.size(); i++)
         {
-            return false;
+            //allow only the same input sizes or scalars, without pitches
+            if (ewParams.inputs[i].PitchesDifferFromLogicalDims() ||
+               (!(ewParams.inputs[0] == ewParams.inputs[i] && ewParams.inputs[i] == ewParams.output) &&
+                   ewParams.inputs[i].PhysicalSize() != 1))
+                bCheckSizes = false;
         }
 
-        switch (ewParams.eltwiseParams.operations[0].mode)
+        if (!bCheckSizes || !bSupportedCount)
         {
-        case EltwiseMode::ADD:
-        case EltwiseMode::SUB:
-        case EltwiseMode::MUL:
-        case EltwiseMode::MAX:
-            break;
-        default:
             return false;
         }
 
@@ -91,7 +84,7 @@ namespace KernelSelector {
 
         try
         {
-            auto cldnn_jit = get_jit_constants(newParams);
+            auto cldnn_jit = GetJitConstants(newParams);
             jit = CreateJit(kernelName, cldnn_jit, entry_point);
         }
         catch (const std::runtime_error&)

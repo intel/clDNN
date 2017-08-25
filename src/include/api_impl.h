@@ -39,6 +39,7 @@ namespace cldnn {
         {
             _msg = ex.what();
         }
+
         /// @breif Gets the message of last error
         const std::string& get_last_error_message()
         {

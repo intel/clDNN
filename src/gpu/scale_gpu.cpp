@@ -15,42 +15,37 @@
 */
 
 #include "scale_inst.h"
-#include "kernel.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
-#include "eltwise/eltwise_kernel_selector.h"
 #include "kernel_selector_helper.h"
+#include "error_handler.h"
 
 using namespace cldnn;
 
-namespace neural
+namespace cldnn { namespace gpu {
+
+
+struct scale_gpu : typed_primitive_gpu_impl<scale>
 {
+    using parent = typed_primitive_gpu_impl<scale>;
+    using parent::parent;
 
-struct scale_gpu : typed_primitive_impl<scale>
-{
-    const scale_node& outer;
-    gpu::kernel _kernel;
+protected:
 
-    scale_gpu(const scale_node& arg, const kernel_selector::kernel_data& kd)
-        : outer(arg)
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
+    virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<scale>& instance, int32_t) const override
     {
-        _kernel_data = kd; 
-    }
-
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, scale_inst& instance) override
-    {
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
+        kernel::kernel_arguments_data args;
         args.inputs = { &instance.input_memory(), &instance.scale_memory() };
         args.output = &instance.output_memory();
 
-        if (outer.bias_term())
+        if (_outer.bias_term())
         {
             args.inputs.push_back(&instance.bias_memory());
         }
-
-        return _kernel.run(_kernel_data.kernels[0], events, args);
+        return args;
     }
+
+public:
 
     static primitive_impl* create(const scale_node& arg) 
     { 
@@ -76,10 +71,7 @@ struct scale_gpu : typed_primitive_impl<scale>
         auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
 
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto scale = new scale_gpu(arg, best_kernels[0]);
 
@@ -92,13 +84,13 @@ namespace {
         attach() {
             auto val_fw = scale_gpu::create;
 
-            implementation_map<scale>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), val_fw);
-            implementation_map<scale>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), val_fw);
-            implementation_map<scale>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), val_fw);
-            implementation_map<scale>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), val_fw);
+            implementation_map<scale>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), val_fw);
+            implementation_map<scale>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw);
+            implementation_map<scale>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
+            implementation_map<scale>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
         }
         ~attach() {}
     };
     attach attach_impl;
 }
-} // namespace neural
+} }

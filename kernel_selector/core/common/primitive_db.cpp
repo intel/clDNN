@@ -25,11 +25,23 @@ primitive_db::primitive_db() : primitives({
 
 std::vector<code> primitive_db::get(const primitive_id & id) const
 {
-    const auto codes = primitives.equal_range(id);
-    std::vector<code> temp;
-    std::for_each(codes.first, codes.second, [&](const std::pair<const std::string, std::string>& c){ temp.push_back(c.second); });
-    assert(temp.size() > 0 && "There should be at least one implementation of primitive");
-    return temp;
+    try
+    {
+        const auto codes = primitives.equal_range(id);
+        std::vector<code> temp;
+        std::for_each(codes.first, codes.second, [&](const std::pair<const std::string, std::string>& c) { temp.push_back(c.second); });
+
+        if (temp.size() != 1)
+        {
+            throw std::runtime_error("cannot find the kernel " + id + " in primitive database.");
+        }
+
+        return temp;
+    }
+    catch (...)
+    {
+        throw std::runtime_error("cannot find the kernel " + id + " in primitive database.");
+    }
 }
 
 } } }

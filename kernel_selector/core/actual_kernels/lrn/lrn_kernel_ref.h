@@ -16,17 +16,22 @@
 
 #pragma once
 
-#include "cnn_kernel_base.h"
+#include "lrn_kernel_base.h"
  
 namespace KernelSelector 
 {    
-    class LRNKernelRef : public CNNKernelBase
+    class LRNKernelRef : public LRNKernelBase
     {
     public:
-        LRNKernelRef() : CNNKernelBase("cnn_lrn_ref") {}
+        using Parent = LRNKernelBase;
+        LRNKernelRef() : LRNKernelBase("lrn_ref") {}
         virtual ~LRNKernelRef() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
+
+    protected:
+        virtual JitConstants GetJitConstants(const LRNParams& params, DispatchData kd) const;
+        virtual DispatchData SetDefault(const LRNParams& params) const;
     };
 }

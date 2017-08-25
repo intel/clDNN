@@ -16,21 +16,21 @@
 
 #pragma once
 
-#include "common_kernel_base.h"
+#include "eltwise_kernel_base.h"
 
 namespace KernelSelector
 {
-    class EltwiseKernel_vload8 : public CommonKernelBase
+    class EltwiseKernel_vload8 : public EltwiseKernelBase
     {
     public:
-        EltwiseKernel_vload8() : CommonKernelBase("eltwise_simple_vload8") {}
+        EltwiseKernel_vload8() : EltwiseKernelBase("eltwise_simple_vload8") {}
         virtual ~EltwiseKernel_vload8() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        bool Validate(const Params& params, const OptionalParams&) const override;
-        JitConstants get_jit_constants(const EltwiseParams& params) const;
+        virtual bool Validate(const Params& p, const OptionalParams& o) const override;
+        virtual JitConstants GetJitConstants(const EltwiseParams& params) const override;
     };
 }

@@ -30,15 +30,9 @@ struct typed_program_node<concatenation> : public typed_program_node_base<concat
 public:
     using parent::parent;
 
-    auto& input(size_t idx = 0) const { return get_dependency(idx); }
+    decltype(auto) input(size_t idx = 0) const { return get_dependency(idx); }
 
     auto inputs_count() const { return desc->input.size(); }
-
-    auto can_be_optimized() const { return optimized; }
-    void can_be_optimized(bool opt) { optimized = opt; }
-
-private:
-    bool optimized = false;
 };
 
 using concatenation_node = typed_program_node<concatenation>;
@@ -54,8 +48,6 @@ public:
 
 public:
     typed_primitive_inst(network_impl& network, concatenation_node const& node);
-
-    const memory& input_memory(size_t idx) const { return dep_memory(idx); }
 };
 
 using concatenation_inst = typed_primitive_inst<concatenation>;

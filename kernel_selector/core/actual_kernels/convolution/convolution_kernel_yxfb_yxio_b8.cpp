@@ -52,14 +52,14 @@ namespace KernelSelector
 
         if (((filterOfmNum * batchSize) / 16) % runInfo.lws0)
         {
-            runInfo.ofmPerWorkItem = 8;
+            runInfo.cldnnStyle.ofmPerWorkItem = 8;
         }
         else
         {
-            runInfo.ofmPerWorkItem = 16;
+            runInfo.cldnnStyle.ofmPerWorkItem = 16;
         }
 
-        runInfo.gws0 = filterOfmNum * batchSize / (runInfo.ofmPerWorkItem * runInfo.batchesPerWorkItem);
+        runInfo.gws0 = filterOfmNum * batchSize / (runInfo.cldnnStyle.ofmPerWorkItem * runInfo.cldnnStyle.batchesPerWorkItem);
 
         runInfo.effiency = FORCE_PRIORITY_9;
         
@@ -139,7 +139,7 @@ namespace KernelSelector
         auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, true, !orgParams.bias.empty());
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
 
         kd.estimatedTime = runInfo.effiency;

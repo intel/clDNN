@@ -15,8 +15,7 @@
 */
 
 #include "roi_pooling_kernel_ref.h"
-#include "kernel_selector_utils.h" 
- 
+
 namespace KernelSelector {
 
     ParamsKey ROIPoolingKernelRef::GetSupportedKey() const
@@ -34,43 +33,63 @@ namespace KernelSelector {
         return k;
     }
 
+    static ROIPoolingKernelRef::DispatchData SetDefault(const ROIPoolingParams& params)
+    {
+        ROIPoolingKernelRef::DispatchData kd;
+
+        kd.fp16UnitUsed = (params.inputs[0].GetDType() == Datatype::F16);
+
+        // Determine global work sizes.
+        kd.gws0 = params.output.LogicalSize();
+        kd.gws1 = 1;
+        kd.gws2 = 1;
+
+        // Find largest positive local work size that is divider for global work size.
+        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
+        while (kd.gws0 % kd.lws0 != 0)
+        {
+            --kd.lws0;
+        }
+        kd.lws1 = 1;
+        kd.lws2 = 1;
+
+        return kd;
+    }
+
+    JitConstants ROIPoolingKernelRef::GetJitConstants(const ROIPoolingParams& params) const
+    {
+        auto jit = MakeROIPoolingV1JitConstants(params);
+
+        jit.AddConstants({
+            MakeJitConstant("MAX_POOL",                     params.roiParams.mode == PoolType::MAX),
+            MakeJitConstant("USE_OLD_SCALE_AND_ROUNDING",   params.roiParams.groupSize == 0)
+        });
+
+        return jit;
+    }
+
     KernelsData ROIPoolingKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
         assert(params.GetType() == KernelType::ROI_POOLING);
+        const ROIPoolingParams& orgParams = static_cast<const ROIPoolingParams&>(params);
 
+        if (orgParams.activationFunc != ActivationFunction::NONE)
+        {
+            return{};
+        }
+
+        DispatchData runInfo = SetDefault(orgParams);
         KernelData kd = KernelData::Default<ROIPoolingParams>(params);
 
-        ROIPoolingParams& newParams = *static_cast<ROIPoolingParams*>(kd.params.get());
-        const std::string kernel_id = GetEntryPoint(kernelName, params.layerID, options);
-
-        std::stringstream jit;
-        jit << GetBaseJit(newParams, kernel_id)
-            << "#define FP16_SUPPORTED 1\n"
-            << "#define UNIT_TYPE " << (newParams.inputs[0].GetDType() == Datatype::F16 ? "half" : "float") << "\n"
-            << "#define SRC_W (" << newParams.inputs[0].X().v << ")\n"
-            << "#define SRC_H (" << newParams.inputs[0].Y().v << ")\n"
-            << "#define DST_W (" << newParams.output.X().v << ")\n"
-            << "#define DST_H (" << newParams.output.Y().v << ")\n"
-            << "#define CHAN_NUM (" << newParams.inputs[0].Feature().v << ")\n"
-            << "#define ROIS_NUM (" << newParams.rois << ")\n"
-            << "#define BATCH_NUM (" << newParams.inputs[0].Batch().v << ")\n"
-            << "#define PITCH_SRC_H (" << newParams.inputs[0].Y().pitch << ")\n"
-            << "#define PITCH_SRC_C (" << newParams.inputs[0].Feature().pitch << ")\n"
-            << "#define PITCH_SRC_B (" << newParams.inputs[0].Batch().pitch << ")\n"
-            << "#define PITCH_ROI_R (" << newParams.pitchRoisR << ")\n"
-            << "#define PITCH_ROI_B (" << newParams.pitchRoisB << ")\n"
-            << "#define PITCH_DST_H (" << newParams.output.Y().pitch << ")\n"
-            << "#define PITCH_DST_C (" << newParams.output.Feature().pitch << ")\n"
-            << "#define PITCH_DST_R (" << newParams.output.ROI().pitch << ")\n"
-            << "#define PITCH_DST_B (" << newParams.output.Batch().pitch << ")\n";
+        auto cldnn_jit = GetJitConstants(orgParams);
+        auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
+        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        kernel.workGroups.global = { newParams.output.LogicalSize(), 1, 1 };
-        kernel.workGroups.local = GetOptimalLocalWorkGroupSizes(kernel.workGroups.global);
-        kernel.kernelString = GetKernelString(kernelName, jit.str(), kernel_id);
-        kernel.arguments = GetArgumentDesc(2, false, false);
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
+        kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
 
-        kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
+        kd.estimatedTime = FORCE_PRIORITY_9;
 
         return{ kd };
     }

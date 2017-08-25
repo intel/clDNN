@@ -66,8 +66,7 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         float activation_slp = 0.0f,
         const padding& output_padding = padding()
     )
-        :primitive_base(id, { input }, output_padding)
-        , input2(input2)
+        :primitive_base(id, { input, input2 }, output_padding)
         , mode(mode)
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
@@ -77,15 +76,14 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
     /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{eltwise}
     eltwise(const dto* dto)
         :primitive_base(dto)
-        , input2(dto->input2)
         , mode(static_cast<eltwise_mode>(dto->mode))
         , with_activation(dto->with_activation != 0)
         , activation_negative_slope(dto->activation_negative_slope)
     {
+        if (dto->input.size != 2)
+            throw std::invalid_argument("eltiwise dto should containt exactly two inputs");
     }
 
-    /// @brief Second input primitive id with values needed for eltwise computation.
-    primitive_id input2;
     /// @param mode Eltwise mode.
     eltwise_mode mode;
     /// @brief Enables Relu activation.
@@ -94,11 +92,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
     float activation_negative_slope;
 
 protected:
-    std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override { return{ input2 }; }
-
     void update_dto(dto& dto) const override
     {
-        dto.input2 = input2.c_str();
         dto.mode = static_cast<cldnn_eltwise_mode>(mode);
         dto.with_activation = with_activation;
         dto.activation_negative_slope = activation_negative_slope;

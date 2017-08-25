@@ -15,53 +15,33 @@
 */
 
 #include "reshape_inst.h"
-#include "kernel.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
-#include "events_waiter.h"
-#include "network_impl.h"
 #include "kernel_selector_helper.h"
+#include "error_handler.h"
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural
+struct reshape_gpu : public typed_primitive_gpu_impl<reshape>
 {
+    using parent = typed_primitive_gpu_impl<reshape>;
+    using parent::parent;
 
-struct reshape_gpu : public typed_primitive_impl<reshape>
-{
-    std::unique_ptr<gpu::kernel> _kernel;
+protected:
 
-    reshape_gpu(reshape_node const& node, const kernel_selector::kernel_data& kd)
-        : _kernel(std::make_unique<gpu::kernel>(node.get_program().get_engine()->get_context(), kd.kernels[0].kernelString))
+    virtual bool optimized_out(reshape_inst& instance) const override
     {
-        _kernel_data = kd;
+        return
+            parent::optimized_out(instance) || _outer.is_in_place();
     }
 
-    reshape_gpu(reshape_node const&){}
-
-    event_impl::ptr execute_impl(std::vector<event_impl::ptr> const& events, reshape_inst& instance)
-    {
-        if (!_kernel)
-        {
-            if (events.size() == 1)
-                return events[0];
-
-            neural::gpu::events_waiter events_waiter(instance.get_network().get_engine()->get_context());
-            return events_waiter.run(events);
-        }
-
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
-        args.inputs = { &instance.input_memory() };
-        args.output = &instance.output_memory();
-
-        return _kernel->run(_kernel_data.kernels[0], events, args);
-    }
+public:
 
     static primitive_impl* create(reshape_node const& arg) 
     { 
         if (arg.is_in_place())
         {
-            return new reshape_gpu(arg);
+            return new reshape_gpu(arg, {});
         }
 
         auto reorder_params = get_default_params<kernel_selector::reorder_base_params>(arg);
@@ -69,10 +49,8 @@ struct reshape_gpu : public typed_primitive_impl<reshape>
 
         auto& kernel_selector = kernel_selector::reshape_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(reorder_params, reorder_optional_params);
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto reorder = new reshape_gpu(arg, best_kernels[0]);
 
@@ -84,11 +62,11 @@ namespace {
     struct attach {
         attach() {
             implementation_map<reshape>::add({
-                { cldnn::engine_types::ocl, reshape_gpu::create }
+                { engine_types::ocl, reshape_gpu::create }
             });
         }
         ~attach() {}
     };
     attach attach_impl;
 }
-}
+} }

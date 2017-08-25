@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 UNIT_TYPE FUNC(find_max_value)(__local UNIT_TYPE* partial_max, const int global_id, const int idx, const int batch_offset, const int data_sets_count, const __global UNIT_TYPE* input)
 {
@@ -75,8 +75,8 @@ KERNEL (softmax_gpu_continoues_yxfb)(const __global UNIT_TYPE* input, __global U
     barrier(CLK_LOCAL_MEM_FENCE);
     for(int i = 0; i < ITEMS_NUM; i++)
     {
-        output[LWS * i + global_id] = tmp_vals[i] / partial_acc[batch_offset];
+        output[LWS * i + global_id] = ACTIVATION(tmp_vals[i] / partial_acc[batch_offset], NL_M ,NL_N);
     }
     if(global_id < LEFTOVERS)
-        output[LWS * ITEMS_NUM + global_id] = tmp_vals[ITEMS_NUM] / partial_acc[batch_offset];
+        output[LWS * ITEMS_NUM + global_id] = ACTIVATION(tmp_vals[ITEMS_NUM] / partial_acc[batch_offset], NL_M ,NL_N);
 }

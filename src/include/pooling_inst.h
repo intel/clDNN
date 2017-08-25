@@ -34,8 +34,6 @@ public:
     static std::string to_string(pooling_node const& node);
 public:
     using parent::parent;
-
-    const memory& input_memory() const { return dep_memory(0); }
 };
 
 using pooling_inst = typed_primitive_inst<pooling>;

@@ -30,7 +30,7 @@ struct typed_program_node<permute> : public typed_program_node_base<permute>
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
+    decltype(auto) input() const { return get_dependency(0); }
 };
 
 using permute_node = typed_program_node<permute>;
@@ -46,8 +46,6 @@ public:
 
 public:
     typed_primitive_inst(network_impl& network, permute_node const& node);
-
-    const memory& input_memory() const { return dep_memory(0); }
 };
 
 using permute_inst = typed_primitive_inst<permute>;

@@ -16,6 +16,7 @@
 
 #include "concatenation_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -83,34 +84,29 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
         auto& input_mem = i->output_memory();
         auto input_mem_size = input_mem.get_layout().size;
         if (input_mem.get_layout().fused_format() != input_format)
-            throw std::runtime_error("Every input must have the same format!");
-
+            CLDNN_ERROR_MESSAGE(node.id(), "Every input must have the same format!");
         for (int dim = concatenation::along_b; dim <= concatenation::along_y; ++dim)
         {
             if (dim == node.get_primitive()->axis)
                 concat_count += input_mem_size.raw[dim];
             else
             {
-                if (input_size.raw[dim] != input_mem_size.raw[dim])
-                    throw std::runtime_error("Every input must have the same size");
+                CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size dim: " + dim, input_size.raw[dim], "input memory dim: " + dim, input_mem_size.raw[dim], "Every input must have the same size");
             }
         }
     }
 
-    if (output_format != input_format)
-        throw std::runtime_error("Input and output must have the same format!");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Output format (fused) ", output_format, "input format (fused)", input_format, "Fused input/output formats mistmach");
 
     for (int dim = concatenation::along_b; dim <= concatenation::along_y; ++dim)
     {
         if (dim == node.get_primitive()->axis)
         {
-            if (concat_count != output_size.raw[dim])
-                throw std::runtime_error("Output size in concatenated dimension mismatch sum of inputs!");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Concat count", concat_count, "output size dim:" + dim, output_size.raw[dim], "Output size in concatenated dimension mismatch sum of inputs!");
         }
         else
         {
-            if (input_size.raw[dim] != output_size.raw[dim])
-                throw std::runtime_error("Output size in non-concatenated dimension mistmatch input");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size dim: " + dim, input_size.raw[dim], "output size dim:" + dim, output_size.raw[dim], "Output size in non-concatenated dimension mistmatch input");
         }
     }
 

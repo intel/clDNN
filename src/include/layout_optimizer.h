@@ -65,11 +65,13 @@ public:
     };
     enum class optimization_attributes_type
     {
-        splitted_convolution
+        splitted_convolution,
+        bfyx_only_layer
     };
     struct optimization_attributes
     {
         int32_t splitted_convolution = 0;
+        int32_t bfyx_only_layer = 0;
     };
 
 private:
@@ -110,6 +112,8 @@ private:
     layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const fully_connected> prim, boost::optional<layout> const& output_layout);
     layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const deconvolution> prim, boost::optional<layout> const& output_layout);
     layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const detection_output> prim, boost::optional<layout> const& output_layout);
+
+    bool convolution_bfyx_opt(const layout& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv);
 
     //pair.first is reorder (may be nullptr if reorder is not needed), pair.second tells if returned reorder was cached (no need to add it to 'ouputs' etc.)
     //for pair.first == nullptr, pair.second == true
@@ -182,10 +186,12 @@ public:
             if (reorder_params.engine == kernel_selector::weights_reorder_params::Engine::CPU &&
                 reorder_params.cpuKernel != nullptr)
             {
-                const auto intermediate_format = to_weights_layout(reorder_params.cpuKernel->GetInputLayout());
-                if (intermediate_format != old_layout.format)
+                const auto intermediate_format = from_weights_layout(reorder_params.cpuKernel->GetExpectedInputLayout());
+                const auto intermediate_type   = from_weights_type(reorder_params.cpuKernel->GetExpectedInputType());
+                if (intermediate_format != old_layout.format ||
+                    intermediate_type   != old_layout.data_type)
                 {
-                    const layout intermediate_layout = { old_layout.data_type, intermediate_format, old_layout.size.transform(intermediate_format, 1) };
+                    const layout intermediate_layout = { intermediate_type, intermediate_format, old_layout.size.transform(intermediate_format, 1) };
 
                     auto reorder = create_reorder_if_needed(old_layout, input_id, intermediate_layout);
                     if (reorder.first)
@@ -255,11 +261,14 @@ public:
         case optimization_attributes_type::splitted_convolution:
             _optimization_attributes.splitted_convolution = val;
             break;
+        case optimization_attributes_type::bfyx_only_layer:
+            _optimization_attributes.bfyx_only_layer = val;
+            break;
         default: throw std::out_of_range("unsupported layout optimization attribute");
         }
     }
 
-    void optimize() const;
+    std::map<primitive_id, memory_impl::ptr> optimize() const;
     auto get_engine() { return _engine; }
 };
 }

@@ -21,98 +21,66 @@
 namespace cldnn
 {
 
-//class simple_user_event : public event_impl
-//{
-//public:
-//    simple_user_event() :
-//        _is_set(false)
-//    {}
-//
-//    void wait() override
-//    {
-//        std::unique_lock<std::mutex> lock(_mutex);
-//        if (_is_set) return;
-//        _cv.wait(lock, [&] {return _is_set; });
-//    }
-//
-//    void set() override
-//    {
-//        {
-//            std::lock_guard<std::mutex> lock(_mutex);
-//            _is_set = true;
-//        }
-//        _cv.notify_all();
-//        for (auto& pair : _handlers)
-//        {
-//            pair.first(pair.second);
-//        }
-//    }
-//
-//    void add_event_handler(event::event_handler handler, void* data) override
-//    {
-//        if (handler == nullptr) throw std::invalid_argument("event handler");
-//        _handlers.push_back({ handler, data });
-//    }
-//
-//private:
-//    bool _is_set;
-//    std::mutex _mutex;
-//    std::condition_variable _cv;
-//    std::vector<std::pair<event::event_handler, void*>> _handlers;
-//};
+void event_impl::wait()
+{
+    if (_set)
+        return;
 
-namespace
-{
-struct profiling_period_ocl_start_stop
-{
-    const char* name;
-    cl_profiling_info start;
-    cl_profiling_info stop;
-};
-
-bool is_event_profiled(const cl::Event& event)
-{
-    if (event() != nullptr)
-    {
-        auto queue = event.getInfo<CL_EVENT_COMMAND_QUEUE>();
-        if(queue() != nullptr)
-        {
-            return (queue.getInfo<CL_QUEUE_PROPERTIES>() & CL_QUEUE_PROFILING_ENABLE) != 0;
-        }
-    }
-    return false;
-}
+    //TODO: refactor in context of multiple simultaneous calls (for generic engine)
+    wait_impl();
+    _set = true;
+    return;
 }
 
-const std::vector<cldnn_profiling_interval>& event_impl::get_profiling_info()
+bool event_impl::is_set()
 {
-    static const std::vector<profiling_period_ocl_start_stop> profiling_periods
-    {
-        { "submission", CL_PROFILING_COMMAND_QUEUED, CL_PROFILING_COMMAND_SUBMIT },
-        { "starting",   CL_PROFILING_COMMAND_SUBMIT, CL_PROFILING_COMMAND_START },
-        { "executing",  CL_PROFILING_COMMAND_START,  CL_PROFILING_COMMAND_END },
-    };
+    if (_set)
+        return true;
 
-    if (_profiling_info.empty())
+    //TODO: refactor in context of multiple simultaneous calls (for generic engine)
+    _set = is_set_impl();
+    return _set;
+}
+
+bool event_impl::add_event_handler(cldnn_event_handler handler, void* data)
+{
+    if (is_set())
     {
-        for (auto& pp : profiling_periods)
-        {
-            _profiling_info.push_back({ pp.name, 0 });
-        }
-        if (is_event_profiled(_event))
-        {
-            for (size_t i = 0; i < profiling_periods.size(); i++)
-            {
-                cl_ulong start;
-                _event.getProfilingInfo(profiling_periods[i].start, &start);
-                cl_ulong end;
-                _event.getProfilingInfo(profiling_periods[i].stop, &end);
-                _profiling_info[i].nanoseconds = end - start;
-            }
-        }
+        handler(data);
+        return true;
     }
+
+    std::lock_guard<std::mutex> lock(_handlers_mutex);
+    auto itr = _handlers.insert(_handlers.end(), { handler, data });
+    auto ret = add_event_handler_impl(handler, data);
+    if (!ret)
+        _handlers.erase(itr);
+
+    return ret;
+}
+
+const std::list<cldnn_profiling_interval>& event_impl::get_profiling_info()
+{
+    if (_profiling_captured)
+        return _profiling_info;
+
+    _profiling_captured = get_profiling_info_impl(_profiling_info);
     return _profiling_info;
 }
 
+
+void event_impl::call_handlers()
+{
+    std::lock_guard<std::mutex> lock(_handlers_mutex);
+    for (auto& pair : _handlers)
+    {
+        try
+        {
+            pair.first(pair.second);
+        }
+        catch (...) {}
+    }
+    _handlers.clear();
+}
 
 }

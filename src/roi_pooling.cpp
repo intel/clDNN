@@ -16,6 +16,7 @@
 
 #include "roi_pooling_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -36,11 +37,13 @@ layout roi_pooling_inst::calc_output_layout(roi_pooling_node const& node)
 
     int gss = desc->group_sz * desc->group_sz;
 
-    if (desc->group_sz < 0 || (gss && fm % gss != 0))
-    {
-        throw std::runtime_error("group_sz must be either 0 (For RoIPooling) or satisfy fm % (group_sz^2) == 0");
-    }
 
+    CLDNN_ERROR_LESS_THAN(node.id(), "Group size", desc->group_sz, "value", 0, "");
+    if (gss && fm % gss != 0)
+    {
+        CLDNN_ERROR_MESSAGE(node.id(), "group_sz must be either 0 (For RoIPooling) or satisfy fm % (group_sz^2) == 0");
+    }
+    
     if (gss)
     {
         fm /= gss;
@@ -53,8 +56,6 @@ std::string roi_pooling_inst::to_string(roi_pooling_node const& node)
 {
     std::stringstream primitive_description;
     auto desc           = node.get_primitive();
-    auto input          = node.input();
-    auto input_rois     = node.rois();
     auto mode           = desc->mode == pooling_mode::max ? "max" : "average";
 
     primitive_description

@@ -33,7 +33,6 @@ extern "C" {
 /// @brief Performs forward spatial convolution with weight sharing.
 /// Also supports built-in Relu @CLDNN_PRIMITIVE_DESC{activation} available by setting it in arguments.
 /// @details Parameters are defined in context of "direct" convolution, but actual algorithm is not implied.
-/// Look into docs/size_offset_stride_padding.html for description how size, offsets, stride & padding parameters work.
 CLDNN_BEGIN_PRIMITIVE_DESC(convolution)
 /// @brief Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the convolution window should start calculations.
 cldnn_tensor input_offset;

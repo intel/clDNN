@@ -39,8 +39,8 @@ struct reshape : public primitive_base<reshape, CLDNN_PRIMITIVE_DESC(reshape)>
     /// @brief Constructs reshape primitive.
     /// @param id This primitive id.
     /// @param input Input primitive id.
-    /// @param output_shape Requested memory shape.
-    /// @param values_to_substract Array of mean subtract values.
+    /// @param output_shape Requested memory shape (excluding padding).
+    /// @param output_padding Requested memory padding.
     reshape(
         const primitive_id& id,
         const primitive_id& input,

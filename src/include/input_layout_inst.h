@@ -47,7 +47,7 @@ public:
 public:
     typed_primitive_inst(network_impl& network, input_layout_node const& node);
 
-    void set_data(memory_impl* mem);
+    void set_data(memory_impl& mem);
 };
 
 using input_layout_inst = typed_primitive_inst<input_layout>;

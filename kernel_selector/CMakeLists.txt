@@ -26,6 +26,16 @@ set(CLDNN_BUILD__PROJ             "cldnn_kernel_selector")
 set(CLDNN_BUILD__PROJ_LABEL       "${CLDNN_BUILD__PROJ}")
 set(CLDNN_BUILD__PROJ_OUTPUT_NAME "${CLDNN_BUILD__PROJ}${CLDNN__OUT_CPU_SUFFIX}")
 
+# ========================================== Compiler options ==========================================
+
+intel_config_flag_apply_settings(
+    CompilerOptions
+    CMAKE_CXX_FLAGS
+    ALL_PATTERN ""
+    SET
+      RttiEnabled
+  )
+
 # ================================== Compiler preprocessor definitions =================================
 
 if (CLDNN__ENABLE_PERSISTENT_CACHE)

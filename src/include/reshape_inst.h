@@ -30,7 +30,7 @@ struct typed_program_node<reshape> : public typed_program_node_base<reshape>
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
+    decltype(auto) input() const { return get_dependency(0); }
 
     bool is_in_place() const
     {
@@ -51,8 +51,6 @@ public:
 
 public:
     typed_primitive_inst(network_impl& network, reshape_node const& node);
-
-    const memory& input_memory() const { return dep_memory(0); }
 
 private:
     void on_execute() override;

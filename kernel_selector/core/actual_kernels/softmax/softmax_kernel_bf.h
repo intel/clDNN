@@ -20,10 +20,11 @@
  
 namespace KernelSelector 
 {    
-    class SoftmaxKernel_bf : public SoftmaxKernelBase
+    class SoftmaxKernel_bf : public SoftmaxKernelBaseBF
     {
     public:
-        SoftmaxKernel_bf() : SoftmaxKernelBase("softmax_gpu_bf") {}
+        using Parent = SoftmaxKernelBaseBF;
+        SoftmaxKernel_bf() : Parent("softmax_gpu_bf") {}
         virtual ~SoftmaxKernel_bf() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;

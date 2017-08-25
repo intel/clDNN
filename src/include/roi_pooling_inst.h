@@ -29,8 +29,8 @@ struct typed_program_node<roi_pooling> : public typed_program_node_base<roi_pool
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
-    auto& rois() const { return get_dependency(1); }
+    decltype(auto) input() const { return get_dependency(0); }
+    decltype(auto) rois() const { return get_dependency(1); }
 };
 
 using roi_pooling_node = typed_program_node<roi_pooling>;
@@ -47,8 +47,7 @@ public:
 public:    
     using parent::parent;
 
-    const memory& input_memory() const { return dep_memory(0); }
-    const memory& rois_memory() const { return dep_memory(1); }
+    decltype(auto) rois_memory() const { return dep_memory(1); }
 };
 
 using roi_pooling_inst = typed_primitive_inst<roi_pooling>;

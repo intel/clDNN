@@ -21,7 +21,6 @@
 #include "api/CPP/memory.hpp"
 #include <api/CPP/input_layout.hpp>
 #include <api/CPP/proposal.hpp>
-#include <include/proposal_inst.h>
 #include <api/CPP/topology.hpp>
 #include <api/CPP/network.hpp>
 #include <api/CPP/engine.hpp>

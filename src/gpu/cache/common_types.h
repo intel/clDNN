@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace neural { namespace gpu { 
+namespace cldnn { namespace gpu { 
 
 class gpu_toolkit; //TODO temporary
 using context = gpu_toolkit;

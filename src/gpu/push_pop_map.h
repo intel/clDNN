@@ -19,7 +19,7 @@
 #include <map>
 #include <mutex>
 
-namespace neural { namespace gpu {
+namespace cldnn { namespace gpu {
 
 template<typename Key, typename Type, class Traits = std::less<Key>,
     class Allocator = std::allocator<std::pair <const Key, Type> >>

@@ -58,7 +58,9 @@ namespace KernelSelector
 
     JitConstants ConcatenationKernelBase::GetJitConstants(const ConcatenationParams& params) const
     {
-        return MakeConcatenationJitConstants(params);
+        auto jit = MakeConcatenationJitConstants(params);
+        jit.AddConstant(MakeJitConstant("CONCAT_AXIS_INDEX", GetConcatChannelIndex(params)));
+        return jit;
     }
 
     ConcatenationKernelBase::DispatchData ConcatenationKernelBase::SetDefault(const ConcatenationParams& params) const
@@ -92,17 +94,42 @@ namespace KernelSelector
 
         const ConcatenationParams& orgParams = static_cast<const ConcatenationParams&>(params);
 
-        DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<ConcatenationParams>(params);
+        KernelData kd = KernelData::Default<ConcatenationParams>(params, orgParams.inputs.size());
 
-        auto cldnnJit = GetJitConstants(orgParams);
-        auto entryPoint = GetEntryPoint(kernelName, orgParams.layerID,  options);
-        auto jit = CreateJit(kernelName, cldnnJit, entryPoint);
+        uint32_t lastOffset = 0;
+        const auto concatChannelIndex = GetConcatChannelIndex(orgParams);
+        float effiency = FORCE_PRIORITY_1;
+        for (size_t i = 0 ; i < orgParams.inputs.size(); i++)
+        {
+            const auto& input = orgParams.inputs[i];
 
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entryPoint);
+            auto newParams = orgParams;
+            newParams.inputs.resize(1);
+            newParams.inputs[0] = input;
 
-        kd.estimatedTime = runInfo.effiency;
+            auto& kernel = kd.kernels[i];
+            DispatchData runInfo = SetDefault(newParams);
+            auto cldnnJit = GetJitConstants(newParams);
+            auto entryPoint = GetEntryPoint(kernelName, newParams.layerID, options);
+            auto jit = CreateJit(kernelName, cldnnJit, entryPoint);
+
+            kernel.workGroups.global = { runInfo.gws0, runInfo.gws1, runInfo.gws2 };
+            kernel.workGroups.local = { runInfo.lws0, runInfo.lws1, runInfo.lws2 };
+            kernel.kernelString = GetKernelString(kernelName, jit, entryPoint);
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, (uint32_t)i });
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::OUTPUT, 0 });
+
+            ScalarDescriptor s;
+            s.t = ScalarDescriptor::Types::UINT32;
+            s.v.u32 = lastOffset;
+            kernel.scalars.push_back(s);
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::SCALAR, 0 });
+
+            lastOffset += (uint32_t)input.GetDims()[concatChannelIndex].v;
+            effiency = std::max(effiency, runInfo.effiency);
+        }
+
+        kd.estimatedTime = effiency;
 
         return{ kd };
     }

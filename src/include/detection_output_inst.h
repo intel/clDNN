@@ -34,9 +34,9 @@ class typed_program_node<detection_output> : public typed_program_node_base<dete
 public:
     using parent::parent;
 
-    auto& location() const { return get_dependency(0); }
-    auto& confidence() const { return get_dependency(1); }
-    auto& prior_box() const { return get_dependency(2); }
+    decltype(auto) location() const { return get_dependency(0); }
+    decltype(auto) confidence() const { return get_dependency(1); }
+    decltype(auto) prior_box() const { return get_dependency(2); }
 };
 
 using detection_output_node = typed_program_node<detection_output>;
@@ -53,9 +53,9 @@ public:
 public:
     typed_primitive_inst(network_impl& network, detection_output_node const& node);
 
-    const memory& location_memory() const { return dep_memory(0); }
-    const memory& confidence_memory() const { return dep_memory(1); }
-    const memory& prior_box_memory() const { return dep_memory(2); }
+    decltype(auto) location_memory() const { return dep_memory(0); }
+    decltype(auto) confidence_memory() const { return dep_memory(1); }
+    decltype(auto) prior_box_memory() const { return dep_memory(2); }
 };
 
 using detection_output_inst = typed_primitive_inst<detection_output>;

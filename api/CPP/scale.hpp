@@ -55,8 +55,7 @@ struct scale : public primitive_base<scale, CLDNN_PRIMITIVE_DESC(scale)>
         const primitive_id& scale_input, //should be bfyx or yxfb, where each dimension can be 1, if all dimensions are 1 then this is scalar
         const padding& output_padding = padding()
     )
-        :primitive_base(id, {input}, output_padding)
-        , scale_input(scale_input)
+        :primitive_base(id, { input, scale_input }, output_padding)
         , bias("")
     {
     }
@@ -73,8 +72,7 @@ struct scale : public primitive_base<scale, CLDNN_PRIMITIVE_DESC(scale)>
         const primitive_id& bias, //should be same size as scale_input
         const padding& output_padding = padding()
     )
-        :primitive_base(id, { input }, output_padding)
-        , scale_input(scale_input)
+        :primitive_base(id, { input, scale_input }, output_padding)
         , bias(bias)
     {
     }
@@ -82,13 +80,12 @@ struct scale : public primitive_base<scale, CLDNN_PRIMITIVE_DESC(scale)>
     /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{scale}
     scale(const dto* dto)
         :primitive_base(dto)
-        , scale_input(dto->scale_input)
         , bias(dto->bias)
     {
+        if (dto->input.size != 2)
+            throw std::invalid_argument("scale dto should contains exactly 2 inputs");
     }
 
-    /// @brief Scale input primitive id with values needed for product computation.
-    primitive_id scale_input;
     /// @brief Primitive id containing bias data.
     primitive_id bias;
 
@@ -96,14 +93,13 @@ protected:
     std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override
     { 
         if (bias.empty())
-            return{ scale_input };
+            return{};
         else
-            return{ scale_input, bias };
+            return{ bias };
     }
 
     void update_dto(dto& dto) const override
     {
-        dto.scale_input = scale_input.c_str();
         dto.bias = bias.c_str();
     }
 };

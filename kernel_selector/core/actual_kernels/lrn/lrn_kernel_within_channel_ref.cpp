@@ -33,7 +33,7 @@ namespace KernelSelector
         k.EnableTensorPitches();
         k.EnableBatching();
         k.EnableLRNMode(LRNMode::WITHIN_CHANNEL);
-        k.EnableLRNKernelDividerMode(KernelDividerMode::DYNAMIC);
+        k.EnableLRNKernelDividerMode(KernelDividerMode::FIXED);
         return k;
     }
 

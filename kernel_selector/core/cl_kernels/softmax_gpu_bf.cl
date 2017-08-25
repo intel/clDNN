@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 __attribute__((reqd_work_group_size(LWS, 1, 1)))
 KERNEL (softmax_gpu_continoues_bfyx)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
@@ -95,7 +95,7 @@ KERNEL (softmax_gpu_continoues_bfyx)(const __global UNIT_TYPE* input, __global U
     my_sum = lg_storage[0];
 
     for (uint i=0; i<ITEMS_NUM; ++i)
-        output[my_data_offset + i * workers_per_data_set] = my_chunk[i] / my_sum;
+        output[my_data_offset + i * workers_per_data_set] = ACTIVATION(my_chunk[i] / my_sum, NL_M ,NL_N);
     if (in_data_set_idx < LEFTOVERS)
-        output[data_set_offset + workers_per_data_set * ITEMS_NUM + in_data_set_idx] = my_chunk[ITEMS_NUM] / my_sum;
+        output[data_set_offset + workers_per_data_set * ITEMS_NUM + in_data_set_idx] = ACTIVATION(my_chunk[ITEMS_NUM] / my_sum, NL_M ,NL_N);
 }

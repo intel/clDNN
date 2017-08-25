@@ -234,7 +234,7 @@ inline bool floating_point_equal(FLOAT16 x, FLOAT16 y, int max_ulps_diff = 4) {
         return a == 0 && b == 0;
     }
     else {
-        return std::abs(a - b) <= max_ulps_diff;
+        return std::abs(a - b) < (1 << (max_ulps_diff));
     }
 }
 
@@ -248,7 +248,7 @@ inline bool floating_point_equal(float x, float y, int max_ulps_diff = 4) {
         return a == 0 && b == 0;
     }
     else {
-        return std::abs(a - b) <= max_ulps_diff;
+        return std::abs(a - b) < (1 << (max_ulps_diff));
     }
 }
 
@@ -283,6 +283,17 @@ public:
     static std::string print_tensor(cldnn::tensor tensor);
 };
 
+struct pitches
+{
+    size_t b, f, y, x;
+};
+
+struct memory_desc
+{
+    pitches pitch;
+    size_t offset;
+};
+
 class generic_test : public ::testing::TestWithParam<std::tuple<test_params*, cldnn::primitive*>>
 {
 
@@ -294,8 +305,10 @@ public:
     template<typename Type>
     void compare_buffers(const cldnn::memory& out, const cldnn::memory& ref);
 
-    static size_t get_linear_index(const cldnn::layout & layout, int b, int f, int y, int x);
-    size_t get_linear_index_with_broadcast(const cldnn::layout & in_layout, int b, int f, int y, int x, const cldnn::layout & out_layout);
+    static size_t get_linear_index(const cldnn::layout & layout, int b, int f, int y, int x, const memory_desc& desc);
+    static size_t get_linear_index_with_broadcast(const cldnn::layout& in_layout, int b, int f, int y, int x, const memory_desc& desc);
+
+    static memory_desc get_linear_memory_desc(const cldnn::layout & layout);
 
     static std::vector<test_params*> generate_generic_test_params(std::vector<test_params*>& all_generic_params);
 

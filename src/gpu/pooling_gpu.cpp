@@ -15,77 +15,40 @@
 */
 
 #include "pooling_inst.h"
-#include "kernel.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
+#include "error_handler.h"
 #include "kernel_selector_helper.h"
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural
+namespace
 {
-
-struct pooling_gpu : typed_primitive_impl<pooling>
-{
-    const pooling_node& outer;
-    gpu::engine_info_internal _engine_info;
-    gpu::kernel _kernel;
-
-    pooling_gpu(const pooling_node &arg, const kernel_selector::kernel_data& kd)
-        : outer(arg)
-        , _engine_info(arg.get_program().get_engine()->get_context()->get_engine_info())
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
-    {
-        _kernel_data = kd;
-    }
-
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, pooling_inst& instance) override
-    {
-        const auto* input_mem = &instance.input_memory();
-        const auto* output_mem = &instance.output_memory();
-
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
-        args.inputs = { input_mem };
-        args.output = output_mem;
-
-        return _kernel.run(_kernel_data.kernels[0], events, args);
-    }
-
-    static void validate(const pooling_node& arg)
+    void validate_args(const pooling_node& arg)
     {
         auto const& input_buffer_size = arg.input().get_output_layout().get_buffer_size();
         auto const& input_dimensions = input_buffer_size.batch.size() + input_buffer_size.feature.size() + input_buffer_size.spatial.size();
         auto const& output_buffer_size = arg.get_output_layout().get_buffer_size();
         auto const& output_dimensions = output_buffer_size.batch.size() + output_buffer_size.feature.size() + output_buffer_size.spatial.size();
-        auto const& input_format = arg.input().get_output_layout().format;
-        auto const& output_format = arg.get_output_layout().format;
         auto& stride = arg.get_primitive()->stride;
         auto const& stride_dimensions = stride.batch.size() + stride.feature.size() + stride.spatial.size();
         auto& window = arg.get_primitive()->size;
         auto const& window_dimensions = window.batch.size() + window.feature.size() + window.spatial.size();
 
-        if (input_dimensions != output_dimensions)
-            throw std::invalid_argument("Pooling input/output number of dimension does not match.");
-
-        if (stride_dimensions != output_dimensions)
-            throw std::invalid_argument("Pooling stride/output number of dimension does not match.");
-
-        if (window_dimensions != output_dimensions)
-            throw std::invalid_argument("Pooling window_size/output number of dimension does not match.");
-
-        if (input_format != output_format)
-            throw std::invalid_argument("Pooling input/output data format does not match.");
+        CLDNN_ERROR_NOT_EQUAL(arg.id(), "input dimensions", input_dimensions, "output dimensions", output_dimensions, "");
+        CLDNN_ERROR_NOT_EQUAL(arg.id(), "stride dimensions", stride_dimensions, "output dimensions", output_dimensions, "");
+        CLDNN_ERROR_NOT_EQUAL(arg.id(), "window dimensions", window_dimensions, "output dimensions", output_dimensions, "");
     }
 
-    static kernel_selector::pool_type cldnn_2_pool_type(cldnn::pooling_mode mode)
+    kernel_selector::pool_type cldnn_2_pool_type(pooling_mode mode)
     {
         switch (mode)
         {
-        case cldnn::pooling_mode::max:
+        case pooling_mode::max:
             return kernel_selector::pool_type::MAX;
-        case cldnn::pooling_mode::average:
+        case pooling_mode::average:
             return kernel_selector::pool_type::AVG;
-        case cldnn::pooling_mode::average_no_padding:
+        case pooling_mode::average_no_padding:
             return kernel_selector::pool_type::AVG;
         default:
             assert(0);
@@ -93,25 +56,31 @@ struct pooling_gpu : typed_primitive_impl<pooling>
         }
     }
 
-    static kernel_selector::kernel_divider_mode cldnn_2_kernel_divider_mode(cldnn::pooling_mode mode)
+    kernel_selector::kernel_divider_mode cldnn_2_kernel_divider_mode(pooling_mode mode)
     {
         switch (mode)
         {
-        case cldnn::pooling_mode::max:
+        case pooling_mode::max:
             return kernel_selector::kernel_divider_mode::DONT_CARE;
-        case cldnn::pooling_mode::average:
+        case pooling_mode::average:
             return kernel_selector::kernel_divider_mode::FIXED;
-        case cldnn::pooling_mode::average_no_padding:
+        case pooling_mode::average_no_padding:
             return kernel_selector::kernel_divider_mode::DYNAMIC;
         default:
             assert(0);
             return kernel_selector::kernel_divider_mode::DONT_CARE;
         }
     }
+}
+
+struct pooling_gpu : typed_primitive_gpu_impl<pooling>
+{
+    using parent = typed_primitive_gpu_impl<pooling>;
+    using parent::parent;
 
     static primitive_impl* create(const pooling_node& arg)
     {
-        validate(arg);
+        validate_args(arg);
 
         auto pool_params            = get_default_params<kernel_selector::pooling_params>(arg);
         auto pool_optional_params   = get_default_optional_params<kernel_selector::pooling_optional_params>(arg.get_program());
@@ -125,6 +94,13 @@ struct pooling_gpu : typed_primitive_impl<pooling>
         pp.poolType                 = cldnn_2_pool_type(primitive->mode);
         pp.remainderAction          = kernel_selector::pool_remainder::CEIL;
         pp.divMode                  = cldnn_2_kernel_divider_mode(primitive->mode);
+
+        const auto additional_offset = tensor::max(input_offset, 0);
+        if (additional_offset != 0)
+        {
+            const auto& input_layout = arg.input().get_output_layout();
+            pool_params.inputs[0] = convert_data_tensor(input_layout, 1, additional_offset);
+        }
         
         pp.poolSize = {
             (uint32_t)primitive->size.spatial[0],
@@ -144,10 +120,7 @@ struct pooling_gpu : typed_primitive_impl<pooling>
         auto& kernel_selector   = kernel_selector::pooling_kernel_selector::Instance();
         auto best_kernels       = kernel_selector.GetBestKernels(pool_params, pool_optional_params);
 
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto pool = new pooling_gpu(arg, best_kernels[0]);
 
@@ -155,20 +128,17 @@ struct pooling_gpu : typed_primitive_impl<pooling>
     }
 };
 
-namespace
-{
-
-    struct attach
-    {
+namespace {
+    struct attach {
         attach()
         {
-            implementation_map<pooling>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), pooling_gpu::create);
-            implementation_map<pooling>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), pooling_gpu::create);
-            implementation_map<pooling>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), pooling_gpu::create);
-            implementation_map<pooling>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), pooling_gpu::create);
         }
         ~attach() {}
     };
     attach attach_impl;
 }
-}
+} }

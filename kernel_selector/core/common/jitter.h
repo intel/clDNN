@@ -32,42 +32,50 @@ using JitDefinitions = std::vector<std::pair<std::string, std::string>>;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 inline std::string GetTypeName() { throw std::runtime_error("Implement me"); }
-#if defined(_WIN64) || defined(__linux__)
 template <>
-inline std::string GetTypeName<size_t>() { return "size_t"; } 
-#endif
+inline std::string GetTypeName<int8_t>() { return "char"; }
 template <>
-inline std::string GetTypeName<double>() { return "double"; }
+inline std::string GetTypeName<uint8_t>() { return "uchar"; }
+template <>
+inline std::string GetTypeName<int16_t>() { return "short"; }
+template <>
+inline std::string GetTypeName<uint16_t>() { return "ushort"; }
+template <>
+inline std::string GetTypeName<int32_t>() { return "int"; }
+template <>
+inline std::string GetTypeName<uint32_t>() { return "uint"; }
+template <>
+inline std::string GetTypeName<int64_t>() { return "long"; } 
+template <>
+inline std::string GetTypeName<uint64_t>() { return "ulong"; }
 template <>
 inline std::string GetTypeName<float>() { return "float"; }
 template <>
-inline std::string GetTypeName<int>() { return "int"; }
-template <>
-inline std::string GetTypeName<unsigned>() { return "unsigned"; }
-template <>
-inline std::string GetTypeName<char>() { return "char"; }
-template <>
-inline std::string GetTypeName<short>() { return "short"; }
-template <>
-inline std::string GetTypeName<uint16_t>() { return "unsigned short"; }
+inline std::string GetTypeName<double>() { return "double"; }
 
 inline std::string toCLType(WeightsType wType)
 {
     switch (wType)
     {
-    case WeightsType::F16: return "half";
-    case WeightsType::F32: return "float";
-    case WeightsType::INT8: return "char";
+    case WeightsType::INT8: return GetTypeName<int8_t>();
+    case WeightsType::F16:  return "half";
+    case WeightsType::F32:  return GetTypeName<float>();
     default: return "";
     }
 }
 
-inline std::string toCLType(Datatype wType)
+inline std::string toCLType(Datatype dType)
 {
-    switch (wType)
+    switch (dType)
     {
-    case Datatype::F16: return "half";
-    case Datatype::F32: return "float";
+    case Datatype::INT8:    return GetTypeName<int8_t>();
+    case Datatype::UINT8:   return GetTypeName<uint8_t>();
+    case Datatype::INT16:   return GetTypeName<int16_t>();
+    case Datatype::UINT16:  return GetTypeName<uint16_t>();
+    case Datatype::INT32:   return GetTypeName<int32_t>();
+    case Datatype::UINT32:  return GetTypeName<uint32_t>();
+    case Datatype::F16:     return "half";
+    case Datatype::F32:     return GetTypeName<float>();
     default: return "";
     }
 }
@@ -87,6 +95,22 @@ inline std::string toCodeString<const char*>(const char* val) { return val; }
 
 template<>
 inline std::string toCodeString<char*>(char* val) { return val; }
+
+template<>
+inline std::string toCodeString<bool>(bool val)
+{
+    std::stringstream ss;
+    ss << static_cast<int>(val);
+    return ss.str();
+}
+
+template<>
+inline std::string toCodeString<const bool>(const bool val)
+{
+    std::stringstream ss;
+    ss << static_cast<int>(val);
+    return ss.str();
+}
 
 template<>
 inline std::string toCodeString<float>(float val) {
@@ -121,13 +145,13 @@ inline std::string toCodeString<double>(double val) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JitConstant
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename VecT, typename Func>
-inline std::string toVectorString(const VecT& vec, const std::string& vertorType, size_t maxDim, int padFillingVal, Func fetchVal)
+template <typename VecT, typename ValT, typename Func>
+inline std::string toVectorString(const VecT& vec, const std::string& vertorType, size_t maxDim, ValT padFillingVal, Func fetchFunc)
 {
     std::stringstream ss;
     ss << "(" << vertorType << " []){ ";
     for (size_t i = 0; i < vec.size(); i++)
-        ss << toCodeString(fetchVal(vec[i])) << ",";
+        ss << toCodeString(fetchFunc(vec[i])) << ",";
     for (size_t i = vec.size(); i < maxDim; i++)
         ss << padFillingVal << ",";
     ss << " } ";
@@ -195,8 +219,8 @@ public:
         definitions.push_back({ _name + "_SIZE",        toCodeString(t.GetDims().size()) });
         definitions.push_back({ _name + "_SIZES",       toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 1, [](const Tensor::Dim& d) { return d.v; }) });
         definitions.push_back({ _name + "_PITCHES",     toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 1, [](const Tensor::Dim& d) { return d.pitch; }) });
-        definitions.push_back({ _name + "_PAD_BEFORE",  toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 1, [](const Tensor::Dim& d) { return d.pad.before; }) });
-        definitions.push_back({ _name + "_PAD_AFTER",   toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 1, [](const Tensor::Dim& d) { return d.pad.after; }) });
+        definitions.push_back({ _name + "_PAD_BEFORE",  toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 0, [](const Tensor::Dim& d) { return d.pad.before; }) });
+        definitions.push_back({ _name + "_PAD_AFTER",   toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 0, [](const Tensor::Dim& d) { return d.pad.after; }) });
 
         return definitions;
     }
@@ -227,6 +251,14 @@ public:
             { _name + "_FEATURE_PITCH", toCodeString(_tensor.Feature().pitch) },
             { _name + "_ROI_PITCH",     toCodeString(_tensor.ROI().pitch) },
             { _name + "_BATCH_PITCH",   toCodeString(_tensor.Batch().pitch) },
+            { _name + "_PAD_BEFORE_SIZE_X",        toCodeString(_tensor.X().pad.before) },
+            { _name + "_PAD_BEFORE_SIZE_Y",        toCodeString(_tensor.Y().pad.before) },
+            { _name + "_PAD_BEFORE_FEATURE_NUM",   toCodeString(_tensor.Feature().pad.before) },
+            { _name + "_PAD_BEFORE_BATCH_NUM",     toCodeString(_tensor.Batch().pad.before) },
+            { _name + "_PAD_AFTER_SIZE_X",         toCodeString(_tensor.X().pad.after) },
+            { _name + "_PAD_AFTER_SIZE_Y",         toCodeString(_tensor.Y().pad.after) },
+            { _name + "_PAD_AFTER_FEATURE_NUM",    toCodeString(_tensor.Feature().pad.after) },
+            { _name + "_PAD_AFTER_BATCH_NUM",      toCodeString(_tensor.Batch().pad.after) },
         };
 
         definitions.insert(definitions.end(), baseDefinitions.begin(), baseDefinitions.end());
@@ -375,42 +407,22 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 inline JitConstants MakeBaseParamsJitConstants(const BaseParams& params)
 {
-    const bool relu =
-        params.activationFunc == ActivationFunction::RELU ||
-        params.activationFunc == ActivationFunction::RELU_NEGATIVE_SLOPE;
-    const float negative_slope =
-        params.activationFunc == ActivationFunction::RELU_NEGATIVE_SLOPE ?
-        params.nlParams.m : 0.f;
-
-    bool fp16_unit_used = params.output.GetDType() == Datatype::F16;
+    bool bFP16Used = params.output.GetDType() == Datatype::F16;
     for (const auto& i : params.inputs)
     {
-        fp16_unit_used |= i.GetDType() == Datatype::F16;
+        bFP16Used |= i.GetDType() == Datatype::F16;
     }
 
     JitConstants jit{
         MakeJitConstant("OUTPUT",               params.output),
-        MakeJitConstant("FP16_SUPPORTED",       static_cast<int>(fp16_unit_used)),                      // TODO: use engine
-        MakeJitConstant("FP16_UNIT_USED",       static_cast<int>(fp16_unit_used)),
-        MakeJitConstant("UNIT_TYPE",            fp16_unit_used ? "half" : "float"),
-        MakeJitConstant("UNIT_VAL_ZERO",        fp16_unit_used ? "0.0h" : "0.0f"),
-        MakeJitConstant("UNIT_VAL_MAX",         fp16_unit_used ? "HALF_MAX" : "FLT_MAX"),
-        MakeJitConstant("UNIT_VAL_MIN",         "-(UNIT_VAL_MAX)"),
-        MakeJitConstant("TO_UNIT_TYPE_V1(v)",   fp16_unit_used ? "convert_half(v)" : "(float)(v)"),
-        MakeJitConstant("RELU",                 static_cast<int>(relu)),                                // TODO: remove it
-        MakeJitConstant("NEGATIVE_SLOPE",       negative_slope),
-        MakeJitConstant("NL_M",                 params.nlParams.m),
-        MakeJitConstant("NL_N",                 params.nlParams.n),
+        MakeJitConstant("FP64_SUPPORTED",       params.engineInfo.bFP64Support),
+        MakeJitConstant("FP16_SUPPORTED",       params.engineInfo.bFP16Support),
+        MakeJitConstant("FP16_UNIT_USED",       bFP16Used),
+        MakeJitConstant("UNIT_TYPE",            bFP16Used ? "half" : "float"),
+        MakeJitConstant("NL_M",                 params.activationParams.m),
+        MakeJitConstant("NL_N",                 params.activationParams.n),
         MakeJitConstant("ACTIVATION_FUNCTION_"  + toString(params.activationFunc), ""),
-        MakeJitConstant("TYPE_"                 + toString(params.output.GetDType()), ""),
-        
     };
-
-    if (params.inputs.size() >= 1)
-    {
-        // default input is input 0
-        jit.AddConstant(MakeJitConstant("INPUT", params.inputs[0]));                                    // TODO: remove it
-    }
 
     for (size_t i = 0; i < params.inputs.size(); i++)
     {
@@ -427,15 +439,18 @@ inline JitConstants MakeWeightBiasParamsJitConstants(const WeightBiasParams& par
 {
     JitConstants jit = MakeBaseParamsJitConstants(params);
     jit.AddConstants({
-        MakeJitConstant("FILTER",                       params.weights),
-        MakeJitConstant("BIAS_TERM",                    static_cast<int>(!params.bias.empty())),
-        MakeJitConstant("FILTER_OUTPUT_FEATURE_NUM",    "FILTER_OFM_NUM"),  // TODO: remove it
-        MakeJitConstant("FILTER_INPUT_FEATURE_NUM",     "FILTER_IFM_NUM"),  // TODO: remove it
+        MakeJitConstant("FILTER",       params.weights),
+        MakeJitConstant("BIAS_TERM",    !params.bias.empty()),
     });
 
     if (params.bias.empty() == false)
     {
-        jit.AddConstant(MakeJitConstant("BIAS", params.bias[0]));
+        const bool sameDims = params.bias[0].SameDims(params.output);
+        jit.AddConstants({
+            MakeJitConstant("BIAS",             params.bias[0]),
+            MakeJitConstant("BIAS_PER_OUTPUT",  sameDims),
+            MakeJitConstant("BIAS_PER_OFM",     !sameDims),
+        });
     }
 
     return jit;
@@ -458,7 +473,8 @@ inline JitConstants MakeConvolutionParamsJitConstants(const ConvolutionParams& p
         MakeJitConstant("PADDING",                      params.convParams.padding),
         MakeJitConstant("DILATION",                     params.convParams.dilation),
         MakeJitConstant("FILTER_ARRAY_NUM",             params.convParams.split),
-        MakeJitConstant("INPUT_OFFSET_WITH_PADDING",    input_offset_with_padding),
+        MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
+        MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      params.convParams.depthwiseSeparableOpt),
     });
 
     return jit;
@@ -473,10 +489,7 @@ inline JitConstants MakeFullyConnectedJitConstants(const FullyConnectedParams& p
     const auto& input = params.inputs[0];
     const auto x_size = input.LogicalSize() / input.Batch().v;
 
-    jit.AddConstants({
-        MakeJitConstant("INPUT_ELEMENTS_COUNT",      x_size),
-        MakeJitConstant("WEIGHTS_BATCH_NUM",         "FILTER_OFM_NUM"),     // TODO: remove it
-    });
+    jit.AddConstant(MakeJitConstant("INPUT0_ELEMENTS_COUNT", x_size));
 
     return jit;
 }
@@ -498,6 +511,8 @@ inline JitConstants MakeLRNJitConstants(const LRNParams& params)
         MakeJitConstant("ALPHA",        np.alpha),
         MakeJitConstant("BETA",         np.beta),
         MakeJitConstant("K",            np.k),
+        MakeJitConstant(toString(np.divMode) + "_KERNEL_DIVIDER", ""),
+        MakeJitConstant(toString(np.normMode), ""),
     });
 
     return jit;
@@ -513,8 +528,7 @@ inline JitConstants MakePoolingJitConstants(const PoolingParams& params)
     const auto& pp = params.poolParams;
 
     jit.AddConstants({
-        MakeJitConstant("WINDOW",   pp.poolSize),
-        MakeJitConstant("POOL",     pp.poolSize),   // TODO: remove it or WINDOW
+        MakeJitConstant("POOL",     pp.poolSize),
         MakeJitConstant("STRIDE",   pp.poolStride),
         MakeJitConstant("PADDING",  pp.poolPad),
         MakeJitConstant(toString(pp.poolType) + "_POOLING", 1),
@@ -590,7 +604,8 @@ inline JitConstants MakeDeconvolutionJitConstants(const DeconvolutionParams& par
         MakeJitConstant("PADDING",                      dp.padding),
         MakeJitConstant("DILATION",                     dp.dilation),
         MakeJitConstant("FILTER_ARRAY_NUM",             dp.split),
-        MakeJitConstant("INPUT_OFFSET_WITH_PADDING",    input_offset_with_padding),
+        MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
+        MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      dp.depthwiseSeparableOpt),
     });
 
     return jit;
@@ -625,21 +640,29 @@ inline JitConstants MakeReorderJitConstants(const ReorderParams& params)
 {
     JitConstants jit = MakeReorderBaseJitConstants(params);
 
-    jit.AddConstant(MakeJitConstant("MEAN_SUBTRUCT_" + toString(params.reorderParams.mode), 1));
+    jit.AddConstant(MakeJitConstant("MEAN_SUBTRACT_" + toString(params.reorderParams.mode), 1));
 
-    if (params.reorderParams.mode == MeanSubtructMode::INSIDE_PARAMS)
+    if (params.reorderParams.mode == MeanSubtractMode::INSIDE_PARAMS)
     {
         jit.AddConstant(MakeJitConstant("VALUE_TO_SUBTRACT", params.reorderParams.meanValues));
     }
-    else if (params.reorderParams.mode == MeanSubtructMode::IN_BUFFER)
+    else if (params.reorderParams.mode == MeanSubtractMode::IN_BUFFER)
     {
-        jit.AddConstant(MakeJitConstant("MEAN_SUBTRUCT", params.reorderParams.mean));
+        jit.AddConstant(MakeJitConstant("MEAN_SUBTRACT", params.reorderParams.mean));
     }
 
-    Datatype calc_type = params.inputs[0].GetDType();
+    //half->half without subtraction (so plain reorder) can be done on shorts without explicit fp16 support
+    bool useUshort = (params.inputs[0].GetDType() == Datatype::F16 && params.output.GetDType() == Datatype::F16 &&
+        params.reorderParams.mode == MeanSubtractMode::NONE);
+    
+    Datatype calc_type = useUshort ? Datatype::UINT16 : params.inputs[0].GetDType();
+
     jit.AddConstants({
         MakeJitConstant("CALC_TYPE",                      toCLType(calc_type)),
         MakeJitConstant("TO_CALC_TYPE",      "convert_" + toCLType(calc_type)),
+        MakeJitConstant("INPUT_REORDER_TYPE",             useUshort ? toCLType(Datatype::UINT16) : "INPUT0_TYPE"),
+        MakeJitConstant("OUTPUT_REORDER_TYPE",            useUshort ? toCLType(Datatype::UINT16) : "OUTPUT_TYPE"),
+        MakeJitConstant("TO_OUTPUT_REORDER_TYPE",         useUshort ? "" : "TO_OUTPUT_TYPE")
     });
 
     return jit;
@@ -655,9 +678,9 @@ inline JitConstants MakeReorderWeightsJitConstants(const ReorderWeightsParams& p
     const bool fp16Supported = output.GetDType() == WeightsType::F16 || input.GetDType() == WeightsType::F16;
 
     JitConstants jit{
-        MakeJitConstant("FP16_SUPPORTED",   static_cast<int>(fp16Supported)),                      // TODO: use engine
-        MakeJitConstant("FP16_UNIT_USED",   static_cast<int>(fp16Supported)),
-        MakeJitConstant("INPUT",            input),
+        MakeJitConstant("FP16_SUPPORTED",   fp16Supported),                      // TODO: use engine
+        MakeJitConstant("FP16_UNIT_USED",   fp16Supported),
+        MakeJitConstant("INPUT0",           input),
         MakeJitConstant("OUTPUT",           output),
     };
 
@@ -667,7 +690,7 @@ inline JitConstants MakeReorderWeightsJitConstants(const ReorderWeightsParams& p
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MakeROIPoolingV1JitConstants
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-inline JitConstants MakeROIPoolingV1JitConstants(const ROIPoolingV1Params& params)
+inline JitConstants MakeROIPoolingV1JitConstants(const ROIPoolingParams& params)
 {
     JitConstants jit = MakeBaseParamsJitConstants(params);
 
@@ -705,7 +728,7 @@ inline JitConstants MakeActivationJitConstants(const ActivationParams& params)
 {
     JitConstants jit = MakeBaseParamsJitConstants(params);
     
-    const auto& inputNlParams = params.actParams.inputNlParams;
+    const auto& inputNlParams = params.actParams.inputActivationParams;
 
     jit.AddConstants({
         MakeJitConstant("PARAMS_NUM", GetActivationAdditionalParamsNumber(params.activationFunc)),

@@ -34,8 +34,6 @@ public:
 
 public:
     typed_primitive_inst(network_impl& network, softmax_node const& desc);
-
-    const memory& input_memory() const { return dep_memory(0); }
 };
 
 using softmax_inst = typed_primitive_inst<softmax>;

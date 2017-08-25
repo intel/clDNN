@@ -17,6 +17,7 @@
 #pragma once
 
 #include "kernel_selector.h"
+#include "kernel_runner_interface.h"
  
 namespace KernelSelector 
 {

@@ -22,10 +22,9 @@ namespace KernelSelector {
     ParamsKey EltwiseKernelRef::GetSupportedKey() const
     {
         ParamsKey k;
-        k.EnableInputDataType(Datatype::F16);
-        k.EnableInputDataType(Datatype::F32);
-        k.EnableOutputDataType(Datatype::F16);
-        k.EnableOutputDataType(Datatype::F32);
+        k.EnableAllInputDataType();
+        k.EnableAllOutputDataType();
+        k.EnableDifferentTypes();
         k.EnableAllInputLayout();
         k.EnableAllOutputLayout();
         k.EnableTensorOffset();
@@ -36,32 +35,6 @@ namespace KernelSelector {
 
     KernelsData EltwiseKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        assert(params.GetType() == KernelType::ELTWISE);
-
-        KernelData kd = KernelData::Default<EltwiseParams>(params);
-
-        EltwiseParams& newParams = *static_cast<EltwiseParams*>(kd.params.get());
-        const std::string kernel_id = GetEntryPoint(kernelName, params.layerID, options);
-
-        std::stringstream jit;
-        jit << GetBaseJit(newParams, kernel_id)
-            << "#define INPUT_OFFSET1 (" << newParams.inputs[1].GetFirstElementOffset() << ")\n"
-            << "#define INPUT_ROW_PITCH1 (" << newParams.inputs[1].Y().pitch << ")\n"
-            << "#define INPUT_SLICE_PITCH1 (" << newParams.inputs[1].Feature().pitch << ")\n"
-            << "#define INPUT_BATCH_PITCH1 (" << newParams.inputs[1].Batch().pitch << ")\n"
-            //<< "#define ELTWISE_MODE_" << toString(newParams.eltwiseParams.mode) << "\n"
-            //<< "#define SCALAR (" << newParams.eltwiseParams.scalar << ")\n"
-            ;
-
-        const auto& out = newParams.output;
-        auto& kernel = kd.kernels[0];
-        kernel.workGroups.global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
-        kernel.workGroups.local = GetOptimalLocalWorkGroupSizes(kernel.workGroups.global);
-        kernel.kernelString = GetKernelString(kernelName, jit.str(), kernel_id);
-        kernel.arguments = GetArgumentDesc(2, false, false);
-
-        kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
-
-        return{ kd };
+        return GetCommonKernelsData(params, options);
     }
 }

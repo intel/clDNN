@@ -1412,24 +1412,25 @@ public:
         const Type * const in2_mem = in2_mem_ptr ? in2_mem_ptr->data() : nullptr; //TODO: is the condition needed or is it nullptr anyway?
         auto out_mem = output.pointer<Type>();
 
-        const int in0_b = input.get_layout().size.sizes()[0];
-        const int in0_f = input.get_layout().size.sizes()[1];
-        const int in0_h = input.get_layout().size.sizes()[2];
-        const int in0_w = input.get_layout().size.sizes()[3];
+        const auto input_sizes = input.get_layout().size.sizes(cldnn::format::bfyx);
+
+        const int in0_b = input_sizes[0];
+        const int in0_f = input_sizes[1];
+        const int in0_h = input_sizes[2];
+        const int in0_w = input_sizes[3];
 
         { // asserting dims
-            const int out_b = output.get_layout().size.sizes()[0]; (void) out_b;
-            const int out_f = output.get_layout().size.sizes()[1]; (void) out_f;
-            const int out_h = output.get_layout().size.sizes()[2]; (void) out_h;
-            const int out_w = output.get_layout().size.sizes()[3]; (void) out_w;
+            const auto output_sizes = output.get_layout().size.sizes(cldnn::format::bfyx);
+            const int out_b = output_sizes[0]; (void) out_b;
+            const int out_f = output_sizes[1]; (void) out_f;
+            const int out_h = output_sizes[2]; (void) out_h;
+            const int out_w = output_sizes[3]; (void) out_w;
 
-            const int in1_b = scale.get_layout().size.sizes()[0]; (void) in1_b;
-            const int in1_f = scale.get_layout().size.sizes()[1]; (void) in1_f;
-            const int in1_h = scale.get_layout().size.sizes()[2]; (void) in1_h;
-            const int in1_w = scale.get_layout().size.sizes()[3]; (void) in1_w;
-            // input and output dims must match
-            assert(in0_b == out_b && in0_f == out_f && in0_h == out_h && in0_w == out_w);
-
+            const auto scale_sizes = scale.get_layout().size.sizes(cldnn::format::bfyx);
+            const int in1_b = scale_sizes[0]; (void) in1_b;
+            const int in1_f = scale_sizes[1]; (void) in1_f;
+            const int in1_h = scale_sizes[2]; (void) in1_h;
+            const int in1_w = scale_sizes[3]; (void) in1_w;
             // input and output dims must match
             assert(in0_b == out_b && in0_f == out_f && in0_h == out_h && in0_w == out_w);
 
@@ -1441,30 +1442,42 @@ public:
 
             if (bias)
             {
-                const int in2_b = scale.get_layout().size.sizes()[0]; (void) in2_b;
-                const int in2_f = scale.get_layout().size.sizes()[1]; (void) in2_f;
-                const int in2_h = scale.get_layout().size.sizes()[2]; (void) in2_h;
-                const int in2_w = scale.get_layout().size.sizes()[3]; (void) in2_w;
+                const auto bias_sizes = bias->get_layout().size.sizes(cldnn::format::bfyx);
+                const int in2_b = bias_sizes[0]; (void) in2_b;
+                const int in2_f = bias_sizes[1]; (void) in2_f;
+                const int in2_h = bias_sizes[2]; (void) in2_h;
+                const int in2_w = bias_sizes[3]; (void) in2_w;
 
-                // scale and bias dims must match
-                assert(in1_b == in2_b && in1_f == in2_f && in1_h == in2_h && in1_w == in2_w);
+                // scale/bias dims must be equal to in/out or be 1 for broadcast
+                assert(in2_b == 1 || in2_b == in0_b);
+                assert(in2_b == 1 || in2_b == in0_f);
+                assert(in2_b == 1 || in2_b == in0_h);
+                assert(in2_b == 1 || in2_b == in0_w);
             }
         }
+
+        const auto input_desc = get_linear_memory_desc(input.get_layout());
+        const auto output_desc = get_linear_memory_desc(output.get_layout());
+        const auto scale_desc = get_linear_memory_desc(scale.get_layout());
+        const auto bias_desc =
+            bias ?
+            get_linear_memory_desc(bias->get_layout()) :
+            memory_desc();
 
         for (int n = 0; n < in0_b; ++n)
         for (int c = 0; c < in0_f; ++c)
         for (int y = 0; y < in0_h; ++y)
         for (int x = 0; x < in0_w; ++x)
         {
-            const size_t in0_idx = get_linear_index(input.get_layout(), n, c, y, x);
-            const size_t in1_idx = get_linear_index_with_broadcast(scale.get_layout(), n, c, y, x, input.get_layout());
-            const size_t out_idx = get_linear_index(output.get_layout(), n, c, y, x);
+            const size_t in0_idx = get_linear_index(input.get_layout(), n, c, y, x, input_desc);
+            const size_t in1_idx = get_linear_index_with_broadcast(scale.get_layout(), n, c, y, x, scale_desc);
+            const size_t out_idx = get_linear_index(output.get_layout(), n, c, y, x, output_desc);
 
             out_mem[out_idx] = in0_mem[in0_idx] * in1_mem[in1_idx];
 
             if (bias)
             {
-                const size_t in2_idx = get_linear_index_with_broadcast(bias->get_layout(), n, c, y, x, input.get_layout());
+                const size_t in2_idx = get_linear_index_with_broadcast(bias->get_layout(), n, c, y, x, bias_desc);
                 out_mem[out_idx] += in2_mem[in2_idx];
             }
         }

@@ -18,6 +18,7 @@
 #include "reshape_inst.h"
 #include "primitive_type_base.h"
 #include "memory_impl.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -39,7 +40,7 @@ std::string reshape_inst::to_string(reshape_node const& node)
 {
     std::stringstream           primitive_description;
     auto desc = node.get_primitive();
-    auto input = node.input();
+    auto& input = node.input();
     primitive_description << "id: " << desc->id << ", type: reshape" <<
         "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
         "\n\toutput shape: " << desc->output_shape <<
@@ -55,10 +56,8 @@ reshape_inst::typed_primitive_inst(network_impl& network, reshape_node const& no
 {
     auto input_layout = node.input().get_output_layout();
     auto output_layout = node.get_output_layout();
-    if (input_layout.data_type != output_layout.data_type)
-        throw std::domain_error("Output layout of reshape primitive has different data type than it's input");
-    if (input_layout.count() != output_layout.count())
-        throw std::domain_error("Output layout of reshape pirmitive changes size of input buffer");
+    CLDNN_ERROR_DATA_TYPES_MISMATCH(node.id(), "Input layout data typr", input_layout.data_type, "output layout data type", output_layout.data_type, "");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Output layout count", output_layout.count(), "input layout count", input_layout.count(), "Output layout of reshape pirmitive changes size of input buffer");
 
     //if reshape operated in-place, postpone creation of the output until network run,
     //then create new memory object as the reinterpreted output of the previous primitive
@@ -73,7 +72,7 @@ void reshape_inst::on_execute()
     if (!node.is_in_place())
         return;
 
-    if (_output && _output->is_the_same_buffer(input_memory()))
+    if (_output && _network.get_engine().is_the_same_buffer(output_memory(), input_memory()))
         return;
 
     reuse_input();
@@ -81,7 +80,7 @@ void reshape_inst::on_execute()
 
 void reshape_inst::reuse_input()
 {
-    _output = api_cast(_network.get_engine()->reinterpret_buffer(api_cast(input_memory().get()), node.get_output_layout()));
+    _output = _network.get_engine().reinterpret_buffer(input_memory(), node.get_output_layout());
 }
 
 }

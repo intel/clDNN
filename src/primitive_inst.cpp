@@ -19,14 +19,14 @@
 #include "network_impl.h"
 #include "engine_impl.h"
 #include "memory_impl.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
 event_impl::ptr primitive_inst::execute(const std::vector<event_impl::ptr>& events)
 {
-    if (!_has_valid_input)
-        throw std::runtime_error("Cannot execute primitive " + id() + " with invalid/unset input");
- 
+    CLDNN_ERROR_BOOL(id(), "Invalid/unset input", !_has_valid_input, "Cannot execute primitive " + id() + " with invalid/unset input");
+
     on_execute();
 
     if (_deps.size() == 0)
@@ -47,7 +47,7 @@ primitive_inst::primitive_inst(network_impl& network, program_node const& node, 
     : _network(network)
     , _node(node)
     , _impl(node.get_selected_impl())
-    , _deps(network.get_primitives(desc()->dependecies()))
+    , _deps(network.get_primitives(node.get_dependencies()))
     , _output()
     , _output_changed(false)
 {
@@ -55,9 +55,34 @@ primitive_inst::primitive_inst(network_impl& network, program_node const& node, 
         _output = allocate_output();
 }
 
-memory primitive_inst::allocate_output()
+memory_impl::ptr primitive_inst::allocate_output()
 {
     auto layout = _node.get_output_layout();
-    return api_cast(get_network().get_engine()->allocate_buffer(layout));
+    return get_network().get_engine().allocate_buffer(layout);
 }
+
+std::string primitive_inst::generic_to_string(program_node const& node, const char* type_name)
+{
+    std::stringstream primitive_description;
+    std::stringstream ss_inputs;
+    for (size_t i = 0; i < node.get_dependencies().size(); ++i)
+    {
+        auto& in = node.get_dependency(i);
+        ss_inputs << in.id();
+        ss_inputs << ", count: " << in.get_output_layout().count();
+        i != (node.get_dependencies().size() - 1) ? ss_inputs << ", " : ss_inputs << "";
+    }
+
+    auto&& out_layout = node.get_output_layout();
+
+    primitive_description << "id: " << node.id() << ", type: " << type_name <<
+        "\n\tdeps count: " << node.get_dependencies().size() <<
+        "\n\tdeps: " << ss_inputs.str() <<
+        "\n\toutput: count: " << out_layout.count() << ",  size: " << out_layout.size <<
+        "\n\toutput padding lower size: " << out_layout.data_padding.lower_size() <<
+        "\n\toutput padding upper size: " << out_layout.data_padding.upper_size() << '\n';
+
+    return primitive_description.str();
+}
+
 }

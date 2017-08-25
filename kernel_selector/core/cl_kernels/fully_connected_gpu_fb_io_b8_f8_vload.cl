@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 // TODO: use CAT
 #define CONCAT_TOKEN_HANDLER1(prefix, suffix) prefix##suffix
@@ -111,7 +111,7 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 #endif // #if NEURONS_PER_WORK_ITEM > 1
 
     uint input_idx = sub_group_idx * (BATCHES_PER_WORK_ITEM / 8) * (uint)get_global_size(1) + (group_id * BATCHES_PER_WORK_ITEM) / 8;
-    for(uint h = 0; h < INPUT_ELEMENTS_COUNT / 8; h++)
+    for(uint h = 0; h < INPUT0_ELEMENTS_COUNT / 8; h++)
     {
         MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA00 = vload8(input_idx, input);
 
@@ -124,14 +124,14 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
         MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA03 = vload8(input_idx + 3, input);
 #endif
         MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockB00;
-        blockB00.s0 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
-        blockB00.s1 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
-        blockB00.s2 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
-        blockB00.s3 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
-        blockB00.s4 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
-        blockB00.s5 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
-        blockB00.s6 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
-        blockB00.s7 = weight[weight_offset]; weight_offset += WEIGHTS_BATCH_NUM;
+        blockB00.s0 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
+        blockB00.s1 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
+        blockB00.s2 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
+        blockB00.s3 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
+        blockB00.s4 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
+        blockB00.s5 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
+        blockB00.s6 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
+        blockB00.s7 = weight[weight_offset]; weight_offset += FILTER_OFM_NUM;
         MULTIPLY_BLOCKS_8x8(blockC00, blockA00, blockB00)
 
 #if BATCHES_PER_WORK_ITEM >= 16
@@ -146,14 +146,14 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 #if NEURONS_PER_WORK_ITEM > 1
 
         MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockB10;
-        blockB10.s0 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
-        blockB10.s1 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
-        blockB10.s2 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
-        blockB10.s3 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
-        blockB10.s4 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
-        blockB10.s5 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
-        blockB10.s6 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
-        blockB10.s7 = weight[weight_offset2]; weight_offset2 += WEIGHTS_BATCH_NUM;
+        blockB10.s0 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
+        blockB10.s1 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
+        blockB10.s2 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
+        blockB10.s3 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
+        blockB10.s4 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
+        blockB10.s5 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
+        blockB10.s6 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
+        blockB10.s7 = weight[weight_offset2]; weight_offset2 += FILTER_OFM_NUM;
         MULTIPLY_BLOCKS_8x8(blockC10, blockA00, blockB10)
 
 #if BATCHES_PER_WORK_ITEM >= 16
@@ -165,7 +165,7 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 #endif
 
 #endif // #if NEURONS_PER_WORK_ITEM > 1
-        input_idx += INPUT_BATCH_NUM; // we don't need to multiply by 8 because of vload8
+        input_idx += INPUT0_BATCH_NUM; // we don't need to multiply by 8 because of vload8
     }
 
 #if BIAS_TERM
@@ -192,24 +192,24 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 
 #endif // #if NEURONS_PER_WORK_ITEM > 1
 
-    ACTIVATION(blockC00, blockC00);
+    blockC00 = ACTIVATION(blockC00, NL_M, NL_N);
 #if BATCHES_PER_WORK_ITEM >= 16
-    ACTIVATION(blockC01, blockC01);
+    blockC01 = ACTIVATION(blockC01, NL_M, NL_N);
 #endif
 #if BATCHES_PER_WORK_ITEM >= 32
-    ACTIVATION(blockC02, blockC02);
-    ACTIVATION(blockC03, blockC03);
+    blockC02 = ACTIVATION(blockC02, NL_M, NL_N);
+    blockC03 = ACTIVATION(blockC03, NL_M, NL_N);
 #endif
 
 #if NEURONS_PER_WORK_ITEM > 1
 
-    ACTIVATION(blockC10, blockC10);
+    blockC10 = ACTIVATION(blockC10, NL_M, NL_N);
 #if BATCHES_PER_WORK_ITEM >= 16
-    ACTIVATION(blockC11, blockC11);
+    blockC11 = ACTIVATION(blockC11, NL_M, NL_N);
 #endif
 #if BATCHES_PER_WORK_ITEM >= 32
-    ACTIVATION(blockC12, blockC12);
-    ACTIVATION(blockC13, blockC13);
+    blockC12 = ACTIVATION(blockC12, NL_M, NL_N);
+    blockC13 = ACTIVATION(blockC13, NL_M, NL_N);
 #endif
 
 #endif // #if NEURONS_PER_WORK_ITEM > 1
@@ -225,15 +225,15 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 #endif // #if BIAS_TERM
 #if NEURONS_PER_WORK_ITEM > 1
 
-    vstore8(blockC10, out_id+INPUT_BATCH_NUM, output);
+    vstore8(blockC10, out_id+INPUT0_BATCH_NUM, output);
 
 #if BATCHES_PER_WORK_ITEM >= 16
-    vstore8(blockC11, out_id+INPUT_BATCH_NUM+1, output);
+    vstore8(blockC11, out_id+INPUT0_BATCH_NUM+1, output);
 #endif
 
 #if BATCHES_PER_WORK_ITEM >= 32
-    vstore8(blockC12, out_id+INPUT_BATCH_NUM+2, output);
-    vstore8(blockC13, out_id+INPUT_BATCH_NUM+3, output);
+    vstore8(blockC12, out_id+INPUT0_BATCH_NUM+2, output);
+    vstore8(blockC13, out_id+INPUT0_BATCH_NUM+3, output);
 #endif
 
 #endif // #if NEURONS_PER_WORK_ITEM > 1
@@ -245,4 +245,3 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8_vload)(
 #undef CONCAT_TOKEN
 #undef CONCAT_TOKEN_HANDLER1
 #undef MULTIPLY_BLOCKS_8x8
-#undef ACTIVATION

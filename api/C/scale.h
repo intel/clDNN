@@ -44,8 +44,6 @@ extern "C" {
 /// Performs scale over feature in batch when the scale feature and scale batch sizes are equal to input feature and input batch sizes.<br>
 /// Optionally it can also add provided biases by setting bias_term.<br>
 CLDNN_BEGIN_PRIMITIVE_DESC(scale)
-/// @brief Scale input primitive id with values needed for product computation.
-cldnn_primitive_id scale_input;
 /// @brief Primitive id containing bias data.
 cldnn_primitive_id bias;
 CLDNN_END_PRIMITIVE_DESC(scale)

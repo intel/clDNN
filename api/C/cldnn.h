@@ -119,6 +119,9 @@ typedef struct
     uint32_t dump_custom_program;      ///< dump the custom generated program to files 
     const char* compiler_options;      ///< OpenCL compiler options string.
     const char* single_kernel_name;    ///< If provided, runs specific layer.
+    uint32_t enable_parallelisation;   ///< Enables parallel execution of primitives which don't depend on each other. Disabled by default.
+    const char* engine_log;            ///< Specifies a file to which engine log should be dumped. Null/empty values means no logging.
+    const char* sources_dumps_dir;     ///< Specifies a directory where sources of cldnn::program objects should be dumped. Null/empty values means no loggins.
 }  cldnn_engine_configuration;
 
 /// @brief Information about the engine returned by cldnn_get_engine_info().
@@ -155,13 +158,28 @@ typedef struct
 /// @brief Network build option types.
 typedef enum /*:int32_t*/
 {
-    cldnn_build_option_fusing,          ///< Allow primitives fusing during network build.
-    cldnn_build_option_profiling,       ///< Enable primitives profiling.
-    cldnn_build_option_optimize_data,   ///< Enable implicit reordering for user input.
-    cldnn_build_option_debug,           ///< Enable debug mode.
-    cldnn_build_option_outputs,         ///< User selected list of network outputs.
+    cldnn_build_option_fusing,                  ///< Allow primitives fusing during network build.
+    cldnn_build_option_optimize_data,           ///< Enable implicit reordering for user input.
+    cldnn_build_option_debug,                   ///< Enable debug mode.
+    cldnn_build_option_outputs,                 ///< User selected list of network outputs.
+    cldnn_build_option_tuning_config,           ///< Tuning config.
+    cldnn_build_option_graph_dumps_dir          ///< Specifies a directory to which stages of network compilation should be dumped.
 } cldnn_build_option_type;
 
+/// @brief Tuning modes.
+typedef enum /*:int32_t*/
+{
+    cldnn_tuning_disabled,          ///< Tuning is disabled.
+    cldnn_tuning_use_cache,         ///< Tuning using the cached data (no on-line tuning for non-existing data).
+    cldnn_tuning_tune_and_cache,    ///< Tuning using the cached data if exist, tune and update cache otherwise.
+} cldnn_tuning_mode_type;
+
+/// @brief Tuning config.
+struct cldnn_tuning_config
+{
+    const int32_t mode;             ///< #cldnn_tuning_mode_type.
+    const char* cache_file_path;    ///< A path to the tuning cache file.
+};
 
 /// @brief Represents network build option.
 typedef struct
@@ -324,7 +342,7 @@ typedef enum cldnn_activation_func_t
     activation_hyperbolic_tan,          // tanh(val)
     activation_relu,                    // max(0, val)
     activation_relu_negative_slope,     // max(0, val) + a * min(0, val)    (a is additional param)
-    activation_brelu,                   // max(0, min(a, val)               (a is additional param)
+    activation_clamp,                   // max(a, min(b, val)               (a,b are additional param)
     activation_softrelu,                // log(1 + exp(val))
     activation_abs,                     // abs(val)
     activation_linear,                  // a*val + b                        (a,b are additional params) 
@@ -413,6 +431,9 @@ CLDNN_API /*cldnn_engine_type*/ int32_t cldnn_get_engine_type(cldnn_engine engin
 
 /// @brief Creates an event which can be set by user.
 CLDNN_API cldnn_event cldnn_create_user_event(cldnn_engine engine, cldnn_status* status);
+
+/// @brief Checks if an event was created by user.
+CLDNN_API int32_t cldnn_is_user_event(cldnn_event event, cldnn_status* status);
 
 /// @brief Increment reference counter for the event object.
 CLDNN_API void cldnn_retain_event(cldnn_event event, cldnn_status* status);
@@ -519,6 +540,12 @@ CLDNN_API                 void cldnn_execute_network(cldnn_network network, cldn
 /// To work with the result of this function, user should first wait for cldnn_network_output::event
 /// before getting an access to cldnn_network_output::memory.
 CLDNN_API cldnn_network_output cldnn_get_network_output(cldnn_network network, const char* name, cldnn_status* status);
+
+/// @brief Returns @ref memory corresponding to output with @p name.
+/// @details User can call this function even before calling cldnn_execute_network(), but then content of memory is uninitialized.
+/// @param name Output name to get the result.
+/// @returns @ref cldnn_memory structure with the output information.
+CLDNN_API cldnn_memory cldnn_get_network_output_memory(cldnn_network network, const char* name, cldnn_status* status);
 /// @}
 
 /// @addtogroup c_memory

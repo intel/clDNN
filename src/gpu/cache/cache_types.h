@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include "common_types.h"
 
-namespace neural { namespace gpu { namespace cache {
+namespace cldnn { namespace gpu { namespace cache {
 
 using binary_data = std::string;
 static_assert(sizeof(binary_data::value_type) == 1, "Binary data has to represent byte array");

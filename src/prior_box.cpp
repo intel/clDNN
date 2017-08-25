@@ -16,6 +16,7 @@
 
 #include "prior_box_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 #include <cmath>
 
@@ -58,7 +59,7 @@ std::string prior_box_inst::to_string(prior_box_node const& node)
 {
     std::stringstream               primitive_description;
     auto desc                       = node.get_primitive();
-    auto input                      = node.input();
+    auto in_layout                  = node.input().get_output_layout();
     auto flip                       = desc->flip ? "true" : "false";
     auto clip                       = desc->clip ? "true" : "false";
     std::string str_min_sizes       = vector_to_string(desc->min_sizes);
@@ -67,7 +68,7 @@ std::string prior_box_inst::to_string(prior_box_node const& node)
     std::string str_variance        = vector_to_string(desc->variance);
 
     primitive_description << "id: " << desc->id << ", type: normalization" <<
-        "\n\tinput: "        << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
+        "\n\tinput: "        << "id: " << node.get_primitive()->input[0] << ", count: " << in_layout.count() << ", size: " << in_layout.size <<
         "\n\timage size: "   << desc->img_size <<
         "\n\tmin_sizes: "    << str_min_sizes << ", max sizes: " << str_max_sizes <<
         "\n\taspect_ratio: " << str_aspect_ratio <<
@@ -87,11 +88,10 @@ void prior_box_inst::generate_output()
     // Calculate output.
     // All the inputs for this layer are known at this point,
     // so the output buffer is written here and not in execute().
-    const auto& input_mem = input_memory();
-    const auto& output_mem = output_memory();
+    auto& output_mem = output_memory();
 
-    const int layer_width = input_mem.get_layout().size.spatial[0];
-    const int layer_height = input_mem.get_layout().size.spatial[1];
+    const int layer_width = input_memory().get_layout().size.spatial[0];
+    const int layer_height = input_memory().get_layout().size.spatial[1];
     const int img_width = argument.img_size.spatial[0];
     const int img_height = argument.img_size.spatial[1];
     float step_w = argument.step_width;
@@ -103,7 +103,9 @@ void prior_box_inst::generate_output()
     const float offset = argument.offset;
     int num_priors = (int)argument.aspect_ratios.size() * (int)argument.min_sizes.size() + (int)argument.max_sizes.size();
 
-    auto out_ptr = output_mem.pointer<dtype>();
+    mem_lock<dtype> lock{ output_mem };
+    auto out_ptr = lock.begin();
+
     int dim = layer_height * layer_width * num_priors * 4;
     int idx = 0;
     for (int h = 0; h < layer_height; ++h) {
@@ -184,48 +186,34 @@ prior_box_inst::typed_primitive_inst(network_impl& network, prior_box_node const
     :parent(network, node)
 {
     //Check arguments
-    if (argument.min_sizes.size() == 0) {
-        throw std::runtime_error("Must provide at least one min size.");
-    }
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "Argument min size", argument.min_sizes.size(), "not proper size", 0, "Must provide at least one min size.");
+
     for (size_t i = 0; i < argument.min_sizes.size(); i++) {
-        if (argument.min_sizes[i] <= 0) {
-            throw std::runtime_error("Min size must be positive.");
-        }
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "Min size value at index: " + i, argument.min_sizes[i], "less or equal than 0", 0, "Min size must be positive.");
     }
-    if ( (argument.max_sizes.size() > 0) && (argument.min_sizes.size() != argument.max_sizes.size())) {
-        throw std::runtime_error("Number of min sizes must be equal to number of max sizes.");
+    if (argument.max_sizes.size() > 0) {
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Argument min sizes", argument.min_sizes.size(), "argument max sizes", argument.max_sizes.size(), "Number of min sizes must be equal to number of max sizes.");
     }
     for (size_t i = 0; i < argument.max_sizes.size(); i++) {
-        if (argument.min_sizes[i] >= argument.max_sizes[i]) {
-            throw std::runtime_error("Max size must be greater than Min size.");
-        }
+        CLDNN_ERROR_GREATER_OR_EQUAL_THAN(node.id(), "Argument min size value", argument.min_sizes[i], "argument max sizes value", argument.max_sizes[i], "Max size must be greater than Min size.");
     }
     if (argument.variance.size() > 1) {
-        if (argument.variance.size() != 4) {
-            throw std::runtime_error("Must provide 4 variances.");
-        }
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Argument variance size", argument.variance.size(), "not proper size", 4, "Must provide 4 variances.");
         for (size_t i = 0; i < argument.variance.size(); i++) {
-            if (argument.variance[i] <= 0) {
-                throw std::runtime_error("Variance must be positive.");
-            }
+            CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "Varaiance value at index: " + i, argument.variance[i], "value", 0, "Variance must be positive.");
         }
     }
     else if (argument.variance.size() == 1) {
-        if (argument.variance[0] <= 0) {
-            throw std::runtime_error("Variance must be positive.");
-        }
-    }
-    if ((argument.img_size.spatial[0] <= 0) || (argument.img_size.spatial[1] <= 0)) {
-        throw std::runtime_error("Image dimensions must be positive.");
-    }
-    if ((argument.step_height < 0) || (argument.step_width < 0)) {
-        throw std::runtime_error("Step dimensions must be positive.");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "Varaiance value at index 0", argument.variance[0], "value", 0, "Variance must be positive.");
     }
 
-    if (node.is_padded())
-    {
-        throw std::invalid_argument("Prior-box layer doesn't support output padding.");
-    }
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "Image dimension spatial X", argument.img_size.spatial[0], "value", 0, "Image spatial X must be positive.");
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "Image dimension spatial Y", argument.img_size.spatial[1], "value", 0, "Image spatial Y must be positive.");
+
+    CLDNN_ERROR_LESS_THAN(node.id(), "Step height", argument.step_height, "value", 0, "Step height must be positive.");
+    CLDNN_ERROR_LESS_THAN(node.id(), "Step width", argument.step_width, "value", 0, "Step width must be positive.");
+
+    CLDNN_ERROR_BOOL(node.id(), "Prior box padding", node.is_padded(), "Prior-box layer doesn't support output padding.");
 
     if (input_memory().get_layout().data_type == data_types::f32)
     {

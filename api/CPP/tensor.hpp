@@ -325,6 +325,28 @@ public:
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1] = sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1];
     }
 
+    tensor(format fmt, const std::vector<value_type>& sizes, value_type default_size = 1)
+        : tensor(default_size)
+    {
+        auto in_order = fmt.order();
+        auto out_order = fmt.internal_order();
+        if (in_order.size() != sizes.size())
+            throw std::invalid_argument("The count of values passed to initialize tensor does not match passed format.");
+
+        for (size_t out_idx = 0; out_idx < out_order.size(); ++out_idx)
+        {
+            auto channel = out_order[out_idx];
+            if (channel == '?')
+                continue;
+            
+            auto in_idx = in_order.find(channel);
+            if (in_idx == in_order.npos)
+                throw std::runtime_error("Internal order of a format contains channel which does not appear in external order.");
+
+            _sizes[out_idx] = sizes[in_idx];
+        }
+    }
+
     /// @brief Implicit conversion form C API :: cldnn_tensor.
     tensor(const cldnn_tensor& other)
         : tensor()

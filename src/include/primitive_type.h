@@ -30,6 +30,7 @@ namespace cldnn {
     struct program_node;
     struct primitive_impl;
     class primitive_inst;
+    struct program_impl;
 }
 struct cldnn_primitive_type
 {
@@ -41,4 +42,6 @@ struct cldnn_primitive_type
     virtual std::unique_ptr<cldnn::primitive_impl> choose_impl(cldnn::engine_impl& engine, const cldnn::program_node& node) const = 0;    
     virtual cldnn::layout calc_output_layout(const cldnn::program_node& node) const = 0;
     virtual std::string to_string(const cldnn::program_node& node) const = 0;
+
+    virtual bool is_internal_type() const { return false; }
 };

@@ -906,6 +906,172 @@ TEST(deconvolution_f32_fw_gpu, basic_wsiz2x2_in1x2x2x2_bfyx_stride2_pad1_split2)
     }
 }
 
+TEST(deconvolution_f32_fw_gpu, basic_wsiz2x2_in1x2x2x2_bfyx_stride2_pad1_split2_depthwise_sep_opt) {
+    //  Test for depthwise separable optimization, there are 16 weights and biases (split 16)
+    //  data is similar as in basic_wsiz2x2_in1x2x2x2_bfyx_stride2_pad1_split2
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 16, 2, 2 } });
+    set_values(input, 
+    { 8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f, 
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f
+    });
+
+    topology topology(input_layout("input", input.get_layout()));
+
+    std::vector<primitive_id> weights_vec;
+    std::vector<primitive_id> bias_vec;
+
+    for (uint32_t i = 0; i < 8; i++)
+    {
+        auto weights = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
+        auto biases = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+        auto weights2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
+        auto biases2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+
+        set_values(weights, { -2.f, 2.f, 7.f, -0.5f });
+        set_values(biases, { 1.0f });
+        set_values(weights2, { -4.f, 1.f, -9.f, -7.f });
+        set_values(biases2, { -1.0f });
+
+        primitive_id weights_id = "weights_" + std::to_string(i);
+        primitive_id weights2_id = "weights2_" + std::to_string(i);
+        primitive_id bias_id = "biases_" + std::to_string(i);
+        primitive_id bias2_id = "biases2_" + std::to_string(i);
+
+        weights_vec.push_back(weights_id);
+        weights_vec.push_back(weights2_id);
+        bias_vec.push_back(bias_id);
+        bias_vec.push_back(bias2_id);
+
+        topology.add(
+            data(weights_id, weights),
+            data(bias_id, biases),
+            data(weights2_id, weights2),
+            data(bias2_id, biases2)
+            );
+    }
+
+    topology.add(deconvolution("deconv", "input", weights_vec, bias_vec, { 1, 1, 2, 2 }, { 0, 0, -1, -1 }));
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "deconv");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<float>();
+
+    std::vector<float> expected_output_vec = {
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+    };
+
+    for (unsigned int i = 0; i < expected_output_vec.size(); i++)
+    {
+        EXPECT_FLOAT_EQ(expected_output_vec[i], output_ptr[i]);
+    }
+}
+
+TEST(deconvolution_f32_fw_gpu, basic_wsiz2x2_in1x2x2x2_bfyx_stride2_pad1_split2_depthwise_sep_opt_ofm2) {
+    //  Test for depthwise separable optimization, there are 16 weights and biases (split 16)
+    //  data is similar as in basic_wsiz2x2_in1x2x2x2_bfyx_stride2_pad1_split2
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 16, 2, 2 } });
+    set_values(input,
+    { 8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f,
+        8.f, 0.5f, 6.f, 9.f, 1.f, 3.f, 2.f, 4.f
+    });
+
+    topology topology(input_layout("input", input.get_layout()));
+
+    std::vector<primitive_id> weights_vec;
+    std::vector<primitive_id> bias_vec;
+
+    for (uint32_t i = 0; i < 8; i++)
+    {
+        auto weights = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
+        auto biases = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 1 } });
+        auto weights2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
+        auto biases2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 1 } });
+
+        set_values(weights, { -2.f, 2.f, 7.f, -0.5f, -2.f, 2.f, 7.f, -0.5f });
+        set_values(biases, { 1.0f, 1.0f });
+        set_values(weights2, { -4.f, 1.f, -9.f, -7.f, -4.f, 1.f, -9.f, -7.f });
+        set_values(biases2, { -1.0f, -1.0f });
+
+        primitive_id weights_id = "weights_" + std::to_string(i);
+        primitive_id weights2_id = "weights2_" + std::to_string(i);
+        primitive_id bias_id = "biases_" + std::to_string(i);
+        primitive_id bias2_id = "biases2_" + std::to_string(i);
+
+        weights_vec.push_back(weights_id);
+        weights_vec.push_back(weights2_id);
+        bias_vec.push_back(bias_id);
+        bias_vec.push_back(bias2_id);
+
+        topology.add(
+            data(weights_id, weights),
+            data(bias_id, biases),
+            data(weights2_id, weights2),
+            data(bias2_id, biases2)
+        );
+    }
+
+    topology.add(deconvolution("deconv", "input", weights_vec, bias_vec, { 1, 1, 2, 2 }, { 0, 0, -1, -1 }));
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "deconv");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<float>();
+
+    std::vector<float> expected_output_vec = {
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+        -3.f, 4.5f, 13.f, -17.f,-3.f, 4.5f, 13.f, -17.f, -8.f, -28.f, 1.f, -17.f, -8.f, -28.f, 1.f, -17.f,
+    };
+
+    for (unsigned int i = 0; i < expected_output_vec.size(); i++)
+    {
+        EXPECT_FLOAT_EQ(expected_output_vec[i], output_ptr[i]);
+    }
+}
+
 TEST(deconvolution_f32_fw_gpu, basic_wsiz2x2_in1x6x1x1_bfyx_stride2_pad1_split2_ofm3) {
     //  Filter : 1x1
     //  Stride : 1x1

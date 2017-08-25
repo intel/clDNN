@@ -27,15 +27,19 @@ namespace KernelSelector
     {
         switch (dt)
         {
+        case Datatype::INT8:
+        case Datatype::UINT8:
+            return 1;
         case Datatype::F16:
+        case Datatype::INT16:
+        case Datatype::UINT16:
             return 2;
-            break;
         case Datatype::F32:
+        case Datatype::INT32:
+        case Datatype::UINT32:
             return 4;
-            break;
         default:
             return 0;
-            break;
         }
     }
 
@@ -45,16 +49,12 @@ namespace KernelSelector
         {
         case WeightsType::INT8:
             return 1;
-            break;
         case WeightsType::F16:
             return 2;
-            break;
         case WeightsType::F32:
             return 4;
-            break;
         default:
             return 0;
-            break;
         }
     }
 
@@ -65,10 +65,10 @@ namespace KernelSelector
         switch (func)
         {
         case ActivationFunction::LINEAR:
+        case ActivationFunction::CLAMP:
             paramsNum = 2;
             break;
         case ActivationFunction::RELU_NEGATIVE_SLOPE:
-        case ActivationFunction::BRELU:
             paramsNum = 1;
             break;
         default:

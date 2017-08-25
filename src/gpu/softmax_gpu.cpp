@@ -15,38 +15,18 @@
 */
 
 #include "softmax_inst.h"
-#include "kernel.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "error_handler.h"
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural
+
+struct softmax_gpu : typed_primitive_gpu_impl<softmax>
 {
-
-struct softmax_gpu : typed_primitive_impl<softmax>
-{
-    const softmax_node& outer;
-    gpu::kernel _kernel;
-
-
-    softmax_gpu(const softmax_node& arg, const kernel_selector::kernel_data& kd)
-        : outer(arg)
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
-    {
-        _kernel_data = kd;
-    }
-
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, softmax_inst& instance) override
-    {
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
-        args.inputs = { &instance.input_memory() };
-        args.output = &instance.output_memory();
-
-        return _kernel.run(_kernel_data.kernels[0], events, args);
-    }
-
+    using parent = typed_primitive_gpu_impl<softmax>;
+    using parent::parent;
     
     static primitive_impl* create(const softmax_node& arg) 
     {
@@ -83,10 +63,7 @@ struct softmax_gpu : typed_primitive_impl<softmax>
         auto& kernel_selector = kernel_selector::softmax_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(sm_params, sm_optional_params);
 
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto softmax_node = new softmax_gpu(arg, best_kernels[0]);
 
@@ -98,13 +75,15 @@ namespace {
     struct attach {
         attach() {
             auto val_fw = softmax_gpu::create;
-            implementation_map<softmax>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), val_fw);
-            implementation_map<softmax>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), val_fw);
-            implementation_map<softmax>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), val_fw);
-            implementation_map<softmax>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), val_fw);
+            implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), val_fw);
+            implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw);
+            implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
+            implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
         }
         ~attach() {}
     };
+
+    attach attach_impl;
 }
-attach attach_impl;
-} // namespace neural
+
+} }

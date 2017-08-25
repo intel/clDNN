@@ -69,8 +69,6 @@ namespace KernelSelector
         const auto& orgParams = static_cast<const FullyConnectedParams&>(params);
         const auto& orgOptParams = static_cast<const FullyConnectedOptionalParams&>(options);
 
-        const bool bSupportedActivation = CheckActivationSupport(orgParams.activationFunc);
-
         bool bProperInput = orgParams.inputs[0].GetLayout() == dl;
         if (!bProperInput && !orgParams.inputs[0].PitchesDifferFromLogicalDims())
         {
@@ -79,10 +77,9 @@ namespace KernelSelector
                 (dl == DataLayout::bf && orgParams.inputs[0].GetLayout() == DataLayout::bfyx);
         }
 
-        const bool bSupportedInput = orgOptParams.allowReorderInput || bProperInput;
+        const bool bSupportedInput = orgOptParams.allowInputReordering || bProperInput;
 
-        if (!bSupportedActivation || 
-            !bSupportedInput)
+        if (!bSupportedInput)
         {
             return KernelsData();
         }
@@ -116,7 +113,7 @@ namespace KernelSelector
         std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, true, !orgParams.bias.empty());
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
 
         kd.estimatedTime = estimated_time;
 

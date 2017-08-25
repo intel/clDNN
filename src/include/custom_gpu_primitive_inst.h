@@ -29,7 +29,7 @@ struct typed_program_node<custom_gpu_primitive> : public typed_program_node_base
 public:
     using parent::parent;
 
-    auto& input(size_t idx = 0) const { return get_dependency(idx); }
+    decltype(auto) input(size_t idx = 0) const { return get_dependency(idx); }
 };
 
 using custom_gpu_primitive_node = typed_program_node<custom_gpu_primitive>;
@@ -42,7 +42,14 @@ class typed_primitive_inst<custom_gpu_primitive> : public typed_primitive_inst_b
 public:
     static layout calc_output_layout(custom_gpu_primitive_node const& node)
     {
-        return node.get_primitive()->output_layout;
+        layout output_layout = node.get_primitive()->output_layout;
+        
+        // if the output layout format was set to any, it means the layer output format will be the same as the first input
+        if (output_layout.format == format::any)
+        {
+            output_layout.format = node.get_dependency(0).get_output_layout().format;
+        }
+        return output_layout;
     }
 
     static std::string to_string(custom_gpu_primitive_node const& node);

@@ -16,12 +16,14 @@
 
 #include "reorder_kernel_selector.h"
 #include "reorder_kernel.h"
+#include "reorder_kernel_fast_b1.h"
  
 namespace KernelSelector {
 
     ReorderKernelSelctor::ReorderKernelSelctor()
     {
         Attach<ReorderKernelRef>();
+        Attach<ReorderKernelFastBatch1>();
     }
 
     KernelsData ReorderKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const

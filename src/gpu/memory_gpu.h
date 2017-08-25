@@ -25,13 +25,13 @@
 #define BUFFER_ALIGNMENT 4096
 #define CACHE_ALIGNMENT 64
 
-namespace neural { namespace gpu {
+namespace cldnn { namespace gpu {
 
 template<typename T>
 T* allocate_aligned(size_t size, size_t align) {
     assert(sizeof(T) <= size);
     assert(alignof(T) <= align);
-    return reinterpret_cast<T*>(_mm_malloc(cldnn::align_to(size, align), align));
+    return reinterpret_cast<T*>(_mm_malloc(align_to(size, align), align));
 }
 
 template<typename T>
@@ -58,9 +58,9 @@ template<typename T>
 T* arr_end(T* buf, size_t count) { return buf + count; }
 #endif
 
-struct gpu_buffer : public cldnn::memory_impl {
-    gpu_buffer(const cldnn::refcounted_obj_ptr<cldnn::engine_impl>& engine, const cldnn::layout& layout);
-    gpu_buffer(const cldnn::refcounted_obj_ptr<cldnn::engine_impl>& engine, const cldnn::layout& new_layout, const cl::Buffer& buffer);
+struct gpu_buffer : public memory_impl {
+    gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, const layout& layout);
+    gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, const layout& new_layout, const cl::Buffer& buffer);
     void* lock() override;
     void unlock() override;
     const cl::Buffer& get_buffer() const {

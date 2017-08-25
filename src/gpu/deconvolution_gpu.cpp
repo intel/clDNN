@@ -15,68 +15,49 @@
 */
 
 #include "deconvolution_inst.h"
-#include "kernel.h"
-#include "kd_selector.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
-#include "deconvolution/deconvolution_kernel_selector.h"
+#include "error_handler.h"
 #include "kernel_selector_helper.h"
-#include <initializer_list>
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural 
+struct deconvolution_gpu : typed_primitive_gpu_impl<deconvolution>
 {
+    using parent = typed_primitive_gpu_impl<deconvolution>;
+    using parent::parent;
 
-struct deconvolution_gpu : typed_primitive_impl<deconvolution> 
-{
-    const deconvolution_node& outer;
-    gpu::kernel _kernel;
+protected:
 
-    deconvolution_gpu(const deconvolution_node &arg, const kernel_selector::kernel_data& kd)
-        : outer(arg)
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
+    // TODO: share it with convolution and fully connected
+    virtual bool validate(typed_primitive_inst<deconvolution>& instance) const override
     {
-        _kernel_data = kd;
-    }
+        bool res = parent::validate(instance);
 
-
-    event_impl::ptr execute_impl(const std::vector<cldnn::refcounted_obj_ptr<cldnn::event_impl>>& events, deconvolution_inst& instance) override
-    {
-        auto split = outer.get_primitive()->split();
-
-        const auto* input_mem = &instance.input_memory();
-        const auto* output_mem = &instance.output_memory();
-        const auto* filter_mem_0 = &instance.weights_memory(0);
-
+        CLDNN_ERROR_NOT_EQUAL(_outer.id(), "deconvolution filling value", _outer.get_output_layout().data_padding.filling_value(), "padding mode", 0.0f, "Unknown padding mode in deconvolution.");
         // Check whether all memory elements use the same unit type (FP16 or FP32).
-        if (input_mem->get_layout().data_type != output_mem->get_layout().data_type)
-            throw std::invalid_argument("Memory format of input is incompatible with memory format of output.");
-        if (input_mem->get_layout().data_type != filter_mem_0->get_layout().data_type)
-            throw std::invalid_argument("Memory format of input is incompatible with memory format of filter.");
+        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.input_memory().get_layout().data_type, "output memory", instance.output_memory().get_layout().data_type, "");
+        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.input_memory().get_layout().data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
 
-        std::vector<event_impl::ptr> tmp_events(events);
-
-        // execute kernels
-        for (decltype(split) i = 0; i < split; i++)
-        {
-            const auto* filter_mem = &instance.weights_memory(i);
-            const auto* bias_mem = instance.bias_term() ? &instance.bias_memory(i) : nullptr;
-            
-            gpu::kernel::kernel_arguments_data args;
-            args.scalars = &_kernel_data.kernels[0].scalars;
-            args.inputs = { input_mem };
-            args.output = output_mem;
-            args.weights = filter_mem;
-            args.bias = bias_mem;
-            args.split = i;
-
-            auto event = _kernel.run(_kernel_data.kernels[0], tmp_events, args);
-            tmp_events.clear();
-            tmp_events.emplace_back(event);
-        }
-
-        return tmp_events.at(0);
+        return res;
     }
+
+    virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<deconvolution>& instance, int32_t split) const override
+    {
+        kernel::kernel_arguments_data args = parent::get_arguments(instance, split);
+
+        args.weights    = &instance.weights_memory(split);
+        args.bias       = instance.bias_term() ? &instance.bias_memory(split) : nullptr;
+
+        return args;
+    }
+
+    virtual int32_t get_split() const override
+    { 
+        return _outer.get_split(); 
+    }
+
+public:
 
     static primitive_impl* create(const deconvolution_node& arg)
     {
@@ -106,14 +87,19 @@ struct deconvolution_gpu : typed_primitive_impl<deconvolution>
 #else
         const tensor dilation = {0,0,1,1};
 #endif
+        const auto depthwise_separable_opt = arg.get_depthwise_sep_opt();
+
         const auto& input_offset = primitive->input_offset;
 
         assert(arg.get_output_layout().size.feature[0] / primitive->split() == weights_layout.size.batch[0]);
 
-        auto deconv_params = get_weights_bias_default_params<kernel_selector::deconvolution_params>(arg, split);
+        auto deconv_params = get_weights_bias_default_params<kernel_selector::deconvolution_params>(arg, depthwise_separable_opt ? 1 : split);
         auto deconv_optional_params = get_default_weights_bias_optional_params<kernel_selector::deconvolution_optional_params>(arg.get_program());
 
-        convert_activation_func_params(primitive, deconv_params);
+        if(primitive->with_activation)
+            convert_activation_func_params(primitive, deconv_params);
+
+        deconv_params.deconvParams.depthwiseSeparableOpt = depthwise_separable_opt;
 
         deconv_params.deconvParams.split = split;
         deconv_params.deconvParams.filterSize = {
@@ -138,10 +124,8 @@ struct deconvolution_gpu : typed_primitive_impl<deconvolution>
 
         auto& kernel_selector = kernel_selector::deconvolution_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(deconv_params, deconv_optional_params);
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto deconv = new deconvolution_gpu(arg, best_kernels[0]);
 
@@ -152,13 +136,13 @@ struct deconvolution_gpu : typed_primitive_impl<deconvolution>
 namespace{
     struct attach {
         attach() {
-            implementation_map<deconvolution>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), deconvolution_gpu::create);
-            implementation_map<deconvolution>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), deconvolution_gpu::create);
-            implementation_map<deconvolution>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), deconvolution_gpu::create);
-            implementation_map<deconvolution>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), deconvolution_gpu::create);
         }
         ~attach() {}
     };
     attach attach_impl;
 }
-}
+} }

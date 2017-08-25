@@ -16,6 +16,7 @@
 
 #include "activation_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -34,7 +35,7 @@ std::string activation_inst::to_string(activation_node const& node)
 {
     std::stringstream            primitive_description;
     auto desc                   = node.get_primitive();
-    auto input                  = node.input();
+    auto& input                 = node.input();
 
     primitive_description << "id: " << desc->id << ", type: activation" <<
         "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: "  << input.get_output_layout().size <<
@@ -55,8 +56,7 @@ activation_inst::typed_primitive_inst(network_impl& network, activation_node con
     auto input_arg  = input_memory().get_layout();
     auto output_arg = output_memory().get_layout();
     
-    if (input_arg.size.raw.size() != output_arg.size.raw.size())
-        throw std::runtime_error("ReLU input/output number of dimension does not match.");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "ReLU input number", input_arg.size.raw.size(), "ReLU output number", output_arg.size.raw.size(), "Relu input/output num dismatch");
 
     if (is_parameterized())
     {
@@ -64,16 +64,10 @@ activation_inst::typed_primitive_inst(network_impl& network, activation_node con
         auto slope_input_size = slope_memory().get_layout().size;
         auto input_feature_size = input_memory().get_layout().size.feature[0];
 
-        if (slope_input_size.spatial[0] < input_feature_size)
-        {
-            throw std::invalid_argument("Dimensions mismatch between input and slope input in Activation layer (slope x size should be equal to input feature size)!");
-        }
+        CLDNN_ERROR_LESS_THAN(node.id(), "Slope x size", slope_input_size.spatial[0], "input feature size", input_feature_size, "Dimensions mismatch between input and slope input in Activation layer(slope x size should be equal to input feature size)!");
 
         // All other dimensions should be 1
-        if ((int32_t)slope_input_size.count() != slope_input_size.spatial[0])
-        {
-            throw std::invalid_argument("Dimensions mismatch of slope input in Activation layer!");
-        }
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Slope input size count", slope_input_size.count(), "Slope input size x", slope_input_size.spatial[0], "Dimensions mismatch of slope input in Activation layer!");
     }
 }
 }

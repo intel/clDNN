@@ -25,16 +25,11 @@
 
 #include "kernel_selector_helper.h"
 
-#ifndef NDEBUG
-#define OUT_PORGRAM_TO_FILE
-#endif
+#define MAX_KERNELS_PER_PROGRAM 10
 
-namespace neural { namespace gpu {
+namespace cldnn { namespace gpu {
 
-const char program_dump_file_name[] = "clDNN_program";
-
-namespace 
-{
+namespace {
     std::string get_undef_jit(kernels_cache::source_code org_source_code)
     {
         const std::string white_space_with_new_lines = " \t\r\n";
@@ -87,7 +82,7 @@ namespace
         return std::move(undefs);
     }
 
-    std::string reroder_options(const std::string& org_options)
+    std::string reorder_options(const std::string& org_options)
     {
         std::stringstream ss(org_options);
         std::set<std::string> sorted_options;
@@ -128,12 +123,13 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
         std::string         options             = code.second.kernel_strings->options;
         bool                batch_compilation   = code.second.kernel_strings->batch_compilation;
         bool                dump_custom_program = code.second.dump_custom_program;
+		bool                one_time_kernel     = code.second.one_time_kernel;
 
         batch_compilation &= does_options_support_batch_compilation(options);
 
         if (batch_compilation)
         {
-            options = reroder_options(options);
+            options = reorder_options(options);
         }
 
         std::string key = options;
@@ -148,12 +144,24 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
             key += " __DUMP_CUSTOM_PROGRAM__"; // Adding label to key so it would be separated from other programs
         }
 
+
+		if (one_time_kernel)
+        {
+            key += " __ONE_TIME__";
+        }
+		
         auto& current_bucket = scode[key];
         current_bucket.dump_custom_program = dump_custom_program;
+		current_bucket.one_time = one_time_kernel;
 
         if (current_bucket.source.empty())
         {
             current_bucket.options = options;
+        }
+
+        if ((current_bucket.kernels_counter % MAX_KERNELS_PER_PROGRAM) == 0)
+        {
+            current_bucket.source.push_back({});
         }
 
         current_bucket.entry_point_to_id[entry_point] = code.second.id;
@@ -167,8 +175,10 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
 
         for (auto& s : new_source_code)
         {
-            current_bucket.source.push_back(std::move(s));
+            current_bucket.source.back().push_back(std::move(s));
         }
+
+        current_bucket.kernels_counter++;
     }
 
     return std::move(scode);
@@ -176,7 +186,7 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
 
 kernels_cache::kernels_cache(gpu_toolkit& context): _context(context) {}
 
-kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program)
+kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program, bool one_time_kernel)
 {
     kernels_cache::kernel_id id;
     
@@ -192,7 +202,7 @@ kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<
         // we need unique id in order to avoid conflict across topologies.
         const auto kernel_num = _kernels.size() + _kernels_code.size(); 
         id = kernel_string->entry_point + "_" + std::to_string(kernel_num);
-        _kernels_code[key] = { kernel_string, id, dump_custom_program };
+        _kernels_code[key] = { kernel_string, id, dump_custom_program, one_time_kernel };
     }
     else
     {
@@ -200,100 +210,141 @@ kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<
     }
 
     assert(_kernels.find(id) == _kernels.end());
-
+    _pending_compilation = true;
     return id;
 }
 
 kernels_cache::kernels_map kernels_cache::build_program(const program_code& program_source) const
 {
     static uint32_t current_file_index = 0;
-    const std::string current_program_dump_file_name = program_dump_file_name + std::to_string(current_file_index) + ".cl";
 
-    try 
+    bool dump_sources = !_context.get_configuration().ocl_sources_dumps_dir.empty();
+
+    std::string dump_file_name = "";
+    if (dump_sources)
     {
-#ifndef OUT_PORGRAM_TO_FILE
-        if (program_source.dump_custom_program)
-#endif
-        {
-            current_file_index++;
-            std::ofstream os(current_program_dump_file_name);
-            for (auto& s : program_source.source)
-                os << s;
-        }
+        dump_file_name = _context.get_configuration().ocl_sources_dumps_dir;
+        if (dump_file_name.back() != '/')
+            dump_file_name += '/';
 
-        cl::Program program(_context.context(), program_source.source);
-        program.build({ _context.device() }, program_source.options.c_str());
-
-#ifndef OUT_PORGRAM_TO_FILE
-        if (program_source.dump_custom_program)
-#endif
-        {
-            std::ofstream os(current_program_dump_file_name, std::ios_base::app);
-            os << "\n/* Build Log:\n";
-            for (auto& p : program.getBuildInfo<CL_PROGRAM_BUILD_LOG>()) {
-                os << p.second << "\n";
-            }
-            os << "*/\n";
-        }
-
-        cl::vector<cl::Kernel> kernels;
-        program.createKernels(&kernels);
-        kernels_map kmap;
-
-        for (auto& k : kernels)
-        {
-            auto kernel_name = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
-            kmap.emplace(kernel_name, k);
-        }
-
-        return std::move(kmap);
+        dump_file_name += "clDNN_program_" + std::to_string(current_file_index++) + "_part_";
     }
-    catch (const cl::BuildError& err) 
-    {
-        std::string build_log{"Build program error "};
-        build_log += err.what();
 
-#ifndef OUT_PORGRAM_TO_FILE
-        if (program_source.dump_custom_program)
-#endif
+    try
+    {
+        kernels_map kmap;
+        std::string err_log; //accumulated build log from all program's parts (only contains messages from parts which failed to compile)
+
+        uint32_t part_idx = 0;
+        for (const auto& sources : program_source.source)
         {
-            std::ofstream os(current_program_dump_file_name, std::ios_base::app);
-            os << "\n/* Build Log:\n";
-            for (auto& p : err.getBuildLog()) {
-                os << p.second << "\n";
-                build_log += "\n" + p.second;
+            auto current_dump_file_name = dump_file_name + std::to_string(part_idx++) + ".cl";
+            boost::optional<std::ofstream> dump_file;
+
+            if (dump_sources)
+            {
+                dump_file.emplace(current_dump_file_name);
+                for (auto& s : sources)
+                    dump_file.get() << s;
             }
-            os << "*/\n";
+
+            try
+            {
+                cl::Program program(_context.context(), sources);
+                program.build({ _context.device() }, program_source.options.c_str());
+
+                if (dump_sources)
+                {
+                    dump_file.get() << "\n/* Build Log:\n";
+                    for (auto& p : program.getBuildInfo<CL_PROGRAM_BUILD_LOG>())
+                        dump_file.get() << p.second << "\n";
+
+                    dump_file.get() << "*/\n";
+                }
+
+                cl::vector<cl::Kernel> kernels;
+                program.createKernels(&kernels);
+
+                for (auto& k : kernels)
+                {
+                    auto kernel_name = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
+                    kmap.emplace(kernel_name, k);
+                }
+            }
+            catch (const cl::BuildError& err)
+            {
+                if (dump_sources)
+                    dump_file.get() << "\n/* Build Log:\n";
+
+                for (auto& p : err.getBuildLog())
+                {
+                    if (dump_sources)
+                        dump_file.get() << p.second << "\n";
+                
+                    err_log += p.second + '\n';
+                }
+
+                if (dump_sources)
+                    dump_file.get() << "*/\n";
+            }
+            
         }
 
-        throw std::runtime_error(build_log);
+        if (!err_log.empty())
+            throw std::runtime_error("Program build failed:\n" + std::move(err_log));
+
+        return kmap;
+    }
+    catch (const cl::Error& err)
+    {
+        throw ocl_error(err);
     }
 }
 
-kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id) 
+kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id, bool one_time_kernel) 
 {
-    std::lock_guard<std::mutex> lock(_mutex);
-    
-    if (_kernels_code.empty() == false) 
+    build_all();
+    if (one_time_kernel)
     {
-        auto sorted_program_code = get_program_source(_kernels_code);
+        return _one_time_kernels.at(id);
+    }
+    else
+    {
+        return _kernels.at(id);
+    }
+}
 
-        for (auto& program : sorted_program_code)
+void kernels_cache::build_all()
+{
+    if (!_pending_compilation)
+        return;
+
+    std::lock_guard<std::mutex> lock(_mutex);
+
+    auto sorted_program_code = get_program_source(_kernels_code);
+
+	_one_time_kernels.clear();
+    for (auto& program : sorted_program_code)
+    {
+        auto kernels = build_program(program.second);
+
+        for (auto& k : kernels)
         {
-            auto kernels = build_program(program.second);
-
-            for (auto& k : kernels)
+            const auto& entry_point = k.first;
+            const auto& k_id = program.second.entry_point_to_id[entry_point];
+            if (program.second.one_time)
             {
-                const auto& entry_point = k.first;
-                const auto& k_id = program.second.entry_point_to_id[entry_point];
+				_one_time_kernels[k_id] = k.second;
+			}
+			else
+			{
                 _kernels[k_id] = k.second;
-            }
+			}
         }
-
-        _kernels_code.clear();
     }
 
-    return _kernels.at(id);
+    _kernels_code.clear();
+    _pending_compilation = false;
 }
 
 }}

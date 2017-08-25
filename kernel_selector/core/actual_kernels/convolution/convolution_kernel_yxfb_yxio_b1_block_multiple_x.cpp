@@ -61,22 +61,22 @@ namespace KernelSelector
         }
         else*/ if (filter_ofm_num % (runInfo.lws0 * 4) == 0)
         {
-            runInfo.ofmPerWorkItem = 4;
+            runInfo.cldnnStyle.ofmPerWorkItem = 4;
             // We compute multiple spatial coordinates "x" in a single workitem that's why we must divide
             runInfo.gws1 = static_cast<size_t>(std::ceil(static_cast<float>(runInfo.gws1) / 4.0f));
         }
         else if (filter_ofm_num % (runInfo.lws0 * 2) == 0)
         {
-            runInfo.ofmPerWorkItem = 2;
+            runInfo.cldnnStyle.ofmPerWorkItem = 2;
             runInfo.gws1 = static_cast<size_t>(std::ceil(static_cast<float>(runInfo.gws1) / 8.0f));
         }
         else
         {
-            runInfo.ofmPerWorkItem = 1;
+            runInfo.cldnnStyle.ofmPerWorkItem = 1;
             runInfo.gws1 = static_cast<size_t>(std::ceil(static_cast<float>(runInfo.gws1) / 8.0f));
         }
 
-        runInfo.gws0 = filter_ofm_num * batch_size / (runInfo.ofmPerWorkItem * runInfo.batchesPerWorkItem);
+        runInfo.gws0 = filter_ofm_num * batch_size / (runInfo.cldnnStyle.ofmPerWorkItem * runInfo.cldnnStyle.batchesPerWorkItem);
         
         return runInfo;
     }
@@ -85,12 +85,12 @@ namespace KernelSelector
     {
         auto cldnn_jit = ConvolutionKernelBase::GetJitConstants(params, kd);
 
-        cldnn_jit.AddConstant(MakeJitConstant("USE_VECTOR", kd.ofmPerWorkItem));
-        if (kd.ofmPerWorkItem == 8)
+        cldnn_jit.AddConstant(MakeJitConstant("USE_VECTOR", kd.cldnnStyle.ofmPerWorkItem));
+        if (kd.cldnnStyle.ofmPerWorkItem == 8)
         {
             cldnn_jit.AddConstant(MakeJitConstant("X_PER_WORK_ITEM", 2));
         }
-        else if (kd.ofmPerWorkItem == 4)
+        else if (kd.cldnnStyle.ofmPerWorkItem == 4)
         {
             cldnn_jit.AddConstant(MakeJitConstant("X_PER_WORK_ITEM", 4));
         }
@@ -173,7 +173,7 @@ namespace KernelSelector
         auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, true, !orgParams.bias.empty());
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
 
         kd.estimatedTime = runInfo.effiency;

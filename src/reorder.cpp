@@ -17,6 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "reorder_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 #include <algorithm>
 
@@ -46,7 +47,7 @@ std::string reorder_inst::to_string(reorder_node const& node)
 {
     std::stringstream           primitive_description;
     auto desc                   = node.get_primitive();
-    auto input                  = node.input();
+    auto& input                 = node.input();
     auto output_layout_data     = desc->output_data_type == data_types::f16 ? "f16" : "f32";
     auto mean = desc->mean;
 
@@ -61,22 +62,41 @@ std::string reorder_inst::to_string(reorder_node const& node)
 }
 
 reorder_inst::typed_primitive_inst(network_impl& network, reorder_node const& node)
-    : parent(network, node)
+    : parent(network, node, !node.can_be_optimized())
 {
+    if (node.can_be_optimized())
+        reuse_input();
+
     auto& input_mem = input_memory();
     auto& output_mem = output_memory();
 
-    if (input_mem.get_layout().size.raw.size() < output_mem.get_layout().size.raw.size())
-        throw std::runtime_error("Input dimension < output dimension. Reorder primitive woks only with same dimension sizes (reorder) or when input > output (flatten).");
-
+    CLDNN_ERROR_LESS_THAN(node.id(), "Input dimension size", input_mem.get_layout().size.raw.size(), "ouput dimension size", output_mem.get_layout().size.raw.size(), "Input dimension < output dimension. Reorder primitive woks only with same dimension sizes (reorder) or when input > output (flatten).");
+    
     if (!argument.subtract_per_feature.empty())
     {
-        if (input_mem.get_layout().size.feature.size() > 1)
-        {
-            throw std::runtime_error("Subtracting values work only for formats that have feature dimension == 1");
-        }
-        if (static_cast<size_t>(input_mem.get_layout().size.feature[0]) != argument.subtract_per_feature.size())
-            throw std::runtime_error("Number of features/channels in input does not match the number of features/channels in values to subtract");
+        CLDNN_ERROR_GREATER_THAN(node.id(), "Input feature dimension size", input_mem.get_layout().size.feature.size(), "value", 1, "Subtracting values work only for formats that have feature dimension == 1");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Input feature size[0]", static_cast<size_t>(input_mem.get_layout().size.feature[0]), "argument subtract per feature size", argument.subtract_per_feature.size(), "Number of features/channels in input does not match the number of features/channels in values to subtract");
     }
 }
+
+void reorder_inst::on_execute()
+{
+    if (node.can_be_optimized())
+        reuse_input();
+}
+
+void reorder_inst::reuse_input()
+{
+    if (!node.can_be_optimized())
+        return;
+
+    if (node.requires_reinterpret())
+    {
+        if (!_output || !_network.get_engine().is_the_same_buffer(output_memory(), input_memory()))
+            _output = _network.get_engine().reinterpret_buffer(input_memory(), node.get_output_layout());
+    }
+    else if (!_output)
+        _output = &input_memory();
+}
+
 }

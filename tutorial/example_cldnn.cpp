@@ -151,7 +151,10 @@ vector<float> load_data(const string&) { return{ 0 }; }
 
 // Allocates memory and loads data from file.
 // Memory layout is taken from file.
-memory load_mem(const engine&, const string&) { return{ 0 }; }
+memory load_mem(const engine& eng, const string&) {
+    //return a dummy value
+    return memory::allocate(eng, layout{ data_types::f32, format::bfyx, { 1, 1, 1, 1 } });
+}
 
 // Load image, resize to [x,y] and store in a vector of floats
 // in the order "bfyx".

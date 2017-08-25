@@ -17,63 +17,76 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "fully_connected_inst.h"
-#include "kernel.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
 #include "network_impl.h"
+#include "error_handler.h"
 
 #include "api/CPP/reorder.hpp"
 #include "api/CPP/input_layout.hpp"
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural
-{
 
-struct fully_connected_gpu : typed_primitive_impl<fully_connected>
+struct fully_connected_gpu : typed_primitive_gpu_impl<fully_connected>
 {
-    const fully_connected_node& outer;
+    using parent = typed_primitive_gpu_impl<fully_connected>;
+
     std::vector<network_impl::ptr> _reorders;   // TODO: move this reorder to graph compiler
-    gpu::kernel _kernel;
+    memory_impl::ptr new_input_mem;      // TODO: remove this hack
 
     fully_connected_gpu(const fully_connected_node& arg, const kernel_selector::kernel_data& kd, std::vector<network_impl::ptr> reorders)
-        : outer(arg)
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
+        : parent(arg, kd)
+        , _reorders(reorders)
+    {}
+
+protected:
+
+    virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<fully_connected>& instance, int32_t) const
     {
-        _kernel_data = kd;
-        _reorders = reorders;
+        kernel::kernel_arguments_data args;
+
+        args.inputs     = { new_input_mem };
+        args.output     = &instance.output_memory();
+        args.weights    = &instance.weights_memory();
+        args.bias       = instance.bias_term() ? &instance.bias_memory() : nullptr;
+
+        return args;
     }
+
+public:
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, fully_connected_inst& instance) override
     {
-        const auto* input_mem = &instance.input_memory();
+        std::vector<event_impl::ptr> tmp_events(events);
 
-        if (_reorders.empty() == false)
+        if (_reorders.empty())
+        {
+            new_input_mem = &instance.input_memory();
+        }
+        else
         {
             auto network = _reorders[0];
-            network->set_input_data("input", api_cast(input_mem->get()));
-            network->execute(events);
+            network->set_input_data("input", instance.input_memory());
+            network->execute(tmp_events);
             auto output_id = network->get_output_ids()[0];
-            input_mem = &network->get_primitive(output_id)->output_memory();
+            new_input_mem = &network->get_primitive(output_id)->output_memory();
+            tmp_events.clear();
+            tmp_events.push_back(network->get_primitive_event(output_id));
         }
 
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
-        args.inputs = { input_mem };
-        args.output = &instance.output_memory();
-        args.weights = &instance.weights_memory();
-        args.bias = instance.bias_term() ? &instance.bias_memory() : nullptr;;
-
-        return _kernel.run(_kernel_data.kernels[0], events, args);
+        return parent::execute_impl(tmp_events, instance);
     }
 
     static primitive_impl* create(const fully_connected_node& arg)
     {
         auto fc_params = get_weights_bias_default_params<kernel_selector::fully_connected_params>(arg);
         auto fc_optional_params = get_default_weights_bias_optional_params<kernel_selector::fully_connected_optional_params>(arg.get_program());
-        fc_optional_params.allowReorderInput = true;
+        fc_optional_params.allowInputReordering = true;
 
-        convert_activation_func_params(arg.get_primitive(), fc_params);
+        if(arg.get_primitive()->with_activation)
+            convert_activation_func_params(arg.get_primitive(), fc_params);
 
         fc_params.output = fc_params.output.FlattenFeatureAndSpatials();
 
@@ -82,22 +95,17 @@ struct fully_connected_gpu : typed_primitive_impl<fully_connected>
         auto& kernel_selector = kernel_selector::fully_connected_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(fc_params, fc_optional_params);
 
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         const auto& new_fc_params = *static_cast<kernel_selector::fully_connected_params*>(best_kernels[0].params.get());
         std::vector<network_impl::ptr> reorders; 
         if (fc_params.inputs[0].GetLayout() != new_fc_params.inputs[0].GetLayout())
         {
             const auto& input_layout = arg.input().get_output_layout();
-            cldnn::topology topology(
-                cldnn::input_layout("input", input_layout),
-                cldnn::reorder("reorder", "input", to_data_layout(new_fc_params.inputs[0].GetLayout()), input_layout.data_type)
-            );
-
-            reorders.push_back({ arg.get_program().get_engine()->build_network(*api_cast(topology.get()), cldnn::build_options()), false });
+            topology_impl tpl;
+            tpl.add(std::make_shared<cldnn::input_layout>("input", input_layout));
+            tpl.add(std::make_shared<cldnn::reorder>("reorder", "input", from_data_layout(new_fc_params.inputs[0].GetLayout()), input_layout.data_type));
+            reorders.push_back(arg.get_program().get_engine().build_network(tpl, cldnn::build_options()));
         }
 
         auto fc = new fully_connected_gpu(arg, best_kernels[0], reorders);
@@ -113,14 +121,14 @@ namespace {
             auto val_fw = fully_connected_gpu::create;
 
             implementation_map<fully_connected>::add({
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), val_fw },
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), val_fw },
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), val_fw },
-                { std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw },
             });
         }
         ~attach() {}
     };
     attach attach_impl;
 }
-}
+} }

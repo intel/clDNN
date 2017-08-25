@@ -32,7 +32,7 @@ struct memory_impl : refcounted_obj<memory_impl>
     virtual void* lock() = 0;
     virtual void unlock() = 0;
     size_t size() const { return _layout.bytes_count(); }
-    virtual bool is_allocated_by(const refcounted_obj_ptr<engine_impl>& engine) const { return engine == _engine; }
+    virtual bool is_allocated_by(const engine_impl& engine) const { return &engine == _engine.get(); }
     const refcounted_obj_ptr<engine_impl>& get_engine() const { return _engine; }
     const layout& get_layout() const { return _layout; }
 protected:
@@ -51,6 +51,41 @@ struct simple_attached_memory : memory_impl
     void unlock() override {}
 private:
     void* _pointer;
+};
+
+template <class T>
+struct mem_lock
+{
+    mem_lock(memory_impl::ptr mem)
+        : mem(mem), ptr(reinterpret_cast<T*>(mem->lock()))
+    {
+    }
+
+    mem_lock(memory_impl& mem)
+        : mem_lock(&mem)
+    {}
+
+    ~mem_lock()
+    {
+        ptr = nullptr;
+        mem->unlock();
+    }
+
+    size_t size() const { return mem->size() / sizeof(T); }
+
+#if defined(_SECURE_SCL) && (_SECURE_SCL > 0)
+    auto begin() & { return stdext::make_checked_array_iterator(ptr, size()); }
+    auto end() & { return stdext::make_checked_array_iterator(ptr, size(), size()); }
+#else
+    T* begin() & { return ptr; }
+    T* end() & { return ptr + size(); }
+#endif
+
+    T* data() const { return ptr; }
+
+private:
+    memory_impl::ptr mem;
+    T* ptr;
 };
 
 }

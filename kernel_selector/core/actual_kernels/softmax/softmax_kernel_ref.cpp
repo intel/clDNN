@@ -43,68 +43,94 @@ namespace KernelSelector
         return k;
     }
 
-    KernelsData SoftmaxKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    SoftmaxKernelRef::Parent::DispatchData SoftmaxKernelRef::SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const
     {
-        assert(params.GetType() == KernelType::SOFT_MAX);
+        auto runInfo = Parent::SetDefault(params, optParams);
 
-        KernelData kd = KernelData::Default<SoftmaxParams>(params);
-
-        SoftmaxParams& newParams = *static_cast<SoftmaxParams*>(kd.params.get());
-        const auto& out = newParams.output;
-        auto& kernel = kd.kernels[0];
-        const std::string kernel_id = GetEntryPoint(kernelName, params.layerID, options);
-        auto jit = GetBaseJit(newParams, kernel_id);
-        switch (newParams.smParams.dim)
+        const auto& out = params.output;
+        std::vector<size_t> global;
+        switch (params.smParams.dim)
         {
         case SoftmaxDim::X:
-            jit +=
-                "#define INPUT_OTHER0_PITCH     INPUT_Y_PITCH\n"
-                "#define INPUT_OTHER1_PITCH     INPUT_FEATURE_PITCH\n"
-                "#define INPUT_CLASS_PITCH      INPUT_X_PITCH\n"
-                "#define INPUT_CLASS_NUM        INPUT_SIZE_X\n"
-                "#define OUTPUT_OTHER0_PITCH    OUTPUT_Y_PITCH\n"
-                "#define OUTPUT_OTHER1_PITCH    OUTPUT_FEATURE_PITCH\n"
-                "#define OUTPUT_CLASS_PITCH     OUTPUT_X_PITCH\n";
-            kernel.workGroups.global = { out.Y().v, out.Feature().v, out.Batch().v };
+            global = { out.Y().v, out.Feature().v, out.Batch().v };
             break;
         case SoftmaxDim::Y:
-            jit +=
-                "#define INPUT_OTHER0_PITCH     INPUT_X_PITCH\n"
-                "#define INPUT_OTHER1_PITCH     INPUT_FEATURE_PITCH\n"
-                "#define INPUT_CLASS_PITCH      INPUT_Y_PITCH\n"
-                "#define INPUT_CLASS_NUM        INPUT_SIZE_Y\n"
-                "#define OUTPUT_OTHER0_PITCH    OUTPUT_X_PITCH\n"
-                "#define OUTPUT_OTHER1_PITCH    OUTPUT_FEATURE_PITCH\n"
-                "#define OUTPUT_CLASS_PITCH     OUTPUT_Y_PITCH\n";
-            kernel.workGroups.global = { out.X().v, out.Feature().v, out.Batch().v };
+            global = { out.X().v, out.Feature().v, out.Batch().v };
             break;
         case SoftmaxDim::FEATURE:
-            jit +=
-                "#define INPUT_OTHER0_PITCH     INPUT_X_PITCH\n"
-                "#define INPUT_OTHER1_PITCH     INPUT_Y_PITCH\n"
-                "#define INPUT_CLASS_PITCH      INPUT_FEATURE_PITCH\n"
-                "#define INPUT_CLASS_NUM        INPUT_FEATURE_NUM\n"
-                "#define OUTPUT_OTHER0_PITCH    OUTPUT_X_PITCH\n"
-                "#define OUTPUT_OTHER1_PITCH    OUTPUT_Y_PITCH\n"
-                "#define OUTPUT_CLASS_PITCH     OUTPUT_FEATURE_PITCH\n";
-            kernel.workGroups.global = { out.X().v, out.Y().v, out.Batch().v };
+            global = { out.X().v, out.Y().v, out.Batch().v };
+            break;
+        default:
+            break;
+        }
+
+        auto local = GetOptimalLocalWorkGroupSizes(global);
+
+        runInfo.gws0 = global[0];
+        runInfo.gws1 = global[1];
+        runInfo.gws2 = global[2];
+
+        runInfo.lws0 = local[0];
+        runInfo.lws1 = local[1];
+        runInfo.lws2 = local[2];
+
+        return runInfo;
+    }
+
+    JitConstants SoftmaxKernelRef::GetJitConstants(const SoftmaxParams& params, DispatchData kd) const
+    {
+        auto jit = Parent::GetJitConstants(params, kd);
+
+        switch (params.smParams.dim)
+        {
+        case SoftmaxDim::X:
+            jit.AddConstants({
+                MakeJitConstant("INPUT0_OTHER0_PITCH",  "INPUT0_Y_PITCH"),
+                MakeJitConstant("INPUT0_OTHER1_PITCH",  "INPUT0_FEATURE_PITCH"),
+                MakeJitConstant("INPUT0_CLASS_PITCH",   "INPUT0_X_PITCH"),
+                MakeJitConstant("INPUT0_CLASS_NUM",     "INPUT0_SIZE_X"),
+                MakeJitConstant("OUTPUT_OTHER0_PITCH",  "OUTPUT_Y_PITCH"),
+                MakeJitConstant("OUTPUT_OTHER1_PITCH",  "OUTPUT_FEATURE_PITCH"),
+                MakeJitConstant("OUTPUT_CLASS_PITCH",   "OUTPUT_X_PITCH"),
+            });
+            break;
+        case SoftmaxDim::Y:
+            jit.AddConstants({
+                MakeJitConstant("INPUT0_OTHER0_PITCH",  "INPUT0_X_PITCH"),
+                MakeJitConstant("INPUT0_OTHER1_PITCH",  "INPUT0_FEATURE_PITCH"),
+                MakeJitConstant("INPUT0_CLASS_PITCH",   "INPUT0_Y_PITCH"),
+                MakeJitConstant("INPUT0_CLASS_NUM",     "INPUT0_SIZE_Y"),
+                MakeJitConstant("OUTPUT_OTHER0_PITCH",  "OUTPUT_X_PITCH"),
+                MakeJitConstant("OUTPUT_OTHER1_PITCH",  "OUTPUT_FEATURE_PITCH"),
+                MakeJitConstant("OUTPUT_CLASS_PITCH",   "OUTPUT_Y_PITCH"),
+            });
+            break;
+        case SoftmaxDim::FEATURE:
+            jit.AddConstants({
+                MakeJitConstant("INPUT0_OTHER0_PITCH",  "INPUT0_X_PITCH"),
+                MakeJitConstant("INPUT0_OTHER1_PITCH",  "INPUT0_Y_PITCH"),
+                MakeJitConstant("INPUT0_CLASS_PITCH",   "INPUT0_FEATURE_PITCH"),
+                MakeJitConstant("INPUT0_CLASS_NUM",     "INPUT0_FEATURE_NUM"),
+                MakeJitConstant("OUTPUT_OTHER0_PITCH",  "OUTPUT_X_PITCH"),
+                MakeJitConstant("OUTPUT_OTHER1_PITCH",  "OUTPUT_Y_PITCH"),
+                MakeJitConstant("OUTPUT_CLASS_PITCH",   "OUTPUT_FEATURE_PITCH"),
+            });
             break;
         default:
             break;
         }
 
         // TODO: W/A - currently using low precision accumulator type. (for testing only)
-        if (newParams.output.GetDType() == Datatype::F16)
+        if (params.output.GetDType() == Datatype::F16)
         {
-            jit += "#define COUNTER_TYPE_F16\n";
+            jit.AddConstant(MakeJitConstant("ACCUMULATOR_TYPE", "half"));
         }
 
-        kernel.workGroups.local = GetOptimalLocalWorkGroupSizes(kernel.workGroups.global);
-        kernel.kernelString = GetKernelString(kernelName, jit, kernel_id);
-        kernel.arguments = GetArgumentDesc(1, false, false);
+        return jit;
+    }
 
-        kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
-
-        return{ kd };
+    KernelsData SoftmaxKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    {
+        return GetCommonKernelsData(params, options, DONT_USE_IF_HAVE_SOMETHING_ELSE);
     }
 }

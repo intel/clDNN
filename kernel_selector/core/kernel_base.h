@@ -28,6 +28,16 @@ namespace KernelSelector
         virtual ~KernelBase() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const = 0;
+        virtual KernelsData GetKernelsDataForAutoTune(const Params& params, const OptionalParams& options) const
+        {
+            return GetKernelsData(params, options);
+        }
+        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, int autoTuneIndex) const
+        {
+            UNUSED(autoTuneIndex);
+            return GetKernelsData(params, options);
+        }
+
         virtual ParamsKey GetSupportedKey() const = 0;
         virtual const std::string GetName() const { return kernelName; }
     

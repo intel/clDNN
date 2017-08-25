@@ -19,6 +19,7 @@
 #include "api/CPP/memory.hpp"
 
 #include "api_impl.h"
+#include "event_impl.h"
 #include "refcounted_obj.h"
 #include "implementation_map.h"
 
@@ -26,11 +27,13 @@
 
 #include <memory>
 
-namespace neural { namespace gpu { class gpu_toolkit; } }
-namespace cldnn
-{
+namespace cldnn {
+namespace gpu { 
+    class gpu_toolkit;
+}
+
 class build_options;
-using gpu_toolkit = neural::gpu::gpu_toolkit;
+using gpu_toolkit = gpu::gpu_toolkit;
 
 struct memory_impl;
 struct event_impl;
@@ -48,30 +51,33 @@ public:
 
     engine_types type() const { return engine_types::ocl; }
 
-    memory_impl* allocate_buffer(layout layout);
-    memory_impl* reinterpret_buffer(memory_impl* memory, layout new_layout);
-    bool is_the_same_buffer(memory_impl* mem1, memory_impl* mem2);
+    refcounted_obj_ptr<memory_impl> allocate_buffer(layout layout);
+    refcounted_obj_ptr<memory_impl> reinterpret_buffer(const memory_impl& memory, layout new_layout);
+    bool is_the_same_buffer(const memory_impl& mem1, const memory_impl& mem2);
 
-    event_impl* create_user_event();
-    program_impl* build_program(const topology_impl& topology, const build_options& options);
-    network_impl* build_network(const topology_impl& topology, const build_options& options);
-    network_impl* allocate_network(const program_impl* program);
+    refcounted_obj_ptr<event_impl> create_user_event(bool set = false);
+    void wait_for_events(std::vector<event_impl::ptr> const& events);
+
+    refcounted_obj_ptr<program_impl> build_program(const topology_impl& topology, const build_options& options);
+    void compile_program(program_impl& prog);
+
+    refcounted_obj_ptr<network_impl> allocate_network(const program_impl& program);
+    refcounted_obj_ptr<network_impl> build_network(const topology_impl& topology, const build_options& options);
+    void flush_network();
 
     template <class T>
     std::unique_ptr<primitive_impl> create_primitive_impl(typed_program_node<T> const& node)
     {
-        if (node.get_program().get_engine() != this)
+        if (&node.get_program().get_engine() != this)
             throw std::invalid_argument("engine_impl::create_primitive_impl: program's engine does not match called engine");
 
         auto factory = implementation_map<T>::get(type(), node);
         return std::move(std::unique_ptr<primitive_impl>(factory(node)));
     }
-
+    
     const engine_configuration& configuration() const { return _configuration; }
-
     std::shared_ptr<gpu_toolkit> get_context() const { return _context; }
-
-    neural::gpu::engine_info_internal get_engine_info() const;
+    gpu::engine_info_internal get_engine_info() const;
 
 private:
     engine_configuration _configuration;

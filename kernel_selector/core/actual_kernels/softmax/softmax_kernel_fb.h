@@ -20,14 +20,17 @@
  
 namespace KernelSelector 
 {    
-    class SoftmaxKernel_fb : public SoftmaxKernelBase
+    class SoftmaxKernel_fb : public SoftmaxKernelBaseBF
     {
     public:
-        SoftmaxKernel_fb() : SoftmaxKernelBase("softmax_gpu_fb") {}
+        using Parent = SoftmaxKernelBaseBF;
+        SoftmaxKernel_fb() : SoftmaxKernelBaseBF("softmax_gpu_fb") {}
         virtual ~SoftmaxKernel_fb() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
+
+    protected:
         DispatchData SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const override;
     };
 }

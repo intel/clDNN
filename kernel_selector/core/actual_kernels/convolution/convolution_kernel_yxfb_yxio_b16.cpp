@@ -56,31 +56,31 @@ namespace KernelSelector
             const uint32_t min_ofm_per_wi = 16;
             const uint32_t min_batches_per_wi = 1;
 
-            runInfo.ofmPerWorkItem = min_ofm_per_wi;
+            runInfo.cldnnStyle.ofmPerWorkItem = min_ofm_per_wi;
             if (batch_size % (4 * min_batches_per_wi * min_lws) == 0)
             {
-                runInfo.batchesPerWorkItem = 4 * min_batches_per_wi; // USE_BLOCK_READ_2 + as_half4
+                runInfo.cldnnStyle.batchesPerWorkItem = 4 * min_batches_per_wi; // USE_BLOCK_READ_2 + as_half4
             }
             else if (batch_size % (2 * min_batches_per_wi * min_lws) == 0)
             {
-                runInfo.batchesPerWorkItem = 2 * min_batches_per_wi; // USE_BLOCK_READ_1 + as_half2
+                runInfo.cldnnStyle.batchesPerWorkItem = 2 * min_batches_per_wi; // USE_BLOCK_READ_1 + as_half2
             }
             else
             {
-                runInfo.batchesPerWorkItem = min_batches_per_wi;
+                runInfo.cldnnStyle.batchesPerWorkItem = min_batches_per_wi;
             }
             
             runInfo.effiency = FORCE_PRIORITY_7;
         }
         else
         {
-            runInfo.ofmPerWorkItem = 8;
-            runInfo.batchesPerWorkItem = 2;
+            runInfo.cldnnStyle.ofmPerWorkItem = 8;
+            runInfo.cldnnStyle.batchesPerWorkItem = 2;
             runInfo.effiency = FORCE_PRIORITY_9;
         }
 
         runInfo.lws0 = min_lws;
-        runInfo.gws0 = filter_ofm_num * batch_size / (runInfo.ofmPerWorkItem * runInfo.batchesPerWorkItem);
+        runInfo.gws0 = filter_ofm_num * batch_size / (runInfo.cldnnStyle.ofmPerWorkItem * runInfo.cldnnStyle.batchesPerWorkItem);
         
         return runInfo;
     }
@@ -169,6 +169,8 @@ namespace KernelSelector
         auto cldnn_jit = GetJitConstants(newParams, runInfo);
 
         const auto batch_size = newParams.output.Batch().v;
+        const auto batch_pad_before = newParams.output.Batch().pad.before;
+        const auto feature_pitch = newParams.output.Feature().pitch;
 
         std::string kernel_name_postfix;
         if (newParams.inputs[0].GetDType() == Datatype::F32)
@@ -185,11 +187,11 @@ namespace KernelSelector
         else
         {
             kernel_name_postfix = "_fp16";
-            if (batch_size >= 64)
+            if (batch_size >= 64 && (feature_pitch % 2 == 0) && (batch_pad_before % 2 == 0))
             {
                 cldnn_jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_2", ""));
             }
-            else if (batch_size >= 32)
+            else if (batch_size >= 32 && (feature_pitch % 2 == 0) && (batch_pad_before % 2 == 0))
             {
                 cldnn_jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_1", ""));
             }
@@ -199,7 +201,7 @@ namespace KernelSelector
         auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName + kernel_name_postfix, jit, entry_point, true, !newParams.bias.empty());
+        FillCLKernelData(kernel, runInfo, kernelName + kernel_name_postfix, jit, entry_point, ROUND_ROBIN, true, !newParams.bias.empty());
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
 
         kd.estimatedTime = runInfo.effiency;

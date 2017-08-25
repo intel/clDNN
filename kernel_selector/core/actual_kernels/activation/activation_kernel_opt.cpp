@@ -29,45 +29,64 @@ namespace KernelSelector {
         k.EnableAllInputLayout();
         k.EnableAllOutputLayout();
         k.EnableTensorOffset();
-        k.EnableTensorPitches();
         k.EnableBatching();
         return k;
     }
 
+    ActivationKernelOpt::Parent::DispatchData ActivationKernelOpt::SetDefault(const ActivationParams& params) const
+    {
+        auto runInfo = Parent::SetDefault(params);
+
+        const auto totalSize = params.inputs[0].LogicalSize();
+
+        std::vector<size_t> global = { totalSize/NUM_COLS_WI };
+        std::vector<size_t> local = GetOptimalLocalWorkGroupSizes(global);
+
+        runInfo.gws0 = global[0];
+        runInfo.gws1 = 1;
+        runInfo.gws2 = 1;
+
+        runInfo.lws0 = local[0];
+        runInfo.lws1 = 1;
+        runInfo.lws2 = 1;
+
+        runInfo.effiency = FORCE_PRIORITY_6;
+
+        return runInfo;
+    }
+
+    bool ActivationKernelOpt::Validate(const Params& p, const OptionalParams& o) const
+    {
+        if (p.GetType() != KernelType::ACTIVATION ||
+            o.GetType() != KernelType::ACTIVATION)
+        {
+            return false;
+        }
+
+        const ActivationParams& params = static_cast<const ActivationParams&>(p);
+
+        const auto totalSize = params.inputs[0].LogicalSize();
+        if ((totalSize % NUM_COLS_WI) != 0 ||
+            (params.inputs[0].GetFirstElementOffset() % NUM_COLS_WI) != 0 ||
+            (params.output.GetFirstElementOffset() % NUM_COLS_WI) != 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    JitConstants ActivationKernelOpt::GetJitConstants(const ActivationParams& params, DispatchData) const
+    {
+        auto jit = MakeActivationJitConstants(params);
+
+        jit.AddConstant(MakeJitConstant("NUM_COLS_WI", NUM_COLS_WI));
+
+        return jit;
+    }
+
     KernelsData ActivationKernelOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        assert(params.GetType() == KernelType::ACTIVATION);
-
-        KernelData kd = KernelData::Default<ActivationParams>(params);
-
-        ActivationParams& newParams = *static_cast<ActivationParams*>(kd.params.get());
-
-        static const int NUM_ROWS_WI = 1;
-        static const int NUM_COLS_WI = 4;
-        const size_t nonWidthDim = newParams.inputs[0].LogicalSize() / newParams.inputs[0].X().v;
-
-        const std::string kernel_id = GetEntryPoint(kernelName, params.layerID, options);
-
-        std::stringstream jit;
-        jit << GetBaseJit(newParams, kernel_id);
-
-        jit << "#define NUM_ROWS_WI (" << NUM_ROWS_WI << ")\n"
-            << "#define NUM_COLS_WI (" << NUM_COLS_WI << ")\n"
-            << "#define INPUT_ROWS (" << nonWidthDim << ")\n"
-            << "#define INPUT_ROWS_MOD_ROWS_WI " << nonWidthDim % NUM_ROWS_WI << "\n"
-            << "#define INPUT_WIDTH_MOD_COLS_WI " << newParams.inputs[0].X().v % NUM_COLS_WI << "\n";
-
-        auto& kernel = kd.kernels[0];
-        kernel.workGroups.global = {
-            (newParams.inputs[0].X().v + NUM_COLS_WI - 1) / NUM_COLS_WI,
-            (nonWidthDim + NUM_ROWS_WI - 1) / NUM_ROWS_WI,
-            newParams.output.Batch().v };
-        kernel.workGroups.local = GetOptimalLocalWorkGroupSizes(kernel.workGroups.global);
-        kernel.kernelString = GetKernelString(kernelName, jit.str(), kernel_id);
-        kernel.arguments = GetArgumentDesc(1, false, false);
-
-        kd.estimatedTime = FORCE_PRIORITY_6;
-
-        return{ kd };
+        return GetCommonKernelsData(params, options);
     }
 }

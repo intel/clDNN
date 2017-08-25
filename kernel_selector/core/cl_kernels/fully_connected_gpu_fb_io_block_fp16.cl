@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Just-in-time macro definitions:
@@ -27,7 +27,7 @@
 //  - INPUT_BATCH_NUM      - [int] Batch size for input. Number of input sets of spatial and feature data that
 //                           are grouped to be processed in single batch.
 //  - INPUT_ELEMENTS_COUNT - [int] Cumulative number of elements in single data set from batch.
-//  - WEIGHTS_BATCH_NUM    - [int] Cumulative number of elements that are outputted for single input set from batch.
+//  - FILTER_OFM_NUM       - [int] Cumulative number of elements that are outputted for single input set from batch.
 //                           Number of layer responses per single input set from batch.
 //  - RELU                 - [0/1] Indicates that ReLU activation function should be used on output.
 //  - NEGATIVE_SLOPE       - [float] Factor for negative output values (required when ReLU is specified).
@@ -119,22 +119,22 @@
 // Currently block write is 4 bytes aligned.
 #define ALIGNED_WRITE(ptr, byte_offset, val) ((void)(*(__global CHUNK_TYPE*)((__global char*)(ptr) + (byte_offset)) = (val)))
 
-// Depends on batch size (aligned to greatest power of 2 which divides INPUT_BATCH_NUM).
-#define INPUT_READ(ptr, byte_offset) ALIGNED_READ(ptr, byte_offset)
-// Depends on number of responses (aligned to greatest power of 2 which divides WEIGHTS_BATCH_NUM).
+// Depends on batch size (aligned to greatest power of 2 which divides INPUT0_BATCH_NUM).
+#define INPUT0_READ(ptr, byte_offset) ALIGNED_READ(ptr, byte_offset)
+// Depends on number of responses (aligned to greatest power of 2 which divides FILTER_OFM_NUM).
 #define FILTER_READ(ptr, byte_offset) ALIGNED_READ(ptr, byte_offset)
 // Aligned to BYTES_PER_SG_READ.
 #define BIAS_READ(ptr, byte_offset) ALIGNED_READ(ptr, byte_offset)
-// Depends on batch size (aligned to greatest power of 2 which divides INPUT_BATCH_NUM).
+// Depends on batch size (aligned to greatest power of 2 which divides INPUT0_BATCH_NUM).
 #define OUTPUT_WRITE(ptr, byte_offset, val) ALIGNED_WRITE(ptr, byte_offset, val)
 
 
 /*
-#if WEIGHTS_BATCH_NUM % (2 * SUB_GROUP_SIZE) == 0 || (!FP16_UNIT_USED && WEIGHTS_BATCH_NUM % SUB_GROUP_SIZE == 0)
+#if FILTER_OFM_NUM % (2 * SUB_GROUP_SIZE) == 0 || (!FP16_UNIT_USED && FILTER_OFM_NUM % SUB_GROUP_SIZE == 0)
     #define FILTER_READ(ptr, byte_offset) ALIGNED_BLOCK_READ(ptr, byte_offset)
 #elifs
     #define FILTER_READ(ptr, byte_offset) ALIGNED_BLOCK_READ(ptr, byte_offset)
-#elif WEIGHTS_BATCH_NUM % 8 == 0
+#elif FILTER_OFM_NUM % 8 == 0
 #else
 #endif
 
@@ -151,7 +151,7 @@
 */
 
 
-#if INPUT_BATCH_NUM > 0 && INPUT_BATCH_NUM % (SUB_GROUP_SIZE * CHUNK_BYTE_SIZE / UNIT_BYTE_SIZE) == 0
+#if INPUT0_BATCH_NUM > 0 && INPUT0_BATCH_NUM % (SUB_GROUP_SIZE * CHUNK_BYTE_SIZE / UNIT_BYTE_SIZE) == 0
 #else
     #error Kernel does not support specified input batch size.
 #endif
@@ -171,21 +171,21 @@ KERNEL (fully_connected_gpu_xb_xb_block_fp16)(
 #endif
 {
     // constexpr:
-    const uint input_batch_byte_size       = INPUT_BATCH_NUM * UNIT_BYTE_SIZE;
-    const uint input_byte_size             = INPUT_ELEMENTS_COUNT * input_batch_byte_size;
-    const uint input_yxf_elems_per_sg_read = INPUT_BATCH_NUM < UNITS_PER_SG_READ
-                                               ? UNITS_PER_SG_READ / INPUT_BATCH_NUM
+    const uint input_batch_byte_size       = INPUT0_BATCH_NUM * UNIT_BYTE_SIZE;
+    const uint input_byte_size             = INPUT0_ELEMENTS_COUNT * input_batch_byte_size;
+    const uint input_yxf_elems_per_sg_read = INPUT0_BATCH_NUM < UNITS_PER_SG_READ
+                                               ? UNITS_PER_SG_READ / INPUT0_BATCH_NUM
                                                : 1;
     const uint input_sg_reads_distance     = WORK_ITEMS_PER_BATCH * BYTES_PER_SG_READ;
 
     // Size in bytes of all responses for single spatial/feature data point (the same as filter_yxf_elems_distance).
     // Distance between two nearest xyf elements with the same response id.
-    const uint filter_response_byte_size = WEIGHTS_BATCH_NUM * UNIT_BYTE_SIZE;
+    const uint filter_response_byte_size = FILTER_OFM_NUM * UNIT_BYTE_SIZE;
     // Cumulative size in bytes of all weights/filters.
-    const uint filters_byte_size         = INPUT_ELEMENTS_COUNT * filter_response_byte_size;
+    const uint filters_byte_size         = INPUT0_ELEMENTS_COUNT * filter_response_byte_size;
 
     const uint output_batch_byte_size = input_batch_byte_size;
-    const uint output_byte_size = WEIGHTS_BATCH_NUM * output_batch_byte_size;
+    const uint output_byte_size = FILTER_OFM_NUM * output_batch_byte_size;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -208,8 +208,8 @@ KERNEL (fully_connected_gpu_xb_xb_block_fp16)(
 #if BIAS_TERM
     const uint bias_base = filter_base;
 #endif
-    // Output base offset in bytes (xb format of output). INPUT_BATCH_NUM is the same as OUTPUT_BATCH_NUM.
-    const uint output_base    = (sg_id * INPUT_BATCH_NUM + batch_group_id) * BYTES_PER_SG_READ;
+    // Output base offset in bytes (xb format of output). INPUT0_BATCH_NUM is the same as OUTPUT_BATCH_NUM.
+    const uint output_base    = (sg_id * INPUT0_BATCH_NUM + batch_group_id) * BYTES_PER_SG_READ;
 
     // Filter/input byte offsets in sub-group used duering read/write operations.
     const uint sg_elem_offset = sg_elem_id * CHUNK_BYTE_SIZE;
@@ -221,7 +221,7 @@ KERNEL (fully_connected_gpu_xb_xb_block_fp16)(
     // Iterate over yxf linear plane (both filters/weights and input).
     for (uint input_offset = input_base, filter_offset = filter_base; input_offset < input_byte_size; input_offset += input_sg_reads_distance)
     {
-        CHUNK_TYPE input_val = INPUT_READ(input, input_offset + sg_elem_offset);
+        CHUNK_TYPE input_val = INPUT0_READ(input, input_offset + sg_elem_offset);
 
         // Iterate over filters needed to process input read by sub-group.
         for(uint elem_idx = 0; elem_idx < input_yxf_elems_per_sg_read; ++elem_idx)
@@ -258,7 +258,7 @@ KERNEL (fully_connected_gpu_xb_xb_block_fp16)(
 #else
             CHUNK_UNITS_TYPE output_val = AS_UNITS(acc[acc_pos]);
 #endif
-            ACTIVATION(output_val, output_val);
+            output_val = ACTIVATION(output_val, NL_M, NL_N);
             OUTPUT_WRITE(output, output_offset + sg_elem_offset, AS_CHUNK(output_val));
             output_offset += output_batch_byte_size;
         }
@@ -277,7 +277,7 @@ KERNEL (fully_connected_gpu_xb_xb_block_fp16)(
 #else
             CHUNK_UNITS_TYPE output_val = AS_UNITS(acc[acc_pos]);
 #endif
-            ACTIVATION(output_val, output_val);
+            output_val = ACTIVATION(output_val, NL_M, NL_N);
             OUTPUT_WRITE(output, output_offset + sg_elem_offset, AS_CHUNK(output_val));
             output_offset += output_batch_byte_size;
         }
@@ -294,12 +294,10 @@ KERNEL (fully_connected_gpu_xb_xb_block_fp16)(
 #undef AS_UNITS
 #undef CHUNK_UNIT_SELECT
 
-#undef ACTIVATION
-
 #undef SG_UNIT_SELECT
 #undef ALIGNED_BLOCK_READ
 #undef ALIGNED_BLOCK_WRITE
-#undef INPUT_READ
+#undef INPUT0_READ
 #undef FILTER_READ
 #undef BIAS_READ
 #undef OUTPUT_WRITE

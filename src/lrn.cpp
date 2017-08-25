@@ -16,6 +16,7 @@
 
 #include "lrn_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -34,7 +35,7 @@ std::string lrn_inst::to_string(lrn_node const& node)
 {
     std::stringstream           primitive_description;
     auto desc                   = node.get_primitive();
-    auto input                  = node.input();
+    auto& input                 = node.input();
     auto norm_size              = desc->size;
     auto k                      = desc->k;
     auto alpha                  = desc->alpha;
@@ -55,9 +56,6 @@ std::string lrn_inst::to_string(lrn_node const& node)
 lrn_inst::typed_primitive_inst(network_impl& network, lrn_node const& desc)
     :parent(network, desc)
 {
-    if (argument.size == 0)
-    {
-        throw std::runtime_error("LRN size must be greater than 0!");
-    }
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(desc.id(), "LRN argument size", argument.size, "value", static_cast<uint32_t>(0), "LRN size must be greater than 0!");
 }
 }

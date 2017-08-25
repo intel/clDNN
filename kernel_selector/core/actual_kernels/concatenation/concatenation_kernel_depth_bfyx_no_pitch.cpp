@@ -32,6 +32,7 @@ namespace KernelSelector
         k.EnableTensorOffset();
         k.EnableBatching();
         k.EnableConcatAxis(ConcatAxis::FEATURE);
+        k.EnableConcatKernelPerInput();
         return k;
     }
 

@@ -30,12 +30,7 @@ class typed_program_node<crop> : public typed_program_node_base<crop>
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
-    auto can_be_optimized() const { return optimized; }
-    void can_be_optimized(bool opt) { optimized = opt; }
-
-private:
-    bool optimized = false;
+    decltype(auto) input() const { return get_dependency(0); }
 };
 
 using crop_node = typed_program_node<crop>;
@@ -49,8 +44,6 @@ public:
     static layout calc_output_layout(crop_node const& node);
     static std::string to_string(crop_node const& node);
     typed_primitive_inst(network_impl& network, crop_node const& node);
-
-    const memory& input_memory() const { return dep_memory(0); }
 
 private:
     void on_execute() override;

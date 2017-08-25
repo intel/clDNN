@@ -29,11 +29,6 @@ namespace KernelSelector
         const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
         const ConvolutionOptionalParams& optParams = static_cast<const ConvolutionOptionalParams&>(o);
 
-        if (!CheckActivationSupport(params.activationFunc))
-        {
-            return false;
-        }
-
         bool bSupportedWeightsLayout = false;
 
         for (WeightsLayout l : GetSupportedWeightLayouts())
@@ -41,7 +36,7 @@ namespace KernelSelector
             bSupportedWeightsLayout |= params.weights.GetLayout() == l;
         }
 
-        const bool bWeightsOK = bSupportedWeightsLayout || optParams.allowWeightsReorder;
+        const bool bWeightsOK = bSupportedWeightsLayout || optParams.allowStaticInputReordering;
 
         if (!bWeightsOK)
         {
@@ -63,10 +58,10 @@ namespace KernelSelector
 
             mem_consts.AddConstants({
                 MakeJitConstant("LOCAL_WORK_GROUP_SIZE",                            local_work_group_size),
-                MakeJitConstant("OFM_PER_WORK_ITEM",                                kd.ofmPerWorkItem), // how many output feature maps for a single batch will a single work item produce
-                MakeJitConstant("BATCHES_PER_WORK_ITEM",                            kd.batchesPerWorkItem), // how many batches will a single work item compute
-                MakeJitConstant("LOCAL_WORK_GROUPS_PER_SINGLE_BATCHES_ELEMENTS",    std::max(batch_size / kd.batchesPerWorkItem / local_work_group_size, static_cast<size_t>(1))), // how many local work groups we need to compute single element for each batch
-                MakeJitConstant("WORK_ITEMS_PER_SINGLE_BATCHES_ELEMENTS",           batch_size / kd.batchesPerWorkItem), // how many work items we need to compute single element for each batch
+                MakeJitConstant("OFM_PER_WORK_ITEM",                                kd.cldnnStyle.ofmPerWorkItem), // how many output feature maps for a single batch will a single work item produce
+                MakeJitConstant("BATCHES_PER_WORK_ITEM",                            kd.cldnnStyle.batchesPerWorkItem), // how many batches will a single work item compute
+                MakeJitConstant("LOCAL_WORK_GROUPS_PER_SINGLE_BATCHES_ELEMENTS",    std::max(batch_size / kd.cldnnStyle.batchesPerWorkItem / local_work_group_size, static_cast<size_t>(1))), // how many local work groups we need to compute single element for each batch
+                MakeJitConstant("WORK_ITEMS_PER_SINGLE_BATCHES_ELEMENTS",           batch_size / kd.cldnnStyle.batchesPerWorkItem), // how many work items we need to compute single element for each batch
             });
         }
 
@@ -152,14 +147,14 @@ namespace KernelSelector
         kd.lws0 = lws0;
         kd.lws1 = 1;
         kd.lws2 = 1;
-        kd.ofmPerWorkItem = 1;
-        kd.batchesPerWorkItem = 1;
-        kd.blockWidth = 1;
-        kd.blockHeight = 1;
-        kd.prefetch = 0;
-        kd.inputBlockArraySize = 0;
-        kd.inputBlockWidth = 0;
-        kd.leftovers = 0;
+        kd.cldnnStyle.ofmPerWorkItem = 1;
+        kd.cldnnStyle.batchesPerWorkItem = 1;
+        kd.cldnnStyle.blockWidth = 1;
+        kd.cldnnStyle.blockHeight = 1;
+        kd.cldnnStyle.prefetch = 0;
+        kd.cldnnStyle.inputBlockArraySize = 0;
+        kd.cldnnStyle.inputBlockWidth = 0;
+        kd.cldnnStyle.leftovers = 0;
         kd.effiency = DONT_USE_IF_HAVE_SOMETHING_ELSE;
         return kd;
     }

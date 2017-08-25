@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 #define CONCAT_TOKEN_HANDLER1(prefix, suffix) prefix##suffix
 
@@ -96,10 +96,10 @@ KERNEL (fully_connected_gpu_xb_bs_xs_xsv8_bsv16_vload)(
 
     MAKE_VECTOR_TYPE(UNIT_TYPE, 16) blockC00 = UNIT_VAL_ZERO;
 
-    uint weight_offset = id_in_sub_group + SUB_GROUP_SIZE * group_id * INPUT_ELEMENTS_COUNT;
+    uint weight_offset = id_in_sub_group + SUB_GROUP_SIZE * group_id * INPUT0_ELEMENTS_COUNT;
 
-    uint input_idx = id_in_sub_group + batch_group_id * BATCHES_PER_WORK_ITEM * INPUT_ELEMENTS_COUNT;
-    for(uint h = 0; h < INPUT_ELEMENTS_COUNT / 8; h++)
+    uint input_idx = id_in_sub_group + batch_group_id * BATCHES_PER_WORK_ITEM * INPUT0_ELEMENTS_COUNT;
+    for(uint h = 0; h < INPUT0_ELEMENTS_COUNT / 8; h++)
     {
         // read input data in blocks ( 16 batch * 8 x )
         MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA00 = ALIGNED_BLOCK_READ8(input, input_idx);
@@ -115,7 +115,7 @@ KERNEL (fully_connected_gpu_xb_bs_xs_xsv8_bsv16_vload)(
     blockC00 += bias[neuronIdx];
 #endif // #if BIAS_TERM
 
-    ACTIVATION(blockC00, blockC00);
+    blockC00 = ACTIVATION(blockC00, NL_M, NL_N);
 
     vstore16(blockC00, out_id, output);
 
@@ -127,4 +127,3 @@ KERNEL (fully_connected_gpu_xb_bs_xs_xsv8_bsv16_vload)(
 #undef CONCAT_TOKEN
 #undef CONCAT_TOKEN_HANDLER1
 #undef MULTIPLY_BLOCKS_16x16
-#undef ACTIVATION

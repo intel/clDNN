@@ -36,11 +36,14 @@ enum class engine_types : int32_t
 /// @brief Configuration parameters for created engine.
 struct engine_configuration
 {
-    const bool enable_profiling;         ///< Enable per-primitive profiling.
-    const bool meaningful_kernels_names; ///< Generate meaniful names fo OpenCL kernels.
-    const bool dump_custom_program;      ///< Dump the user OpenCL programs to files
-    const std::string compiler_options;  ///< OpenCL compiler options string.
-    const std::string single_kernel_name; ///< If provided, runs specific layer.
+    const bool enable_profiling;            ///< Enable per-primitive profiling.
+    const bool meaningful_kernels_names;    ///< Generate meaniful names fo OpenCL kernels.
+    const bool dump_custom_program;         ///< Dump the user OpenCL programs to files
+    const std::string compiler_options;     ///< OpenCL compiler options string.
+    const std::string single_kernel_name;   ///< If provided, runs specific layer.
+    const bool enable_parallelisation;      ///< Enables parallel execution of primitives which don't depend on each other. Disabled by default.
+    const std::string engine_log;           ///< Specifies a file to which engine log should be dumped. Empty by default (means no logging).
+    const std::string sources_dumps_dir;    ///< Specifies a directory where sources of cldnn::program objects should be dumped. Empty by default (means no dumping).
 
     /// @brief Constructs engine configuration with specified options.
     /// @param profiling Enable per-primitive profiling.
@@ -48,16 +51,49 @@ struct engine_configuration
     /// @param dump_custom_program Dump the custom OpenCL programs to files
     /// @param options OpenCL compiler options string.
     /// @param single_kernel If provided, runs specific layer.
-    engine_configuration(bool profiling = false, bool decorate_kernel_names = false, bool dump_custom_program = false, const std::string& options = std::string(), const std::string& single_kernel = std::string())
-        :enable_profiling(profiling), meaningful_kernels_names(decorate_kernel_names), dump_custom_program(dump_custom_program), compiler_options(options), single_kernel_name(single_kernel) {}
+    engine_configuration(
+            bool profiling = false,
+            bool decorate_kernel_names = false,
+            bool dump_custom_program = false,
+            const std::string& options = std::string(),
+            const std::string& single_kernel = std::string(),
+            bool primitives_parallelisation = false,
+            const std::string& engine_log = std::string(),
+            const std::string& sources_dumps_dir = std::string())
+        : enable_profiling(profiling)
+        , meaningful_kernels_names(decorate_kernel_names)
+        , dump_custom_program(dump_custom_program)
+        , compiler_options(options)
+        , single_kernel_name(single_kernel)
+        , enable_parallelisation(primitives_parallelisation)
+        , engine_log(engine_log)
+        , sources_dumps_dir(sources_dumps_dir)
+    {}
 
     engine_configuration(const cldnn_engine_configuration& c_conf)
-        :enable_profiling(c_conf.enable_profiling != 0), meaningful_kernels_names(c_conf.meaningful_kernels_names != 0), dump_custom_program(c_conf.dump_custom_program != 0), compiler_options(c_conf.compiler_options), single_kernel_name(c_conf.single_kernel_name){}
+        : enable_profiling(c_conf.enable_profiling != 0)
+        , meaningful_kernels_names(c_conf.meaningful_kernels_names != 0)
+        , dump_custom_program(c_conf.dump_custom_program != 0)
+        , compiler_options(c_conf.compiler_options)
+        , single_kernel_name(c_conf.single_kernel_name)
+        , enable_parallelisation(c_conf.enable_parallelisation != 0)
+        , engine_log(c_conf.engine_log)
+        , sources_dumps_dir(c_conf.sources_dumps_dir)
+    {}
 
     /// @brief Implicit conversion to C API @ref ::cldnn_engine_configuration
     operator ::cldnn_engine_configuration() const
     {
-        return{ enable_profiling, meaningful_kernels_names, dump_custom_program, compiler_options.c_str(), single_kernel_name.c_str() };
+        return{
+            enable_profiling,
+            meaningful_kernels_names,
+            dump_custom_program,
+            compiler_options.c_str(),
+            single_kernel_name.c_str(),
+            enable_parallelisation,
+            engine_log.c_str(),
+            sources_dumps_dir.c_str()
+        };
     }
 };
 

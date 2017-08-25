@@ -17,6 +17,7 @@
 #include "detection_output_inst.h"
 #include "primitive_type_base.h"
 #include "network_impl.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -28,10 +29,7 @@ primitive_type_id detection_output_type_id()
 
 layout detection_output_inst::calc_output_layout(detection_output_node const& node)
 {
-    if (node.get_dependencies().size() != 3)
-    {
-        throw std::invalid_argument("Detection output layer must get 3 inputs.");
-    }
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Detection output layer input number", node.get_dependencies().size(), "expected number of inputs", static_cast<size_t>(3), "");
 
     auto input_layout = node.location().get_output_layout();
 
@@ -47,9 +45,9 @@ std::string detection_output_inst::to_string(detection_output_node const& node)
 {
     std::stringstream           primitive_description;
     auto desc                   = node.get_primitive();
-    auto input_location         = node.location();
-    auto input_confidence       = node.confidence();
-    auto input_prior_box        = node.prior_box();
+    auto& input_location        = node.location();
+    auto& input_confidence      = node.confidence();
+    auto& input_prior_box       = node.prior_box();
     auto share_location         = desc->share_location ? "true" : "false"; 
     auto variance_encoded       = desc->variance_encoded_in_target ? "true" : "false";
     std::string                 str_code_type;
@@ -94,44 +92,24 @@ std::string detection_output_inst::to_string(detection_output_node const& node)
 detection_output_inst::typed_primitive_inst(network_impl& network, detection_output_node const& node)
     :parent(network, node)
 {
-    if ( (location_memory().get_layout().format != format::bfyx) ||
-         (confidence_memory().get_layout().format != format::bfyx) ||
-         (prior_box_memory().get_layout().format != format::bfyx) )
-    {
-        throw std::invalid_argument("Detection output layer supports only bfyx input format.");
-    }
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Location memory format", location_memory().get_layout().format.value, "expected bfyx input format", format::bfyx );
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Confidence memory format", confidence_memory().get_layout().format.value, "expected bfyx input format", format::bfyx );
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Prior box memory format", prior_box_memory().get_layout().format.value, "expected bfyx input format", format::bfyx );
 
     tensor location_size = location_memory().get_layout().size;
-    if ( (location_size.feature[0] * location_size.batch[0]) != (int)location_memory().get_layout().count() )
-    {
-        throw std::invalid_argument("Dimensions mismatch of location input in Detection output layer!");
-    }
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Location input dimensions", (location_size.feature[0] * location_size.batch[0]), "detection output layer dismatch", (int)location_memory().get_layout().count(), "Location input/ detection output dims mismatch");
 
     tensor confidence_size = confidence_memory().get_layout().size;
-    if ( (confidence_size.feature[0] * confidence_size.batch[0]) != (int)confidence_memory().get_layout().count() )
-    {
-        throw std::invalid_argument("Dimensions mismatch of confidence input in Detection output layer!");
-    }
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Confidence input dimensions", (confidence_size.feature[0] * confidence_size.batch[0]), "detection output layer dimensions", (int)confidence_memory().get_layout().count(), "Confidence input/detection output dims mistmach");
 
-    if (confidence_size.batch[0] != location_size.batch[0])
-    {
-        throw std::invalid_argument("Batch size mismatch of confidence input and location input in Detection output layer!");
-    }
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Confidene batch size", confidence_size.batch[0], "lacation input batch size", location_size.batch[0], "Batch sizes mismatch.");
 
     tensor prior_box_size = prior_box_memory().get_layout().size;
-    if ((prior_box_size.batch[0] != 1) || (prior_box_size.spatial[0] != 1) || (prior_box_size.feature[0] != 2) )
-    {
-        throw std::invalid_argument("Dimensions mismatch of prior-box input in Detection output layer!");
-    }
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Prior box batch size", prior_box_size.batch[0], "expected value", 1, "");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Prior box spatial X", prior_box_size.spatial[0], "expected value", 1, "");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Prior box featuresize", prior_box_size.feature[0], "expected value", 2, "");
 
-    if (node.is_padded())
-    {
-        throw std::invalid_argument("Detection output layer doesn't support output padding.");
-    }
-
-    if (node.get_dependency(2).is_padded())
-    {
-        throw std::invalid_argument("Detection output layer doesn't support input padding in Prior-Box input");
-    }
+    CLDNN_ERROR_BOOL(node.id(), "Detecion output layer padding", node.is_padded(), "Detection output layer doesn't support output padding.");
+    CLDNN_ERROR_BOOL(node.id(), "Detecion output layer PRior-box input padding", node.get_dependency(2).is_padded(), "Detection output layer doesn't support input padding in Prior-Box input");
 }
 }

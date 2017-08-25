@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 __attribute__((reqd_work_group_size(8, 1, 1)))
 KERNEL (fully_connected_gpu_xb_xb_b8_x8)(
@@ -28,12 +28,12 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8)(
 {
     const uint global_id = get_global_id(0);
     const int x = get_global_id(0);
-    const uint batch_id = x % INPUT_BATCH_NUM;
+    const uint batch_id = x % INPUT0_BATCH_NUM;
 
-    uint neuronIdx = (x / INPUT_BATCH_NUM) * NEURONS_PER_WORK_ITEM;
+    uint neuronIdx = (x / INPUT0_BATCH_NUM) * NEURONS_PER_WORK_ITEM;
 
     const uint sub_group_id = get_local_id(0);
-    const uint batch_num = INPUT_BATCH_NUM;
+    const uint batch_num = INPUT0_BATCH_NUM;
 
     const int out_id = (global_id / batch_num) * NEURONS_PER_WORK_ITEM * batch_num + batch_id;
 
@@ -46,13 +46,13 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8)(
 
     uint weight_offset = sub_group_id + neuronIdx;
 
-    for(uint h = 0; h < INPUT_ELEMENTS_COUNT; h++)
+    for(uint h = 0; h < INPUT0_ELEMENTS_COUNT; h++)
     {
         DOT_PRODUCT_8(_data0, input[h * batch_num + batch_id], weight[weight_offset])
 #if NEURONS_PER_WORK_ITEM > 8
         DOT_PRODUCT_8(_data1, input[h * batch_num + batch_id], weight[weight_offset + 8])
 #endif
-        weight_offset+= WEIGHTS_BATCH_NUM;
+        weight_offset+= FILTER_OFM_NUM;
     }
 
 #if BIAS_TERM
@@ -61,9 +61,9 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8)(
     ADD_BIAS_8(_data1, bias[neuronIdx + sub_group_id + 8]);
 #endif
 #endif
-    ACTIVATION(_data0, _data0);
+    _data0 = ACTIVATION(_data0, NL_M, NL_N);
 #if NEURONS_PER_WORK_ITEM > 8
-    ACTIVATION(_data1, _data1);
+    _data1 = ACTIVATION(_data1, NL_M, NL_N);
 #endif
 
     intel_sub_group_block_write8((__global uint*)output + out_id, as_uint8(_data0));
@@ -71,5 +71,3 @@ KERNEL (fully_connected_gpu_xb_xb_b8_x8)(
     intel_sub_group_block_write8((__global uint*)output + out_id + 8 * batch_num, as_uint8(_data1));
 #endif
 }
-
-#undef ACTIVATION

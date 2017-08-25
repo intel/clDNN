@@ -17,6 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "permute_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 #include <algorithm>
 
@@ -29,8 +30,10 @@ primitive_type_id permute_type_id()
     return &instance;
 }
 
-static std::vector<uint16_t> get_permute_order(format::type fmt)
+static std::vector<uint16_t> get_permute_order(permute_node const& node, format::type fmt)
 {
+
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "node format", fmt, "byxf, yxfb, bfyx, fyxb", format::byxf, format::yxfb, format::bfyx, format::fyxb);
     switch (fmt)
     {
         // For input formats:
@@ -58,7 +61,7 @@ layout permute_inst::calc_output_layout(permute_node const& node)
     auto permute_order = node.get_primitive()->permute_order;
     auto input_sizes_ordered = input_layout.size.sizes(input_layout.format);
 
-    const auto& fmt_2_bfxy = get_permute_order(input_layout.format);
+    const auto& fmt_2_bfxy = get_permute_order(node, input_layout.format);
     std::vector<tensor::value_type> output_sizes;
     for (auto i : fmt_2_bfxy)
     {
@@ -75,7 +78,7 @@ std::string permute_inst::to_string(permute_node const& node)
 {
     std::stringstream           primitive_description;
     auto desc                   = node.get_primitive();
-    auto input                  = node.input();
+    auto& input                 = node.input();
     auto permute_order          = desc->permute_order;
     std::stringstream           ss_permute_order;
     for (size_t i = 0; i < permute_order.size(); ++i)
@@ -98,8 +101,7 @@ permute_inst::typed_primitive_inst(network_impl& network, permute_node const& no
 {
     auto permute_order = argument.permute_order;
 
-    if (permute_order.size() != 4)
-        throw std::runtime_error("Permute order size needs to be 4.");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Permute order size", permute_order.size(), "expected order size", 4, "Permute order size needs to be 4.");
 
     std::vector<uint16_t> required_order_values = { 0, 1, 2, 3 };
     auto required_order_values_size = required_order_values.size();
@@ -107,12 +109,9 @@ permute_inst::typed_primitive_inst(network_impl& network, permute_node const& no
     for (decltype(required_order_values_size) i = 0; i < required_order_values_size; i++)
     {
         if (!(std::find(permute_order.begin(), permute_order.end(), required_order_values[i]) != permute_order.end()))
-            throw std::runtime_error("Permute order does not contain all of required values.");
+            CLDNN_ERROR_MESSAGE(node.id(), "Permute order does not contain all of required values.");
     }
 
-    if (node.has_padded_dependency())
-    {
-        throw std::runtime_error("Permute with input which contains padding is NOT IMPLEMENTED yet!");
-    }
+    CLDNN_ERROR_BOOL(node.id(), "Padded dependecy", node.has_padded_dependency(), "Permute with input which contains padding is NOT IMPLEMENTED yet!");
 }
 }

@@ -27,55 +27,64 @@ namespace KernelSelector
         k.EnableOutputDataType(Datatype::F16);
         k.EnableOutputDataType(Datatype::F32);
         k.EnableInputLayout(DataLayout::bfyx);
+        k.EnableInputLayout(DataLayout::yxfb);
         k.EnableOutputLayout(DataLayout::bfyx);
+        k.EnableOutputLayout(DataLayout::yxfb);
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBatching();
         k.EnableLRNMode(LRNMode::WITHIN_CHANNEL);
         k.EnableLRNMode(LRNMode::ACROSS_CHANNEL);
+        k.EnableLRNKernelDividerMode(KernelDividerMode::DYNAMIC);
         k.EnableLRNKernelDividerMode(KernelDividerMode::FIXED);
         return k;
     }
 
-    KernelsData LRNKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    JitConstants LRNKernelRef::GetJitConstants(const LRNParams& params, LRNKernelRef::Parent::DispatchData kd) const
     {
-        assert(params.GetType() == KernelType::LRN);
-
-        KernelData kd = KernelData::Default<LRNParams>(params);
-
-        LRNParams& newParams = *static_cast<LRNParams*>(kd.params.get());
-
-        std::stringstream jit;
-        
-        const uint32_t round_norm_size = (newParams.lrnParams.localSize / 2) * 2 + 1;
+        const uint32_t round_norm_size = (params.lrnParams.localSize / 2) * 2 + 1;
         uint32_t numElement = round_norm_size * round_norm_size;
 
-        if (newParams.lrnParams.normMode == LRNMode::ACROSS_CHANNEL)
+        if (params.lrnParams.normMode == LRNMode::ACROSS_CHANNEL)
         {
-            jit << "#define ACROSS_MAPS\n";
             numElement = round_norm_size;
         }
 
-        const float num_element_div = 1.f / numElement;
-        const std::string kernel_id = GetEntryPoint(kernelName, params.layerID, options);
+        const float num_element_div = 1.f / (float)numElement;
 
-        jit << GetBaseJit(newParams, kernel_id)
-            << "#define ROUND_NORM_SIZE (" << round_norm_size << ")\n"
-            << "#define ROUND_NORM_HALF_SIZE (" << round_norm_size / 2 << ")\n"
-            << "#define NUM_ELEMENTS_DIV (" << Float2Str(num_element_div) << ")\n"
-            << "#define ALPHA (" << Float2Str(newParams.lrnParams.alpha) << ")\n"
-            << "#define BETA (" << Float2Str(newParams.lrnParams.beta) << ")\n"
-            << "#define NORM_K (1)\n";
+        JitConstants jit = Parent::GetJitConstants(params, kd);
+        jit.AddConstants({
+            MakeJitConstant("NUM_ELEMENTS_DIV", num_element_div),
+            MakeJitConstant("GWS_BATCH", 2),
+            MakeJitConstant("GWS_FEATURE", 1),
+            MakeJitConstant("GWS_YX", 0),
+        });
 
-        const auto& out = newParams.output;
-        auto& kernel = kd.kernels[0];
-        kernel.workGroups.global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
-        kernel.workGroups.local = GetOptimalLocalWorkGroupSizes(kernel.workGroups.global);
-        kernel.kernelString = GetKernelString(kernelName, jit.str(), kernel_id, ROUND_ROBIN, "");
-        kernel.arguments = GetArgumentDesc(1, false, false);
+        return jit;
+    }
 
-        kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
+    LRNKernelRef::Parent::DispatchData LRNKernelRef::SetDefault(const LRNParams& params) const
+    {
+        DispatchData kd = Parent::SetDefault(params);
 
-        return{ kd };
+        const auto& out = params.output;
+        
+        std::vector<size_t> global = { out.X().v*out.Y().v, out.Feature().v, out.Batch().v };
+        auto local  = GetOptimalLocalWorkGroupSizes(global);
+
+        kd.gws0 = global[0];
+        kd.gws1 = global[1];
+        kd.gws2 = global[2];
+
+        kd.lws0 = local[0];
+        kd.lws1 = local[1];
+        kd.lws2 = local[2];
+
+        return kd;
+    }
+
+    KernelsData LRNKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    {
+        return GetCommonKernelsData(params, options, DONT_USE_IF_HAVE_SOMETHING_ELSE);
     }
 }

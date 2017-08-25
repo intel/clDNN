@@ -17,7 +17,7 @@
 #include <cstdint>
 #include "api/CPP/engine.hpp"
 
-namespace neural { namespace gpu {
+namespace cldnn { namespace gpu {
 
 class gpu_toolkit;
 struct engine_info_internal : cldnn::engine_info
@@ -35,7 +35,7 @@ struct engine_info_internal : cldnn::engine_info
 
     enum models
     {
-        HD500_505, HD5XX, HD6XX
+        HD500_505, HD5XX, HD6XX, FUTURE
     };
 
     enum architectures

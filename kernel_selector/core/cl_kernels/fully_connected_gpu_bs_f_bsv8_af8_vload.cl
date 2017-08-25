@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 #define CONCAT_TOKEN_HANDLER1(prefix, suffix) prefix##suffix
 
@@ -108,23 +108,23 @@ KERNEL (fully_connected_gpu_xb_bs_xs_xsv8_bsv8_vload)(
 #endif
 #endif
 
-    uint weight_offset = id_in_sub_group + SUB_GROUP_SIZE * group_id * NEURONS_PER_WORK_ITEM * INPUT_ELEMENTS_COUNT;
+    uint weight_offset = id_in_sub_group + SUB_GROUP_SIZE * group_id * NEURONS_PER_WORK_ITEM * INPUT0_ELEMENTS_COUNT;
 #if NEURONS_PER_WORK_ITEM > 1
 
-    uint weight_offset2 = weight_offset + SUB_GROUP_SIZE * INPUT_ELEMENTS_COUNT;
+    uint weight_offset2 = weight_offset + SUB_GROUP_SIZE * INPUT0_ELEMENTS_COUNT;
 
 #endif // #if NEURONS_PER_WORK_ITEM > 1
 
-    uint input_idx = id_in_sub_group + batch_group_id * BATCHES_PER_WORK_ITEM * INPUT_ELEMENTS_COUNT;
-    for(uint h = 0; h < INPUT_ELEMENTS_COUNT / 8; h++)
+    uint input_idx = id_in_sub_group + batch_group_id * BATCHES_PER_WORK_ITEM * INPUT0_ELEMENTS_COUNT;
+    for(uint h = 0; h < INPUT0_ELEMENTS_COUNT / 8; h++)
     {
         // read input data in blocks ( 8 batch * 8 x )
         MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA00 = ALIGNED_BLOCK_READ8(input, input_idx);
 #if BATCHES_PER_WORK_ITEM >= 16
-        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA01 = ALIGNED_BLOCK_READ8(input, input_idx + (INPUT_ELEMENTS_COUNT*8));
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA01 = ALIGNED_BLOCK_READ8(input, input_idx + (INPUT0_ELEMENTS_COUNT*8));
 #if BATCHES_PER_WORK_ITEM >= 32
-        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA02 = ALIGNED_BLOCK_READ8(input, input_idx + (INPUT_ELEMENTS_COUNT*16));
-        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA03 = ALIGNED_BLOCK_READ8(input, input_idx + (INPUT_ELEMENTS_COUNT*24));
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA02 = ALIGNED_BLOCK_READ8(input, input_idx + (INPUT0_ELEMENTS_COUNT*16));
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) blockA03 = ALIGNED_BLOCK_READ8(input, input_idx + (INPUT0_ELEMENTS_COUNT*24));
 #endif
 #endif
 
@@ -179,23 +179,23 @@ KERNEL (fully_connected_gpu_xb_bs_xs_xsv8_bsv8_vload)(
 
 #endif // #if NEURONS_PER_WORK_ITEM > 1
 #endif // #if BIAS_TERM
-    ACTIVATION(blockC00, blockC00);
+    blockC00 = ACTIVATION(blockC00, NL_M, NL_N);
 #if BATCHES_PER_WORK_ITEM >= 16
-    ACTIVATION(blockC01, blockC01);
+    blockC01 = ACTIVATION(blockC01, NL_M, NL_N);
 #if BATCHES_PER_WORK_ITEM >= 32
-    ACTIVATION(blockC02, blockC02);
-    ACTIVATION(blockC03, blockC03);
+    blockC02 = ACTIVATION(blockC02, NL_M, NL_N);
+    blockC03 = ACTIVATION(blockC03, NL_M, NL_N);
 #endif
 #endif
 
 #if NEURONS_PER_WORK_ITEM > 1
 
-    ACTIVATION(blockC10, blockC10);
+    blockC10 = ACTIVATION(blockC10, NL_M, NL_N);
 #if BATCHES_PER_WORK_ITEM >= 16
-    ACTIVATION(blockC11, blockC11);
+    blockC11 = ACTIVATION(blockC11, NL_M, NL_N);
 #if BATCHES_PER_WORK_ITEM >= 32
-    ACTIVATION(blockC12, blockC12);
-    ACTIVATION(blockC13, blockC13);
+    blockC12 = ACTIVATION(blockC12, NL_M, NL_N);
+    blockC13 = ACTIVATION(blockC13, NL_M, NL_N);
 #endif
 #endif
 
@@ -218,12 +218,12 @@ KERNEL (fully_connected_gpu_xb_bs_xs_xsv8_bsv8_vload)(
     if(neuronIdx + 8 >= OUTPUT_ELEMENTS_COUNT)
         return;
 
-    vstore8(blockC10, out_id+INPUT_BATCH_NUM, output);
+    vstore8(blockC10, out_id+INPUT0_BATCH_NUM, output);
 #if BATCHES_PER_WORK_ITEM >= 16
-    vstore8(blockC11, out_id+INPUT_BATCH_NUM+1, output);
+    vstore8(blockC11, out_id+INPUT0_BATCH_NUM+1, output);
 #if BATCHES_PER_WORK_ITEM >= 32
-    vstore8(blockC12, out_id+INPUT_BATCH_NUM+2, output);
-    vstore8(blockC13, out_id+INPUT_BATCH_NUM+3, output);
+    vstore8(blockC12, out_id+INPUT0_BATCH_NUM+2, output);
+    vstore8(blockC13, out_id+INPUT0_BATCH_NUM+3, output);
 #endif
 #endif
 
@@ -236,4 +236,3 @@ KERNEL (fully_connected_gpu_xb_bs_xs_xsv8_bsv8_vload)(
 #undef CONCAT_TOKEN
 #undef CONCAT_TOKEN_HANDLER1
 #undef MULTIPLY_BLOCKS_8x8
-#undef ACTIVATION

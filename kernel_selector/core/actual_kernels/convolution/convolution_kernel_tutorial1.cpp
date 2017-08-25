@@ -37,7 +37,6 @@ namespace KernelSelector {
         // Supported layout
         k.EnableAllInputLayout();
         k.EnableAllOutputLayout();
-        k.EnableAllWeightsLayout();
 
         // Supported tensor offset/pitch/padding
         k.EnableTensorOffset();
@@ -64,7 +63,9 @@ namespace KernelSelector {
         // - Uncomment and update the following lines
 
         // assert(params.GetType() == KernelType::CONVOLUTION && options.GetType() == KernelType::CONVOLUTION);
-        // KernelData kd = KernelData::Default<ConvolutionParams>(params);
+        //
+        // const uint32_t numOfkernels = 1;
+        // KernelData kd = KernelData::Default<ConvolutionParams>(params, numOfkernels);
         // ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
         // const ConvolutionOptionalParams& optParams = static_cast<const ConvolutionOptionalParams&>(options);
         // auto& kernel = kd.kernels[0];
@@ -109,6 +110,10 @@ namespace KernelSelector {
         //     kernel.arguments.push_back({ ArgumentDescriptor::Types::OUTPUT, 0 });
         //     kernel.arguments.push_back({ ArgumentDescriptor::Types::WEIGHTS, 0 });
         //     kernel.arguments.push_back({ ArgumentDescriptor::Types::BIAS, 0 });
+        //
+        //   in case that you have more than one kernel, you probably need an intermediate buffers.
+        //   in order to support that you have to describe the buffer size in kd.internalBufferSizes and add a kernel argument like:
+        //     kernel.arguments.push_back({ ArgumentDescriptor::Types::INTERNAL_BUFFER, <index to kd.internalBufferSize> });
 
 
         // Step 8:

@@ -16,14 +16,14 @@
 
 #pragma once
 
-#include "cnn_kernel_base.h"
+#include "eltwise_kernel_base.h"
 
 namespace KernelSelector
 {
-    class EltwiseKernelRef : public CNNKernelBase
+    class EltwiseKernelRef : public EltwiseKernelBase
     {
     public:
-        EltwiseKernelRef() : CNNKernelBase("cnn_eltwise_ref") {}
+        EltwiseKernelRef() : EltwiseKernelBase("generic_eltwise_ref") {}
         virtual ~EltwiseKernelRef() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;

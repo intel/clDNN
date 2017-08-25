@@ -23,8 +23,7 @@
 #include <utility>
 
 
-namespace neural
-{
+namespace cldnn { namespace gpu {
 namespace mputils
 {
 template <typename ... Tys> struct type_tuple;
@@ -307,4 +306,4 @@ using kd_selector_t = kd_selector<KernelDataTy,
                                     : sizeof...(SelectorTys),
                                   mputils::remove_tt_t<mputils::type_tuple<SelectorTys ...>, kd_optional_selector_t>>;
 
-} // namespace neural
+} }

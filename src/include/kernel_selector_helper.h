@@ -26,7 +26,7 @@
 #include "lrn/lrn_kernel_selector.h"
 #include "normalize/normalize_kernel_selector.h"
 #include "pooling/pooling_kernel_selector.h"
-#include "roi_pooling/roi_pooling_v1_kernel_selector.h"
+#include "roi_pooling/roi_pooling_kernel_selector.h"
 #include "fully_connected/fully_connected_kernel_selector.h"
 #include "activation/activation_kernel_selector.h"
 #include "softmax/softmax_kernel_selector.h"
@@ -55,7 +55,6 @@ namespace kernel_selector
     using data_type                         = KernelSelector::Datatype;
     using kernel_type                       = KernelSelector::KernelType;
     using weights_type                      = KernelSelector::WeightsType;
-    using convert_types                     = KernelSelector::ConvertTypes;
     using activation_function               = KernelSelector::ActivationFunction;
     using pool_type                         = KernelSelector::PoolType;
     using pool_remainder                    = KernelSelector::PoolRemainder;
@@ -65,8 +64,9 @@ namespace kernel_selector
     using eltwise_mode                      = KernelSelector::EltwiseMode;
     using eltwise_input_mode                = KernelSelector::EltwiseInputMode;
     using softmax_dim                       = KernelSelector::SoftmaxDim;
-    using mean_subtruct_mode                = KernelSelector::MeanSubtructMode;
+    using mean_subtruct_mode                = KernelSelector::MeanSubtractMode;
     using concat_axis                       = KernelSelector::ConcatAxis;
+	using tuning_mode                       = KernelSelector::TuningMode;
 
     using data_tensor                       = KernelSelector::DataTensor;
     using weights_tensor                    = KernelSelector::WeightsTensor;
@@ -82,7 +82,7 @@ namespace kernel_selector
     using lrn_params                        = KernelSelector::LRNParams;
     using normalize_params                  = KernelSelector::NormalizeParams;
     using pooling_params                    = KernelSelector::PoolingParams;
-    using roi_pooling_v1_params             = KernelSelector::ROIPoolingV1Params;
+    using roi_pooling_v1_params             = KernelSelector::ROIPoolingParams;
     using fully_connected_params            = KernelSelector::FullyConnectedParams;
     using activation_params                 = KernelSelector::ActivationParams;
     using softmax_params                    = KernelSelector::SoftmaxParams;
@@ -115,7 +115,7 @@ namespace kernel_selector
     using lrn_kernel_selector               = KernelSelector::LRNKernelSelctor;
     using normalize_kernel_selector         = KernelSelector::NormalizeKernelSelctor;
     using pooling_kernel_selector           = KernelSelector::PoolingKernelSelctor;
-    using roi_pooling_v1_kernel_selector    = KernelSelector::ROIPoolingV1KernelSelctor;
+    using roi_pooling_v1_kernel_selector    = KernelSelector::ROIPoolingKernelSelctor;
     using fully_connected_kernel_selector   = KernelSelector::FullyConnectedKernelSelctor;
     using activation_kernel_selector        = KernelSelector::ActivationKernelSelctor;
     using softmax_kernel_selector           = KernelSelector::SoftmaxKernelSelctor;
@@ -130,11 +130,25 @@ inline kernel_selector::data_type to_data_type(data_types dt)
 {
     switch (dt)
     {
+    case cldnn::data_types::i8:     return kernel_selector::data_type::INT8;
     case cldnn::data_types::f16:    return kernel_selector::data_type::F16;
     case cldnn::data_types::f32:    return kernel_selector::data_type::F32;
     default:
         assert(0);
         return kernel_selector::data_type::F16;
+    }
+}
+
+inline data_types from_data_type(kernel_selector::data_type dt)
+{
+    switch (dt)
+    {
+    case kernel_selector::data_type::INT8:   return cldnn::data_types::i8;
+    case kernel_selector::data_type::F16:    return cldnn::data_types::f16;
+    case kernel_selector::data_type::F32:    return cldnn::data_types::f32;
+    default:
+        assert(0);
+        return cldnn::data_types::f16;
     }
 }
 
@@ -155,16 +169,16 @@ inline data_types from_weights_type(kernel_selector::weights_type dt)
 {
     switch (dt)
     {
-    case kernel_selector::weights_type::INT8:       return data_types::i8;
-    case kernel_selector::weights_type::F16: return data_types::f16;
-    case kernel_selector::weights_type::F32: return data_types::f32;
+    case kernel_selector::weights_type::INT8:   return data_types::i8;
+    case kernel_selector::weights_type::F16:    return data_types::f16;
+    case kernel_selector::weights_type::F32:    return data_types::f32;
     default:
         assert(0);
         return data_types::f16;;
     }
 }
 
-inline kernel_selector::data_layout from_data_layout(format f)
+inline kernel_selector::data_layout to_data_layout(format f)
 {
     switch (f)
     {
@@ -181,7 +195,7 @@ inline kernel_selector::data_layout from_data_layout(format f)
     }
 }
 
-static inline cldnn::format to_data_layout(kernel_selector::data_layout l)
+static inline cldnn::format from_data_layout(kernel_selector::data_layout l)
 {
     switch (l)
     {
@@ -200,7 +214,7 @@ static inline cldnn::format to_data_layout(kernel_selector::data_layout l)
     }
 }
 
-inline kernel_selector::weights_layout from_weights_layout(format f)
+inline kernel_selector::weights_layout to_weights_layout(format f)
 {
     switch (f)
     {
@@ -217,7 +231,7 @@ inline kernel_selector::weights_layout from_weights_layout(format f)
     }
 }
 
-static inline cldnn::format to_weights_layout(kernel_selector::weights_layout l)
+static inline cldnn::format from_weights_layout(kernel_selector::weights_layout l)
 {
     switch (l)
     {
@@ -236,6 +250,18 @@ static inline cldnn::format to_weights_layout(kernel_selector::weights_layout l)
     }
 }
 
+inline kernel_selector::tuning_mode to_tuning_mode(cldnn::tuning_mode mode)
+{
+    switch (mode)
+    {
+    case cldnn::tuning_mode::tuning_disabled:         return kernel_selector::tuning_mode::TUNING_DISABLED;
+    case cldnn::tuning_mode::tuning_use_cache:        return kernel_selector::tuning_mode::TUNING_USE_CACHE;
+    case cldnn::tuning_mode::tuning_tune_and_cache:   return kernel_selector::tuning_mode::TUNING_TUNE_AND_CACHE;
+    default:
+        return kernel_selector::tuning_mode::TUNING_DISABLED;
+    }
+}
+
 inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_t split = 1, const tensor view_offset = {})
 {
     const auto& pad = l.data_padding;
@@ -243,7 +269,7 @@ inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_
     const auto& add_offsets = view_offset.sizes(l.format);
     const auto& lower_pad = pad.lower_size().sizes(l.format);
     const auto& upper_pad = pad.upper_size().sizes(l.format);
-    const auto ks_layout = from_data_layout(l.format);
+    const auto ks_layout = to_data_layout(l.format);
     kernel_selector::n_dims vec(KernelSelector::Tensor::ChannelsCount(ks_layout));
 
     size_t pitch = 1;
@@ -257,7 +283,7 @@ inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_
         const auto up = upper_pad[tensor_index];
 
         auto& elm = vec[i];
-        elm.v = static_cast<size_t>(d);
+        elm.v = static_cast<size_t>(d - add_offsets[tensor_index]);
         elm.pitch = pitch;
         elm.pad.before = lp;
         elm.pad.after = up;
@@ -282,7 +308,7 @@ inline kernel_selector::weights_tensor convert_weights_tensor(const layout& l)
     const auto& t = l.size.sizes(format::bfyx);
     const auto base_layout = kernel_selector::weights_layout::oiyx;
     const auto ks_type = to_weights_type(l.data_type);
-    const auto ks_layout = from_weights_layout(l.format);
+    const auto ks_layout = to_weights_layout(l.format);
     std::vector<size_t> vec(KernelSelector::Tensor::ChannelsCount(base_layout));
 
     for (size_t i = 0; i < vec.size(); i++)
@@ -301,76 +327,80 @@ inline kernel_selector::weights_tensor convert_weights_tensor(const layout& l)
 template <typename p_type>
 inline void convert_activation_func_params(const p_type primitive, kernel_selector::base_params& params)
 {
-    if (primitive->with_activation)
+    const float negative_slope = primitive->activation_negative_slope;
+    if (negative_slope)
     {
-        const float negative_slope = primitive->activation_negative_slope;
-        if (negative_slope)
-        {
-            params.nlParams.m = negative_slope;
-            params.activationFunc = kernel_selector::activation_function::RELU_NEGATIVE_SLOPE;
-        }
-        else
-        {
-            params.activationFunc = kernel_selector::activation_function::RELU;
-        }
+        params.activationParams.m = negative_slope;
+        params.activationFunc = kernel_selector::activation_function::RELU_NEGATIVE_SLOPE;
     }
     else
     {
-        params.activationFunc = kernel_selector::activation_function::NONE;
+        params.activationFunc = kernel_selector::activation_function::RELU;
     }
 }
 
-template <typename p_type>
-inline void convert_new_activation_func(const p_type primitive, kernel_selector::base_params& params)
+inline kernel_selector::activation_function get_kernel_selector_activation_param(cldnn_activation_func activation_func)
 {
-    switch (primitive->activation_func)
+    switch (activation_func)
     {
-    case activation_none:           
-        params.activationFunc = kernel_selector::activation_function::NONE;
-        break;
+    case activation_none:
+        return kernel_selector::activation_function::NONE;
     case activation_logistic:
-        params.activationFunc = kernel_selector::activation_function::LOGISTIC;
-        break;
+        return kernel_selector::activation_function::LOGISTIC;
     case activation_hyperbolic_tan:
-        params.activationFunc = kernel_selector::activation_function::HYPERBOLIC_TAN;
-        break;
+        return kernel_selector::activation_function::HYPERBOLIC_TAN;
     case activation_relu:
-        params.activationFunc = kernel_selector::activation_function::RELU;
-        break;
+        return kernel_selector::activation_function::RELU;
     case activation_relu_negative_slope:
-        params.activationFunc = kernel_selector::activation_function::RELU_NEGATIVE_SLOPE;
-        break;
-    case activation_brelu:
-        params.activationFunc = kernel_selector::activation_function::BRELU;
-        break;
+        return kernel_selector::activation_function::RELU_NEGATIVE_SLOPE;
+    case activation_clamp:
+        return kernel_selector::activation_function::CLAMP;
     case activation_softrelu:
-        params.activationFunc = kernel_selector::activation_function::SOFTRELU;
-        break;
+        return kernel_selector::activation_function::SOFTRELU;
     case activation_abs:
-        params.activationFunc = kernel_selector::activation_function::ABS;
-        break;
+        return kernel_selector::activation_function::ABS;
     case activation_linear:
-        params.activationFunc = kernel_selector::activation_function::LINEAR;
-        break;
+        return kernel_selector::activation_function::LINEAR;
     case activation_square:
-        params.activationFunc = kernel_selector::activation_function::SQUARE;
-        break;
+        return kernel_selector::activation_function::SQUARE;
     case activation_sqrt:
-        params.activationFunc = kernel_selector::activation_function::SQRT;
-        break;
+        return kernel_selector::activation_function::SQRT;
     default:
         throw std::runtime_error("Unknown activation function");
         break;
     }
+}
 
-    params.nlParams.m = primitive->additional_params.a;
-    params.nlParams.n = primitive->additional_params.b;
+template <typename arg_t>
+inline void convert_fused_activation_func_params(const arg_t& arg, kernel_selector::base_params& params)
+{
+    params.activationParams.m = arg.get_fused_activation_params().a;
+    params.activationParams.n = arg.get_fused_activation_params().b;
+    params.activationFunc = get_kernel_selector_activation_param(arg.get_fused_activation_func());
+}
+
+template <typename p_type>
+inline void convert_new_activation_func(const p_type primitive, kernel_selector::base_params& params)
+{        
+    params.activationFunc = get_kernel_selector_activation_param(primitive->activation_func);
+    params.activationParams.m = primitive->additional_params.a;
+    params.activationParams.n = primitive->additional_params.b;
 }
 
 template <typename params_t, typename arg_t>
 inline params_t get_default_params(const arg_t& arg, uint32_t split = 1)
 {
     params_t params;
+
+    const auto& context = arg.get_program().get_engine().get_context();
+    const auto& engine_info = context->get_engine_info();
+
+    params.engineInfo.bSubGroupSupport      = context->extension_supported("cl_intel_subgroups");
+    params.engineInfo.bSubGroupShortSupport = context->extension_supported("cl_intel_subgroups_short");
+    params.engineInfo.bFP16Support          = context->extension_supported("cl_khr_fp16");
+    params.engineInfo.bFP64Support          = context->extension_supported("cl_khr_fp64");
+    params.engineInfo.maxWorkGroupSize      = engine_info.max_work_group_size;
+    params.engineInfo.maxLocalMemSize       = engine_info.max_local_mem_size;
     
     const auto& input_layout    = arg.input().get_output_layout();
     const auto& output_layout   = arg.get_output_layout();
@@ -379,6 +409,8 @@ inline params_t get_default_params(const arg_t& arg, uint32_t split = 1)
     params.output = convert_data_tensor(output_layout, split);
 
     params.layerID = arg.id();
+
+    convert_fused_activation_func_params(arg, params);
 
     return params;
 }
@@ -406,21 +438,22 @@ inline optional_params_t get_default_optional_params(const program_impl& program
 {
     optional_params_t params;
     
-    const auto& context = program.get_engine()->get_context();
-    const auto& engine_info = context->get_engine_info();
+    const auto& context = program.get_engine().get_context();
 
-    params.bSupportSubGroupExt = program.get_engine()->get_context()->extension_supported("cl_intel_subgroups_short");
-    params.maxWorkGroupSize = engine_info.max_work_group_size;
-    params.maxLocalMemSize = engine_info.max_local_mem_size;
-    params.meaningfulKernelsNames = context->get_configuration().meaningful_kernels_names;
+    params.meaningfulKernelsNames       = context->get_configuration().meaningful_kernels_names;
+    params.allowStaticInputReordering   = program.get_options().get<build_option_type::optimize_data>()->enabled();
+    params.allowInputReordering         = false;
+    params.allowOutputReordering        = false;
+	
+	const auto& tuning_config = program.get_options().get<build_option_type::tuning_config>();
+    params.tuningParams.mode = to_tuning_mode(tuning_config->config.mode);
+    params.tuningParams.cacheFilePath = tuning_config->config.cache_file_path;
+
     return params;
 }
 
 template <typename optional_params_t>
 inline optional_params_t get_default_weights_bias_optional_params(const program_impl& program)
 {
-    optional_params_t params = get_default_optional_params<optional_params_t>(program);
-    //params.allow_padding = true; - TODO:
-    params.allowWeightsReorder = program.get_options().get<build_option_type::optimize_data>()->enabled();
-    return params;
+    return get_default_optional_params<optional_params_t>(program);
 }

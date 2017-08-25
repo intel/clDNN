@@ -16,6 +16,7 @@
 
 #include "normalize_inst.h"
 #include "primitive_type_base.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -34,8 +35,8 @@ std::string normalize_inst::to_string(normalize_node const& node)
 {
     std::stringstream           primitive_description;
     auto desc = node.get_primitive();
-    auto input = node.input();
-    auto scale_input = node.scale();
+    auto& input = node.input();
+    auto& scale_input = node.scale();
     auto epsilon = desc->epsilon;
     auto norm_region = desc->across_spatial ? "across spatial" : "within spatial";
 
@@ -58,16 +59,13 @@ normalize_inst::typed_primitive_inst(network_impl& network, normalize_node const
     auto scale_feature_size = scale_size.spatial[0];
     auto input_feature_size = input_memory().get_layout().size.feature[0];
 
-    if ((scale_feature_size != 1) && (scale_feature_size != input_feature_size))
+    if (scale_feature_size != 1)
     {
-        throw std::invalid_argument("Dimensions mismatch between input and scale input in Normalize layer!");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Scale feature size", scale_feature_size, "input feature size", input_feature_size, "");
     }
 
     // All other dimensions should be 1
-    if((int32_t)scale_size.count() != scale_feature_size)
-    {
-        throw std::invalid_argument("Dimensions mismatch of scale input in Normalize layer!");
-    }
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Scale input size elements count", (int32_t)scale_size.count(), "scale feature size", scale_feature_size, "Dimensions mismatch of scale input in Normalize layer!");
 
 }
 }

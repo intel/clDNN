@@ -31,7 +31,7 @@ namespace KernelSelector
     
     protected:
         virtual bool Validate(const Params&, const OptionalParams&) const override;
-        JitConstants GetJitConstants(const ConcatenationParams& params) const;
+        virtual JitConstants GetJitConstants(const ConcatenationParams& params) const;
         virtual DispatchData SetDefault(const ConcatenationParams& params) const;
         KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&) const;
     };

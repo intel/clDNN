@@ -19,7 +19,8 @@
 #include "lrn_kernel_within_channel_ref.h"
 #include "lrn_kernel_across_channel_ref.h"
 #include "lrn_kernel_across_channel_opt_b8.h"
- 
+#include "lrn_kernel_across_channel_multiple_features.h"
+
 namespace KernelSelector 
 {
     LRNKernelSelctor::LRNKernelSelctor()
@@ -28,6 +29,7 @@ namespace KernelSelector
         Attach<LRNKernelWithinChannel>();
         Attach<LRNKernelAcrossChannelRef>();
         Attach<LRNKernelAcrossChannel_b8>();
+        Attach<LRNKernelAcrossChannelMultipleFeatures>();
     }
 
     KernelsData LRNKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const

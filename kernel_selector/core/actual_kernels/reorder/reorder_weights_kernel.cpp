@@ -27,7 +27,6 @@ namespace KernelSelector
         k.EnableInputWeightsType(WeightsType::F32);
         k.EnableOutputWeightsType(WeightsType::F16);
         k.EnableOutputWeightsType(WeightsType::F32);
-        k.EnableAllWeightsLayout();
         k.EnableDifferentTypes();
         k.EnableTensorOffset();
         k.EnableTensorPitches();

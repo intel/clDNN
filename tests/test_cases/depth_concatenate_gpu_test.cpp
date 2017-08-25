@@ -278,6 +278,18 @@ public:
         return format == cldnn_format_type::cldnn_format_bfyx;
     }
 
+    virtual cldnn::tensor get_expected_output_tensor() override
+    {
+        cldnn::tensor::value_type features = 0;
+        for (const auto& t : generic_params->input_layouts)
+        {
+            features += t.size.feature[0];
+        }
+
+        const auto& t = generic_params->input_layouts[0].size;
+        return{ t.batch[0], features, t.spatial[0], t.spatial[1] };
+    }
+
     template<typename Type>
     memory generate_reference_typed(const std::vector<memory> & inputs)
     {
@@ -308,6 +320,9 @@ public:
         int out_f_off = 0;
         for (const memory & input : inputs)
         {
+            const auto input_desc = get_linear_memory_desc(input.get_layout());
+            const auto output_desc = get_linear_memory_desc(output.get_layout());
+
             const int in_f = input.get_layout().size.feature[0];
             const auto in_mem = input.pointer<Type>();
 
@@ -316,8 +331,8 @@ public:
             for (int y = 0; y < in_h; ++y)
             for (int x = 0; x < in_w; ++x)
             {
-                const size_t in_idx = get_linear_index(input.get_layout(), n, f, y, x);
-                const size_t out_idx = get_linear_index(output.get_layout(), n, out_f_off + f, y, x);
+                const size_t in_idx = get_linear_index(input.get_layout(), n, f, y, x, input_desc);
+                const size_t out_idx = get_linear_index(output.get_layout(), n, out_f_off + f, y, x, output_desc);
 
                 out_mem[out_idx] = in_mem[in_idx];
             }

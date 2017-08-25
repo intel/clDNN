@@ -13,38 +13,25 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
-
-#define CONCAT_TOKEN_HANDLER1(prefix, suffix) prefix##suffix
-
-// Expands and concatenates two tokens into one.
-#define CONCAT_TOKEN(prefix, suffix) CONCAT_TOKEN_HANDLER1(prefix, suffix)
+#include "include/include_all.cl"
 
 // Creates vector type.
-#define MAKE_VECTOR_TYPE(elem_type, size) CONCAT_TOKEN(elem_type, size)
+#define MAKE_VECTOR_TYPE(elem_type, size) CAT(elem_type, size)
 
-KERNEL (eltwise_gpu_vload8)(const __global UNIT_TYPE* input1, const __global UNIT_TYPE* input2, __global UNIT_TYPE* output)
+KERNEL(eltwise_gpu_vload8)(
+    INPUTS_DECLS
+    __global UNIT_TYPE* output)
 {
     const uint global_id = get_global_id(0);
 
-    const MAKE_VECTOR_TYPE(UNIT_TYPE, 8) in1 = vload8(global_id, input1);
-    const MAKE_VECTOR_TYPE(UNIT_TYPE, 8) in2 = vload8(global_id, input2);
+    VLOAD_DECLS
 
-    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) result;
-#if   defined MAX_MODE_USED
-    result = (in1 > in2 ? in1 : in2);
-#elif defined MUL_MODE_USED
-    result = in1 * in2;
-#elif defined SUB_MODE_USED
-    result = in1 - in2;
-#elif defined ADD_MODE_USED
-    result = in1 + in2;
-#endif
-   
-    ACTIVATION(result, result);
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 8) res;
 
-    vstore8(result, global_id, output);
+    DO_ELTWISE
+    
+    res = ACTIVATION(res, NL_M, NL_N);
+
+    vstore8(res, global_id, output);
 
 }
-
-#undef ACTIVATION

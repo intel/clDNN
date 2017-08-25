@@ -15,6 +15,7 @@
 */
 
 #include "normalize_kernel_base.h"
+#include "kernel_selector_utils.h"
 
 namespace KernelSelector 
 {
@@ -31,22 +32,26 @@ namespace KernelSelector
 
         kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
+        std::vector<size_t> global(3);
+
         if (params.normParams.normMode == NormalizeMode::WITHIN_SPATIAL)
         {
-            kd.gws0 = output.X().v;
-            kd.gws1 = output.Y().v;
-            kd.gws2 = output.Batch().v;
+            global = { output.X().v, output.Y().v, output.Batch().v };
         }
         else
         {
-            kd.gws0 = output.Batch().v;
-            kd.gws1 = 1;
-            kd.gws2 = 1;
+            global = { output.Batch().v, 1, 1 };
         }
 
-        kd.lws0 = kd.gws0;
-        kd.lws1 = 1;
-        kd.lws2 = 1;
+        auto local = GetOptimalLocalWorkGroupSizes(global);
+
+        kd.gws0 = global[0];
+        kd.gws1 = global[1];
+        kd.gws2 = global[2];
+
+        kd.lws0 = local[0];
+        kd.lws1 = local[1];
+        kd.lws2 = local[2];
 
         return kd;
     }
@@ -56,11 +61,6 @@ namespace KernelSelector
         assert(params.GetType() == KernelType::NORMALIZE);
 
         const NormalizeParams& orgParams = static_cast<const NormalizeParams&>(params);
-
-        if (!CheckActivationSupport(orgParams.activationFunc))
-        {
-            return{};
-        }
 
         DispatchData runInfo;
 

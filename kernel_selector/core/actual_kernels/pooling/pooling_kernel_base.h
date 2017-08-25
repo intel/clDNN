@@ -36,5 +36,8 @@ namespace KernelSelector
         virtual bool Validate(const Params&, const OptionalParams&) const override;
         virtual JitConstants GetJitConstants(const PoolingParams& params, DispatchData kd) const;
         virtual DispatchData SetDefault(const PoolingParams& params) const;
+        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&, float estimatedTime) const;
+
+        bool NeedsBoundaryCheck(const PoolingParams& params) const;
     };
 }

@@ -20,18 +20,26 @@
  
 namespace KernelSelector {
 
+    std::string Params::to_string() const
+    {
+        std::stringstream s;
+        s << toString(kType);
+        return s.str();
+    }
+
     std::string BaseParams::to_string() const
     {
         std::stringstream s;
-        s << toString(inputs[0].GetDType()) << "_";
-        s << toString(inputs[0].GetLayout()) << "_";
-        s << toString(output.GetLayout()) << "_";
+        s << Params::to_string() << "_";
+        s << toString(activationParams) << "_";
         s << toString(activationFunc) << "_";
-        s << nlParams.m << "_" << nlParams.n << "_";
-        s << inputs[0].X().v << "_" << inputs[0].Y().v << "_" << inputs[0].Feature().v << "_" << inputs[0].Batch().v << "_";
-        //s << inputs[0].offset << "_" << inputs[0].x().pitch << "_" << inputs[0].y().pitch << "_" << inputs[0].feature().pitch << "_" << inputs[0].batch().pitch << "_";
-        s << output.X().v << "_" << output.Y().v << "_" << output.Feature().v << "_" << output.Batch().v;
-        //s << output.offset << "_" << output.x().pitch << "_" << output.y().pitch << "_" << output.feature().pitch << "_" << output.batch().pitch;
+
+        for (auto input : inputs)
+        {
+            s << toString(input) << "_";
+        }
+        s << toString(output);
+
         return s.str();
     }
 
@@ -40,19 +48,19 @@ namespace KernelSelector {
         std::stringstream s;
 
         s << BaseParams::to_string() << "_";
-        s << toString(weights.GetLayout()) << "_";
-        if (bias.size())
+        if (bias.empty())
         {
-            s << toString(bias[0].GetLayout()) << "_";
+            s << "no_bias" << "_";
         }
         else
         {
-            s << "nobias_";
+            s << "bias_" << bias[0].PhysicalSize() << "_";
         }
         s << convParams.filterSize.x << "_" << convParams.filterSize.y << "_";
-        s << convParams.padding.x << "_" << convParams.padding.y << "_";
         s << convParams.stride.x << "_" << convParams.stride.y << "_";
-        s << convParams.dilation.x << "_" << convParams.dilation.y;
+        s << convParams.dilation.x << "_" << convParams.dilation.y << "_";
+        s << convParams.padding.x << "_" << convParams.padding.y << "_";
+        s << convParams.split;
 
         return s.str();
     }
@@ -62,19 +70,19 @@ namespace KernelSelector {
         std::stringstream s;
 
         s << BaseParams::to_string() << "_";
-        s << toString(weights.GetLayout()) << "_";
-        if (bias.size())
+        if (bias.empty())
         {
-            s << toString(bias[0].GetLayout()) << "_";
+            s << "no_bias" << "_";
         }
         else
         {
-            s << "nobias_";
+            s << "bias_size:" << bias[0].PhysicalSize() << "_";
         }
         s << deconvParams.filterSize.x << "_" << deconvParams.filterSize.y << "_";
-        s << deconvParams.padding.x << "_" << deconvParams.padding.y << "_";
         s << deconvParams.stride.x << "_" << deconvParams.stride.y << "_";
-        s << deconvParams.dilation.x << "_" << deconvParams.dilation.y;
+        s << deconvParams.dilation.x << "_" << deconvParams.dilation.y << "_";
+        s << deconvParams.padding.x << "_" << deconvParams.padding.y << "_";
+        s << deconvParams.split;
 
         return s.str();
     }

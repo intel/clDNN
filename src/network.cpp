@@ -16,74 +16,38 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "network_impl.h"
-
-#include "api/CPP/input_layout.hpp"
-
 #include "engine_impl.h"
 #include "event_impl.h"
 #include "program_impl.h"
 
+#include "api/CPP/data.hpp"
+#include "api/CPP/input_layout.hpp"
+
+#include "error_handler.h"
 #include "primitive_inst.h"
 #include "input_layout_inst.h"
 #include "kernel_selector_helper.h"
-#include "gpu/kernel.h"
-
 #include <algorithm>
 
 namespace cldnn
 {
 
-network_impl::network_impl(program_impl::cptr program)
-    : _program(program)
+network_impl::network_impl(const program_impl& program)
+    : _program(&program)
 {
     for (auto const& node : _program->get_nodes())
         allocate_primitive_instance(*node);
-    
-    kernel_selector::cl_kernel_data cl_kernel;
-    cl_kernel.kernelString = std::make_shared<kernel_selector::kernel_string>();
-    cl_kernel.kernelString->str = R"(
-        __kernel void warm_up_gpu(int c, int a, int b, __global int* out)
-        {
-            int res = (get_global_id(0) * a + get_global_id(1)) * b + get_global_id(2);
-            if(a >> 3)
-                res += get_local_id(1);
-            if(c)
-                out[get_local_id(0)] = res;
-        }
-    )";
 
-    cl_kernel.kernelString->entry_point = "warm_up_gpu";
-    cl_kernel.workGroups.global = { 1024, 8 };
-    cl_kernel.scalars = {
-        { kernel_selector::kernel_scalar_argument_types::INT32, (int32_t)0 },
-        { kernel_selector::kernel_scalar_argument_types::INT32, (int32_t)111 },
-        { kernel_selector::kernel_scalar_argument_types::INT32, (int32_t)7 }
-    };
-    cl_kernel.arguments = {
-        { kernel_selector::kernel_argument_types::SCALAR, 0 },
-        { kernel_selector::kernel_argument_types::SCALAR, 1 },
-        { kernel_selector::kernel_argument_types::SCALAR, 2 },
-        { kernel_selector::kernel_argument_types::OUTPUT, 0 },
-    };
-
-    auto eimpl      = _program->get_engine().get();
-    auto context    = eimpl->get_context();
-    auto api_engine = *reinterpret_cast<engine*>(&eimpl);
-    auto out        = memory::allocate(api_engine, { data_types::f32 ,format::bfyx,{ 1,1,1,1 } });
-
-    //pre-compile program and warm-up
-    neural::gpu::kernel warmup_kernel(context, cl_kernel.kernelString);
-    neural::gpu::kernel::kernel_arguments_data args;
-    args.output = &out;
-    args.scalars = &cl_kernel.scalars;
-
-    warmup_kernel.run(cl_kernel, {}, args);
-
-    context->queue().finish();
+    //sanity check
+    //TODO: fix run single layer design (in run single layer multiple networks can be run - i.e. weights optimization, we should have better logic to decide whether to filter or not some networks/nodes)
+    /*if (get_engine()->get_context()->enabled_single_kernel()
+        && (_exec_order.size() != 1 || _exec_order.front()->id() != get_engine()->get_context()->single_kernel_name()))
+        throw std::runtime_error("Network allocation: layer specified to be run with 'single_kernel_name' option could not be found (layer id: '"
+            + get_engine()->get_context()->single_kernel_name() + "').");*/
 }
 
-network_impl::network_impl(engine_impl::ptr engine, const topology_impl& topo, const build_options& options)
-    : network_impl(program_impl::cptr(engine->build_program(topo, options), false))
+network_impl::network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options)
+    : network_impl(*engine.build_program(topo, options))
 {
 }
 
@@ -91,30 +55,22 @@ void network_impl::reset_execution(bool wait)
 {
     if (wait && _events.size() > 0)
     {
-        std::vector<cl::Event> events;
-        events.reserve(_events.size());
+        std::vector<event_impl::ptr> events;
         for (auto& pair : _events)
         {
-            auto clevent = pair.second->get();
-            if (clevent.get() != CL_NONE)
-            {
-                auto event_status = clevent.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>();
+            auto& ev = pair.second;
+            if (ev->is_set())
+                continue;
 
-                if (event_status != CL_COMPLETE)
-                {
-                    events.emplace_back(clevent);
-                }
-            }
+            events.push_back(ev);
         }
-        if (events.size() > 0)
-        {
-            cl::WaitForEvents(events);
-        }
+
+        get_engine().wait_for_events(events);
     }
     _events.clear();
 }
 
-void network_impl::set_input_data(const primitive_id& id, memory_impl* data)
+void network_impl::set_input_data(const primitive_id& id, memory_impl& data)
 {
     std::shared_ptr<primitive_inst> primitive_inst;
     try {
@@ -125,13 +81,14 @@ void network_impl::set_input_data(const primitive_id& id, memory_impl* data)
         throw std::runtime_error("topology doesn't contain prmitive:" + id);
     }
     if (primitive_inst->type() != input_layout::type_id())
-        throw std::invalid_argument("primitive " + id + " is not an input");
+    {
+        CLDNN_ERROR_MESSAGE(id, "primitive " + id + " is not an input");
+    }
 
     auto input = std::static_pointer_cast<input_layout_inst>(primitive_inst);
 
     //Wait for previous execution completion
     reset_execution(true);
-        
     input->set_data(data);
 }
 
@@ -146,13 +103,16 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
     //Wait for previous execution completion
     reset_execution(false);
 
-    for(auto& output : _outputs)
-    {
-        auto output_event = execute_primitive(output, events);
-    }
+    for(auto& inst : _exec_order)
+        execute_primitive(inst, events);
 
     for (auto& prim : _primitives)
         prim.second->reset_output_change();
+
+    // Using output of previouse network as input to another one may cause hazard (in OOOQ mode) if user would not 
+    // provide proper event to execution. Flushing pipeline should prevent this kind of issues. 
+    // In scenarios with a big number of very small networks it can provide performance drop.
+    get_engine().flush_network();
 }
 
 std::vector<primitive_id> network_impl::get_output_ids() const
@@ -179,6 +139,13 @@ std::vector<std::shared_ptr<primitive_inst>> network_impl::get_primitives(const 
     return result;
 }
 
+std::vector<std::shared_ptr<primitive_inst>> network_impl::get_primitives(const std::vector<program_node*>& nodes)
+{
+    std::vector<std::shared_ptr<primitive_inst>> result(nodes.size());
+    std::transform(std::begin(nodes), std::end(nodes), std::begin(result), [&](const program_node* node) { return get_primitive(node->id()); });
+    return result;
+}
+
 refcounted_obj_ptr<event_impl> network_impl::execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<refcounted_obj_ptr<event_impl>>& events)
 {
     auto id = primitive->id();
@@ -187,7 +154,15 @@ refcounted_obj_ptr<event_impl> network_impl::execute_primitive(const std::shared
     {
         return it->second;
     }
-    return _events.insert({ id, primitive->execute(events) }).first->second;
+
+    event_impl::ptr ev;
+    if (!get_engine().get_context()->enabled_single_kernel() || get_engine().get_context()->single_kernel_name() == id)
+        ev = primitive->execute(events);
+    else
+        ev = get_engine().create_user_event(true);
+
+    _events.insert({ id, ev });
+    return ev;
 }
 
 void network_impl::allocate_primitive_instance(program_node const& node)
@@ -197,6 +172,8 @@ void network_impl::allocate_primitive_instance(program_node const& node)
 
     auto inst = node.type()->create_instance(*this, node);
     _primitives[node.id()] = inst;
+    if (!node.is_type<data>())
+        _exec_order.push_back(inst);
     if (node.is_input())
         _inputs.push_back(inst);
     if (node.is_output())

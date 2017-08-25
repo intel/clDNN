@@ -37,14 +37,14 @@ class primitive_inst;
 struct network_impl : public refcounted_obj<network_impl>
 {
 public:
-    network_impl(program_impl::cptr program);
-    network_impl(engine_impl::ptr engine, const topology_impl& topo, const build_options& options = build_options());
+    network_impl(const program_impl& program);
+    network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options = build_options());
 
-    const program_impl::cptr& get_program() const { return _program; }
-    engine_impl::ptr get_engine() const { return _program->get_engine(); }
+    const program_impl& get_program() const { return *_program; }
+    engine_impl& get_engine() const { return _program->get_engine(); }
 
     void reset_execution(bool wait = true);
-    void set_input_data(const primitive_id& id, memory_impl* data);
+    void set_input_data(const primitive_id& id, memory_impl& data);
 
     auto const& get_outputs() { return _outputs; }
 
@@ -61,6 +61,7 @@ public:
     std::string get_primitive_info(const primitive_id& id) const;
     const event_impl::ptr& get_primitive_event(const primitive_id& id) const { return _events.at(id); }
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<primitive_id>& ids);
+    std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<program_node*>& nodes);
     event_impl::ptr execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<event_impl::ptr>& events);
 
 private:
@@ -69,6 +70,7 @@ private:
     std::map<primitive_id, std::shared_ptr<primitive_inst>> _primitives;
     std::vector<std::shared_ptr<primitive_inst>> _inputs;
     std::vector<std::shared_ptr<primitive_inst>> _outputs;
+    std::list<std::shared_ptr<primitive_inst>> _exec_order;
 
     std::unordered_map<primitive_id, event_impl::ptr> _events;
 

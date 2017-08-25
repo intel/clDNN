@@ -15,12 +15,14 @@
 */
 
 #pragma once
+#include <limits>
 #include <string>
 #include <memory>
 #include "primitive_db.h"
 #include "kernel_selector_params.h"
 #include <float.h>
- 
+#include <sstream>
+
 #define AGE_BASED "-cl-no-subgroup-ifp"
 #define ROUND_ROBIN ""
 
@@ -63,8 +65,8 @@ namespace KernelSelector {
         bool        batch_compilation;
 
         KernelString() :
-            str(""),jit(""),
-            options(""),entry_point(""),
+            str(""), jit(""),
+            options(""), entry_point(""),
             batch_compilation(false)
         {};
     };
@@ -132,6 +134,7 @@ namespace KernelSelector {
             SCALE_TABLE,
             SLOPE,
             SPLIT,
+            INTERNAL_BUFFER,
             SCALAR,
         };
 
@@ -172,7 +175,8 @@ namespace KernelSelector {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     struct CPUKernel
     {
-        virtual WeightsLayout GetInputLayout() const { return WeightsLayout::oiyx; }
+        virtual WeightsType   GetExpectedInputType() = 0;
+        virtual WeightsLayout GetExpectedInputLayout() const { return WeightsLayout::oiyx; }
         virtual void Execute(void* input, size_t input_size, void* output, size_t output_size) const = 0;
     };
 
@@ -209,11 +213,15 @@ namespace KernelSelector {
     {
         std::shared_ptr<Params> params;
         std::vector<clKernelData> kernels;
+        std::vector<size_t> internalBufferSizes;
         float estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
+        uint64_t runTime = std::numeric_limits<uint64_t>::max(); // kernel run time in nanoseconds
 
         bool reorderInput = false;
         WeightsReorderParams weightsReorderParams;
         std::string kernelName;
+
+        int autoTuneIndex = -1;
 
         template <typename T>
         inline static KernelData Default(const Params& _params, size_t kernel_nums = 1)
@@ -223,7 +231,9 @@ namespace KernelSelector {
             kd.params = std::make_shared<T>(orgParams);
             kd.kernels.resize(kernel_nums);
             kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE; // for KW
+            kd.runTime = std::numeric_limits<uint64_t>::max();
             kd.reorderInput = false; // for KW
+            kd.autoTuneIndex = -1;
             return kd;
         }
     };
@@ -242,7 +252,7 @@ namespace KernelSelector {
         case ActivationFunction::HYPERBOLIC_TAN:        method = "HYPERBOLIC_TAN"; break;
         case ActivationFunction::RELU:                  method = "RELU"; break;
         case ActivationFunction::RELU_NEGATIVE_SLOPE:   method = "RELU_NEGATIVE_SLOPE"; break;
-        case ActivationFunction::BRELU:                 method = "BRELU"; break;
+        case ActivationFunction::CLAMP:                 method = "CLAMP"; break;
         case ActivationFunction::SOFTRELU:              method = "SOFTRELU"; break;
         case ActivationFunction::ABS:                   method = "ABS"; break;
         case ActivationFunction::SQUARE:                method = "SQUARE"; break;
@@ -275,8 +285,14 @@ namespace KernelSelector {
     {
         switch (dType)
         {
-        case Datatype::F16: return "F16";
-        case Datatype::F32: return "F32";
+        case Datatype::INT8:    return "INT8";
+        case Datatype::UINT8:   return "UINT8";
+        case Datatype::INT16:   return "INT16";
+        case Datatype::UINT16:  return "UINT16";
+        case Datatype::INT32:   return "INT32";
+        case Datatype::UINT32:  return "UINT32";
+        case Datatype::F16:     return "F16";
+        case Datatype::F32:     return "F32";
         default: return "";
         }
     }
@@ -292,22 +308,6 @@ namespace KernelSelector {
         }
     }
 
-    inline std::string toString(ConvertTypes dType)
-    {
-        switch (dType)
-        {
-        case ConvertTypes::U8 : return "U8";
-        case ConvertTypes::U16: return "U16";
-        case ConvertTypes::U32: return "U32";
-        case ConvertTypes::S8 : return "S8";
-        case ConvertTypes::S16: return "S16";
-        case ConvertTypes::S32: return "S32";
-        case ConvertTypes::F16: return "F16";
-        case ConvertTypes::F32: return "F32";
-        default: return "";
-        }
-    }
-
     inline std::string toString(KernelType kt)
     {
         switch (kt)
@@ -318,13 +318,10 @@ namespace KernelSelector {
         case KernelType::POOLING:           return "POOLING";
         case KernelType::ROI_POOLING:       return "ROI_POOLING";
         case KernelType::FULLY_CONNECTED:   return "FULLY_CONNECTED";
-        case KernelType::LOCALLY_CONNECTED: return "LOCALLY_CONNECTED";
         case KernelType::ACTIVATION:        return "ACTIVATION";
         case KernelType::SOFT_MAX:          return "SOFT_MAX";
         case KernelType::ELTWISE:           return "ELTWISE";
-        case KernelType::TABLE_LOOKUP:      return "TABLE_LOOKUP";
         case KernelType::REORDER:           return "REORDER";
-        case KernelType::CONVERT:           return "CONVERT";
         default:
             return "";
         }
@@ -365,13 +362,13 @@ namespace KernelSelector {
         }
     }
 
-    inline std::string toString(MeanSubtructMode mode)
+    inline std::string toString(MeanSubtractMode mode)
     {
         switch (mode)
         {
-        case MeanSubtructMode::NONE:            return "NONE";
-        case MeanSubtructMode::INSIDE_PARAMS:   return "INSIDE_PARAMS";
-        case MeanSubtructMode::IN_BUFFER:       return "IN_BUFFER";
+        case MeanSubtractMode::NONE:            return "NONE";
+        case MeanSubtractMode::INSIDE_PARAMS:   return "INSIDE_PARAMS";
+        case MeanSubtractMode::IN_BUFFER:       return "IN_BUFFER";
         default: return "";
         }
     }
@@ -382,6 +379,16 @@ namespace KernelSelector {
         {
         case PoolType::MAX: return "MAX";
         case PoolType::AVG: return "AVG";
+        default: return "";
+        }
+    }
+
+    inline std::string toString(LRNMode mode)
+    {
+        switch (mode)
+        {
+        case LRNMode::ACROSS_CHANNEL: return "ACROSS_CHANNEL";
+        case LRNMode::WITHIN_CHANNEL: return "WITHIN_CHANNEL";
         default: return "";
         }
     }
@@ -452,4 +459,33 @@ namespace KernelSelector {
         default: return "";
         }
     }
+
+    inline std::string toString(NonLinearParams params)
+    {
+        std::stringstream s;
+        s << "m" << params.m << "_n" << params.n;
+        return s.str();
+    }
+
+    inline std::string toString(Tensor::Dim dim)
+    {
+        std::stringstream s;
+        s << "v" << dim.v << "_p" << dim.pitch << "_" << dim.pad.before << "_" << dim.pad.after;
+        return s.str();
+    }
+
+    inline std::string toString(DataTensor tensor)
+    {
+        std::stringstream s;
+        s << toString(tensor.GetDType()) << "_";
+        s << toString(tensor.GetLayout()) << "_";
+        int i = 0;
+        for (auto dim : tensor.GetDims())
+        {
+            s << "d" << i << "_" << toString(dim) << "_";
+            i++;
+        }
+        return s.str();
+    }
+
 }

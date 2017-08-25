@@ -34,15 +34,78 @@ namespace KernelSelector
         return mem_consts;
     }
 
-    static bool validate(const SoftmaxParams& params)
+    SoftmaxKernelBase::DispatchData SoftmaxKernelBase::SetDefault(const SoftmaxParams& params, const OptionalParams&) const
     {
+        DispatchData runInfo;
+
+        runInfo.gws0 = 1;
+        runInfo.gws1 = 1;
+        runInfo.gws2 = 1;
+
+        runInfo.lws0 = 1;
+        runInfo.lws1 = 1;
+        runInfo.lws2 = 1;
+
+
+        runInfo.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
+        runInfo.leftovers = 0;
+        runInfo.itemsNum = 0;
+        runInfo.normIndex = 0;
+        runInfo.dataSetsCount = 0;
+        runInfo.dataSetSize = 0;
+
+        return runInfo;
+    }
+
+    bool SoftmaxKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    {
+        if (p.GetType() != KernelType::SOFT_MAX ||
+            o.GetType() != KernelType::SOFT_MAX)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    KernelsData SoftmaxKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, float estimated_time) const
+    {
+        if (!Validate(params, options))
+        {
+            return{};
+        }
+
+        const SoftmaxParams& orgParams = static_cast<const SoftmaxParams&>(params);
+        KernelData kd = KernelData::Default<SoftmaxParams>(params);
+
+        auto runInfo = SetDefault(orgParams, options);
+        auto cldnn_jit = GetJitConstants(orgParams, runInfo);
+        auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
+        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
+
+        auto& kernel = kd.kernels[0];
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
+
+        kd.estimatedTime = estimated_time;
+
+        return{ kd };
+    }
+
+    bool SoftmaxKernelBaseBF::Validate(const Params& p, const OptionalParams& o) const
+    {
+        if (!Parent::Validate(p, o))
+        {
+            return false;
+        }
+
+        const SoftmaxParams& params = static_cast<const SoftmaxParams&>(p);
         const auto& input = params.inputs[0];
 
         if (params.activationFunc != ActivationFunction::NONE)
         {
             return false;
         }
-        
+
         if (input.GetLayout() == DataLayout::bf ||
             input.GetLayout() == DataLayout::fb)
         {
@@ -58,58 +121,16 @@ namespace KernelSelector
         }
     }
 
-    SoftmaxKernelBase::DispatchData SoftmaxKernelBase::SetDefault(const SoftmaxParams& params, const OptionalParams&) const
+    SoftmaxKernelBase::DispatchData SoftmaxKernelBaseBF::SetDefault(const SoftmaxParams& params, const OptionalParams& options) const
     {
         const auto& input = params.inputs[0];
 
-        DispatchData kd;
-        
-        kd.gws0 = 1;
-        kd.gws1 = 1;
-        kd.gws2 = 1;
+        DispatchData kd = Parent::SetDefault(params, options);
 
-        kd.lws0 = 1;
-        kd.lws1 = 1;
-        kd.lws2 = 1;
-
-
-        kd.fp16UnitUsed = input.GetDType() == Datatype::F16;
-        kd.leftovers = 0;
-        kd.itemsNum = 0;
-        kd.normIndex = 0;
-        kd.dataSetsCount = 0;
-
-        // currently all derived kernels support bf/fb only
         auto flatten_input = input.FlattenFeatureAndSpatials();
         kd.dataSetSize = flatten_input.Feature().v;
         kd.dataSetsCount = input.Batch().v;
 
         return kd;
-    }
-
-    KernelsData SoftmaxKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, float estimated_time) const
-    {
-        assert(params.GetType() == KernelType::SOFT_MAX);
-
-        const SoftmaxParams& orgParams = static_cast<const SoftmaxParams&>(params);
-
-        if (!validate(orgParams))
-        {
-            return{};
-        }
-
-        KernelData kd = KernelData::Default<SoftmaxParams>(params);
-
-        auto runInfo = SetDefault(orgParams, options);
-        auto cldnn_jit = GetJitConstants(orgParams, runInfo);
-        auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
-
-        kd.estimatedTime = estimated_time;
-
-        return{ kd };
     }
 }

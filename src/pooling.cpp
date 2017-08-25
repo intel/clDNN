@@ -17,7 +17,7 @@
 #include "pooling_inst.h"
 #include "primitive_type_base.h"
 #include "sliding_window_utils.h"
-
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -38,17 +38,21 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
     auto window_size = desc->size;
 
     // TODO: Consider moving general parameter verification to arguments constructor.
-    if (stride.spatial[0] <= 0 || stride.spatial[1] <= 0)
-        throw std::runtime_error("Stride must be positive (>= 1)");
-    if (window_size.spatial[0] <= 0 || window_size.spatial[1] <= 0)
-        throw std::runtime_error("Size (of pooling window) must be positive (>= 1)");
-    if (2 * input_offset.spatial[0] > input_layout.size.spatial[0] || 2 * input_offset.spatial[1] > input_layout.size.spatial[1])
-        throw std::invalid_argument("Input offset is greater than input data range. There is no input data to process");
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial X", stride.spatial[0], "", 0, "Stride spatial X must be positive (>= 1)");
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial Y", stride.spatial[1], "", 0, "Stride spatial Y must be positive (>= 1)");
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "window size spatial X", window_size.spatial[0], "", 0, "Size X (of pooling window) must be positive (>= 1)");
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "window size spatial Y", window_size.spatial[1], "", 0, "Size Y (of pooling window) must be positive (>= 1)");
+    CLDNN_ERROR_GREATER_THAN(node.id(), "Input offset spatial X", 2 * input_offset.spatial[0], "input layout size spatial X", input_layout.size.spatial[0], "Input offset is greater than input data range. There is no input data to process");
+    CLDNN_ERROR_GREATER_THAN(node.id(), "Input offset spatial Y", 2 * input_offset.spatial[1], "input layout size spatial Y", input_layout.size.spatial[1], "Input offset is greater than input data range. There is no input data to process");
+    CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial X", -input_offset.spatial[0], "input window size spatial X", window_size.spatial[0], "First pool is outside of image. please reduce input offset X");
+    CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial Y", -input_offset.spatial[1], "input window size spatial Y", window_size.spatial[1], "First pool is outside of image. please reduce input offset Y");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Input offset feature", input_offset.feature[0], "", 0, "Input offset in feature is not supported");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Input offset batch", input_offset.batch[0], "", 0, "Input offset in batch is not supported");
 
     if (desc->with_output_size)
     {
-        if (desc->output_size.spatial[0] <= 0 || desc->output_size.spatial[1] <= 0)
-            throw std::invalid_argument("User-defined size of output layout must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial X", desc->output_size.spatial[0], "", 0, "User-defined size of output layout (spatial X) must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial Y", desc->output_size.spatial[1], "", 0, "User-defined size of output layout (spatial Y) must be positive (>= 1)");
 
         tensor output_size(input_layout.size.batch[0], input_layout.size.feature[0],
                            desc->output_size.spatial[0], desc->output_size.spatial[1]);
@@ -68,7 +72,7 @@ std::string pooling_inst::to_string(pooling_node const& node)
 {
     std::stringstream   primitive_description;
     auto desc           = node.get_primitive();
-    auto input          = node.input();
+    auto& input         = node.input();
     auto strd           = desc->stride;
     auto kernel_size    = desc->size;
     auto mode           = desc->mode == pooling_mode::max ? "max" : "average";

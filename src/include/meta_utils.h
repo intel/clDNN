@@ -17,6 +17,7 @@
 
 #include <type_traits>
 #include "api/CPP/meta_utils.hpp"
+#include "internal_primitive.h"
 
 namespace cldnn
 {
@@ -25,6 +26,9 @@ struct primitive;
 
 namespace meta
 {
+
+template <class... T>
+struct pack {};
 
 template <class T, class... U>
 constexpr bool is_any_of_v = is_any_of<T, U...>::value;
@@ -57,6 +61,23 @@ struct is_primitive : public std::integral_constant<bool,
 
 template <class T>
 constexpr bool is_primitive_v = is_primitive<T>::value;
+
+template <class T>
+struct is_api_primitive : public std::integral_constant<bool,
+                                                    is_primitive_v<T> &&
+                                                    !std::is_base_of<internal_primitive, T>::value> {};
+
+template <class T>
+constexpr bool is_api_primitive_v = is_api_primitive<T>::value;
+
+template <class T>
+struct is_internal_primitive : public std::integral_constant<bool,
+                                                    std::is_base_of<internal_primitive, T>::value &&
+                                                    !std::is_same<internal_primitive, std::remove_cv_t<T>>::value &&
+                                                    std::is_same<T, std::remove_cv_t<T>>::value> {};
+
+template <class T>
+constexpr bool is_internal_primitive_v = is_internal_primitive<T>::value;
 
 }
 }

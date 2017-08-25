@@ -16,17 +16,22 @@
 
 #pragma once
 
-#include "cnn_kernel_base.h"
+#include "softmax_kernel_base.h"
  
 namespace KernelSelector 
 {    
-    class SoftmaxKernelRef : public CNNKernelBase
+    class SoftmaxKernelRef : public SoftmaxKernelBase
     {
     public:
-        SoftmaxKernelRef() : CNNKernelBase("cnn_softmax_ref") {}
+        using Parent = SoftmaxKernelBase;
+        SoftmaxKernelRef() : Parent("softmax_gpu_ref") {}
         virtual ~SoftmaxKernelRef() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
+
+    protected:
+        JitConstants GetJitConstants(const SoftmaxParams& params, DispatchData kd) const override;
+        DispatchData SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const override;
     };
 }

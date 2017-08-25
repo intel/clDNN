@@ -29,7 +29,7 @@ struct typed_program_node<generic_layer> : public typed_program_node_base<generi
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
+    decltype(auto) input() const { return get_dependency(0); }
 };
 
 using generic_layer_node = typed_program_node<generic_layer>;
@@ -49,9 +49,6 @@ public:
 
 public:
     typed_primitive_inst(network_impl& network, generic_layer_node const& node);
-
-    size_t        inputs_memory_count() const { return dependencies().size(); }
-    const memory& input_memory(size_t idx = 0) const { return dep_memory(idx); }
 };
 
 using generic_layer_inst = typed_primitive_inst<generic_layer>;

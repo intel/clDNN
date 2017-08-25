@@ -36,11 +36,36 @@ namespace KernelSelector
         k.EnableConcatAxis(ConcatAxis::Y);
         k.EnableConcatAxis(ConcatAxis::FEATURE);
         k.EnableConcatAxis(ConcatAxis::BATCH);
+        k.EnableConcatKernelPerInput();
         return k;
+    }
+
+    JitConstants ConcatenationKernelRef::GetJitConstants(const ConcatenationParams& params) const
+    {
+        auto cldnnJit = ConcatenationKernelBase::GetJitConstants(params);
+        const ConcatenationParams& orgParams = static_cast<const ConcatenationParams&>(params);
+        if (orgParams.inputs[0].X().v == 1 && orgParams.inputs[0].Y().v == 1)
+        {
+            cldnnJit.AddConstant(MakeJitConstant("CHECK_FEATURES", 1));
+        }
+        return cldnnJit;
     }
 
     KernelsData ConcatenationKernelRef::GetKernelsData(const Params& params, const OptionalParams& optParams) const
     {
-        return GetCommonKernelsData(params, optParams);
+        KernelsData kd = GetCommonKernelsData(params, optParams);
+        for (int i = 0; i < (int)kd[0].kernels.size(); i++)
+        {
+            auto& kernel = kd[0].kernels[i];
+
+            // to avoid cases when we execute with local work sizes 1x1x1
+            if (kernel.workGroups.local[0] == 1 &&
+                kernel.workGroups.global[1] != 1)
+            {
+                kernel.workGroups.global[1] = Align(kernel.workGroups.global[1], 32);
+                kernel.workGroups.local[1] = 32;
+            }
+        }
+        return kd;
     }
 }

@@ -15,40 +15,39 @@
 */
 
 #include "reorder_inst.h"
-#include "kernel.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "error_handler.h"
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural
+struct reorder_gpu : typed_primitive_gpu_impl<reorder>
 {
+    using parent = typed_primitive_gpu_impl<reorder>;
+    using parent::parent;
 
-struct reorder_gpu : typed_primitive_impl<reorder>
-{
-    const reorder_node& outer;
-    gpu::kernel _kernel;
+protected:
 
-    reorder_gpu(const reorder_node& arg, const kernel_selector::kernel_data& kd)
-        : outer(arg)
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
+    virtual bool optimized_out(reorder_inst& instance) const override
     {
-        _kernel_data = kd;
+        return
+            parent::optimized_out(instance) || _outer.can_be_optimized();
     }
 
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, reorder_inst& instance) override
+    virtual kernel::kernel_arguments_data get_arguments(reorder_inst& instance, int32_t split) const override
     {
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
-        args.inputs = { &instance.input_memory() };
-        args.output = &instance.output_memory();
-        if (outer.has_mean())
+        kernel::kernel_arguments_data args = parent::get_arguments(instance, split);
+
+        if (_outer.has_mean())
         {
             args.bias = &instance.mean_memory();
         }
 
-        return _kernel.run(_kernel_data.kernels[0], events, args);
+        return args;
     }
+
+public:
 
     static primitive_impl* create(const reorder_node& arg)
     {
@@ -73,10 +72,8 @@ struct reorder_gpu : typed_primitive_impl<reorder>
 
         auto& kernel_selector = kernel_selector::reorder_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(reorder_params, reorder_optional_params);
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto reorder = new reorder_gpu(arg, best_kernels[0]);
 
@@ -88,11 +85,11 @@ namespace {
     struct attach {
         attach() {
             implementation_map<reorder>::add({
-                { cldnn::engine_types::ocl, reorder_gpu::create }
+                { engine_types::ocl, reorder_gpu::create }
             });
         }
         ~attach() {}
     };
     attach attach_impl;
 }
-}
+} }

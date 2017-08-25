@@ -144,6 +144,9 @@ namespace tests
         auto res_data = out.pointer<Type>();
         auto ref_data = ref.pointer<Type>();
 
+        const auto out_desc = get_linear_memory_desc(out_layout);
+        const auto ref_desc = get_linear_memory_desc(ref_layout);
+
         for (int b = 0; b < batch_size; b++)
         {
             for (int f = 0; f < feature_size; f++)
@@ -152,8 +155,8 @@ namespace tests
                 {
                     for (int x = 0; x < x_size; x++)
                     {
-                        size_t res_index = get_linear_index(out_layout, b, f, y, x);
-                        size_t ref_index = get_linear_index(ref_layout, b, f, y, x);
+                        size_t res_index = get_linear_index(out_layout, b, f, y, x, out_desc);
+                        size_t ref_index = get_linear_index(ref_layout, b, f, y, x, ref_desc);
 
                         EXPECT_TRUE(floating_point_equal(res_data[res_index], ref_data[ref_index], max_ulps_diff_allowed))
                             << "Expected " << (float)res_data[res_index] << " to be almost equal (within " << max_ulps_diff_allowed << " ULP's) to " << (float)ref_data[ref_index]
@@ -169,45 +172,52 @@ namespace tests
         }
     }
 
-    size_t generic_test::get_linear_index(const layout & layout, int b, int f, int y, int x)
+    static size_t calc_offfset(const layout & layout, const pitches& p)
     {
-        uint32_t bPitch, fPitch, yPitch, xPitch;
+        auto lower_padding = layout.data_padding.lower_size();
+        return
+            p.b * lower_padding.batch[0] +
+            p.f * lower_padding.feature[0] +
+            p.y * lower_padding.spatial[1] +
+            p.x * lower_padding.spatial[0];
+    }
+
+    memory_desc generic_test::get_linear_memory_desc(const layout & layout)
+    {
+        pitches p;
+        
         switch (layout.format)
         {
             case format::bfyx:
             {
-                //b=sizes[0], f=sizes[1], y=sizes[2], x=sizes[3]
-                xPitch = 1;
-                yPitch = layout.get_buffer_size().sizes(format::bfyx)[3] * xPitch;
-                fPitch = layout.get_buffer_size().sizes(format::bfyx)[2] * yPitch;
-                bPitch = layout.get_buffer_size().sizes(format::bfyx)[1] * fPitch;
+                p.x = 1;
+                p.y = layout.get_buffer_size().sizes(format::bfyx)[3] * p.x;
+                p.f = layout.get_buffer_size().sizes(format::bfyx)[2] * p.y;
+                p.b = layout.get_buffer_size().sizes(format::bfyx)[1] * p.f;
                 break;
             }
             case format::yxfb:
             {
-                //y=sizes[0], x=sizes[1], f=sizes[2], b=sizes[3]
-                bPitch = 1;
-                fPitch = layout.get_buffer_size().sizes(format::yxfb)[3] * bPitch;
-                xPitch = layout.get_buffer_size().sizes(format::yxfb)[2] * fPitch;
-                yPitch = layout.get_buffer_size().sizes(format::yxfb)[1] * xPitch;
+                p.b = 1;
+                p.f = layout.get_buffer_size().sizes(format::yxfb)[3] * p.b;
+                p.x = layout.get_buffer_size().sizes(format::yxfb)[2] * p.f;
+                p.y = layout.get_buffer_size().sizes(format::yxfb)[1] * p.x;
                 break;
             }
             case format::fyxb:
             {
-                //f=sizes[0], y=sizes[1], x=sizes[2], b=sizes[3]
-                bPitch = 1;
-                xPitch = layout.get_buffer_size().sizes(format::fyxb)[3] * bPitch;
-                yPitch = layout.get_buffer_size().sizes(format::fyxb)[2] * xPitch;
-                fPitch = layout.get_buffer_size().sizes(format::fyxb)[1] * yPitch;
+                p.b = 1;
+                p.x = layout.get_buffer_size().sizes(format::fyxb)[3] * p.b;
+                p.y = layout.get_buffer_size().sizes(format::fyxb)[2] * p.x;
+                p.f = layout.get_buffer_size().sizes(format::fyxb)[1] * p.y;
                 break;
             }
             case format::byxf:
             {
-                //b=sizes[0], y=sizes[1], x=sizes[2], f=sizes[3]
-                fPitch = 1;
-                xPitch = layout.get_buffer_size().sizes(format::byxf)[3] * fPitch;
-                yPitch = layout.get_buffer_size().sizes(format::byxf)[2] * xPitch;
-                bPitch = layout.get_buffer_size().sizes(format::byxf)[1] * yPitch;
+                p.f = 1;
+                p.x = layout.get_buffer_size().sizes(format::byxf)[3] * p.f;
+                p.y = layout.get_buffer_size().sizes(format::byxf)[2] * p.x;
+                p.b = layout.get_buffer_size().sizes(format::byxf)[1] * p.y;
                 break;
             }
             default:
@@ -215,74 +225,28 @@ namespace tests
                 throw std::runtime_error("Format not supported yet.");
             }
         }
-        return ((b * bPitch) + (f * fPitch) + ((y + layout.data_padding.lower_size().spatial[1]) * yPitch) + ((x + layout.data_padding.lower_size().spatial[0]) * xPitch));
+        
+        return{ p, calc_offfset(layout, p) };
     }
 
-    //TODO: change the sig to take the layout size only for the output stuff
-    //TODO: is it ok that it assumes flat memory?
-    size_t generic_test::get_linear_index_with_broadcast(const layout & in_layout, int b, int f, int y, int x, const layout & out_layout)
+    size_t generic_test::get_linear_index(const layout & layout, int b, int f, int y, int x, const memory_desc& desc)
     {
-        assert(in_layout.format == out_layout.format);    //TODO: won't be needed after sig change. we could support different layouts but there's no need, atm.
+        return 
+            desc.offset + 
+            b*desc.pitch.b + 
+            f*desc.pitch.f + 
+            y*desc.pitch.y + 
+            x*desc.pitch.x;
+    }
 
-        const auto in0 = in_layout.get_buffer_size().sizes(in_layout.format)[0];
-        const auto in1 = in_layout.get_buffer_size().sizes(in_layout.format)[1];
-        const auto in2 = in_layout.get_buffer_size().sizes(in_layout.format)[2];
-        const auto in3 = in_layout.get_buffer_size().sizes(in_layout.format)[3];
-
-        const auto out0 = out_layout.get_buffer_size().sizes(out_layout.format)[0];
-        const auto out1 = out_layout.get_buffer_size().sizes(out_layout.format)[1];
-        const auto out2 = out_layout.get_buffer_size().sizes(out_layout.format)[2];
-        const auto out3 = out_layout.get_buffer_size().sizes(out_layout.format)[3];
-
-        assert(in0 == 1 || in0 == out0);
-        assert(in1 == 1 || in1 == out1);
-        assert(in2 == 1 || in2 == out2);
-        assert(in3 == 1 || in3 == out3);
-
-        uint32_t bPitch, fPitch, yPitch, xPitch;
-        switch (in_layout.format)
-        {
-            case format::bfyx:
-            {
-                //b=sizes[0], f=sizes[1], y=sizes[2], x=sizes[3]
-                xPitch = 1;
-                yPitch = in3 * xPitch;
-                fPitch = in2 * yPitch;
-                bPitch = in1 * fPitch;
-                return    (in3 == out3 ? x * xPitch : 0) +
-                    (in2 == out2 ? y * yPitch : 0) +
-                    (in1 == out1 ? f * fPitch : 0) +
-                    (in0 == out0 ? b * bPitch : 0);
-            }
-            case format::yxfb:
-            {
-                //y=sizes[0], x=sizes[1], f=sizes[2], b=sizes[3]
-                bPitch = 1;
-                fPitch = in3 * bPitch;
-                xPitch = in2 * fPitch;
-                yPitch = in1 * xPitch;
-                return    (in3 == out3 ? b * bPitch : 0) +
-                    (in2 == out2 ? f * fPitch : 0) +
-                    (in1 == out1 ? x * xPitch : 0) +
-                    (in0 == out0 ? y * yPitch : 0);
-            }
-            case format::fyxb:
-            {
-                //f=sizes[0], y=sizes[1], x=sizes[2], b=sizes[3]
-                bPitch = 1;
-                xPitch = in3 * bPitch;
-                yPitch = in2 * xPitch;
-                fPitch = in1 * yPitch;
-                return    (in3 == out3 ? b * bPitch : 0) +
-                    (in2 == out2 ? x * xPitch : 0) +
-                    (in1 == out1 ? y * yPitch : 0) +
-                    (in0 == out0 ? f * fPitch : 0);
-            }
-            default:
-            {
-                throw std::runtime_error("Format not supported yet.");
-            }
-        }
+    size_t generic_test::get_linear_index_with_broadcast(const layout& in_layout, int b, int f, int y, int x, const memory_desc& desc)
+    {
+        return
+            desc.offset +
+            (b % in_layout.size.batch[0]) * desc.pitch.b +
+            (f % in_layout.size.feature[0]) * desc.pitch.f +
+            (y % in_layout.size.spatial[1]) * desc.pitch.y +
+            (x % in_layout.size.spatial[0]) * desc.pitch.x;
     }
 
     //Default implementation. Should be overridden in derived class otherwise.

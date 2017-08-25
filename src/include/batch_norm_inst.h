@@ -30,9 +30,9 @@ struct typed_program_node<batch_norm> : public typed_program_node_base<batch_nor
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
-    auto& mean() const { return get_dependency(1); }
-    auto& variance() const { return get_dependency(2); }
+    decltype(auto) input() const { return get_dependency(0); }
+    decltype(auto) mean() const { return get_dependency(1); }
+    decltype(auto) variance() const { return get_dependency(2); }
 };
 
 using batch_norm_node = typed_program_node<batch_norm>;
@@ -49,9 +49,8 @@ public:
 public:
     typed_primitive_inst(network_impl& network, batch_norm_node const& node);
 
-    const memory& input_memory() const { return dep_memory(0); }
-    const memory& mean_memory() const { return dep_memory(1); }
-    const memory& variance_memory() const { return dep_memory(2); }
+    decltype(auto) mean_memory() const { return dep_memory(1); }
+    decltype(auto) variance_memory() const { return dep_memory(2); }
 };
 
 using batch_norm_inst = typed_primitive_inst<batch_norm>;

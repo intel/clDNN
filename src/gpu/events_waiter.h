@@ -17,37 +17,25 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "api/CPP/profiling.hpp"
-#include "event_impl.h"
+#include "ocl_user_event.h"
+#include "ocl_toolkit.h"
 
-namespace neural { namespace gpu {
-class events_waiter: public context_holder
+namespace cldnn { namespace gpu {
+class events_waiter : public context_holder
 {
 public:
-    explicit events_waiter(std::shared_ptr<gpu_toolkit> context) : context_holder(context){}
-    cldnn::refcounted_obj_ptr<cldnn::event_impl> run(const std::vector<cldnn::refcounted_obj_ptr<cldnn::event_impl>>& dependencies)
+    explicit events_waiter(std::shared_ptr<gpu_toolkit> context) : context_holder(context)
+    {}
+
+    event_impl::ptr run(const std::vector<event_impl::ptr>& dependencies)
     {
-        if(dependencies.size() == 0)
+        if (dependencies.size() == 0)
         {
-            cldnn::refcounted_obj_ptr<cldnn::event_impl> result(new cldnn::user_event_gpu(cl::UserEvent( context()->context() )), false);
-            result->set();
-            return result;
+            auto ev = new gpu::user_event(context(), true);
+            return{ ev, false };
         }
-        cl::Event end_event;
-        std::vector<cl::Event> events;
-        events.reserve(dependencies.size());
-        for(auto& dependency : dependencies)
-        {
-            events.emplace_back(dependency->get());
-        }
-        if (context()->enabled_single_kernel() == false)
-        {
-            const_cast<cl::CommandQueue&>(context()->queue()).enqueueMarkerWithWaitList(&events, &end_event);
-        }
-        else
-        {
-            const_cast<cl::CommandQueue&>(context()->queue()).enqueueMarkerWithWaitList(nullptr, &end_event);
-        }
-        return { new cldnn::event_impl(end_event), false };
+
+        return context()->enqueue_marker(dependencies);
     }
 };
 }}

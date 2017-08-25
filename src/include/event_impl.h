@@ -18,70 +18,66 @@
 #pragma once
 #include "api_impl.h"
 #include "refcounted_obj.h"
-#include "gpu/ocl_toolkit.h"
+
+#include <list>
+#include <mutex>
 
 namespace cldnn
 {
-struct event_impl: public refcounted_obj<event_impl>
+struct user_event;
+
+struct event_impl : public refcounted_obj<event_impl>
 {
 public:
-    event_impl(const cl::Event& event) : _event(event)
-    {}
+    event_impl() = default;
 
-    void wait() const { _event.wait(); }
-    virtual void set() { throw std::logic_error("cannot set OCL event"); }
-    void add_event_handler(cldnn_event_handler handler, void* data)
-    {
-        std::lock_guard<std::mutex> lock(_handlers_mutex);
-        if (_event.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>() == CL_COMPLETE)
-        {
-            handler(data);
-        }
-        else
-        {
-            if (_handlers.size() == 0)
-            {
-                _event.setCallback(CL_COMPLETE, callBack, this);
-            }
-            _handlers.push_back({ handler, data });
-        }
-    }
-    cl::Event get() const { return _event; }
-    const std::vector<cldnn_profiling_interval>& get_profiling_info();
-protected:
-    //TODO prevent long handler execution problem
-    static void CL_CALLBACK callBack(cl_event, cl_int, void* me)
-    {
-        reinterpret_cast<event_impl*>(me)->callHandlers();
-    }
+    void wait();
+    bool is_set();
+    
+    //returns true if handler has been successfully added
+    bool add_event_handler(cldnn_event_handler handler, void* data);
+    
+    const std::list<cldnn_profiling_interval>& get_profiling_info();
 
-    void callHandlers()
-    {
-        std::lock_guard<std::mutex> lock(_handlers_mutex);
-        for (auto& pair : _handlers)
-        {
-            try
-            {
-                pair.first(pair.second);
-            }
-            catch (...) {}
-        }
-        _handlers.clear();
-    }
-
+private:
     std::mutex _handlers_mutex;
-    cl::Event _event;
-    std::vector<std::pair<cldnn_event_handler, void*>> _handlers;
-    std::vector<cldnn_profiling_interval> _profiling_info;
+    std::list<std::pair<cldnn_event_handler, void*>> _handlers;
+
+    bool _profiling_captured = false;
+    std::list<cldnn_profiling_interval> _profiling_info;
+
+protected:
+    bool _set = false;
+
+    void call_handlers();
+
+    virtual void wait_impl() = 0;
+    virtual bool is_set_impl() = 0;
+    virtual bool add_event_handler_impl(cldnn_event_handler, void*) { return true; }
+
+    //returns whether profiling info has been captures successfully and there's no need to call this impl a second time when user requests to get profling info
+    virtual bool get_profiling_info_impl(std::list<cldnn_profiling_interval>&) { return true; };
 };
 
-class user_event_gpu : public event_impl
+struct user_event : virtual public event_impl
 {
 public:
-    user_event_gpu(const cl::UserEvent& event) : event_impl(event), _user_event(event) {}
-    void set() override { _user_event.setStatus(CL_COMPLETE); }
+    user_event(bool set = false)
+    {
+        _set = set;
+    }
+
+    void set()
+    { 
+        if (_set)
+            return;
+        _set = true;
+        set_impl();
+        call_handlers();
+    }
+
 private:
-    cl::UserEvent _user_event;
+    virtual void set_impl() = 0;
 };
 
 }

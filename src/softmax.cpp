@@ -44,7 +44,7 @@ std::string softmax_inst::to_string(softmax_node const& node)
 {
     std::stringstream   primitive_description;
     auto desc           = node.get_primitive();
-    auto input          = node.input();
+    auto& input         = node.input();
 
     primitive_description << "id: " << desc->id << ", type: softmax" << 
         "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<

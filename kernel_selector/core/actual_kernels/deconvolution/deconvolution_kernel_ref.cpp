@@ -39,8 +39,7 @@ namespace KernelSelector
         k.EnableNonBiasTerm();
         k.EnableBatching();
         k.EnableSplitSupport();
-        k.EnableTensorOffset();
-        k.EnableTensorPitches();
+        k.EnableDepthwiseSeparableOpt();
         return k;
     }
 
@@ -50,18 +49,11 @@ namespace KernelSelector
 
         const DeconvolutionParams& orgParams = static_cast<const DeconvolutionParams&>(params);
 
-        const bool bSupportedActivation = CheckActivationSupport(orgParams.activationFunc);
-
         const std::vector<WeightsLayout> weightsLayouts = {
             WeightsLayout::yxio,
             WeightsLayout::iyxo,
             WeightsLayout::oyxi,
             WeightsLayout::oiyx };
-        
-        if (!bSupportedActivation)
-        {
-            return{};
-        }
 
         DispatchData runInfo = SetDefault(orgParams);
         KernelData kd = KernelData::Default<DeconvolutionParams>(params);
@@ -83,7 +75,7 @@ namespace KernelSelector
         auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, true, !orgParams.bias.empty());
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
 
         kd.estimatedTime = runInfo.effiency;

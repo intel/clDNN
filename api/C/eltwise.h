@@ -49,8 +49,6 @@ typedef enum /*:int32_t*/
 /// - both inputs have to have equal sizes in all dimensions
 /// - format of both inputs has to be the same
 CLDNN_BEGIN_PRIMITIVE_DESC(eltwise)
-/// @brief Second input primitive id with values needed for eltwise computation.
-cldnn_primitive_id input2;
 /// @brief Eltwise mode. See #cldnn_eltwise_mode.
 int32_t mode; /*cldnn_eltwise_mode*/
 /// @brief Enables Relu activation.

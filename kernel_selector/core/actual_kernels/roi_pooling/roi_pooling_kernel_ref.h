@@ -16,17 +16,22 @@
 
 #pragma once
 
-#include "cnn_kernel_base.h"
+#include "common_kernel_base.h"
 
 namespace KernelSelector
 {
-    class ROIPoolingKernelRef : public CNNKernelBase
+    class ROIPoolingKernelRef : public CommonKernelBase
     {
     public:
-        ROIPoolingKernelRef() : CNNKernelBase("cnn_roi_pooling_ref") {}
+        ROIPoolingKernelRef() : CommonKernelBase("roi_pooling_ref") {}
         virtual ~ROIPoolingKernelRef() {}
+
+        using DispatchData = CommonDispatchData;
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
+
+    protected:
+        JitConstants GetJitConstants(const ROIPoolingParams& params) const;
     };
 }

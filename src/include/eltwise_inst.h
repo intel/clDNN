@@ -31,8 +31,8 @@ struct typed_program_node<eltwise> : public typed_program_node_base<eltwise>
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
-    auto& input2() const { return get_dependency(1); }
+    decltype(auto) input() const { return get_dependency(0); }
+    decltype(auto) input2() const { return get_dependency(1); }
 };
 
 using eltwise_node = typed_program_node<eltwise>;
@@ -48,9 +48,6 @@ public:
 
 public:
     typed_primitive_inst(network_impl& network, eltwise_node const& node);
-
-    const memory& input_memory() const { return dep_memory(0); }
-    const memory& input2_memory() const { return dep_memory(1); }
 };
 
 using eltwise_inst = typed_primitive_inst<eltwise>;

@@ -177,6 +177,11 @@ struct padding
             && lhs._filling_value == rhs._filling_value;
     }
 
+    friend bool operator !=(const padding& lhs, const padding& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
     friend bool operator <(const padding& lhs, const padding& rhs)
     {
         if (lhs._filling_value != rhs._filling_value)
@@ -280,6 +285,41 @@ struct layout
     tensor get_buffer_size() const
     {
         return size.add(data_padding.lower_size()).add(data_padding.upper_size());
+    }
+
+    tensor get_pitches() const
+    {
+        auto sizes = get_buffer_size().sizes(format);
+        std::vector<tensor::value_type> pitches(sizes.size(), tensor::value_type(1));
+        std::partial_sum(sizes.rbegin(), sizes.rend() - 1, pitches.rbegin() + 1, std::multiplies<tensor::value_type>());
+        return{ format, pitches };
+    }
+
+    // @brief Calculates position within buffer of the data element pointed by the provided tensor.
+    // element == { 0,0,0,0 } means first no-padding (i.e. data) element
+    size_t get_linear_offset(tensor element = { 0,0,0,0 }) const
+    {
+        auto pitches = get_pitches();
+        auto l_padd = data_padding.lower_size();
+        auto u_padd = data_padding.upper_size();
+
+        if ((element.batch[0] < 0 && -element.batch[0] > l_padd.batch[0]) ||
+            (element.feature[0] < 0 && -element.feature[0] > l_padd.feature[0]) ||
+            (element.spatial[0] < 0 && -element.spatial[0] > l_padd.spatial[0]) ||
+            (element.spatial[1] < 0 && -element.spatial[1] > l_padd.spatial[1]) ||
+            (element.batch[0] >= size.batch[0] + u_padd.batch[0]) ||
+            (element.feature[0] >= size.feature[0] + u_padd.feature[0]) ||
+            (element.spatial[0] >= size.spatial[0] + u_padd.spatial[0]) ||
+            (element.spatial[1] >= size.spatial[1] + u_padd.spatial[1]))
+            throw std::invalid_argument("Requested to calculate linear offset for an element which lies outside of the buffer range.");
+
+        size_t linear_offset =
+            static_cast<size_t>(element.batch[0] + l_padd.batch[0]) * static_cast<size_t>(pitches.batch[0]) +
+            static_cast<size_t>(element.feature[0] + l_padd.feature[0]) * static_cast<size_t>(pitches.feature[0]) +
+            static_cast<size_t>(element.spatial[0] + l_padd.spatial[0]) * static_cast<size_t>(pitches.spatial[0]) +
+            static_cast<size_t>(element.spatial[1] + l_padd.spatial[1]) * static_cast<size_t>(pitches.spatial[1]);
+
+        return linear_offset;
     }
 
     /// @brief Get aligned linear size calculated as multiplication of all elements. 

@@ -26,13 +26,6 @@ namespace KernelSelector
             return false;
         }
 
-        const LRNParams& params = static_cast<const LRNParams&>(p);
-
-        if (params.activationFunc != ActivationFunction::NONE)
-        {
-            return false;
-        }
-
         return true;
     }
 

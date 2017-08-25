@@ -15,45 +15,27 @@
 */
 
 #include "crop_inst.h"
-#include "kernel.h"
-#include "events_waiter.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "error_handler.h"
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural
+struct crop_gpu : typed_primitive_gpu_impl<crop>
 {
+    using parent = typed_primitive_gpu_impl<crop>;
+    using parent::parent;
 
-struct crop_gpu : typed_primitive_impl<crop>
-{
-    const crop_node& outer;
-    gpu::kernel _kernel;
+protected:
 
-    crop_gpu(const crop_node& arg, const kernel_selector::kernel_data& kd)
-        : outer(arg)
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
+    virtual bool optimized_out(crop_inst& instance) const override
     {
-        _kernel_data = kd;
+        return
+            parent::optimized_out(instance) || _outer.can_be_optimized();
     }
 
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, crop_inst& instance) override
-    {
-        if (outer.can_be_optimized())
-        {
-            if (events.size() == 1)
-                return events[0];
-
-            return neural::gpu::events_waiter(outer.get_program().get_engine()->get_context()).run(events);
-        }
-
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
-        args.inputs = { &instance.input_memory() };
-        args.output = &instance.output_memory();
-
-        return _kernel.run(_kernel_data.kernels[0], events, args);
-    }
+public:
 
     static primitive_impl* create(const crop_node& arg) 
     { 
@@ -68,10 +50,7 @@ struct crop_gpu : typed_primitive_impl<crop>
         auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
 
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto crop = new crop_gpu(arg, best_kernels[0]);
 
@@ -84,10 +63,10 @@ namespace {
         attach() {
             auto val_fw = crop_gpu::create;
 
-            implementation_map<crop>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::yxfb), val_fw);
-            implementation_map<crop>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::yxfb), val_fw);
-            implementation_map<crop>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f32, format::bfyx), val_fw);
-            implementation_map<crop>::add(std::make_tuple(cldnn::engine_types::ocl, data_types::f16, format::bfyx), val_fw);
+            implementation_map<crop>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), val_fw);
+            implementation_map<crop>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw);
+            implementation_map<crop>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
+            implementation_map<crop>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
         }
         ~attach() {}
     };
@@ -95,4 +74,4 @@ namespace {
     attach attach_impl;
 
 }
-} // namespace neural
+} }

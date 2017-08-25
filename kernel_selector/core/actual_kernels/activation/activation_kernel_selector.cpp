@@ -23,7 +23,7 @@ namespace KernelSelector
     ActivationKernelSelctor::ActivationKernelSelctor()
     {
         Attach<ActivationKernelRef>();
-        //Attach<ActivationKernelOpt>(); we need to evaluate it when we will have some better tests
+        Attach<ActivationKernelOpt>();
     }
 
     KernelsData ActivationKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const

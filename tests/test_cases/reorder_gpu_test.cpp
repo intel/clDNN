@@ -717,6 +717,110 @@ TEST(reorder_gpu_f32, basic_bfyx_to_yxfb_input_padding)
 
 }
 
+TEST(reorder_gpu_opt, basic_remove_redundant)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{ 1, 2, 2, 1 } });
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        reorder("r1", "in", format::bfyx, data_types::f32),
+        reorder("r2", "r1", format::yxfb, data_types::f32)
+    };
+
+    build_options opts;
+    opts.set_option(build_option::debug(true)); //to enable query for optimized memory
+    opts.set_option(build_option::optimize_data(true));
+
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+    auto outputs = net.execute();
+
+    EXPECT_TRUE(outputs.count("r1") == 0);
+    ASSERT_TRUE(outputs.count("r2") == 1);
+    EXPECT_TRUE(outputs.at("r2").get_memory().get_layout().format == format::yxfb);
+}
+
+TEST(reorder_gpu_opt, basic_remove_redundant_due_to_implicit_reorders)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::f32, format::yxfb, tensor{ 1, 2, 2, 1 } });
+    memory weights = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{ 1, 2, 2, 1 } });
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        convolution("conv", "in", { "weights" }),
+        data("weights", weights),
+        reorder("r1", "conv", format::bfyx, data_types::f32) //optimize data should add conversion from yxfb to bfyx and 'conv' should output data in bfyx as well (IE case)
+    };
+
+    build_options opts;
+    opts.set_option(build_option::debug(true)); //to enable query for optimized memory
+    opts.set_option(build_option::optimize_data(true));
+
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+    auto outputs = net.execute();
+
+    EXPECT_TRUE(outputs.count("r1") == 0);
+    ASSERT_TRUE(outputs.count("conv") == 1);
+    EXPECT_TRUE(outputs.at("conv").get_memory().get_layout().format == format::bfyx);
+}
+
+TEST(reorder_gpu_opt, basic_remove_redundant_output_due_to_implicit_reorders)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::f32, format::yxfb, tensor{ 1, 2, 2, 1 } });
+    memory weights = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{ 1, 2, 2, 1 } });
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        convolution("conv", "in",{ "weights" }),
+        data("weights", weights),
+        reorder("r1", "conv", format::bfyx, data_types::f32) //optimize data should add conversion from yxfb to bfyx and 'conv' should output data in bfyx as well (IE case)
+    };
+
+    build_options opts;
+
+    //we need to check if r1 will be successfully opimized and still we should be able to query for r1's output which should point to conv's output (note conv cannot be marked as output in this case)
+    opts.set_option(build_option::outputs({ "r1" }));
+    opts.set_option(build_option::optimize_data(true));
+
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+    auto outputs = net.execute();
+
+    EXPECT_TRUE(outputs.count("conv") == 0);
+    ASSERT_TRUE(outputs.count("r1") == 1);
+    EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
+}
+
+TEST(reorder_gpu_opt, non_trivial_remove_redundant)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::f32, format::yxfb, tensor{ 1, 1, 5, 2 } });
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        reorder("r1", "in", format::bfyx, data_types::f32)
+    };
+
+    build_options opts;
+
+    opts.set_option(build_option::debug(true));
+    opts.set_option(build_option::optimize_data(true));
+
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+    auto outputs = net.execute();
+
+    ASSERT_TRUE(outputs.count("in") == 1);
+    ASSERT_TRUE(outputs.count("r1") == 1);
+    EXPECT_TRUE(outputs.at("r1").get_memory().is_the_same_buffer(outputs.at("in").get_memory()));
+    EXPECT_TRUE(outputs.at("in").get_memory().get_layout().format == format::yxfb);
+    EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
+}
+
 using namespace cldnn;
 
 class reorder_test : public tests::generic_test

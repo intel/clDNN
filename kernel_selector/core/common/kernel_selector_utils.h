@@ -78,12 +78,44 @@ namespace KernelSelector { namespace
         return{dims, t.GetDType(), t.GetLayout()};
     }
 
+    inline bool CovolutionCheckInput(const Params& p, const OptionalParams& o)
+    {
+        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
+        const ConvolutionOptionalParams& optParams = static_cast<const ConvolutionOptionalParams&>(o);
+
+        const auto req_input = GetConvolutionBFYXPaddedTensor(params);
+        const bool bProperInputDesc = CheckConvolutionPaddedInputDesc(params, req_input);
+        const bool bInputPadded = optParams.allowInputReordering || bProperInputDesc;
+
+        if (!bInputPadded)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    inline bool CovolutionUpdateInputParams(ConvolutionParams& params)
+    {
+        const auto req_input = GetConvolutionBFYXPaddedTensor(params);
+        const bool bProperInputDesc = CheckConvolutionPaddedInputDesc(params, req_input);
+
+        if (!bProperInputDesc)
+        {
+            params.inputs[0] = req_input;
+            return true;
+        }
+
+        return false;
+    }
+
     inline WeightsType DataTypeToWeightsType(Datatype t)
     {
         switch (t)
         {
-        case Datatype::F16: return WeightsType::F16;
-        case Datatype::F32: return WeightsType::F32;
+        case Datatype::INT8:    return WeightsType::INT8;
+        case Datatype::F16:     return WeightsType::F16;
+        case Datatype::F32:     return WeightsType::F32;
         default:
             return WeightsType::UNSUPPORTED;
         }
@@ -118,7 +150,7 @@ namespace KernelSelector { namespace
 
         if (!bProperWeights)
         {
-            if (!optParams.allowWeightsReorder)
+            if (!optParams.allowStaticInputReordering)
             {
                 return false;
             }

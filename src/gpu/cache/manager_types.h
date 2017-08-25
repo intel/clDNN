@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace neural { namespace gpu { namespace manager {
+namespace cldnn { namespace gpu { namespace manager {
 
 using primitive_id = std::string;
 

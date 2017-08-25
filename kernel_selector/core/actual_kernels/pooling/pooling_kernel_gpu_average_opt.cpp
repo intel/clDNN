@@ -108,26 +108,6 @@ namespace KernelSelector
 
     KernelsData PoolingKernelGPUAverageOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        const PoolingParams& orgParams = static_cast<const PoolingParams&>(params);
-        
-        DispatchData runInfo = SetDefault(orgParams);
-
-        KernelData kd = KernelData::Default<PoolingParams>(params);
-
-        auto cldnn_jit = GetJitConstants(orgParams, runInfo);
-        auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
-
-        kd.estimatedTime = FORCE_PRIORITY_8;
-
-        return{ kd };
+        return GetCommonKernelsData(params, options, FORCE_PRIORITY_7);
     }
 }

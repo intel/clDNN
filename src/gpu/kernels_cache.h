@@ -20,6 +20,7 @@
 #include <mutex>
 #include <vector>
 #include <memory>
+#include <atomic>
 
 namespace cl {
 class Kernel;
@@ -35,18 +36,22 @@ namespace kernel_selector
     using kernel_string = KernelSelector::KernelString;
 }
 
-namespace neural {namespace gpu {
+namespace cldnn { namespace gpu {
+
 class gpu_toolkit;
 
-class kernels_cache {
+class kernels_cache
+{
 public:
     using source_code = std::vector<std::string>;
 
     struct program_code
     {
-        source_code source;
+        std::vector<source_code> source;
+        uint32_t kernels_counter = 0;
         std::string options;
-        bool dump_custom_program;
+        bool dump_custom_program = false;
+		bool one_time = false;
         std::map<std::string, std::string> entry_point_to_id;
     };
 
@@ -55,6 +60,7 @@ public:
         std::shared_ptr<kernel_selector::kernel_string> kernel_strings;
         std::string id;
         bool dump_custom_program;
+		bool one_time_kernel;
     };
 
     typedef std::string kernel_id;
@@ -67,7 +73,9 @@ private:
     gpu_toolkit& _context;
     std::mutex _mutex;
     kernels_code _kernels_code;
+    std::atomic<bool> _pending_compilation{ false };
     std::map<std::string, kernel_type> _kernels;
+    std::map<std::string, kernel_type> _one_time_kernels; // These kernels are intended to be executed only once (can be removed later from the cache).
 
     sorted_code get_program_source(const kernels_code& kernels_source_code) const;
     friend class gpu_toolkit;
@@ -75,8 +83,11 @@ private:
     kernels_map build_program(const program_code& pcode) const;
 
 public:
-    kernel_id set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program);
-    kernel_type get_kernel(kernel_id id);
+    kernel_id set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program, bool one_time_kernel);
+    kernel_type get_kernel(kernel_id id, bool one_time_kernel);
+
+    //forces compilation of all pending kernels/programs
+    void build_all();
 };
 
 }}

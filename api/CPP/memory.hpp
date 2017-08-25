@@ -39,6 +39,10 @@ template<typename T> struct pointer;
 /// @details Usually allocated by @ref engine except cases when attached to user-allocated buffer.
 struct memory
 {
+    friend struct data;
+    friend struct network;
+    friend struct network_output;
+
     /// Allocate memory on @p engine using specified @p layout
     static memory allocate(const engine& engine, const layout& layout)
     {
@@ -68,16 +72,6 @@ struct memory
         {
             return cldnn_attach_memory(layout, ptr, data_size, status);
         });
-    }
-
-    // TODO remove cldnn::memory usage from the implementation code
-    /// @brief Constructs memory object form C API ::cldnn_memory handler
-    memory(cldnn_memory data, bool add_ref = false)
-        :_impl(data), _layout(get_layout_impl(data))
-        ,_size(_layout.bytes_count()), _count(_layout.count())
-    {
-        if (!_impl) throw std::invalid_argument("data");
-        if (add_ref) retain();
     }
 
     memory(const memory& other)
@@ -156,6 +150,14 @@ private:
         {
             return cldnn_get_memory_layout(mem, status);
         });
+    }
+
+    memory(cldnn_memory data)
+        :_impl(data), _layout(get_layout_impl(data))
+        , _size(_layout.bytes_count()), _count(_layout.count())
+    {
+        if (_impl == nullptr)
+            throw std::invalid_argument("implementation pointer should not be null");
     }
 
     void retain()

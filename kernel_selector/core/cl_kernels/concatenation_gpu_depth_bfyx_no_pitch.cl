@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 //
 // In this kernel we are processing "fyx" as flatten 1D "elements".
@@ -24,11 +24,11 @@
 // must be 8 as long as we use block_read8/write8
 #define ELEMENTS_PER_WORK_ITEM 8
 #define WORK_GROUP_SIZE 16
-#define INPUT_ELEMENTS_COUNT (INPUT0_LENGTH/INPUT0_BATCH_NUM)
+#define INPUT0_ELEMENTS_COUNT (INPUT0_LENGTH/INPUT0_BATCH_NUM)
 
 __attribute__((reqd_work_group_size(1, WORK_GROUP_SIZE, 1)))
 __attribute__((intel_reqd_sub_group_size(WORK_GROUP_SIZE)))
-KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global float* output)
+KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global float* output, uint output_offset_in_concat_axis)
 {
     const uint batch_id = get_group_id(0);
 
@@ -38,9 +38,9 @@ KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global
 
     const uint element_group_offset = element_group_id * WORK_GROUP_SIZE * ELEMENTS_PER_WORK_ITEM;
 
-    const uint input_offset = INPUT_OFFSET + element_group_offset + batch_id * INPUT0_BATCH_PITCH;
+    const uint input_offset = INPUT0_OFFSET + element_group_offset + batch_id * INPUT0_BATCH_PITCH;
     const uint output_batch_offset = batch_id * OUTPUT_BATCH_PITCH;
-    const uint output_offset = OUTPUT_OFFSET + element_group_offset + output_batch_offset;
+    const uint output_offset = OUTPUT_OFFSET + element_group_offset + output_batch_offset + output_offset_in_concat_axis*OUTPUT_PITCHES[CONCAT_AXIS_INDEX];
 
     //Check if current group in batch starts from 16-byte aligned pos. If not then move block read to 16-byte aligned position.
     //Requirement for intel_sub_group_block_write8.
@@ -52,7 +52,7 @@ KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global
         align_offset = next_aligned_pos - group_start_pos;
     }
 
-    if(element_group_offset + align_offset + WORK_GROUP_SIZE * ELEMENTS_PER_WORK_ITEM < INPUT_ELEMENTS_COUNT)
+    if(element_group_offset + align_offset + WORK_GROUP_SIZE * ELEMENTS_PER_WORK_ITEM < INPUT0_ELEMENTS_COUNT)
     {
         float8 in = as_float8(intel_sub_group_block_read8((const __global uint*)input + input_offset + align_offset));
         intel_sub_group_block_write8((__global uint*)output + output_offset + align_offset, as_uint8(in));
@@ -70,15 +70,15 @@ KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global
         uint element_offset_in_workitem = element_offset - element_group_offset;
         for(uint i = 0; i < ELEMENTS_PER_WORK_ITEM; i++)
         {
-            if(element_offset + i >= INPUT_ELEMENTS_COUNT)
+            if(element_offset + i >= INPUT0_ELEMENTS_COUNT)
                 return;
 
-            output[output_offset + element_offset_in_workitem] = input[input_offset + element_offset_in_workitem];
+            output[output_offset + element_offset_in_workitem] = ACTIVATION(input[input_offset + element_offset_in_workitem], NL_M, NL_N);
             element_offset_in_workitem++;
         }
     }
 }
 
-#undef INPUT_ELEMENTS_COUNT
+#undef INPUT0_ELEMENTS_COUNT
 #undef WORK_GROUP_SIZE
 #undef ELEMENTS_PER_WORK_ITEM

@@ -18,6 +18,7 @@
 #include "deconvolution_inst.h"
 #include "primitive_type_base.h"
 #include "sliding_window_utils.h"
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -42,8 +43,8 @@ layout deconvolution_inst::calc_output_layout(deconvolution_node const& node)
 
     if (desc->with_output_size)
     {
-        if (desc->output_size.spatial[0] <= 0 || desc->output_size.spatial[1] <= 0)
-            throw std::invalid_argument("User-defined size of output layout must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined output spatial X", desc->output_size.spatial[0], "value 0", 0, "User-defined size of output layout must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined output spatial Y", desc->output_size.spatial[1], "value 0", 0, "User-defined size of output layout must be positive (>= 1)");
 
         tensor output_size(input_layout.size.batch[0], number_of_features,
                            desc->output_size.spatial[0], desc->output_size.spatial[1]);
@@ -65,7 +66,7 @@ std::string deconvolution_inst::to_string(deconvolution_node const& node)
 {
     std::stringstream           primitive_description;
     auto desc                   = node.get_primitive();
-    auto input                  = node.input();
+    auto& input                 = node.input();
     auto strd                   = desc->stride;
     auto activation             = desc->with_activation ? " true" : "false";
     auto ud_out_size            = desc->with_output_size ? " true" : "false";
@@ -109,12 +110,10 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
     auto input_inst = input_memory().get_layout();
     auto output_inst = output_memory().get_layout();
 
-    if (input_inst.size.raw.size() != output_inst.size.raw.size())
-        throw std::runtime_error("Input/output number of dimension does not match.");
-    if (stride.raw.size() != output_inst.size.raw.size())
-        throw std::runtime_error("Stride/output number of dimension does not match.");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_inst.size.raw.size(), "output size", output_inst.size.raw.size(), "Input/output number of dimension does not match.");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Stride size", stride.raw.size(), "output size", output_inst.size.raw.size(), "Stride/output number of dimension does not match.");
 
-    auto split = argument.split();
+    auto split = node.get_split();
     for (decltype(split) j = 0; j < split; j++)
     {
         auto& filter_mem = weights_memory(j);
@@ -124,24 +123,20 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
         if (argument.bias.size() != 0)
         {
             auto& bias_inst = bias_memory(j).get_layout();
-            if (bias_inst.size.batch[0] != 1 && bias_inst.size.feature[0] != 1 && bias_inst.size.spatial[1] != 1)
-                throw std::runtime_error("Biases isn't 1D vector."); // b=1, f=1
-            if (bias_inst.size.spatial[0] != output_size.feature[0] / split)
-                throw std::runtime_error("Biases/output feature maps number does not match.");
-        }
-        if (node.get_output_layout().data_padding.filling_value() != 0.0f)
-            throw std::runtime_error("Wnknown padding mode.");
-        if (input_offset.raw.size() != input_inst.size.raw.size())
-            throw std::runtime_error("Input offset/input number of dimension does not match.");
-        if (1 != output_size.feature.size())
-            throw std::runtime_error("Only one-dimensional features are supported");
-        if (1 != output_size.batch.size())
-            throw std::runtime_error("Only one-dimensional batch size is supported");
-        if (2 != filter_inst.size.spatial.size())
-            throw std::runtime_error("Weights have to have 2 dimensions in spatial domain.");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias batch[0]", bias_inst.size.batch[0], "dimension size", 1, "Batch[0] of bias should be 1. Bias isn't 1D vector.");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias feature[0]", bias_inst.size.feature[0], "dimension size", 1, "Feature[0] of bias should be 1. Bias isn't 1D vector.");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[1]", bias_inst.size.spatial[1], "dimension size", 1, "Spatial[1] of bias should be 1. Bias isn't 1D vector.");
 
-        if ((input_inst.size.feature[0] - input_offset.feature[0]) / split < filter_inst.size.feature[0])
-            throw std::runtime_error("Weights/input feature maps number does not match.");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[0]", bias_inst.size.spatial[0], "output feature size / split", output_size.feature[0] / split, "Biases/output feature maps number does not match.");
+        }
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "deconvolution padding filling value", node.get_output_layout().data_padding.filling_value(), "padding mode", 0.0f, "Unknown padding mode in deconvolution.");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Input offset size", input_offset.raw.size(), "input number of dimensions", input_inst.size.raw.size(), "");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Output feature size", output_size.feature.size(), "expected output feature size", 1,"Only one-dimensional features are supported" );
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Output feature size", output_size.feature.size(), "expected output feature size", 1, "Only one-dimensional features are supported");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Output batch size", output_size.batch.size(), "expected output batch size", 1, "Only one-dimensional features are supported");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Weights spatial size", filter_inst.size.spatial.size(), "expected deconvolution weights spatial size", 2, "Weights have to have 2 dimensions in spatial domain.");
+
+        CLDNN_ERROR_LESS_THAN(node.id(), "Weights feature maps number", (input_inst.size.feature[0] - input_offset.feature[0]) / split, "input feature maps number", filter_inst.size.feature[0], "Weights/ifm mimsmatch");
     }
 }
 }

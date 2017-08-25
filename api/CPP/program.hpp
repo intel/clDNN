@@ -37,11 +37,6 @@ enum class build_option_type
     /// @brief Allow primitives fusing during program build (default: false).
     fusing = cldnn_build_option_fusing,
 
-    /// @brief Enable primitives profiling (default: false).
-    /// @details This option allows to collect @ref profiling_interval for every program output.
-    /// This option reduces performance.
-    profiling = cldnn_build_option_profiling,
-
     /// @brief Enable implicit reordering for user inputs (default: false).
     optimize_data = cldnn_build_option_optimize_data,
 
@@ -50,7 +45,43 @@ enum class build_option_type
     debug = cldnn_build_option_debug,
 
     /// @brief User selected list of program outputs.
-    outputs = cldnn_build_option_outputs
+    outputs = cldnn_build_option_outputs,
+
+    /// @brief Tuning config (default: Tuning is disabled).
+    /// @details The tuner will automatically find the optimal kernel/config for each node in the graph,
+    /// by running multiple implementations and configurations per node and storing the optimal one in cache.
+    /// Expect long execution time in the first run. 
+    /// After the first run a cache with the tuning results will be created in the path provided.
+    /// This cache will be used in the next runs.
+    tuning_config = cldnn_build_option_tuning_config,
+
+    /// @brief Specifies a directory to which stages of network compilation should be dumped. (default: empty, i.e. no dumping)
+    graph_dumps_dir = cldnn_build_option_graph_dumps_dir
+};
+
+/// @brief Tuning mode.
+enum class tuning_mode
+{
+    /// @brief Tuning is disabled.
+    tuning_disabled = cldnn_tuning_disabled,
+
+    /// @brief Tuning using the cached data (no on-line tuning for non-existing data).
+    tuning_use_cache = cldnn_tuning_use_cache,
+
+    /// @brief Tuning using the cached data if exist, tune and update cache otherwise.
+    tuning_tune_and_cache = cldnn_tuning_tune_and_cache
+};
+
+/// @brief Tuning configuration.
+struct tuning_config_options
+{
+    tuning_mode mode;
+    std::string cache_file_path;
+
+    tuning_config_options() :
+        mode(tuning_mode::tuning_disabled),
+        cache_file_path("")
+    {}
 };
 
 /// @brief Represents user-provided program build option.
@@ -58,11 +89,6 @@ struct build_option
 {
     /// @brief Allow primitives fusing during program build (default: false).
     static std::shared_ptr<const build_option> fusing(bool enable = false);
-
-    /// @brief Enable primitives profiling (default: false).
-    /// @details This option allows to collect @ref profiling_interval for every program output.
-    /// This option reduces performance.
-    static std::shared_ptr<const build_option> profiling(bool enable = false);
 
     /// @brief Enable implicit reordering for user inputs (default: false).
     static std::shared_ptr<const build_option> optimize_data(bool enable = false);
@@ -73,6 +99,17 @@ struct build_option
 
     /// @brief User selected list of program outputs.
     static std::shared_ptr<const build_option> outputs(const std::vector<primitive_id>& outs);
+
+    /// @brief Tuning configuration (default: false).
+    /// @details This option will automatically find the optimal kernel/config for each node in the graph,
+    /// by running multiple implementations and configurations per node and storing the optimal one in cache.
+    /// Expect long execution time in the first run (unless the cache only mode is enabled). 
+    /// After the first run a cache with the tuning results will be created in the path provided.
+    /// This cache will be used in the next runs.
+    static std::shared_ptr<const build_option> tuning_config(const tuning_config_options& config = tuning_config_options());
+
+    /// @brief Specifies a directory to which stages of network compilation should be dumped (default: empty, i.e. no dumping)
+    static std::shared_ptr<const build_option> graph_dumps_dir(const std::string& dir_path);
 
     virtual ~build_option() = default;
 
@@ -167,6 +204,86 @@ private:
     }
 };
 
+/// @brief @ref build_option specialization for tuning config.
+struct build_option_tuning_config : build_option
+{
+    /// @brief Tuning configuration
+    const tuning_config_options config;
+
+    /// @brief Constructs tuning config build option.
+    /// @param tuning_config Configuration for the tuning.
+    explicit build_option_tuning_config(const tuning_config_options& tuning_config) :
+        config(tuning_config),
+        config_ref({ static_cast<int32_t>(config.mode), config.cache_file_path.c_str() })
+    {}
+
+    /// @brief Constructs tuning config build option from C API @ref ::cldnn_build_option.
+    explicit build_option_tuning_config(const cldnn_build_option& value)
+        : build_option_tuning_config(make_config_from_ref(value))
+    {
+        assert(value.type == static_cast<int32_t>(cldnn_build_option_tuning_config));
+    }
+
+private:
+    /// @brief Returns build_option_type::tuning_config.
+    build_option_type get_type() const override { return build_option_type::tuning_config; }
+    /// @brief Returns pointer to @ref cldnn_tuning_config
+    const void* get_data() const override { return &config_ref; }
+
+    build_option_tuning_config(const build_option_tuning_config& other) = delete;
+    build_option_tuning_config& operator=(const build_option_tuning_config& other) = delete;
+
+    const cldnn_tuning_config config_ref;
+
+    static tuning_config_options make_config_from_ref(const cldnn_build_option& value)
+    {
+        if (value.type != cldnn_build_option_tuning_config) throw std::invalid_argument("option type does not match: should be 'tuning_config'");
+        if (value.data == nullptr) throw std::invalid_argument("Tuning config data is empty");
+        auto refs = reinterpret_cast<const cldnn_tuning_config*>(value.data);
+        tuning_config_options result;
+        result.mode = tuning_mode(refs->mode);
+        result.cache_file_path = std::string(refs->cache_file_path);
+        return result;
+    }
+};
+
+/// @brief @ref build_option specialization for selecting a directory.
+template<build_option_type OptType>
+struct build_option_directory : build_option
+{
+    const std::string directory_path;
+
+    /// @brief Constructs option.
+    /// @param outs List of ouput ids (names)
+    explicit build_option_directory(const std::string& dir_path)
+        : directory_path(dir_path)
+    {}
+
+    /// @brief Constructs from C API @ref ::cldnn_build_option.
+    explicit build_option_directory(const cldnn_build_option& value)
+        : directory_path(from_c_value(value))
+    {}
+
+private:
+    /// @brief Returns build_option_type::graph_dumps_dir.
+    build_option_type get_type() const override { return build_option_type::graph_dumps_dir; }
+    /// @brief Returns null terminated C string.
+    const void* get_data() const override { return (directory_path.empty() ? nullptr : directory_path.c_str()); }
+
+    build_option_directory(const build_option_directory& other) = delete;
+    build_option_directory& operator=(const build_option_directory& other) = delete;
+
+    static std::string from_c_value(const cldnn_build_option& value)
+    {
+        if (value.type != static_cast<int32_t>(OptType))
+            throw std::invalid_argument("option type does not match");
+        if (value.data == nullptr)
+            return{};
+
+        return{ static_cast<const char*>(value.data) };
+    }
+};
+
 namespace detail
 {
     /// @brief Helper template to convert @ref build_option_type value to particular @ref build_option class.
@@ -189,16 +306,6 @@ namespace detail
         static std::shared_ptr<const build_option> make_option(const cldnn_build_option& option)
         {
             assert(option.type == cldnn_build_option_fusing);
-            return std::make_shared<object_type>(option);
-        }
-    };
-    template<> struct build_option_traits<build_option_type::profiling>
-    {
-        typedef build_option_bool<build_option_type::profiling> object_type;
-        static std::shared_ptr<const build_option> make_default() { return build_option::profiling(); }
-        static std::shared_ptr<const build_option> make_option(const cldnn_build_option& option)
-        {
-            assert(option.type == cldnn_build_option_profiling);
             return std::make_shared<object_type>(option);
         }
     };
@@ -232,6 +339,26 @@ namespace detail
             return std::make_shared<object_type>(option);
         }
     };
+    template<> struct build_option_traits<build_option_type::tuning_config>
+    {
+        typedef build_option_tuning_config object_type;
+        static std::shared_ptr<const build_option> make_default() { return build_option::tuning_config(); }
+        static std::shared_ptr<const build_option> make_option(const cldnn_build_option& option)
+        {
+            assert(option.type == cldnn_build_option_tuning_config);
+            return std::make_shared<object_type>(option);
+        }
+    };
+    template<> struct build_option_traits<build_option_type::graph_dumps_dir>
+    {
+        typedef build_option_directory<build_option_type::graph_dumps_dir> object_type;
+        static std::shared_ptr<const build_option> make_default() { return build_option::graph_dumps_dir({}); }
+        static std::shared_ptr<const build_option> make_option(const cldnn_build_option& option)
+        {
+            assert(option.type == cldnn_build_option_graph_dumps_dir);
+            return std::make_shared<object_type>(option);
+        }
+    };
 #endif
 } // namespace detail
 
@@ -239,11 +366,6 @@ namespace detail
 inline std::shared_ptr<const build_option> build_option::fusing(bool enable)
 {
     return std::make_shared<build_option_bool<build_option_type::fusing>>(enable);
-}
-
-inline std::shared_ptr<const build_option> build_option::profiling(bool enable)
-{
-    return std::make_shared<build_option_bool<build_option_type::profiling>>(enable);
 }
 
 inline std::shared_ptr<const build_option> build_option::optimize_data(bool enable)
@@ -259,6 +381,16 @@ inline std::shared_ptr<const build_option> build_option::debug(bool enable)
 inline std::shared_ptr<const build_option> build_option::outputs(const std::vector<primitive_id>& outs)
 {
     return std::make_shared<build_option_outputs>(outs);
+}
+
+inline std::shared_ptr<const build_option> build_option::tuning_config(const tuning_config_options& config)
+{
+    return std::make_shared<build_option_tuning_config>(config);
+}
+
+inline std::shared_ptr<const build_option> build_option::graph_dumps_dir(const std::string& dir_path)
+{
+    return std::make_shared<build_option_directory<build_option_type::graph_dumps_dir>>(dir_path);
 }
 #endif
 
@@ -299,7 +431,7 @@ public:
     /// @brief Returns program build option for @p OptType
     template<build_option_type OptType>
     std::shared_ptr<const typename detail::build_option_traits<OptType>::object_type>
-        get()
+        get() const
     {
         using T = typename detail::build_option_traits<OptType>::object_type;
         for (auto& option : _options)
@@ -345,14 +477,16 @@ private:
         {
         case cldnn_build_option_fusing:
             return  detail::build_option_traits<build_option_type::fusing>::make_option(option);
-        case cldnn_build_option_profiling:
-            return detail::build_option_traits<build_option_type::profiling>::make_option(option);
         case cldnn_build_option_optimize_data:
             return detail::build_option_traits<build_option_type::optimize_data>::make_option(option);
         case cldnn_build_option_debug:
             return detail::build_option_traits<build_option_type::debug>::make_option(option);
         case cldnn_build_option_outputs:
             return detail::build_option_traits<build_option_type::outputs>::make_option(option);
+        case cldnn_build_option_tuning_config:
+            return detail::build_option_traits<build_option_type::tuning_config>::make_option(option);
+        case cldnn_build_option_graph_dumps_dir:
+            return detail::build_option_traits<build_option_type::graph_dumps_dir>::make_option(option);
         default: throw std::out_of_range("unsupported build option type");
         }
     }
@@ -413,7 +547,8 @@ private:
 
     program(::cldnn_program impl) : _impl(impl)
     {
-        if (_impl == nullptr) throw std::invalid_argument("implementation pointer should not be null");
+        if (_impl == nullptr)
+            throw std::invalid_argument("implementation pointer should not be null");
     }
 
     void retain()

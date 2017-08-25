@@ -29,9 +29,9 @@ struct typed_program_node<fully_connected> : public typed_program_node_base<full
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
-    auto& weights() const { return get_dependency(1); }
-    auto& bias() const { return get_dependency(2); }
+    decltype(auto) input() const { return get_dependency(0); }
+    decltype(auto) weights() const { return get_dependency(1); }
+    decltype(auto) bias() const { return get_dependency(2); }
     bool bias_term() const { return !get_primitive()->bias.empty(); }
 };
 
@@ -49,9 +49,8 @@ public:
 public:
     typed_primitive_inst(network_impl& network, fully_connected_node const& node);
 
-    const memory& input_memory() const { return dep_memory(0); }
-    const memory& weights_memory() const { return dep_memory(1); }
-    const memory& bias_memory() const { return dep_memory(2); }
+    decltype(auto) weights_memory() const { return dep_memory(1); }
+    decltype(auto) bias_memory() const { return dep_memory(2); }
     bool bias_term() const { return !argument.bias.empty(); }
 };
 

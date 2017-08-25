@@ -28,6 +28,6 @@ namespace KernelSelector {
 
         virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
-        virtual DispatchData SetDefault(const ConcatenationParams& params) const;
+        virtual DispatchData SetDefault(const ConcatenationParams& params) const override;
     };
 }

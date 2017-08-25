@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
-KERNEL (reshape_padding)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
+KERNEL (reshape_ref)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
 {
     const uint d1 = get_global_id(0);
     const uint d2 = get_global_id(1);
@@ -28,7 +28,7 @@ KERNEL (reshape_padding)(const __global UNIT_TYPE* input, __global UNIT_TYPE* ou
     const uint od3 = linear % OUTPUT_SIZES[2]; linear /= OUTPUT_SIZES[2];
     const uint od4 = linear;
     
-    uint input_offset =  INPUT_OFFSET +
+    uint input_offset =  INPUT0_OFFSET +
                          d1*INPUT0_PITCHES[0] +
                          d2*INPUT0_PITCHES[1] +
                          d3*INPUT0_PITCHES[2] +
@@ -39,5 +39,5 @@ KERNEL (reshape_padding)(const __global UNIT_TYPE* input, __global UNIT_TYPE* ou
                          od3*OUTPUT_PITCHES[2] +
                          od4*OUTPUT_PITCHES[3];
     
-    output[output_offset] = input[input_offset];
+    output[output_offset] = ACTIVATION(input[input_offset], NL_M ,NL_N);
 }

@@ -32,10 +32,9 @@ class typed_primitive_inst<lrn> : public typed_primitive_inst_base<lrn>
 public:
     static layout calc_output_layout(lrn_node const& node);
     static std::string to_string(lrn_node const& node);
+
 public:
     typed_primitive_inst(network_impl& network, lrn_node const& node);
-
-    const memory& input_memory() const { return dep_memory(0); }
 };
 
 using lrn_inst = typed_primitive_inst<lrn>;

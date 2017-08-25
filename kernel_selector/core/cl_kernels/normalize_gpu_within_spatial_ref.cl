@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 #if FP16_UNIT_USED
     #define UNIT_CVT_FUNC(val) convert_half(val)
@@ -28,16 +28,16 @@ KERNEL (normalize_gpu_within_spatial_bfyx)(const __global UNIT_TYPE* input, __gl
     const uint y = get_global_id(1);
     const uint b = get_global_id(2);
 
-    const uint input_first = INPUT_OFFSET + b*INPUT_BATCH_PITCH + y*INPUT_Y_PITCH + x*INPUT_X_PITCH;
+    const uint input_first = INPUT0_OFFSET + b*INPUT0_BATCH_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH;
 
     // Compute norm
     uint input_idx = input_first;
     float norm = EPSILON;
-    for (int i = 0; i < INPUT_FEATURE_NUM; i++)
+    for (int i = 0; i < INPUT0_FEATURE_NUM; i++)
     {
         float value = (float)input[input_idx];
         norm = mad(value, value, norm);
-        input_idx += INPUT_FEATURE_PITCH;
+        input_idx += INPUT0_FEATURE_PITCH;
     }
     norm = native_powr(norm, -0.5f);
 
@@ -45,19 +45,19 @@ KERNEL (normalize_gpu_within_spatial_bfyx)(const __global UNIT_TYPE* input, __gl
 
     // Scale the input
     input_idx = input_first;
-    for (int f = 0; f < INPUT_FEATURE_NUM; f++)
+    for (int f = 0; f < INPUT0_FEATURE_NUM; f++)
     {
 #if SCALE_TABLE_FEATURE_NUM == 1
         const uint scale_index = 0;
-#elif INPUT_FEATURE_NUM <= SCALE_TABLE_FEATURE_NUM
+#elif INPUT0_FEATURE_NUM <= SCALE_TABLE_FEATURE_NUM
         const uint scale_index = f;
 #else
         const uint scale_index = f % SCALE_TABLE_FEATURE_NUM;
 #endif 
 
-        output[output_idx] = UNIT_CVT_FUNC(norm) * input[input_idx] * scale_input[scale_index];
+        output[output_idx] = ACTIVATION(UNIT_CVT_FUNC(norm) * input[input_idx] * scale_input[scale_index], NL_M, NL_N);
         output_idx += OUTPUT_FEATURE_PITCH;
-        input_idx += INPUT_FEATURE_PITCH;
+        input_idx += INPUT0_FEATURE_PITCH;
     }
 }
 

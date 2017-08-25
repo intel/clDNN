@@ -38,7 +38,7 @@ std::string generic_layer_inst::to_string(generic_layer_node const& node)
 {
     std::stringstream primitive_description;
     auto desc = node.get_primitive();
-    auto input = node.input();
+    auto& input = node.input();
     auto output_layout_data = desc->output_layout.data_type == data_types::f16 ? "f16" : "f32";
 
     primitive_description << "id: " << desc->id << ", type: generic_layer"

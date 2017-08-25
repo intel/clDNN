@@ -108,7 +108,7 @@ struct refcounted_obj_ptr
         return *this;
     }
 
-    ~refcounted_obj_ptr() { ptr_release(); }
+    ~refcounted_obj_ptr() { ptr_release(); _ptr = nullptr; }
 
     T* detach()
     {
@@ -151,4 +151,5 @@ private:
     void ptr_add_ref() { if (_ptr) _ptr->add_ref(); }
     void ptr_release() { if (_ptr) _ptr->release(); }
 };
+
 }

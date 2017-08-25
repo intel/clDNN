@@ -30,10 +30,16 @@ struct typed_program_node<reorder> : public typed_program_node_base<reorder>
 public:
     using parent::parent;
 
-    auto& input() const { return get_dependency(0); }
-    auto& mean() const { return get_dependency(1); }
+    decltype(auto) input() const { return get_dependency(0); }
+    decltype(auto) mean() const { return get_dependency(1); }
 
     bool has_mean() const { return !typed_desc()->mean.empty(); }
+
+    auto requires_reinterpret() const { return req_reinterpr; }
+    void requires_reinterpret(bool val) { req_reinterpr = (optimized && val); }
+
+private:
+    bool req_reinterpr = false;
 };
 
 using reorder_node = typed_program_node<reorder>;
@@ -50,10 +56,13 @@ public:
 public:
     typed_primitive_inst(network_impl& network, reorder_node const& node);
 
-    const memory& input_memory() const { return dep_memory(0); }
-    const memory& mean_memory() const { return dep_memory(1); }
+    decltype(auto) mean_memory() const { return dep_memory(1); }
 
     bool has_mean() const { return !argument.mean.empty(); }
+
+private:
+    void on_execute() override;
+    void reuse_input();
 };
 
 using reorder_inst = typed_primitive_inst<reorder>;

@@ -21,6 +21,8 @@
 #include "network_impl.h"
 #include "engine_impl.h"
 #include "jitter.h"
+#include "error_handler.h"
+
 #include <map>
 #include <sstream>
 
@@ -38,7 +40,7 @@ struct custom_gpu_primitive_gpu : typed_primitive_impl<custom_gpu_primitive>
     custom_gpu_primitive_gpu(const custom_gpu_primitive_node& arg, std::shared_ptr<kernel_selector::cl_kernel_data>& cl_kernel)
     : outer(arg)
     , cl_kernel(cl_kernel)
-    , _kernel(arg.get_program().get_engine()->get_context(), cl_kernel->kernelString, arg.get_program().get_engine()->get_context()->get_configuration().dump_custom_program)
+    , _kernel(arg.get_program().get_engine().get_context(), cl_kernel->kernelString, arg.get_program().get_engine().get_context()->get_configuration().dump_custom_program)
     {}
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, custom_gpu_primitive_inst& instance) override
@@ -98,14 +100,14 @@ static void add_layout_to_jit(kernel_selector::jit_constants& mem_consts, const 
 
     if (dataTypeToIndex.find(l.data_type) == dataTypeToIndex.end()) 
     {
-        throw std::runtime_error("Unhandled data type in layout");
+        CLDNN_ERROR_MESSAGE("add layout to jit", "Unhandled data type in layout");
     }
 
     mem_consts.AddConstant(KernelSelector::MakeJitConstant(name + "_TYPE", dataTypeToIndex.at(l.data_type)));
 
     // Format
     // #define INPUT0_FORMAT_BFYX
-    mem_consts.AddConstant(KernelSelector::MakeJitConstant(name + "_FORMAT_" + KernelSelector::toString(from_data_layout(l.format)), ""));
+    mem_consts.AddConstant(KernelSelector::MakeJitConstant(name + "_FORMAT_" + KernelSelector::toString(to_data_layout(l.format)), ""));
 
     // Padding (in elements)
     // #define INPUT0_LOWER_PADDING (uint[]) { 0, 0, 0, 0 }
@@ -153,10 +155,10 @@ static void add_layout_to_jit(kernel_selector::jit_constants& mem_consts, const 
     // Offset (in elements)
     // #define INPUT0_OFFSET 0
     int32_t offset =
-        (padded_sizes[0] * l.data_padding.lower_size().batch[0]) +
-        (padded_sizes[1] * l.data_padding.lower_size().feature[0]) +
-        (padded_sizes[2] * l.data_padding.lower_size().spatial[1]) +
-        (padded_sizes[3] * l.data_padding.lower_size().spatial[0]);
+        (pitches[0] * l.data_padding.lower_size().batch[0]) +
+        (pitches[1] * l.data_padding.lower_size().feature[0]) +
+        (pitches[2] * l.data_padding.lower_size().spatial[1]) +
+        (pitches[3] * l.data_padding.lower_size().spatial[0]);
     mem_consts.AddConstant(KernelSelector::MakeJitConstant(name + "_OFFSET", std::to_string(offset)));
 }
 

@@ -36,6 +36,26 @@ Accelerate Deep Learning Inference with Intel® Processor Graphics whitepaper [l
 
 ## Changelog
 
+### Drop 4.0
+	New features:
+	- OOOQ execution model implementation
+	- depthwise separable convolution implementation
+	- kernel auto-tuner implementation
+	Bug fixes:
+	- dump hidden layer fix
+	- run single layer fix
+	- reshape fix
+	UX:
+	- enable RTTI
+	- better error handling/reporting
+	Performance:
+	- lrn optimization
+	- dynamic pruning for sparse fc layers
+	- reorder optimization
+	- concatenation optimization
+	- eltwise optimization
+	- activation fusing 
+
 ### Drop 3.0
 	Added:
 	- kernel selector
@@ -73,7 +93,7 @@ are necessary, may provide feedback to guide you. When accepted, your pull
 request will be merged into our internal and GitHub repositories.
 
 ## System Requirements
-clDNN supports / is optimized for the following Intel® HD Graphics and Intel® Iris® Graphics:
+clDNN supports Intel® HD Graphics and Intel® Iris® Graphics and is optimized for
 - Codename *Skylake*:
     * Intel® HD Graphics 510 (GT1, *client* market)
     * Intel® HD Graphics 515 (GT2, *client* market)
@@ -88,7 +108,16 @@ clDNN supports / is optimized for the following Intel® HD Graphics and Intel® 
 - Codename *Apollolake*:
     * Intel® HD Graphics 500
     * Intel® HD Graphics 505
-
+- Codename *Skylake*:
+    * Intel® HD Graphics 610 (GT1, *client* market)
+	* Intel® HD Graphics 615 (GT2, *client* market)
+    * Intel® HD Graphics 620 (GT2, *client* market)
+	* Intel® HD Graphics 630 (GT2, *client* market)
+    * Intel® Iris® Graphics 640 (GT3e, *client* market)
+    * Intel® Iris® Graphics 650 (GT3e, *client* market)
+    * Intel® HD Graphics P630 (GT2, *server* market)
+    * Intel® Iris® Pro Graphics 630 (GT2, *server* market)
+	
 clDNN currently uses OpenCL™ with multiple Intel® OpenCL™ extensions and requires Intel® Graphics Driver to run.
 
 clDNN requires CPU with Intel® SSE/Intel® AVX support.

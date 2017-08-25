@@ -33,7 +33,6 @@ extern "C" {
 /// @brief Performs transposed convolution.
 /// Also supports built-in Relu @CLDNN_PRIMITIVE_DESC{activation} available by setting it in arguments.
 /// @details Deconvolution is similar to convolution layer with the weights flipped on the axis and stride and input padding parameters used in opposite sense as in convolution.
-/// Look into docs/size_offset_stride_padding.html for description how size, offsets, stride & padding parameter work.
 CLDNN_BEGIN_PRIMITIVE_DESC(deconvolution)
 /// @brief Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
 cldnn_tensor input_offset;

@@ -15,29 +15,16 @@
 */
 
 #include "eltwise_inst.h"
-#include "kernel.h"
+#include "primitive_gpu_base.h"
 #include "implementation_map.h"
-#include "eltwise/eltwise_kernel_selector.h"
+#include "error_handler.h"
 #include "kernel_selector_helper.h"
 
-using namespace cldnn;
+namespace cldnn { namespace gpu {
 
-namespace neural
+namespace
 {
-
-struct eltwise_gpu : typed_primitive_impl<eltwise>
-{
-    const eltwise_node& outer;
-    gpu::kernel _kernel;
-
-    eltwise_gpu(const eltwise_node& arg, const kernel_selector::kernel_data& kd)
-        : outer(arg)
-        , _kernel(arg.get_program().get_engine()->get_context(), kd.kernels[0].kernelString)
-    {
-        _kernel_data = kd;
-    }
-
-    static inline kernel_selector::eltwise_mode convect_to_eltwise_mode(eltwise_mode mode)
+    inline kernel_selector::eltwise_mode convect_to_eltwise_mode(eltwise_mode mode)
     {
         switch (mode)
         {
@@ -49,16 +36,12 @@ struct eltwise_gpu : typed_primitive_impl<eltwise>
             return kernel_selector::eltwise_mode::ADD;
         }
     }
+}
 
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, eltwise_inst& instance) override
-    {
-        gpu::kernel::kernel_arguments_data args;
-        args.scalars = &_kernel_data.kernels[0].scalars;
-        args.inputs = { &instance.input_memory(), &instance.input2_memory() };
-        args.output = &instance.output_memory();
-
-        return _kernel.run(_kernel_data.kernels[0], events, args);
-    }
+struct eltwise_gpu : typed_primitive_gpu_impl<eltwise>
+{
+    using parent = typed_primitive_gpu_impl<eltwise>;
+    using parent::parent;
 
     static primitive_impl* create(const eltwise_node& arg) 
     { 
@@ -68,7 +51,8 @@ struct eltwise_gpu : typed_primitive_impl<eltwise>
         ew_params.inputs.push_back(convert_data_tensor(arg.input2().get_output_layout()));
         
         const auto& primitive = arg.get_primitive();
-        convert_activation_func_params(primitive, ew_params);
+        if(primitive->with_activation)
+            convert_activation_func_params(primitive, ew_params);
 
         ew_params.eltwiseParams.operations.push_back({ 
             { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
@@ -77,10 +61,7 @@ struct eltwise_gpu : typed_primitive_impl<eltwise>
         auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
 
-        if (best_kernels.empty())
-        {
-            throw std::runtime_error("Cannot find a proper kernel for " + arg.id() +" with this arguments");
-        }
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto eltwise = new eltwise_gpu(arg, best_kernels[0]);
 
@@ -102,4 +83,4 @@ namespace {
     };
     attach attach_impl;
 }
-}
+} }

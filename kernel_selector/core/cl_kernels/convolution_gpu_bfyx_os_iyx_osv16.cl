@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "include/common.cl"
+#include "include/include_all.cl"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Just-in-time macro definitions:
@@ -25,7 +25,7 @@
 //  - STRIDE               - [tensor] Stride (only spatial). Factors that describe step size in X or Y dimension of
 //                           input position of application of convolution filter when next ouput value
 //                           (step 1 in in X or Y dimension of output) is computed.
-//  - INPUT_OFFSET         - [tensor] Offset between input and output (only spatial). Non-positive values that describe
+//  - INPUT0_OFFSET        - [tensor] Offset for the first element
 //                           initial offset input position of application of convolution filter and output position.
 //  - FP16_SUPPORTED       - [0/1] Value indicating whether device supports FP16 OpenCL extension (cl_khr_fp16).
 //  - FP16_UNIT_USED       - [0/1] Value indicating that current kernel should use FP16.
@@ -42,10 +42,8 @@
 gpu::make_jit_constant("OUTPUT_LIMIT",              output_size),
 gpu::make_jit_constant("FILTER",                    filter_mem.argument().size),
 gpu::make_jit_constant("FILTER_ARRAY_NUM",          split),
-gpu::make_jit_constant("FILTER_OUTPUT_FEATURE_NUM", "FILTER_FEATURE_NUM_0"),
-gpu::make_jit_constant("FILTER_INPUT_FEATURE_NUM",  "FILTER_FEATURE_NUM_1"),
-gpu::make_jit_constant("OUTPUT_BLOCK_WIDTH",           _kernel_data.block_width));
-gpu::make_jit_constant("OUTPUT_BLOCK_HEIGHT",          _kernel_data.block_height));
+gpu::make_jit_constant("OUTPUT_BLOCK_WIDTH",        _kernel_data.block_width));
+gpu::make_jit_constant("OUTPUT_BLOCK_HEIGHT",       _kernel_data.block_height));
 gpu::make_jit_constant("IN_BLOCK_ARRAY_SIZE",       _kernel_data.input_block_array_size));
 gpu::make_jit_constant("IN_BLOCK_WIDTH",            _kernel_data.input_block_width));
 gpu::make_jit_constant("PREFETCH",                  _kernel_data.prefetch));
@@ -59,9 +57,9 @@ if (_kernel_data.leftovers)
 // there are dummy threads added in z-dimension in count of LEFTOVERS. We need to take them into consideration
 // while calculating batch's id (see lines 86-87). Values calculated by dummy threads are discarded at line 210.
 #ifdef LEFTOVERS
-#define FEATURES_THREADS_PER_BATCH (FILTER_OUTPUT_FEATURE_NUM + LEFTOVERS)
+#define FEATURES_THREADS_PER_BATCH (FILTER_OFM_NUM + LEFTOVERS)
 #else
-#define FEATURES_THREADS_PER_BATCH (FILTER_OUTPUT_FEATURE_NUM)
+#define FEATURES_THREADS_PER_BATCH (FILTER_OFM_NUM)
 #endif
 
 __attribute__((intel_reqd_sub_group_size(SUB_GROUP_SIZE)))
@@ -88,17 +86,17 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
     UNIT_TYPE out[OUTPUT_BLOCK_WIDTH * OUTPUT_BLOCK_HEIGHT];
     UNIT_TYPE w[PREFETCH];
     uint in_addr;
-    uint weight_addr = fmg * FILTER_INPUT_FEATURE_NUM * FILTER_SIZE_X * FILTER_SIZE_Y * SUB_GROUP_SIZE + lid;
+    uint weight_addr = fmg * FILTER_IFM_NUM * FILTER_SIZE_X * FILTER_SIZE_Y * SUB_GROUP_SIZE + lid;
 
     for(int i = 0; i < (OUTPUT_BLOCK_WIDTH * OUTPUT_BLOCK_HEIGHT); i++) {
         out[i] = UNIT_VAL_ZERO;
     }
 
-    uint in_split_offset = split_idx * INPUT_FEATURE_PITCH * FILTER_INPUT_FEATURE_NUM;
-    in_addr = batch_idx * INPUT_BATCH_PITCH;
-    in_addr += in_split_offset + INPUT_OFFSET_WITH_PADDING + or * STRIDE_SIZE_Y * INPUT_Y_PITCH + oc * STRIDE_SIZE_X + lid;
+    uint in_split_offset = split_idx * INPUT0_FEATURE_PITCH * FILTER_IFM_NUM;
+    in_addr = batch_idx * INPUT0_BATCH_PITCH;
+    in_addr += in_split_offset + INPUT0_OFFSET_WITH_PADDING + or * STRIDE_SIZE_Y * INPUT0_Y_PITCH + oc * STRIDE_SIZE_X + lid;
 
-    for(int kd = 0; kd < FILTER_INPUT_FEATURE_NUM; kd++)  // _ID = 3, RGB
+    for(int kd = 0; kd < FILTER_IFM_NUM; kd++)  // _ID = 3, RGB
     {
         uint tmp_in_addr = in_addr;
 
@@ -112,7 +110,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
 
             // If we have row break, move to the next row.
             if (in_block_next_x_pos == IN_BLOCK_WIDTH)
-                tmp_in_addr += INPUT_Y_PITCH;
+                tmp_in_addr += INPUT0_Y_PITCH;
         }
 #elif (2 * IN_BLOCK_WIDTH) % SUB_GROUP_SIZE == 0
         __attribute__((opencl_unroll_hint(IN_BLOCK_ARRAY_SIZE)))
@@ -125,7 +123,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
 
                 // If we have row break, move to the next row.
                 if (in_block_next_x_pos == IN_BLOCK_WIDTH)
-                    tmp_in_addr += INPUT_Y_PITCH;
+                    tmp_in_addr += INPUT0_Y_PITCH;
             }
             else {
                 // TODO: Generalize this step to relax IN_BLOCK_WIDTH restrictions.
@@ -135,13 +133,13 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
                 if (lid < sg_br_pos)
                     in[in_block_pos / SUB_GROUP_SIZE] = input[tmp_in_addr + in_block_pos % IN_BLOCK_WIDTH];
                 // We have row break inside sub-group. Need to move to next line.
-                tmp_in_addr += INPUT_Y_PITCH;
+                tmp_in_addr += INPUT0_Y_PITCH;
                 if (lid >= sg_br_pos)
                     in[in_block_pos / SUB_GROUP_SIZE] = input[tmp_in_addr - sg_br_pos];
 
                 // If we have another row break, move to the next row.
                 if (in_block_next_x_pos == 2 * IN_BLOCK_WIDTH)
-                    tmp_in_addr += INPUT_Y_PITCH;
+                    tmp_in_addr += INPUT0_Y_PITCH;
             }
         }
 #else
@@ -149,7 +147,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
 #endif
 
         //move to next filter
-        in_addr += INPUT_FEATURE_PITCH;
+        in_addr += INPUT0_FEATURE_PITCH;
 
         for(int pf=0; pf<PREFETCH; pf++) {
             w[pf] = weights[weight_addr]; weight_addr += SUB_GROUP_SIZE;
@@ -186,7 +184,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
         weight_addr -= PREFETCH * SUB_GROUP_SIZE;
     }
 
-    uint out_split_offset = split_idx * OUTPUT_FEATURE_PITCH * FILTER_OUTPUT_FEATURE_NUM;
+    uint out_split_offset = split_idx * OUTPUT_FEATURE_PITCH * FILTER_OFM_NUM;
     uint out_addr = OUTPUT_OFFSET;
     out_addr += batch_idx * OUTPUT_BATCH_PITCH;
     out_addr += out_split_offset + feature_idx * OUTPUT_FEATURE_PITCH; // out_addr indices into start of 16 feature maps.
@@ -195,7 +193,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
 #if BIAS_TERM
     for(uint r = 0; r < OUTPUT_BLOCK_HEIGHT; r++) {
         for(uint c = 0; c < OUTPUT_BLOCK_WIDTH; c++) {
-#ifdef BIAS_PER_OUTPUT
+#if BIAS_PER_OUTPUT
             const unsigned bias_index = feature_idx*OUTPUT_SIZE_X*OUTPUT_SIZE_Y + or*OUTPUT_SIZE_X + oc;
 #else
             const unsigned bias_index = feature_idx;
@@ -208,7 +206,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
 
     for(uint r = 0; r < OUTPUT_BLOCK_HEIGHT; r++) {
         for(uint c = 0; c < OUTPUT_BLOCK_WIDTH; c++) {
-            ACTIVATION(out[r * OUTPUT_BLOCK_WIDTH + c], out[r * OUTPUT_BLOCK_WIDTH + c]);
+            out[r * OUTPUT_BLOCK_WIDTH + c] = ACTIVATION(out[r * OUTPUT_BLOCK_WIDTH + c], NL_M, NL_N);
         }
     }
 
@@ -227,6 +225,4 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
     }
 }
 
-
-#undef ACTIVATION
 #undef FEATURES_THREADS_PER_BATCH
