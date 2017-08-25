@@ -108,7 +108,7 @@ clDNN supports Intel® HD Graphics and Intel® Iris® Graphics and is optimized 
 - Codename *Apollolake*:
     * Intel® HD Graphics 500
     * Intel® HD Graphics 505
-- Codename *Skylake*:
+- Codename *Kabylake*:
     * Intel® HD Graphics 610 (GT1, *client* market)
 	* Intel® HD Graphics 615 (GT2, *client* market)
     * Intel® HD Graphics 620 (GT2, *client* market)
