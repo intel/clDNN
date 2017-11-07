@@ -24,13 +24,12 @@ namespace KernelSelector {
     {
     public:
         FullyConnected_fb_oi_b8_ref() : FullyConnectedKernelBase("fully_connected_gpu_fb_oi_b8_fp32_ref") {}
-        virtual ~FullyConnected_fb_oi_b8_ref() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
+        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        ParamsKey GetSupportedKey() const override;
 
     protected:
         bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const FullyConnectedParams& arg) const override;
+        std::unique_ptr<FullyConnectedKernelBase::DispatchData> SetDefault(const FullyConnectedParams& arg) const override;
     };
 }

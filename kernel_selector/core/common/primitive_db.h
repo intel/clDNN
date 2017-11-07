@@ -18,6 +18,7 @@
 #include <map>
 #include <vector>
 #include <cctype>
+#include <string>
 
 /// \brief Class providing interface to retrieve a list of primitive implementations per primitive id
 ///

@@ -33,13 +33,10 @@ extern "C" {
 /// @brief Enum type to specify softmax's normalization scope (see cldnn_softmax_desc::dimension).
 typedef enum
 {
-    cldnn_softmax_normalize_b,
     cldnn_softmax_normalize_f,
     cldnn_softmax_normalize_x,
     cldnn_softmax_normalize_y,
-    cldnn_softmax_normalize_yx,
     cldnn_softmax_normalize_fyx,
-    cldnn_softmax_normalize_bfyx
 } cldnn_softmax_dimension;
 
 /// @brief Normalizes results so they sum to 1. The scope of normalization is defined by a member @p dimension.
@@ -54,14 +51,11 @@ CLDNN_BEGIN_PRIMITIVE_DESC(softmax)
 /// @brief Defines a scope of a single softmax normalization.
 /// @details
 /// Being given a 4-dimensional input, which consists of b,f,y,x dimensions, softmax normalizes data which are divided into multiple independent sets.
-/// Specific behaviour is determined by this parameter, as follows:
+/// Specific behavior is determined by this parameter, as follows:
 /// - when set to @link cldnn_softmax_dimension cldnn_softmax_normalize_x @endlink each input row is normalized independently,
 /// - when set to @link cldnn_softmax_dimension cldnn_softmax_normalize_y @endlink each input column is normalized independently,
 /// - when set to @link cldnn_softmax_dimension cldnn_softmax_normalize_f @endlink each in-depth vector of input is normalized independently,
-/// - when set to @link cldnn_softmax_dimension cldnn_softmax_normalize_b @endlink each pixel from a single 3d image is normalized toghether with corresponding pixels from other images within processing batch,
-/// - when set to @link cldnn_softmax_dimension cldnn_softmax_normallize_yx @endlink each 2d image within input is normalized independently,
 /// - when set to @link cldnn_softmax_dimension cldnn_softmax_normalize_fyx @endlink each 3d image within input is normalized independently,
-/// - when set to @link cldnn_softmax_dimension cldnn_softmax_normalize_bfyx @endlink whole input is normalized as one data set.
 cldnn_softmax_dimension dimension;
 CLDNN_END_PRIMITIVE_DESC(softmax)
 

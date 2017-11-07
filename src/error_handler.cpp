@@ -105,7 +105,7 @@ void error_on_tensor_dims_less_than_other_tensor_dims(std::string file, int line
     {
                 error_msg << tensor_id << " sizes: " << tens << std::endl;
                 error_msg << tensor_to_compare_to_id << " sizes: " << tens_to_compre << std::endl;
-                error_msg << "All " << tensor_id << " dimensions should be less than " << tensor_to_compare_to_id << " dimensions." << std::endl;
+                error_msg << "All " << tensor_id << " dimensions should not be less than " << tensor_to_compare_to_id << " dimensions." << std::endl;
                 error_msg << "Mismatching dimensions: ";
                 for (size_t i = 0; i < errors.size(); i++)
                 {
@@ -140,7 +140,7 @@ void error_on_tensor_dims_greater_than_other_tensor_dims(std::string file, int l
     {
         error_msg << tensor_id << " sizes: " << tens << std::endl;
         error_msg << tensor_to_compare_to_id << " sizes: " << tens_to_compre << std::endl;
-        error_msg << "All " << tensor_id << " dimensions should be greater than " << tensor_to_compare_to_id << std::endl;
+        error_msg << "All " << tensor_id << " dimensions should not be greater than " << tensor_to_compare_to_id << std::endl;
         error_msg << "Mismatching dimensions: ";
         for (size_t i = 0; i < errors.size(); i++)
         {

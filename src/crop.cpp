@@ -18,6 +18,7 @@
 #include "primitive_type_base.h"
 #include "memory_impl.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -36,19 +37,19 @@ layout crop_inst::calc_output_layout(crop_node const& node)
 
 std::string crop_inst::to_string(crop_node const& node)
 {
-    std::stringstream               primitive_description;
-    auto desc                       = node.get_primitive();
-    auto& input                     = node.input();
-    auto ref_input                  = desc->reference_input;
-    auto offsets                    = desc->offsets;
+    auto desc       = node.get_primitive();
+    auto offsets    = desc->offsets;
+    auto node_info  = node.desc_to_json();
+    auto ref_input  = desc->reference_input;
     
-    primitive_description << "id: " << desc->id << ", type: crop" << 
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ",  size: " << input.get_output_layout().size <<
-        "\n\treference input sizes: " << ref_input <<
-        "\n\toffsets: " << offsets <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    std::stringstream primitive_description;
+
+    json_composite crop_info;
+    crop_info.add("reference input", ref_input.to_string());
+    crop_info.add("offset", offsets.to_string());    
+
+    node_info.add("crop info", crop_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

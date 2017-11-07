@@ -745,4 +745,27 @@ inline JitConstants MakeActivationJitConstants(const ActivationParams& params)
     return jit;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MakeUpSamplingJitConstants
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+inline JitConstants MakeUpSamplingJitConstants(const UpSamplingParams& params)
+{
+    JitConstants jit = MakeBaseParamsJitConstants(params);
+
+    const auto& us = params.usParams;
+    const auto& input = params.inputs[0];
+    const auto& output = params.output;
+
+    auto x_ratio = (float)input.X().v / (float)output.X().v;
+    auto y_ratio = (float)input.Y().v / (float)output.Y().v;
+
+    jit.AddConstants({
+        MakeJitConstant(toString(us.sampleType), ""),
+        MakeJitConstant("X_RATIO", x_ratio),
+        MakeJitConstant("Y_RATIO", y_ratio),
+    });
+
+    return jit;
+}
+
 }

@@ -30,7 +30,7 @@ struct typed_program_node<data> : public typed_program_node_base<data>
     typed_program_node(const std::shared_ptr<data> prim, program_impl& prog);
 
     memory_impl& get_attached_memory() const { return *mem; }
-    void attach_memory(memory_impl& new_mem) { mem = &new_mem; }
+    void attach_memory(memory_impl& new_mem, bool invalidate_users_if_changed = true);
     
 private:
     memory_impl::ptr mem;

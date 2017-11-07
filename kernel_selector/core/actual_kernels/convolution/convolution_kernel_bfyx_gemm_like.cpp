@@ -44,6 +44,18 @@ namespace KernelSelector
         return k;
     }
 
+    std::string ConvolutionKernel_bfyx_GEMMLike::GetKernelName(const ConvolutionParams& params) const
+    {
+        if (params.inputs[0].GetDType() == Datatype::F32)
+        {
+            return kernelName + "_fp32";
+        }
+        else
+        {
+            return kernelName + "_fp16";
+        }
+    }
+
     JitConstants ConvolutionKernel_bfyx_GEMMLike::GetJitConstants(const ConvolutionParams& params, Parent::DispatchData runInfo) const
     {
         JitConstants jit = Parent::GetJitConstants(params, runInfo);
@@ -60,9 +72,9 @@ namespace KernelSelector
         return jit;
     }
 
-    ConvolutionKernel_bfyx_GEMMLike::Parent::DispatchData ConvolutionKernel_bfyx_GEMMLike::SetDefault(const ConvolutionParams& arg) const
+    ConvolutionKernel_bfyx_GEMMLike::Parent::DispatchData ConvolutionKernel_bfyx_GEMMLike::SetDefault(const ConvolutionParams& arg, int autoTuneIndex) const
     {
-        DispatchData runInfo = Parent::SetDefault(arg);
+        DispatchData runInfo = Parent::SetDefault(arg, autoTuneIndex);
 
         const auto& cp = arg.convParams;
 
@@ -110,56 +122,20 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData ConvolutionKernel_bfyx_GEMMLike::GetKernelsData(const Params& params, const OptionalParams& options) const
+    std::vector<WeightsLayout> ConvolutionKernel_bfyx_GEMMLike::GetSupportedWeightLayouts(const ConvolutionParams& params) const
     {
-        if (!Validate(params, options))
+        if (params.inputs[0].GetDType() == Datatype::F16)
         {
-            return{};
-        }
-
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
-
-        kd.reorderInput = CovolutionUpdateInputParams(newParams);
-
-        DispatchData runInfo = SetDefault(newParams);
-
-        WeightsLayout wLayout;
-
-        std::string newKernelName = kernelName;
-        
-        if (newParams.inputs[0].GetDType() == Datatype::F16)
-        {
-            newKernelName += "_fp16";
-            wLayout = WeightsLayout::iy_xs_os_xsv2_osv16__ao32;
+            return{ WeightsLayout::iy_xs_os_xsv2_osv16__ao32 };
         }
         else
         {
-            newKernelName += "_fp32";
-            wLayout = WeightsLayout::iy_xs_os_xsv2_osv8__ao32;
+            return{ WeightsLayout::iy_xs_os_xsv2_osv8__ao32 };
         }
+    }
 
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            { wLayout },
-            kd.weightsReorderParams);
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto cldnn_jit = GetJitConstants(newParams, runInfo);
-        auto entryPoint = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entryPoint);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, newKernelName, jit, entryPoint, AGE_BASED, true, !newParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return{ kd };
+    KernelsData ConvolutionKernel_bfyx_GEMMLike::GetKernelsData(const Params& params, const OptionalParams& options) const
+    {
+        return GetCommonKernelsData(params, options, AGE_BASED);
     }
 }

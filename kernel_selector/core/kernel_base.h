@@ -32,14 +32,15 @@ namespace KernelSelector
         {
             return GetKernelsData(params, options);
         }
-        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, int autoTuneIndex) const
+        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, int /*autoTuneIndex*/) const
         {
-            UNUSED(autoTuneIndex);
             return GetKernelsData(params, options);
         }
 
         virtual ParamsKey GetSupportedKey() const = 0;
         virtual const std::string GetName() const { return kernelName; }
+
+        static const primitive_db& get_db() { return db; }
     
     protected:
         static const primitive_db db;

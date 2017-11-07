@@ -32,6 +32,14 @@ namespace err_details
     void cldnn_print_error_message(std::string file, int line, std::string instance_id, std::stringstream &msg, std::string add_msg = "");
 }
 
+template <class T1, class T2>
+std::ostream& operator <<(std::ostream& left, std::pair<T1, T2> const& right)
+{
+    left << "{ " << right.first << ", " << right.second << " }";
+    return left;
+}
+
+
 template<typename N1, typename N2>
 inline void error_on_not_equal(std::string file, int line, std::string instance_id, std::string number_id, N1 number, std::string compare_to_id, N2 number_to_compare_to, std::string additional_message = "")
 {
@@ -98,7 +106,7 @@ template<typename ptr>
 inline void error_on_nullptr(std::string file, int line, std::string instance_id, std::string condition_id, ptr condition, std::string additional_message = "")
 {
     std::stringstream error_msg;
-    if (condition = nullptr)
+    if (condition == nullptr)
     {
         error_msg << condition_id << " should not be null" << std::endl;
         err_details::cldnn_print_error_message(file, line, instance_id, error_msg, additional_message);
@@ -119,7 +127,7 @@ inline void error_on_not_proper_enum_values(std::string file, int line, std::str
         {
             return mode == 0 ? "cldnn_lrn_norm_region_across_channel" : "cldnn_lrn_norm_region_within_channel";
         }
-        return "cldnn_lrn_norm_region_across_channel";
+        return "error during error parsing";
     };
     const std::array<const M, sizeof...(Ms)> modes{ std::forward<Ms>(modes_to_compare_to)... };
     if (std::all_of(modes.begin(), modes.end(), [&](const M& m)->int {return mode != m; }))

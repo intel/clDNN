@@ -48,9 +48,6 @@ template <class T>
 using deduce_ret_type_t = typename deduce_ret_type<T>::type;
 
 template <class T>
-struct always_false : public std::false_type {};
-
-template <class T>
 constexpr bool always_false_v = always_false<T>::value;
 
 template <class T>

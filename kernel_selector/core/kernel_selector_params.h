@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <string>
 #include <cstddef>
 #include <memory>
 #include "common_types.h"
@@ -45,6 +46,8 @@ namespace KernelSelector
             key.outputWeightsType.raw = 0;
             key.inputLayout = 0;
             key.outputLayout = 0;
+            key.weightsInputLayout = 0;
+            key.weightsOutputLayout = 0;
         }
 
         struct Key
@@ -80,6 +83,7 @@ namespace KernelSelector
                             uint32_t ceil : 1;
                             uint32_t fixedKenrelDivider : 1;
                             uint32_t dynamicKenrelDivider : 1;
+                            uint32_t dynamicKenrelDividerWithPadding : 1;
                         } pooling;
                         struct conv_t 
                         {
@@ -103,6 +107,15 @@ namespace KernelSelector
                             uint32_t kernelPerInput : 1;
                             uint32_t oneKernel : 1;
                         } concat;
+                        struct upsample_t
+                        {
+                            uint32_t nearest : 1;
+                            uint32_t bilinear : 1;
+                        } upsample;
+                        struct reorder_t
+                        {
+                            uint32_t winograd : 1;
+                        } reorder;
                     } dedicated;
                 } val;
                 uint64_t raw;
@@ -143,6 +156,8 @@ namespace KernelSelector
             DataTypesKey outputWeightsType;
             uint32_t inputLayout;
             uint32_t outputLayout;
+            uint32_t weightsInputLayout;
+            uint32_t weightsOutputLayout;
         };
 
         void EnableInputDataType(Datatype dt)
@@ -297,6 +312,26 @@ namespace KernelSelector
             key.outputLayout = 0xffffffff;
         }
 
+        void EnableInputWeightsLayout(WeightsLayout l)
+        {
+            key.weightsInputLayout |= (1 << l);
+        }
+
+        void EnableAllInputWeightsLayout()
+        {
+            key.weightsInputLayout = 0xffffffff;
+        }
+
+        void EnableOutputWeightsLayout(WeightsLayout l)
+        {
+            key.weightsOutputLayout |= (1 << l);
+        }
+
+        void EnableAllOutputWeightsLayout()
+        {
+            key.weightsOutputLayout = 0xffffffff;
+        }
+
         void EnableTensorOffset()
         {
             key.restrict.val.offset = 1;
@@ -397,6 +432,9 @@ namespace KernelSelector
             case KernelDividerMode::DYNAMIC:
                 key.restrict.val.dedicated.pooling.dynamicKenrelDivider = 1;
                 break;
+            case KernelDividerMode::DYNAMIC_WITH_PADDING:
+                key.restrict.val.dedicated.pooling.dynamicKenrelDividerWithPadding = 1;
+                break;
             default:
                 break;
             }
@@ -447,6 +485,11 @@ namespace KernelSelector
             key.restrict.val.dedicated.conv.depthwiseSeparableOpt = 1;
         }
 
+        void EnableWinogradReorder()
+        {
+            key.restrict.val.dedicated.reorder.winograd = 1;
+        }
+
         void EnableSoftmaxDim(SoftmaxDim d)
         {
             switch (d)
@@ -486,6 +529,21 @@ namespace KernelSelector
             }
         }
 
+        void EnableUpSamplingSampleType(SampleType a)
+        {
+            switch (a)
+            {
+            case SampleType::NEAREST:
+                key.restrict.val.dedicated.upsample.nearest = 1;
+                break;
+            case SampleType::BILINEAR:
+                key.restrict.val.dedicated.upsample.bilinear = 1;
+                break;
+            default:
+                break;
+            }
+        }
+
         void EnableConcatKernelPerInput()
         {
             key.restrict.val.dedicated.concat.kernelPerInput = 1;
@@ -506,7 +564,9 @@ namespace KernelSelector
                 ((key.inputWeightsType.raw & k.key.inputWeightsType.raw) == k.key.inputWeightsType.raw) &&
                 ((key.outputWeightsType.raw & k.key.outputWeightsType.raw) == k.key.outputWeightsType.raw) &&
                 ((key.inputLayout & k.key.inputLayout) != 0 || key.inputLayout == k.key.inputLayout) &&
-                ((key.outputLayout & k.key.outputLayout) != 0 || key.outputLayout == k.key.outputLayout);
+                ((key.outputLayout & k.key.outputLayout) != 0 || key.outputLayout == k.key.outputLayout) &&
+                ((key.weightsInputLayout & k.key.weightsInputLayout) != 0 || key.weightsInputLayout == k.key.weightsInputLayout) &&
+                ((key.weightsOutputLayout & k.key.weightsOutputLayout) != 0 || key.weightsOutputLayout == k.key.weightsOutputLayout);
         }
 
         ParamsKey Merge(const ParamsKey& k) const
@@ -520,6 +580,8 @@ namespace KernelSelector
             ret.key.outputWeightsType.raw = key.outputWeightsType.raw | k.key.outputWeightsType.raw;
             ret.key.inputLayout = key.inputLayout | k.key.inputLayout;
             ret.key.outputLayout = key.outputLayout | k.key.outputLayout;
+            ret.key.weightsInputLayout = key.weightsInputLayout | k.key.weightsInputLayout;
+            ret.key.weightsOutputLayout = key.weightsOutputLayout | k.key.weightsOutputLayout;
             return ret;
         }
 
@@ -538,6 +600,9 @@ namespace KernelSelector
         bool bFP64Support = false;
         uint64_t maxWorkGroupSize = 0;
         uint64_t maxLocalMemSize = 0;
+        std::string deviceId = "";
+        std::string driverVersion = "";
+        std::string hostVersion = "";
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -548,7 +613,22 @@ namespace KernelSelector
         virtual ~Params() {}
 
         KernelType GetType() const { return kType; }
-        virtual ParamsKey GetParamsKey() const = 0;
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k;
+
+            if (engineInfo.bSubGroupSupport)
+            {
+                k.EnableSubGroup();
+            }
+
+            if (engineInfo.bSubGroupShortSupport)
+            {
+                k.EnableSubGroupShort();
+            }
+
+            return k;
+        }
 
     protected:
         Params(KernelType kt, const std::string& id) : kType(kt), layerID(id) {}
@@ -556,6 +636,7 @@ namespace KernelSelector
 
     public:
         std::string layerID;
+        EngineInfo engineInfo;
 
         virtual std::string to_string() const;
     };
@@ -570,15 +651,13 @@ namespace KernelSelector
         ActivationFunction  activationFunc = ActivationFunction::NONE;
         NonLinearParams     activationParams;
         MultiDataTensor     inputs;
-        DataTensor          output;
-        // TODO: I've still not sure it's the right place for engineInfo
-        EngineInfo          engineInfo;
+        DataTensor          output;        
 
         virtual std::string to_string() const;
 
         virtual ParamsKey GetParamsKey() const
         {
-            ParamsKey k;
+            ParamsKey k = Params::GetParamsKey();
 
             bool bBatching = false;
             bool bPitches = false;
@@ -623,16 +702,6 @@ namespace KernelSelector
                 k.EnableTensorOffset();
             }
 
-            if (engineInfo.bSubGroupSupport)
-            {
-                k.EnableSubGroup();
-            }
-
-            if (engineInfo.bSubGroupShortSupport)
-            {
-                k.EnableSubGroupShort();
-            }
-
             if (!engineInfo.bFP16Support &&
                 bFP16Used)
             {
@@ -658,7 +727,7 @@ namespace KernelSelector
         WeightsTensor weights;
         MultiDataTensor bias;
 
-        virtual ParamsKey GetParamsKey() const
+        virtual ParamsKey GetParamsKey() const override
         {
             ParamsKey k = BaseParams::GetParamsKey();
 
@@ -700,6 +769,10 @@ namespace KernelSelector
             uSize    stride;
             uSize    dilation;
             uSize    padding;
+            uint32_t winograd_tile_n;
+            uint32_t winograd_tile_m;
+            uint32_t winograd_input_tile_width;
+            uint32_t winograd_input_tile_height;
             uint32_t split = 1;
             bool     depthwiseSeparableOpt = false;
         };
@@ -708,7 +781,7 @@ namespace KernelSelector
 
         virtual std::string to_string() const override;
 
-        virtual ParamsKey GetParamsKey() const
+        virtual ParamsKey GetParamsKey() const override
         {
             ParamsKey k = WeightBiasParams::GetParamsKey();
 
@@ -753,7 +826,7 @@ namespace KernelSelector
 
         virtual std::string to_string() const override;
 
-        virtual ParamsKey GetParamsKey() const
+        virtual ParamsKey GetParamsKey() const override
         {
             ParamsKey k = WeightBiasParams::GetParamsKey();
 
@@ -1061,13 +1134,23 @@ namespace KernelSelector
             MeanSubtractMode    mode = MeanSubtractMode::NONE;
             std::vector<float>  meanValues;
             DataTensor          mean;
+            uint32_t            winograd_input_offset_x;
+            uint32_t            winograd_input_offset_y;
+            uint32_t            winograd_nr_tiles_x;
+            bool                winograd = false;
         };
 
         DedicatedParams reorderParams;
 
         virtual ParamsKey GetParamsKey() const
         {
-            return ReorderBaseParams::GetParamsKey();
+            auto k = ReorderBaseParams::GetParamsKey();
+
+            if (reorderParams.winograd)
+            {
+                k.EnableWinogradReorder();
+            }
+            return k;
         }
     };
 
@@ -1082,6 +1165,7 @@ namespace KernelSelector
         {
             WeightsTensor input;
             WeightsTensor output;
+            bool winograd = false;
         };
 
         DedicatedParams reorderParams;
@@ -1093,6 +1177,8 @@ namespace KernelSelector
             const auto& output = reorderParams.output;
             k.EnableInputWeightsType(input.GetDType());
             k.EnableOutputWeightsType(output.GetDType());
+            k.EnableInputWeightsLayout(input.GetLayout());
+            k.EnableOutputWeightsLayout(output.GetLayout());
 
             if (input.PitchesDifferFromLogicalDims() ||
                 output.PitchesDifferFromLogicalDims())
@@ -1103,6 +1189,11 @@ namespace KernelSelector
             if (input.GetFirstElementOffset() != 0 || output.GetFirstElementOffset() != 0)
             {
                 k.EnableTensorOffset();
+            }
+
+            if (reorderParams.winograd)
+            {
+                k.EnableWinogradReorder();
             }
             return k;
         }
@@ -1126,6 +1217,30 @@ namespace KernelSelector
         {
             auto k =  BaseParams::GetParamsKey();
             k.EnableConcatAxis(concatParams.axis);
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // UpSamplingParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct UpSamplingParams : public BaseParams
+    {
+        UpSamplingParams() : BaseParams(KernelType::UPSAMPLING) {}
+
+        struct DedicatedParams
+        {
+            uint32_t scale = 1;
+            uint32_t num_filter = 0;
+            SampleType sampleType = SampleType::NEAREST;
+        };
+
+        DedicatedParams usParams;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            auto k = BaseParams::GetParamsKey();
+            k.EnableUpSamplingSampleType(usParams.sampleType);
             return k;
         }
     };
@@ -1312,5 +1427,13 @@ namespace KernelSelector
 
             return k;
         }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // UpSamplingOptionalParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct UpSamplingOptionalParams : OptionalParams
+    {
+        UpSamplingOptionalParams() : OptionalParams(KernelType::UPSAMPLING) {}
     };
 }

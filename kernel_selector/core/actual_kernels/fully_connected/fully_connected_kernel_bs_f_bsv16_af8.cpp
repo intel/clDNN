@@ -36,19 +36,17 @@ namespace KernelSelector
         return k;
     }
 
-    FullyConnected_bs_f_bsv16_af8::DispatchData FullyConnected_bs_f_bsv16_af8::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_bs_f_bsv16_af8::DispatchData> FullyConnected_bs_f_bsv16_af8::SetDefault(const FullyConnectedParams& arg) const
     {
-        DispatchData kd = FullyConnectedKernelBase::SetDefault(arg);
+        auto kd = FullyConnectedBlockKernelBase::SetDefault(arg);
 
         size_t groups_per_batches = GetLocalGroupsSize(arg);
-        kd.gws0 = Align(arg.output.LogicalSize() / (GetBatchesPerWorkItem(arg) * groups_per_batches), 16);
-        kd.gws1 = groups_per_batches;
-        kd.lws0 = 16;
-        kd.lws1 = 1;
+        kd->gws0 = Align(arg.output.LogicalSize() / (GetBatchesPerWorkItem(arg) * groups_per_batches), 16);
+        kd->gws1 = groups_per_batches;
+        kd->lws0 = 16;
+        kd->lws1 = 1;
 
-        kd.vload_kernel_type = true;
-
-        return kd;
+        return std::move(kd);
     }
     
     static bool check_input_layout(const DataTensor& t)
@@ -61,7 +59,7 @@ namespace KernelSelector
 
     bool FullyConnected_bs_f_bsv16_af8::Validate(const Params& p, const OptionalParams& o) const
     {
-        if (!FullyConnectedKernelBase::Validate(p, o))
+        if (!FullyConnectedBlockKernelBase::Validate(p, o))
         {
             return false;
         }

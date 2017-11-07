@@ -18,6 +18,7 @@
 #include "primitive_type_base.h"
 #include "sliding_window_utils.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -70,23 +71,28 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
 
 std::string pooling_inst::to_string(pooling_node const& node)
 {
-    std::stringstream   primitive_description;
-    auto desc           = node.get_primitive();
-    auto& input         = node.input();
-    auto strd           = desc->stride;
-    auto kernel_size    = desc->size;
-    auto mode           = desc->mode == pooling_mode::max ? "max" : "average";
-    auto ud_out_size    = desc->with_output_size ? " true" : "false";
+    auto desc        = node.get_primitive();
+    auto strd        = desc->stride;
+    auto mode        = desc->mode == pooling_mode::max ? "max" : "average";
+    auto node_info   = node.desc_to_json();
+    auto kernel_size = desc->size;
 
-    primitive_description << "id: " << desc->id << ", type: pooling, mode: " << mode <<
-        "\n\tinput: "         << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\tstride: "        << strd.spatial[0] << "x" << strd.spatial[1] << 
-        "\n\tkernel size: "   << kernel_size.spatial[0] << "x" << kernel_size.spatial[1] <<
-        "\n\twith user-defined out size: " << ud_out_size << ", dims: " << desc->output_size.spatial[0] << "x" << desc->output_size.spatial[1] <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
-    
+    std::stringstream primitive_description;
+
+    json_composite pooling_info;
+    pooling_info.add("mode", mode);
+    pooling_info.add("stride", strd.to_string());
+    pooling_info.add("kernel size", kernel_size.to_string());
+    if (desc->with_output_size)
+    {
+        json_composite ud_out_size_info;
+        ud_out_size_info.add("size", desc->output_size.to_string());
+        pooling_info.add("with_user_defined_output_size", ud_out_size_info);
+    }
+
+    node_info.add("pooling info", pooling_info);
+    node_info.dump(primitive_description);
+
     return primitive_description.str();
 }
 

@@ -31,6 +31,7 @@
 #include <iostream>
 #include <iomanip>
 #include <thread>
+#include <fstream>
 #include <api/CPP/reorder.hpp>
 
 using namespace cldnn;
@@ -101,318 +102,126 @@ float float_round(float x, size_t fraction_precision = 15) {
     return x;
 }
 
-template<typename T>
-void print_2d(VVF<T> &data) {
-    std::cout << "\nprinting data:\n";
-    for (VF<T> &v : data) {
-        for (float f : v) {
-            std::cout << std::setw(4) << std::right << f << " ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-}
-
-static std::string print_test_params(cldnn::format test_input_fmt, cldnn::format test_filter_fmt, 
-    int input_b, int input_f, int input_y, int input_x,
-    int filter_o, int filter_i, int filter_y, int filter_x,
-    int stride_y, int stride_x,
-    int dilation_y, int dilation_x,
-    int input_padding_y, int input_padding_x,
-    int output_padding_y, int output_padding_x)
+void dump_buffer(memory const& mem, std::string const& name)
 {
-    std::stringstream str;
-    
-    str << std::endl
-        << "failing test parameters:" << std::endl
-        << "input_format = " << format::traits(test_input_fmt).order << std::endl
-        << "filter_format = " << format::traits(test_filter_fmt).order << std::endl
-        << "input_b = " << input_b << std::endl
-        << "input_f = " << input_f << std::endl
-        << "input_y = " << input_y << std::endl
-        << "input_x = " << input_x << std::endl
-        << "filter_o = " << filter_o << std::endl
-        << "filter_i = " << filter_i << std::endl
-        << "filter_y = " << filter_y << std::endl
-        << "filter_x = " << filter_x << std::endl
-        << "stride_y = " << stride_y << std::endl
-        << "stride_x = " << stride_x << std::endl
-        << "dilation_y = " << dilation_y << std::endl
-        << "dilation_x = " << dilation_x << std::endl
-        << "input_padding_y = " << input_padding_y << std::endl
-        << "input_padding_x = " << input_padding_x << std::endl
-        << "output_padding_y = " << output_padding_y << std::endl
-        << "output_padding_x = " << output_padding_x << std::endl;
+    std::ofstream out(name);
+    auto size = mem.get_layout().get_buffer_size();
+    auto ptr = mem.pointer<const float>();
+    auto pitches = mem.get_layout().get_pitches();
+    out << "Data size: " << mem.get_layout().size << "\n";
+    out << "Lower padding: " << mem.get_layout().data_padding.lower_size() << "\n";
+    out << "Upper padding: " << mem.get_layout().data_padding.upper_size() << "\n";
+    out << "\n";
 
-    return str.str();
-}
-
-template<typename T>
-void generic_convolution_test(cldnn::format test_input_fmt, cldnn::format test_filter_fmt,
-                              int input_b, int input_f, int input_y, int input_x,
-                              int filter_o, int filter_i, int filter_y, int filter_x, 
-                              int stride_y, int stride_x,
-                              int dilation_y, int dilation_x,
-                              int input_padding_y, int input_padding_x, 
-                              int output_padding_y, int output_padding_x) {
-
-    int min_random = -2, max_random = 2;
-    int split = input_f / filter_i;
-
-    VVVVF<T> input_rnd = generate_random_4d<T>(input_b, input_f, input_y, input_x, min_random, max_random);
-    VVVVVF<T> filter_rnd = generate_random_5d<T>(split, filter_o, filter_i, filter_y, filter_x, min_random, max_random);
-    VVF<T> bias_rnd_vec = generate_random_2d<T>(split, filter_o, min_random, max_random);
-    VVVVF<T> output_cpu(input_b, VVVF<T>(filter_o * split));
-    for (int output_b = 0; output_b < input_b; ++output_b) {
-        for (int s = 0; s < split; ++s) {
-            for (int output_f = 0; output_f < filter_o; ++output_f) {
-                output_cpu[output_b][output_f + s * filter_o] = reference_convolve<T>(input_rnd[output_b], filter_rnd[s][output_f], stride_y, stride_x, 
-                    bias_rnd_vec[s][output_f], dilation_y, dilation_x, input_padding_y, input_padding_x, output_padding_y, output_padding_x, s * filter_i);
-            }
-        }
-    }
-
-    engine engine;
-    
-    tensor input_tensor( input_b, input_f, input_x, input_y );
-    tensor filter_tensor( filter_o, filter_i, filter_x, filter_y );
-
-    auto input = memory::allocate(engine, { cldnn::type_to_data_type<T>::value, test_input_fmt, input_tensor } );
-    std::vector<memory> weights, biases;
-    weights.reserve(split);
-    biases.reserve(split);
-    for (int s = 0; s < split; ++s) {
-        weights.push_back(memory::allocate(engine, { cldnn::type_to_data_type<T>::value, test_filter_fmt, filter_tensor }));
-        biases.push_back(memory::allocate(engine, { cldnn::type_to_data_type<T>::value, format::bfyx,{ filter_o,1,1,1 } }));
-    }
-
-    VF<T> input_rnd_vec = flatten_4d<T>(test_input_fmt, input_rnd);
-    set_values(input, input_rnd_vec);
-    for (int s = 0; s < split; ++s) {
-        VF<T> filter_rnd_vec = flatten_4d<T>(test_filter_fmt, filter_rnd[s]);
-        set_values(weights[s], filter_rnd_vec);
-        set_values(biases[s], bias_rnd_vec[s]);
-    }
-
-    std::vector<std::string> weights_str(split), biases_str(split);
-    for (int s = 0; s < split; ++s) {
-        weights_str[s] = "weights" + std::to_string(s);
-        biases_str[s] = "biases" + std::to_string(s);
-    }
-
-    topology topology(
-        input_layout("input", input.get_layout()),
-        reorder("reorder", "input", input.get_layout()), // This node is needed for optimize_data flag
-        convolution(
-            "conv",
-            "reorder",
-            weights_str,
-            biases_str,
-            { 1,1,stride_x, stride_y },
-            { 0, 0, -input_padding_x, -input_padding_y },
-            { 1,1,dilation_x, dilation_y },
-            false,
-            0,
-            padding{ { 0,0,output_padding_x, output_padding_y }, 0 })
-    );
-
-    for (int s = 0; s < split; ++s) {
-        topology.add(data(weights_str[s], weights[s]));
-        topology.add(data(biases_str[s], biases[s]));
-    }
-    cldnn::build_options options;
-    if (input.get_layout().format == cldnn::format::bfyx)
+    for (int b = 0; b < size.batch[0]; ++b)
     {
-        options.set_option(cldnn::build_option::optimize_data(true));
-    }
-
-    std::map<primitive_id, network_output> outputs;
-    ASSERT_NO_THROW(
-    {
-        network network(engine, topology, options);
-        network.set_input_data("input", input);
-        outputs = network.execute();
-    }) << print_test_params(test_input_fmt, test_filter_fmt, input_b, input_f, input_y, input_x, filter_o, filter_i, filter_y, filter_x, 
-                            stride_y, stride_x, dilation_y, dilation_x, input_padding_y, input_padding_x, output_padding_y, output_padding_x);
-    EXPECT_EQ(outputs.size(), size_t(1));
-    EXPECT_EQ(outputs.begin()->first, "conv");
-
-    auto output_memory = outputs.at("conv").get_memory();
-    auto output_layout = output_memory.get_layout();
-    auto output_ptr = output_memory.pointer<T>();
-
-    EXPECT_EQ(output_layout.format.value, test_input_fmt.value);
-    tensor output_tensor = output_layout.get_buffer_size();
-    int y_size = output_tensor.spatial[1];
-    int x_size = output_tensor.spatial[0];
-    int f_size = output_tensor.feature[0];
-    int b_size = output_tensor.batch[0];
-    EXPECT_EQ(y_size, (int)output_cpu[0][0].size());
-    EXPECT_EQ(x_size, (int)output_cpu[0][0][0].size());
-    EXPECT_EQ(f_size, (int)output_cpu[0].size());
-    EXPECT_EQ(b_size, (int)output_cpu.size());
-    bool test_is_correct = true;
-    const auto output_desc = generic_test::get_linear_memory_desc(output_layout);
-
-    for (int b = 0; b < b_size; b++)
-    {
-        for (int f = 0; f < f_size; f++)
+        out << " ================ BATCH " << b << " =================\n\n";
+        for (int f = 0; f < size.feature[0]; ++f)
         {
-            for (int y = 0; y < y_size; y++)
+            out << "feature " << f << ":\n";
+            for (int y = 0; y < size.spatial[1]; ++y)
             {
-                for (int x = 0; x < x_size; x++)
+                for (int x = 0; x < size.spatial[0]; ++x)
                 {
-                    if ( (y < output_padding_y) ||
-                         (y >= y_size - output_padding_y) ||
-                         (x < output_padding_x) ||
-                         (x >= x_size - output_padding_x) )
-                    {
-                        //Ignore padded values in the output.
-                        continue;
-                    }
-                    size_t res_index = generic_test::get_linear_index(output_layout, b, f, y, x, output_desc);
-                    // CPU reference format is bfyx.
-                    if (!floating_point_equal(output_cpu[b][f][y][x], output_ptr[res_index])) {
-                        test_is_correct = false;
-                        break;
-                    }
+                    size_t idx = b * pitches.batch[0] + f * pitches.feature[0] + y * pitches.spatial[1] + x * pitches.spatial[0];
+                    out << ptr[idx] << " ";
                 }
+                out << "\n";
             }
-        }
-    }
-    EXPECT_EQ(test_is_correct, true) << print_test_params(test_input_fmt, test_filter_fmt, input_b, input_f, input_y, input_x, filter_o, filter_i, filter_y, filter_x, 
-                                                          stride_y, stride_x, dilation_y, dilation_x, input_padding_y, input_padding_x, output_padding_y, output_padding_x);
 
-    bool print_data = !test_is_correct;
-    if (!print_data) return;
+            out << "\n";
+        }
 
-    std::cout << "\ninput:\n\n";
-    for (int b = 0; b < input_b; ++b) {
-        for (int f = 0; f < input_f; ++f) {
-            std::cout << "b" << b << ", f" << f << ":\n";
-            print_2d(input_rnd[b][f]);
-        }
-    }
-    std::cout << "\nfilter:\n\n";
-    for (int s = 0; s < split; ++s) {
-        for (int o = 0; o < filter_o; ++o) {
-            for (int i = 0; i < filter_i; ++i) {
-                std::cout << "s" << s << " o" << o << ", i" << i << ":\n";
-                print_2d(filter_rnd[s][o][i]);
-            }
-            std::cout << "s" << s << " o" << o << " bias = " << (float)bias_rnd_vec[s][o] << "\n\n";
-        }
-    }
-
-    VVVVF<T> output_gpu(b_size, VVVF<T>(f_size, VVF<T>(y_size, VF<T>(x_size))));
-    for (int b = 0; b < b_size; ++b) {
-        for (int f = 0; f < f_size; ++f) {
-            for (int y = 0; y < y_size; ++y) {
-                for (int x = 0; x < x_size; ++x) {
-                    output_gpu[b][f][y][x] = output_ptr[b + b_size * (f + f_size * (x + x_size * y))];
-                }
-            }
-        }
-    }
-    std::cout << "\ngpu test output:\n";
-    for (int b = 0; b < b_size; ++b) {
-        for (int f = 0; f < f_size; ++f) {
-            std::cout << "b" << b << " f" << f << ":\n";
-            print_2d(output_gpu[b][f]);
-        }
-    }
-    
-    std::cout << "\ncpu reference test output:\n";
-    for (int b = 0; b < b_size; ++b) {
-        for (int f = 0; f < f_size; ++f) {
-            std::cout << "b" << b << " f" << f << ":\n";
-            print_2d(output_cpu[b][f]);
-        }
+        out << "\n";
     }
 }
 
-struct input_filter_format_pair {
-    format input;
-    format filter;
-    bool is_fp32;
-    bool is_fp16;
-};
-
-static input_filter_format_pair test_formats[] = {
-      // input      filter        is fp32  is fp16
-    { format::bfyx, format::bfyx, true,    false },
-    { format::yxfb, format::yxfb, true,    true },
-    { format::bfyx, format::bfyx, true,    false },
-    { format::bfyx, format::yxfb, true,    true },
-};
-
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-// Test that should cover different combinations of parameters.
-// It uses a cpu convolution implementation developed for tests only.
-// Note: to debug a failing combination more easily try:
-//    * Isolate the problematic combination of parameters.
-//    * Decrease the random values range in generic_convolution_test().
-//    * Set k = 1 inside the function generate_random_1d().
-TEST(DISABLED_convolution_gpu, generic_random) {
-    std::vector<std::pair<int, int>> input_sizes = { { 100, 100 },{ 227, 227 },{ 400, 600 },{ 531, 777 },{ 4096, 1980 } };
-    std::vector<std::pair<int, int>> filter_sizes = { { 1, 1 },{ 2, 2 },{ 3, 3 },{ 4, 4 },{ 5, 5 },{ 7, 7 },{ 9, 9 },{ 11, 11 },{ 1, 3 },{ 5, 2 } };
-    std::vector<std::pair<int, int>> dilation_sizes = { { 1, 1 }, { 2, 4 } };
-
+TEST(DISABLED_convolution_f32_fw_gpu, winograd)
+{
     engine engine;
-    bool f16_supported = !!engine.get_info().supports_fp16;
-    if (!f16_supported) {
-        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
-    }
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 32, 3, 3 } });
+    auto weights = memory::allocate(engine, { data_types::f32, format::yxfb, { 32, 32, 3, 3 } });
+    auto bias = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 32, 1 } });
+    tensor input_offset = { 0, 0, -1, -1 };
 
-    for (int input_b = 1; input_b <= 1; input_b *= 2) {
-        for (int input_f = 1; input_f <= 6; ++input_f) {
-            for (std::pair<int, int> &input_yx : input_sizes) {
-                for (int filter_o = 1; filter_o <= 2; ++filter_o) {
-                    for (int filter_i = 1; filter_i <= input_f; ++filter_i) {
-                        if (input_f % filter_i != 0)
-                            continue; // only legal split is allowed
-                        for (std::pair<int, int> &filter_yx : filter_sizes) {
-                            for (std::pair<int, int> &dilation_yx : dilation_sizes) {
-                                std::pair<int, int> kernel_extent_yx = std::make_pair(dilation_yx.first * (filter_yx.first - 1) + 1, dilation_yx.second * (filter_yx.second - 1) + 1);
-                                if (input_yx.first < kernel_extent_yx.first || input_yx.second < kernel_extent_yx.second)
-                                    continue; // the filter can't be larger than the input
-                                for (int stride_y = 1; stride_y <= 5; ++stride_y) {
-                                    for (int stride_x = 1; stride_x <= 5; ++stride_x) {
-                                        for (int input_padding_y = 0; input_padding_y <= 1; ++input_padding_y) {
-                                            for (int input_padding_x = 0; input_padding_x <= 1; ++input_padding_x) {
-                                                for (int output_padding_y = 0; output_padding_y <= 1; ++output_padding_y) {
-                                                    for (int output_padding_x = 0; output_padding_x <= 1; ++output_padding_x) {
-                                                        for (int i = 0; i < (int)ARRAY_SIZE(test_formats); i++) {
-                                                            if (test_formats[i].is_fp32) {
-                                                                generic_convolution_test<float>(test_formats[i].input, test_formats[i].filter,
-                                                                    input_b, input_f, input_yx.first, input_yx.second,    // BFYX
-                                                                    filter_o, filter_i, filter_yx.first, filter_yx.second,
-                                                                    stride_y, stride_x,
-                                                                    dilation_yx.first, dilation_yx.second,
-                                                                    input_padding_y, input_padding_x,
-                                                                    output_padding_y, output_padding_x);
-                                                            }
-                                                            if (!f16_supported) continue;
-                                                            if (test_formats[i].is_fp16) {
-                                                                generic_convolution_test<FLOAT16>(test_formats[i].input, test_formats[i].filter,
-                                                                    input_b, input_f, input_yx.first, input_yx.second,    // BFYX
-                                                                    filter_o, filter_i, filter_yx.first, filter_yx.second,
-                                                                    stride_y, stride_x,
-                                                                    dilation_yx.first, dilation_yx.second,
-                                                                    input_padding_y, input_padding_x,
-                                                                    output_padding_y, output_padding_x);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+    set_random_values<float>(input, 1.0f, 10.0f);
+    set_random_values<float>(weights, -5.0f, 5.0f);
+    set_random_values<float>(bias, 1.0f, 1.0f);
+
+    topology tpl;
+    tpl.add(input_layout("in", input.get_layout()));
+    tpl.add(data("weights", weights));
+    tpl.add(data("bias", bias));
+    tpl.add(convolution("conv", "in", { "weights" }, { "bias" }, { 1, 1, 1, 1 }, { 0, 0, -1, -1 }, { 1, 1, 1, 1 }, true));
+
+    build_options opts;
+    opts.set_option(build_option::debug(true));
+    opts.set_option(build_option::optimize_data(true));
+    opts.set_option(build_option::graph_dumps_dir("cldnn_dumps"));
+    network net(engine, tpl, opts);
+    net.set_input_data("in", input);
+
+    auto out = net.execute();
+    ASSERT_TRUE(out.count("conv") == 1);
+
+    auto out_mem = out.at("conv").get_memory();
+    EXPECT_EQ(out_mem.get_layout().size.spatial[0], 2);
+    EXPECT_EQ(out_mem.get_layout().size.spatial[1], 2);
+
+    auto winograd_weights = out.at("generic_layer_0_weights").get_memory();
+    auto trans_to_mem = out.at("reorder_0_in").get_memory();
+    auto winograd_mem = out.at("_winograd_conv").get_memory();
+    auto padded_in = out.at("reorder_in").get_memory();
+
+    dump_buffer(padded_in, "buffer_in_standard_padded");
+    dump_buffer(input, "buffer_in_standard");
+    dump_buffer(weights, "buffer_weights_standard");
+    dump_buffer(out_mem, "buffer_out_standard");
+    dump_buffer(trans_to_mem, "buffer_in_winograd");
+    dump_buffer(winograd_weights, "buffer_weights_winograd");
+    dump_buffer(winograd_mem, "buffer_out_winograd");
+
+    auto trans_to_mem_ptr = trans_to_mem.pointer<float>();
+    auto winograd_mem_ptr = winograd_mem.pointer<float>();
+
+    auto out_ptr = out_mem.pointer<float>();
+    auto in_ptr = input.pointer<float>();
+    auto w_ptr = weights.pointer<float>();
+    auto bias_ptr = bias.pointer<float>();
+
+    constexpr int stride_x = 1;
+    constexpr int stride_y = 1;
+    for (int b = 0; b < out_mem.get_layout().size.batch[0]; ++b)
+    {
+        for (int ofm = 0; ofm < out_mem.get_layout().size.feature[0]; ++ofm)
+        {
+            for (int x = 0; x < out_mem.get_layout().size.spatial[0]; ++x)
+            {
+                for (int y = 0; y < out_mem.get_layout().size.spatial[1]; ++y)
+                {
+                    float ref = 0.0f;
+                    for (int wx = 0; wx < weights.get_layout().size.spatial[0]; ++wx)
+                    {
+                        for (int wy = 0; wy < weights.get_layout().size.spatial[1]; ++wy)
+                        {
+                            for (int ifm = 0; ifm < input.get_layout().size.feature[0]; ++ifm)
+                            {
+                                int in_x = x * stride_x + input_offset.spatial[0] + wx;
+                                int in_y = y * stride_y + input_offset.spatial[1] + wy;
+
+                                if (in_x < 0 || in_x >= input.get_layout().size.spatial[0] || in_y < 0 || in_y >= input.get_layout().size.spatial[1])
+                                    continue;
+
+                                size_t in_idx = input.get_layout().get_linear_offset({ b, ifm, in_x, in_y });
+                                size_t w_idx = weights.get_layout().get_linear_offset({ ofm, ifm, wx, wy });
+                                ref += in_ptr[in_idx] * w_ptr[w_idx];
                             }
                         }
                     }
+                    ref += bias_ptr[ofm];
+                    ref = (ref >= 0 ? ref : 0);
+                    size_t out_idx = out_mem.get_layout().get_linear_offset({ b, ofm, x, y });
+                    EXPECT_NEAR(ref, out_ptr[out_idx], 1e-3);
                 }
             }
         }
@@ -557,14 +366,73 @@ TEST(convolution_f32_fw_gpu, basic_convolution) {
             EXPECT_EQ(output_vec[y][x], output_ptr[y * x_size + x]);
         }
     }
+}
 
-    //VVF temp_vec(y_size, VF(x_size, 0.0f));
-    //for (int y = 0; y < y_size; ++y) {
-    //    for (int x = 0; x < x_size; ++x) {
-    //        temp_vec[y][x] = output_ptr[y * x_size + x];
-    //    }
-    //}
-    //print_2d(temp_vec);
+TEST(convolution_f32_fw_gpu, basic_convolution_bfyx_weights_as_input_layout) {
+    //Same params as convolution_f32_fw_gpu, basic_convolution but with bfyx optimized data and weights set as input_layout
+    engine engine;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,
+    { 1, 1, 5, 4 }
+    });
+    auto weights = memory::allocate(engine, { data_types::f32, format::bfyx,
+    { 1, 1, 3, 2 }
+    });
+    auto biases = memory::allocate(engine, { data_types::f32, format::bfyx,
+    { 1, 1, 1, 1 }
+    });
+    set_values(input,
+    { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 2.0f, 2.0f, 3.0f, 4.0f, 6.0f, 3.0f, 3.0f, 3.0f, 5.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }
+    );
+    set_values(weights,
+    { 1.0f, 2.0f, 1.0f, 2.0f, 1.0f, 2.0f }
+    );
+    set_values(biases,
+    { 1.0f }
+    );
+    VVF<float> output_vec = {
+        { 21.0f, 28.0f, 39.0f }
+        ,
+        { 18.0f, 20.0f, 20.0f }
+    };
+    topology topology(
+        input_layout("input", input.get_layout()),
+        input_layout("weights", weights.get_layout()),
+        input_layout("biases", biases.get_layout()),
+        convolution("conv", "input",
+        { "weights" }
+            ,
+            { "biases" }
+            ,
+            { 0,0,1,2 }
+    ));
+    cldnn::build_options options;
+    options.set_option(cldnn::build_option::optimize_data(true));
+    network network(engine, topology, options);
+    network.set_input_data("input", input);
+    network.set_input_data("weights", weights);
+    network.set_input_data("biases", biases);
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "conv");
+
+    auto output_memory = outputs.at("conv").get_memory();
+    auto output_layout = output_memory.get_layout();
+    auto output_ptr = output_memory.pointer<float>();
+
+    int y_size = output_layout.size.spatial[1];
+    int x_size = output_layout.size.spatial[0];
+    int f_size = output_layout.size.feature[0];
+    int b_size = output_layout.size.batch[0];
+    EXPECT_EQ(output_layout.format, format::bfyx);
+    EXPECT_EQ(y_size, 2);
+    EXPECT_EQ(x_size, 3);
+    EXPECT_EQ(f_size, 1);
+    EXPECT_EQ(b_size, 1);
+    for (int y = 0; y < y_size; ++y) {
+        for (int x = 0; x < x_size; ++x) {
+            EXPECT_EQ(output_vec[y][x], output_ptr[y * x_size + x]);
+        }
+    }
 }
 
 TEST(convolution_f32_fw_gpu, basic_convolution_input_padding) {
@@ -2498,56 +2366,6 @@ TEST(convolution_gpu, basic_yxfb_4_4_yxfb_2_2_b16_if2_of16_st2_2_p0_sp1_fp16)
 
     auto output_ptr = output_prim.pointer<float>();
 
-#if 0
-    for (uint32_t bi = 0; bi < /*batch_size*/ 4; ++bi)
-    {
-        std::cout << "Actual (batch: " << std::setw(3) << std::right << bi << "):" << std::endl;
-        for (uint32_t yi = 0; yi < output_y; ++yi)
-        {
-            const char* x_sep = "";
-            const char* f_sep = "";
-            for (uint32_t ofi = 0; ofi < /*output_feature_count*/ 4; ++ofi)
-            {
-                std::cout << f_sep;
-                f_sep = "  |";
-                for (uint32_t xi = 0; xi < output_x; ++xi)
-                {
-                    uint32_t pos = bi + batch_size * (ofi + output_feature_count * (xi + output_x * yi));
-                    auto val = get_value(output_ptr, pos);
-
-                    std::cout << x_sep << std::setw(8) << std::setprecision(2) << std::right << std::fixed << val;
-                    x_sep = "  ";
-                }
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-
-        std::cout << "Expected (batch: " << std::setw(3) << std::right << bi << "):" << std::endl;
-        for (uint32_t yi = 0; yi < output_y; ++yi)
-        {
-            const char* x_sep = "";
-            const char* f_sep = "";
-            for (uint32_t ofi = 0; ofi < /*output_feature_count*/ 4; ++ofi)
-            {
-                std::cout << f_sep;
-                f_sep = "  |";
-                for (uint32_t xi = 0; xi < output_x; ++xi)
-                {
-                    uint32_t pos = bi + batch_size * (ofi + output_feature_count * (xi + output_x * yi));
-                    auto val = output_vals[pos];
-                    //auto val = get_value(expected_ptr, pos);
-
-                    std::cout << x_sep << std::setw(8) << std::setprecision(2) << std::right << std::fixed << val;
-                    x_sep = "  ";
-                }
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl << std::endl;
-    }
-#endif 
-
     // Checking result.
     uint32_t i = 0;
     for (uint32_t yxi = 0; yxi < output_y * output_x; ++yxi)
@@ -2644,11 +2462,6 @@ public:
             {
                 for (cldnn::format weights_format : weights_formats)
                 {
-                    if ((input_format == cldnn::format::yxfb) && (weights_format == cldnn::format::bfyx) && (data_type == cldnn::data_types::f16))
-                    {
-                        // yxfb oiyx convolution not supported in FP16.
-                        continue;
-                    }
                     cldnn::build_options network_build_options;
                     if (input_format == cldnn::format::bfyx)
                     {
@@ -2677,12 +2490,6 @@ public:
         {
             for (tests::test_params* test_param : all_generic_params)
             {
-                const cldnn::convolution* convolution = (cldnn::convolution*)layer_param;
-                if ((test_param->fmt == cldnn::format::yxfb) && (convolution->input[0] == "reorder0"))
-                {
-                    // Input padding not support in yxfb convolution.
-                    continue;
-                }
                 all_test_params.push_back(std::make_tuple(test_param, layer_param));
             }
         }

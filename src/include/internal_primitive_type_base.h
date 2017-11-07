@@ -61,7 +61,7 @@ struct internal_primitive_type_base : public ::cldnn_primitive_type
         throw std::runtime_error("primitive_type_id::calc_output_layout called for internal primitive - internal primitives should have output layouts precalculated");
     }
 
-    std::string to_string(const cldnn::program_node& node) const
+    std::string to_string(const cldnn::program_node& node) const override
     {
         if (node.type() != this)
             throw std::invalid_argument("primitive_type_base::to_string: primitive type mismatch");

@@ -35,6 +35,9 @@ struct is_any_of : public std::false_type {};
 template <class T, class U, class... Rest>
 struct is_any_of<T, U, Rest...> : public std::conditional<std::is_same<T, U>::value, std::true_type, is_any_of<T, Rest...>>::type {};
 
+template <class T>
+struct always_false : public std::false_type {};
+
 template <typename Ty, Ty Val>
 struct always_false_ty_val : public std::false_type {};
 

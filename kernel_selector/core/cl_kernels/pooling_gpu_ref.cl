@@ -93,6 +93,11 @@ KERNEL(pooling_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
             }
         }
     }
+#ifdef DYNAMIC_WITH_PADDING_KERNEL_DIVIDER
+    const int hend = min(offset_y + POOL_SIZE_Y, INPUT0_SIZE_Y + PADDING_SIZE_Y);
+    const int wend = min(offset_x + POOL_SIZE_X, INPUT0_SIZE_X + PADDING_SIZE_X);
+    const uint num_elementes = (hend - offset_y) * (wend - offset_x);
+#endif
 #else
     uint input_idx = GET_DATA_INDEX(INPUT0, b, f, offset_y, offset_x);
 
@@ -106,13 +111,13 @@ KERNEL(pooling_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
         input_idx += (INPUT0_Y_PITCH - POOL_SIZE_X*INPUT0_X_PITCH);
     }
     
-#ifdef DYNAMIC_KERNEL_DIVIDER
+#if defined(DYNAMIC_KERNEL_DIVIDER) || defined(DYNAMIC_WITH_PADDING_KERNEL_DIVIDER)
     const uint num_elementes = POOL_SIZE_X*POOL_SIZE_Y;
 #endif
 #endif
 
 #if defined AVG_POOLING
-    #ifdef DYNAMIC_KERNEL_DIVIDER
+    #if defined(DYNAMIC_KERNEL_DIVIDER) || defined(DYNAMIC_WITH_PADDING_KERNEL_DIVIDER)
         result /= (UNIT_TYPE)max(num_elementes, (uint)1);
     #else
         result /= (UNIT_TYPE)(POOL_SIZE_Y * POOL_SIZE_X);

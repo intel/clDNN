@@ -30,9 +30,9 @@ namespace KernelSelector {
         virtual ParamsKey GetSupportedKey() const override;
     
     protected:
-        std::vector<WeightsLayout> GetSupportedWeightLayouts() const override { return{ WeightsLayout::yxio }; }
+        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override { return{ WeightsLayout::yxio }; }
         bool Validate(const Params& p, const OptionalParams& o) const override;
         JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
-        DispatchData SetDefault(const ConvolutionParams& arg) const override;
+        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
     };
 }

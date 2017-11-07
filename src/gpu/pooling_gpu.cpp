@@ -88,12 +88,22 @@ struct pooling_gpu : typed_primitive_gpu_impl<pooling>
         const auto primitive        = arg.get_primitive();
         const auto& stride          = primitive->stride;
         const auto& input_offset    = primitive->input_offset;
+        const auto& input_sizes     = arg.input().get_output_layout().size;
+        const auto& output_sizes    = arg.get_output_layout().size;
 
         auto& pp                    = pool_params.poolParams;
 
         pp.poolType                 = cldnn_2_pool_type(primitive->mode);
         pp.remainderAction          = kernel_selector::pool_remainder::CEIL;
-        pp.divMode                  = cldnn_2_kernel_divider_mode(primitive->mode);
+
+        //check if last pooling window goes outside of input size + padding. If so the avg pooling size will be adjusted to that.
+        auto dynamic_mode = (((output_sizes.spatial[0] - 1) * stride.spatial[0]) + primitive->size.spatial[0]) > -2 * input_offset.spatial[0] + input_sizes.spatial[0] ||
+            (((output_sizes.spatial[1] - 1) * stride.spatial[1]) + primitive->size.spatial[1]) > -2 * input_offset.spatial[1] + input_sizes.spatial[1];
+
+        if (primitive->mode == pooling_mode::average && dynamic_mode)
+            pp.divMode = kernel_selector::kernel_divider_mode::DYNAMIC_WITH_PADDING;
+        else
+            pp.divMode = cldnn_2_kernel_divider_mode(primitive->mode);
 
         const auto additional_offset = tensor::max(input_offset, 0);
         if (additional_offset != 0)

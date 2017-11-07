@@ -32,7 +32,7 @@ namespace KernelSelector
             {
                 for (auto executionMode : executionModes)
                 {
-                    autoTuneOptions.emplace_back(tileXDim, tileYDim, executionMode);
+                    autoTuneOptions.emplace_back(AutoTuneOption{ {tileXDim, tileYDim}, executionMode });
                 }
             }
         }
@@ -86,34 +86,31 @@ namespace KernelSelector
         return true;
     }
 
-    static stSize GetTileDimensions()
+    ConvolutionKernel_bfyx_3x3_dw_opt::AutoTuneOption ConvolutionKernel_bfyx_3x3_dw_opt::GetAutoTuneOptions(const Params&, int autoTuneIndex) const
     {
+        if ((autoTuneIndex >= 0) && (autoTuneIndex < (int)autoTuneOptions.size()))
+        {
+            return autoTuneOptions[autoTuneIndex];
+        }
+
         constexpr int simdSize = 16;
 
-        return{ simdSize - 2, 7 };
+        return AutoTuneOption{ { simdSize - 2, 7 }, ROUND_ROBIN };
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_3x3_dw_opt::SetDefaultInternal(const ConvolutionParams& params, const size_t tileXDim, const size_t tileYDim) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_3x3_dw_opt::SetDefault(const ConvolutionParams& params, int autoTuneIndex) const
     {
         constexpr int simdSize = 16;
 
-        DispatchData runInfo = ConvolutionKernelBase::SetDefault(params);
+        DispatchData runInfo = Parent::SetDefault(params);
 
-        stSize tileDims;
+        auto options = GetAutoTuneOptions(params, autoTuneIndex);
 
-        if (tileXDim == 0 || tileYDim == 0)
-        {
-            tileDims = GetTileDimensions();
-        }
-        else // Auto-tuner case
-        {
-            tileDims.x = tileXDim;
-            tileDims.y = tileYDim;
-        }
+        const int numTilesX = static_cast<int>(std::ceil(static_cast<float>(params.inputs[0].X().v) / static_cast<float>(options.tileDims.x)));
+        const int numTilesY = static_cast<int>(std::ceil(static_cast<float>(params.inputs[0].Y().v) / static_cast<float>(options.tileDims.y)));
 
-        const int numTilesX = static_cast<int>(std::ceil(static_cast<float>(params.inputs[0].X().v) / static_cast<float>(tileDims.x)));
-        const int numTilesY = static_cast<int>(std::ceil(static_cast<float>(params.inputs[0].Y().v) / static_cast<float>(tileDims.y)));
-
+        runInfo.cldnnStyle.blockWidth = options.tileDims.x;
+        runInfo.cldnnStyle.blockHeight = options.tileDims.y;
         runInfo.gws0 = numTilesX * simdSize;
         runInfo.gws1 = numTilesY;
         runInfo.gws2 = params.inputs[0].Feature().v * params.inputs[0].Batch().v;
@@ -128,7 +125,7 @@ namespace KernelSelector
 
     JitConstants ConvolutionKernel_bfyx_3x3_dw_opt::GetJitConstants(const ConvolutionParams& params, DispatchData kd) const
     {
-        auto tileDims = GetTileDimensions();
+        stSize tileDims = { kd.cldnnStyle.blockWidth, kd.cldnnStyle.blockHeight };
         auto mem_consts = ConvolutionKernelBase::GetJitConstants(params, kd);
 
         if (tileDims.y != 0 && tileDims.x != 0)
@@ -144,71 +141,12 @@ namespace KernelSelector
 
     KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, const int autoTuneIndex) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        if (autoTuneIndex == -1)
-        {
-            return GetKernelsData(params, options);
-        }
-
-        if ((autoTuneIndex < 0) || (autoTuneIndex >= (int)autoTuneOptions.size()))
-        {
-            return{};
-        }
-
-        std::tuple<size_t, size_t, std::string> dispatchData = autoTuneOptions[autoTuneIndex];
-
-        KernelData kd = GetKernelDataInternal(params, options, std::get<2>(dispatchData), std::get<0>(dispatchData), std::get<1>(dispatchData));
-
-        return{ kd };
-    }
-
-    KernelData ConvolutionKernel_bfyx_3x3_dw_opt::GetKernelDataInternal(const Params& params, const OptionalParams& options, const std::string exeMode, const size_t tileXDim, const size_t tileYDim) const
-    {
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
-
-        DispatchData runInfo = SetDefaultInternal(newParams, tileXDim, tileYDim);
-
-        kd.reorderInput = CovolutionUpdateInputParams(newParams);
-
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            { WeightsLayout::oiyx },
-            kd.weightsReorderParams);
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto cldnn_jit = GetJitConstants(newParams, runInfo);
-        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, exeMode, true, !newParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return kd;
+        return GetCommonKernelsData(params, options, GetAutoTuneOptions(params, autoTuneIndex).exeMode, autoTuneIndex);
     }
 
     KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        KernelData kd = GetKernelDataInternal(params, options, ROUND_ROBIN);
-
-        return{ kd };
+        return GetTunedKernelsDataByIndex(params, options, -1);
     }
 
     KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetKernelsDataForAutoTune(const Params& params, const OptionalParams& options) const
@@ -219,14 +157,14 @@ namespace KernelSelector
         }
 
         KernelsData res = {};
-        int index = 0;
 
-        for (auto autoTuneOption : autoTuneOptions)
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
         {
-            KernelData kd = GetKernelDataInternal(params, options, std::get<2>(autoTuneOption), std::get<0>(autoTuneOption), std::get<1>(autoTuneOption));
-            kd.autoTuneIndex = index;
-            res.emplace_back(kd);
-            index++;
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
         }
 
         KernelsData defaultKds = GetKernelsData(params, options);

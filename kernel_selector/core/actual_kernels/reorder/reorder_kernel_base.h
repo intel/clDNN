@@ -26,9 +26,15 @@ namespace KernelSelector
     public:
         using CommonKernelBase::CommonKernelBase;
         virtual ~ReorderKernelBase() {}
+
+        using DispatchData = CommonDispatchData;
     
     protected:
         virtual JitConstants GetJitConstants(const ReorderWeightsParams& params) const;
         virtual JitConstants GetJitConstants(const ReorderParams& params) const;
+        virtual DispatchData SetDefault(const ReorderWeightsParams& params) const;
+        virtual DispatchData SetDefault(const ReorderParams& params) const;
+        KernelsData GetCommonKernelsData(const ReorderWeightsParams& params, const OptionalParams&, float estimated_time) const;
+        KernelsData GetCommonKernelsData(const ReorderParams& params, const OptionalParams&, float estimated_time) const;
     };
 }

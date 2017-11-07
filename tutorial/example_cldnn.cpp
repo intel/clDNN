@@ -216,7 +216,7 @@ int main_func()
     for (auto img_name : { "one.jpg", "two.jpg" })
     {
         // Reuse image memory.
-        copy_to_memory(input_memory, load_image_bfyx(img_name, in_layout.size.spatial[0], in_layout.size.spatial[1]));
+        copy_to_memory(input_memory, load_image_bfyx("one.jpg", in_layout.size.spatial[0], in_layout.size.spatial[1]));
         auto result = recognize_image(network, input_memory);
         cout << img_name << " recognized as" << result << endl;
     }

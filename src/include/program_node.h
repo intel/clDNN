@@ -18,6 +18,8 @@
 #include "api/CPP/primitive.hpp"
 #include "internal_primitive.h"
 
+#include "to_string_utils.h"
+#include "json_object.h"
 #include "meta_utils.h"
 
 namespace cldnn
@@ -45,6 +47,7 @@ struct internal_primitive_type_base;
 struct program_node
 {
     friend struct program_impl;
+    friend class constants_propagator;
 
     template <class PType>
     friend struct typed_program_node;
@@ -72,18 +75,17 @@ public:
     auto const& get_dependencies() const { return dependencies; }
     auto& get_dependency(size_t idx) const { return *dependencies.at(idx); }
 
-    auto get_dependencies_ids() const
-    {
-        std::vector<primitive_id> dep_ids;
-        for (auto& dependency : dependencies)
-            dep_ids.push_back(dependency->get_primitive()->id);
-        return dep_ids;
-    }
+    //replaces idx-th dependency of 'this' with 'new_dep', calls program::remove_if_dangling(old_dep, detach_whole_branch)
+    void replace_dependency(size_t idx, program_node& new_dep, bool detach_whole_branch = false);
+    //searches for 'old_dep' in dependecies list of 'this' and replaces it with 'new_dep', calls program::remove_if_dangling(old_dep, detach_whole_branch)
+    void replace_dependency(program_node const& old_dep, program_node& new_dep, bool detach_whole_branch = false);
 
-    void replace_dependency(size_t idx, program_node& new_dep);
-    void replace_dependency(program_node const& old_dep, program_node& new_dep);
+    std::vector<primitive_id> get_dependencies_ids() const;
 
     void remove_dependency(size_t idx);
+    void remove_dependency(program_node& node);
+
+    bool is_detached(bool whole_branch = false);
 
     auto const& get_users() { return users; }
     // for const method, add const to stored successors/predecessors
@@ -93,6 +95,7 @@ public:
     program_node* get_next() { auto itr = processing_itr; return (*++itr); }
     const program_node* get_next() const { auto itr = processing_itr; return (*++itr); }
 
+    json_composite desc_to_json() const;
     //do not modify primitive directly to keep synchronisation wit graph
     std::shared_ptr<const primitive> get_primitive() const { return desc; }
 
@@ -109,49 +112,37 @@ public:
         set_output_padding(padding::max(padd, output_layout.data_padding));
     }
 
-    layout get_output_layout();
+    //only calculated output layout (for external usage), does not modify/use cached output layout nor invalidate users
+    layout calc_output_layout() const;
 
-    layout get_output_layout() const
-    {
-        if (!valid_output_layout)
-            throw std::runtime_error("Output layout not calculated");
+    //uses cached output layout if vlid, if not calls 'calc_output_layout' and stores its result + invalidate all users if layout has changed and @p invalidate_users_if_changed is set to true
+    layout get_output_layout(bool invalidate_users_if_changed = true);
+    //returns cached output layout if valid, otherwise throws an exception
+    layout get_output_layout() const;
+    //returns result of get_output_layout without padding
+    layout get_non_padded_output_layout(bool invalidate_users_if_changed = true);
 
-        return output_layout;
-    }
+    //sets cached output layout to an arbitrary value, invalidates users if new layout differs from previous one and @p invalidate_users_if_changed is set to true
+    //returns whether output layout has changed
+    bool set_output_layout(layout new_layout, bool invalidate_users_if_changed = true);
 
-    void set_output_layout(layout layout)
-    {
-        layout.data_padding = output_layout.data_padding;
-        if (layout != output_layout) //output_layout has changed! invalidate users
-            invalidate_users();
-
-        output_layout = layout;
-        valid_output_layout = true;
-    }
-
-    void recalc_output_layout()
-    {
-        valid_output_layout = false;
-        get_output_layout();
-    }
+    //forces recalculation of cached output layout, invalidates users if new layout is different than previous one and @p invalidate_users_if_changed is set to true
+    //returns whether output layout has changed
+    bool recalc_output_layout(bool invalidate_users_if_changed = true);
 
     bool is_padded() { return static_cast<bool>(get_output_layout().data_padding); }
     bool is_padded() const { return static_cast<bool>(get_output_layout().data_padding); }
 
-    bool has_padded_dependency()
-    {
-        return std::any_of(get_dependencies().begin(), get_dependencies().end(), [](program_node* node) { return node->is_padded(); });
-    }
-
-    bool has_padded_dependency() const
-    {
-        return std::any_of(get_dependencies().begin(), get_dependencies().end(), [](const program_node* node) { return node->is_padded(); });
-    }
+    bool has_padded_dependency();
+    bool has_padded_dependency() const;
 
     auto is_input() const { return dependencies.empty(); }
     auto is_endpoint() const { return users.empty(); }
     auto set_output(bool out) { output = out; }
     auto is_output() const { return output; }
+
+    auto is_valid_output_layout() const { return valid_output_layout; }
+    auto get_processing_num() const { return processing_num; }
 
     uint8_t mark(uint8_t val = 1) { uint8_t ret = user_mark; user_mark = val; return ret; }
     void unmark() { user_mark = 0; }
@@ -178,6 +169,9 @@ public:
     auto can_be_optimized() const { return optimized; }
     void can_be_optimized(bool opt) { optimized = opt; }
 
+    primitive_id get_org_primitive_id() const { return org_id; }
+    void set_org_primitive_id(primitive_id org_prim_id) { org_id = org_prim_id; }
+
     // returns immidiate dominator of this node if it's not its direct predecessor, otherwise returns nullptr
     program_node* get_dominator() { return dominator; }
     const program_node* get_dominator() const { return dominator; }
@@ -192,6 +186,7 @@ public:
     bool is_split_point() const { return joint != nullptr; }
 
     bool is_constant() const { return constant; }
+    bool has_non_const_user() const { return (!constant || constant_frontier); }
 
     //returns true if all paths from network's source to sink must come through this node
     //(i.e. if this is a dominator of all the outputs)
@@ -250,6 +245,8 @@ protected:
     program_node* dominator = nullptr;
     program_node* joint = nullptr;
     bool constant = false;
+    bool constant_frontier = false;
+
     bool main_branch = true;
     bool data_flow = false;
 
@@ -257,6 +254,8 @@ protected:
     uint8_t user_mark = 0;
 
     bool optimized = false;
+
+    primitive_id org_id = "";
 
     struct fused_activation_params
     {
@@ -266,17 +265,7 @@ protected:
 
     fused_activation_params fused_activation;
 
-    void invalidate_users() const
-    {
-        for (auto& user : users)
-        {
-            if (user->valid_output_layout)
-            {
-                user->valid_output_layout = false;
-                user->invalidate_users();
-            }
-        }
-    }
+    void invalidate_users() const;
 };
 
 namespace details
@@ -363,7 +352,7 @@ struct typed_program_node : public typed_program_node_base<PType>
 {
     using typed_program_node_base<PType>::typed_program_node_base;
 
-    auto& input() const { return program_node::get_dependency(0); }
+    decltype(auto) input() const { return program_node::get_dependency(0); }
 };
 
 }

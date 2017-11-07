@@ -42,60 +42,8 @@ namespace KernelSelector {
         return k;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_Ref::SetDefault(const ConvolutionParams& params) const
-    {
-        DispatchData kd = ConvolutionKernelBase::SetDefault(params);
-
-        const auto& out = params.output;
-
-        std::vector<size_t> global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
-        auto local = GetOptimalLocalWorkGroupSizes(global);
-
-        kd.gws0 = global[0];
-        kd.gws1 = global[1];
-        kd.gws2 = global[2];
-
-        kd.lws0 = local[0];
-        kd.lws1 = local[1];
-        kd.lws2 = local[2];
-
-        return kd;
-    }
-
     KernelsData ConvolutionKernel_bfyx_Ref::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        const ConvolutionParams& orgParams = static_cast<const ConvolutionParams&>(params);
-
-        DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
-        
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            GetSupportedWeightLayouts(),
-            kd.weightsReorderParams);
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto cldnn_jit = GetJitConstants(newParams, runInfo);
-        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !newParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return{ kd };
+        return GetCommonKernelsData(params, options);
     }
 }

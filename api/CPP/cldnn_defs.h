@@ -64,21 +64,66 @@
 *  <B> Terminology: </B>
 *  - Primitive - dnn base functionality i.e. convolution, pooling, softmax. 
 *  - Data - special primitive type representing primitive parameters (weights and biases), inputs and outputs
-*  - Engine - type of accelerator that is executing network. Currently ocl engine is the only aviable. 
-*  - Topology - container of primitives, data, and relations between then. Topology represents graph. 
-*  - Program - optional step between Topology and Network. It is compiled Topology without memory allocations
-*  - Network - compiled Topology with memory allocations. Can be executed. During compilation, buidling parameters triggers special optimizations like fusing, data reordering.
+*  - Engine - type of accelerator that is executing network. Currently ocl engine is the only available. 
+*  - Topology - container of primitives, data, and relations between them. Topology represents graph. 
+*  - Program - optional step between Topology and Network. It is compiled Topology without memory allocation.
+*  - Network - compiled Topology with memory allocation. Ready to be executed. During compilation, buidling parameters trigger special optimizations like fusing, data reordering.
 *
 *  <B> Execution Steps: </B>
+*
+* \image html workflow.jpg
 * -# Create Engine
 * -# Declare or define primitives parameters (weights and biases) if needed.
-* -# Create primitives. Each primitive requires to provide input name. This is a name of primitive which output will be input to current one. Name can be used before primitive definition.
+* -# Create primitives. It is required to provide name for each primitive. This is a name of primitive which output will be input to current one. Name can be used before primitive definition.
 * -# Create topology
 * -# Add primitives to topology
 * -# Build Network from topology
 * -# Set Inputs data 
 * -# Execute Network
-
+*
+*
+* @section graph_compilation Graph compilation
+*
+* If user choose build option optimize_data when program is being created - explicit or implicit over network creation, clDNN perform some graph optimizations as follows:
+* * <B> Stage 0: Graph initiation:</B>
+*  * build nodes from primitives
+*  * node replacement: 
+*   * replace each split node with series of crop nodes. Name of crop primitive will be concatenation of split + port names. 
+*   * replace upsampling node with deconvolution node if upsampling mode is bilinear.
+*  * set outputs - mark nodes that are defined by user as output (blocks fusing etc) or have no users (leafs).
+*  * calculate processing order - using dfs on graph to establish processing order
+* * <B> Stage 1: Priorboxes:</B>
+*  * priorbox is primitive that is executed during network compilation. Node is removed from a network execution.
+* * <B> Stage 2: Graph analysis:</B>
+*  * mark constatns
+*  * mark data flow 
+*  * mark dominators
+* * <B> Stage 3: Trimming:</B>
+*  * apply backward bfs on each output to find unnecessary nodes/branches, then remove those. 
+* * <B> Stage 4: Inputs and biases:</B>
+*  * reorder input - format of convolution's input/output is being selected. 
+*  * reorder biases for conv,fc and deconv nodes
+* * <B> Stage 5: Redundant reorders:</B>
+*  * previous stages can provide additional reorders due to format changes per primitive. This stage removes redundant and fuses series of reorders into one.  
+* * <B> Stage 6: Constant propagation:</B>
+*  * prepare padding - goes thrugh all primitves and checks if its user requires padding, if so, set output padding.
+*  * prepare depthwise separable opt - if split param is greater than 16 and number of IFM <= 8*split in conv or deconv, this stage changes execution from multi kernels into one.
+*  * constant propagation - replace constant nodes, that are not outputs with data type nodes. Constant primitive is the primitive that doesn't depend on any non-constant primitive and doesn't have to be executed: priorbox, data.
+* * <B> Stage 7: Fusing:</B>
+*  * buffer fusing
+*   * concat - if concatenation is the only user of its dependencies then remove concat node and setting proper output paddings in every dependencies. 
+*   * crop - if crop has only one dependecy, and its users doesn't require padding, remove crop and set proper output padding in its dependecy.
+*   * reorder - if primitive before reorder supports different input vs output type reorder can be fused with previous node.
+*  * primitive fusing - right now this stage fuses activation node with previous node only, only if previous node supports activation fusing. 
+* * <B> Stage 8: Compile graph:</B>
+*  * at this stage using kernel selector, graph chooses the best kernel implementation for each node.
+* * <B> Stage 9: reorder weights:</B>
+*  * at this stage weights are converted into format suitable for selected kernel implementation.
+* * <B> Stage 10 & 11: Redundant reorders and constant propagation:</B>
+*  * check again if whole graph compilation didn't provide any redundant reorders and constants.
+* * <B> Stage 12: Compile program:</B>
+*  * at this stage engine compiles cl_kernels. 
+*
 * @section example C++ API Example MNIST network
 * @include example_cldnn.cpp
 */
@@ -183,6 +228,23 @@ inline void check_status<void>(std::string err_msg, std::function<void(status_t*
     func(&status);
     if (status != CLDNN_SUCCESS)
         CLDNN_THROW(err_msg.append(": ").append(cldnn_get_last_error_message()), status);
+}
+
+/// @}
+
+/// @defgroup cpp_version Version Information
+/// @{
+
+using version_t = ::cldnn_version;
+
+/// @brief Get information about version of clDNN.
+inline version_t get_version()
+{
+    return check_status<version_t>("get_version: fetching version information failed",
+                                   [](status_t* status)
+                                   {
+                                       return ::cldnn_get_version(status);
+                                   });
 }
 
 /// @}
@@ -303,6 +365,14 @@ inline cldnn_float_arr float_vector_to_arr(const std::vector<float>& stor)
 inline cldnn_uint16_t_arr uint16_t_vector_to_arr(const std::vector<uint16_t>& stor)
 {
     return{ stor.data(), stor.size() };
+}
+
+///
+/// \brief Converts std::vector<tensor> to C API tensor_array
+///
+inline cldnn_tensor_arr tensor_vector_to_arr(const std::vector<cldnn_tensor>& stor)
+{
+    return cldnn_tensor_arr{ stor.data(), stor.size() };
 }
 
 /// @}

@@ -15,8 +15,6 @@
 */
 
 #include "convolution_kernel_yxfb_yxio_b16.h"
-#include "kernel_selector_utils.h"
-#include "common_tools.h"
 
 namespace KernelSelector 
 {
@@ -43,7 +41,19 @@ namespace KernelSelector
         return k;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b16::SetDefault(const ConvolutionParams& arg) const
+    std::string ConvolutionKernel_yxfb_yxio_b16::GetKernelName(const ConvolutionParams& params) const
+    {
+        if (params.inputs[0].GetDType() == Datatype::F32)
+        {
+            return kernelName + "_fp32";
+        }
+        else
+        {
+            return kernelName + "_fp16";
+        }
+    }
+
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b16::SetDefault(const ConvolutionParams& arg, int) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
 
@@ -93,11 +103,6 @@ namespace KernelSelector
         }
         const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
 
-        if (!CheckPitchForSplitOnly(params))
-        {
-            return false;
-        }
-
         const auto filter_ofm_num = params.weights.OFM().v;
         const auto batch_size = params.output.Batch().v;
         const uint32_t min_lws = 16;
@@ -137,75 +142,40 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData ConvolutionKernel_yxfb_yxio_b16::GetKernelsData(const Params& params, const OptionalParams& options) const
+    JitConstants ConvolutionKernel_yxfb_yxio_b16::GetJitConstants(const ConvolutionParams& params, DispatchData kd) const
     {
-        if (!Validate(params, options))
+        auto jit = Parent::GetJitConstants(params, kd);
+
+        if (params.inputs[0].GetDType() == Datatype::F32)
         {
-            return{};
-        }
-
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
-
-        DispatchData runInfo = SetDefault(newParams);
-
-        if (!CheckWorkGroups(runInfo))
-        {
-            // Internal Error - wrong calculation of global/local work group sizes
-            return{};
-        }
-
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            { WeightsLayout::yxio },
-            kd.weightsReorderParams);
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto cldnn_jit = GetJitConstants(newParams, runInfo);
-
-        const auto batch_size = newParams.output.Batch().v;
-        const auto batch_pad_before = newParams.output.Batch().pad.before;
-        const auto feature_pitch = newParams.output.Feature().pitch;
-
-        std::string kernel_name_postfix;
-        if (newParams.inputs[0].GetDType() == Datatype::F32)
-        {
-            kernel_name_postfix = "_fp32";
-
             // A LITTLE HACK, for convolutions with low number of input features don't use block reads, and it will speed up by 25%
             // TODO - investigate why is this happening
-            if (newParams.inputs[0].Feature().v > 4)
+            if (params.inputs[0].Feature().v > 4)
             {
-                cldnn_jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_2", ""));
+                jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_2", ""));
             }
         }
         else
         {
-            kernel_name_postfix = "_fp16";
+            const auto batch_size = params.output.Batch().v;
+            const auto batch_pad_before = params.output.Batch().pad.before;
+            const auto feature_pitch = params.output.Feature().pitch;
+
             if (batch_size >= 64 && (feature_pitch % 2 == 0) && (batch_pad_before % 2 == 0))
             {
-                cldnn_jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_2", ""));
+                jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_2", ""));
             }
             else if (batch_size >= 32 && (feature_pitch % 2 == 0) && (batch_pad_before % 2 == 0))
             {
-                cldnn_jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_1", ""));
+                jit.AddConstant(MakeJitConstant("USE_BLOCK_READ_1", ""));
             }
         }
 
-        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
+        return jit;
+    }
 
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName + kernel_name_postfix, jit, entry_point, ROUND_ROBIN, true, !newParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return{ kd };
+    KernelsData ConvolutionKernel_yxfb_yxio_b16::GetKernelsData(const Params& params, const OptionalParams& options) const
+    {
+        return GetCommonKernelsData(params, options);
     }
 }

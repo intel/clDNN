@@ -12,14 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if(CLDNN_BUILT_FROM_OPENVX)
-  FIND_PACKAGE(OpenCL)
-  if (NOT OpenCL_FOUND)
-    message(STATUS "Couldn't build clDNN library. Skip plugin build." )
-    return( )
-  endif( )
-endif( )
-
 # =================================== Name / Output settings from parent ===============================
 
 set(CLDNN_BUILD__PROJ             "cldnn_kernel_selector")
@@ -84,7 +76,6 @@ file(GLOB_RECURSE __CLDNN_Sources__actual_kernels
     "${__CLDNN_Directory__actual_kernels}/*.cpp"
   )
 
-
 set(__CLDNN_Directory__cl_kernels      "${__CLDNN_Directory__core}/cl_kernels")
 set(__CLDNN_Label__cl_kernels          "${__CLDNN_Label__core}\\cl_kernels")
 file(GLOB_RECURSE __CLDNN_Sources__cl_kernels
@@ -122,7 +113,6 @@ source_group("${__CLDNN_Label__actual_kernels}"   FILES ${__CLDNN_Sources__actua
 source_group("${__CLDNN_Label__cl_kernels}"       FILES ${__CLDNN_Sources__cl_kernels})
 source_group("${__CLDNN_Label__cg_cache}"         FILES ${__CLDNN_Sources__cg_cache})
 
-
 # ===================================== Include/Link directories =======================================
 
 include_directories(
@@ -144,19 +134,13 @@ set_property(TARGET "${CLDNN_BUILD__PROJ}" PROPERTY PROJECT_LABEL "${CLDNN_BUILD
 set_property(TARGET "${CLDNN_BUILD__PROJ}" PROPERTY OUTPUT_NAME   "${CLDNN_BUILD__PROJ_OUTPUT_NAME}")
 
 
-if(CLDNN_BUILT_FROM_OPENVX)
-    target_link_libraries("${CLDNN_BUILD__PROJ}" 
-        ${OpenCL_LIBRARIES} 
-      )
-else()
-    target_link_libraries("${CLDNN_BUILD__PROJ}"
-        OpenCL
-      )
-endif()
+target_link_libraries("${CLDNN_BUILD__PROJ}"
+    OpenCL
+  )
 
 if(WIN32)
   target_link_libraries("${CLDNN_BUILD__PROJ}" setupapi)
-elseif(UNIX)
+elseif((NOT ANDROID) AND (UNIX))
   target_link_libraries("${CLDNN_BUILD__PROJ}" pthread)
 endif()
 

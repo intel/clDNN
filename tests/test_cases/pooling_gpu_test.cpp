@@ -396,6 +396,55 @@ TEST(pooling_forward_gpu, offsets_avg_yxfb_f32_wsiz2x2_wstr2x2_i2x2x1x1_zeropad)
     EXPECT_EQ(0.125f,  output_ptr[3]);
 }
 
+TEST(pooling_forward_gpu, offsets_avg_bfyx_f32_wsiz3x3_wstr3x3_i1x1x3x3_zeropad) {
+    //  Test the corner case when average pooling window contains data from image, data from padding and data outside padding
+    //
+    //  Pool window: 3x3
+    //  Pool stride: 3x3
+    //  Pool mode: avg
+    //  Padding: zero
+    //
+    //  Input offset : -1x-1
+    //  Input data:
+    //  [ padd, padd, padd, padd, padd]
+    //  [ padd,  1.5, -0.5, -1.0, padd]
+    //  [ padd,  0.5,  0.1,  0.2, padd]
+    //  [ padd,  0.9,  1.1,  2.2, padd]
+    //  [ padd, padd, padd, padd, padd]
+    //
+    //  Expected output:
+    //  [ 0.177777, -0.133333]
+    //  [ 0.333333,  0.55]
+
+    engine engine;
+
+    auto input_prim = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 3 } });
+
+    topology topology;
+    topology.add(input_layout("input_prim", input_prim.get_layout()));
+    topology.add(pooling("pool_prim", "input_prim", pooling_mode::average, { 1,1,3,3 }, { 1,1,3,3 }, { 0,0,-1,-1 }));
+
+    network network(engine, topology);
+
+    std::vector<float> input_vec = { 1.5f, -0.5f, -1.0f, 0.5f, 0.1f, 0.2f, 0.9f, 1.1f, 2.2f };
+    set_values(input_prim, input_vec);
+
+    network.set_input_data("input_prim", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "pool_prim");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<float>();
+
+    EXPECT_NEAR(output_ptr[0], 0.177777f, 1e-05F);
+    EXPECT_NEAR(output_ptr[1], -0.133333f, 1e-05F);
+    EXPECT_NEAR(output_ptr[2], 0.333333f, 1e-05F);
+    EXPECT_NEAR(output_ptr[3], 0.55f, 1e-05F);
+}
+
 TEST(pooling_forward_gpu, offsets_avg_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad) {
     //  Brief test description.
     //

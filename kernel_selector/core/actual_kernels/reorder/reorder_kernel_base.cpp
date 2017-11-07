@@ -17,6 +17,7 @@
 #include "kernel_selector_common.h"
 #include "reorder_kernel_base.h"
 #include "common_tools.h"
+#include "kernel_selector_utils.h" 
 
 namespace KernelSelector 
 {
@@ -67,5 +68,105 @@ namespace KernelSelector
         mem_consts.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", SubGroupSize(params.output.GetLayout())));
 
         return mem_consts;
+    }
+
+    ReorderKernelBase::DispatchData ReorderKernelBase::SetDefault(const ReorderWeightsParams& params) const
+    {
+        const auto& out = params.reorderParams.output;
+
+        DispatchData kd;
+
+        std::vector<size_t> global(3);
+
+        global = { out.OFM().v, out.IFM().v, out.X().v*out.Y().v };
+        auto local = GetOptimalLocalWorkGroupSizes(global);
+
+        kd.gws0 = global[0];
+        kd.gws1 = global[1];
+        kd.gws2 = global[2];
+
+        kd.lws0 = local[0];
+        kd.lws1 = local[1];
+        kd.lws2 = local[2];
+
+        return kd;
+    }
+
+    ReorderKernelBase::DispatchData ReorderKernelBase::SetDefault(const ReorderParams& params) const
+    {
+        DispatchData kd;
+
+        auto global = GetTensorFriendlyWorkGroups(params.inputs[0]);
+        auto local = GetOptimalLocalWorkGroupSizes(global);
+
+        kd.gws0 = global[0];
+        kd.gws1 = global[1];
+        kd.gws2 = global[2];
+
+        kd.lws0 = local[0];
+        kd.lws1 = local[1];
+        kd.lws2 = local[2];
+
+        return kd;
+    }
+
+    KernelsData ReorderKernelBase::GetCommonKernelsData(const ReorderWeightsParams& params, const OptionalParams& options, float estimated_time) const
+    {
+        assert(params.GetType() == KernelType::REORDER);
+
+        KernelData kd = KernelData::Default<ReorderWeightsParams>(params);
+        ReorderWeightsParams& newParams = *static_cast<ReorderWeightsParams*>(kd.params.get());
+
+        DispatchData runInfo;
+
+        runInfo = SetDefault(newParams);
+
+        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
+        auto cldnn_jit = GetJitConstants(newParams);
+        std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
+
+        auto& kernel = kd.kernels[0];
+        
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
+
+        kernel.arguments = GetArgsDesc(1, false, false);
+
+        kd.estimatedTime = estimated_time;
+
+        return{ kd };
+    }
+
+    KernelsData ReorderKernelBase::GetCommonKernelsData(const ReorderParams& params, const OptionalParams& options, float estimated_time) const
+    {
+        if (!Validate(params, options))
+        {
+            return{};
+        }
+        assert(params.GetType() == KernelType::REORDER);
+
+        KernelData kd = KernelData::Default<ReorderParams>(params);
+        ReorderParams& newParams = *static_cast<ReorderParams*>(kd.params.get());
+
+        DispatchData runInfo;
+
+        runInfo = SetDefault(newParams);
+
+        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
+        auto cldnn_jit = GetJitConstants(newParams);
+        std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
+
+        auto& kernel = kd.kernels[0];
+
+        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
+
+        kernel.arguments = GetArgsDesc(1, false, false);
+        if (newParams.reorderParams.mode == MeanSubtractMode::IN_BUFFER)
+        {
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::BIAS, 0 });
+        }
+
+        kd.estimatedTime = estimated_time;
+
+        return{ kd };
     }
 }

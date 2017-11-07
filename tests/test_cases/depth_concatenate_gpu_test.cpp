@@ -86,6 +86,83 @@ TEST(depth_concatenate_f32_gpu, test01) {
     EXPECT_FLOAT_EQ(-0.2f, output_ptr[9]);
 }
 
+TEST(depth_concatenate_f32_gpu, test02) {
+    //  Input count : 3 (yxfb, yxfb, bfyx)
+    //  Input1 : 2x 1x1 x 2
+    //  Input2 : 2x 1x1 x 3
+    //  Input3 : 2x 1x1 x 3
+    //
+    //  Input1 (yxfb):
+    //  0.5  0.7  :f0
+    //  0.2  0.4  :f1
+    //
+    //  Input2 (yxfb):
+    //  1    0.1  :f0
+    //  0.3 -0.5  :f1
+    //  0   -0.2  :f2
+    //
+    //  Input3 (bfyx):
+    //  1    0.1  :f0
+    //  0.3 -0.5  :f1
+    //  0   -0.2  :f2
+    //
+    //  Output:
+    //  0.5  0.7  :f0
+    //  0.2  0.4  :f1
+    //  1    0.1  :f2
+    //  0.3 -0.5  :f3
+    //  0   -0.2  :f4
+    //  1    0.1  :f5
+    //  0.3 -0.5  :f6
+    //  0   -0.2  :f7
+    //
+
+    engine engine;
+    auto input1 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2,2,1,1 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2,3,1,1 } });
+    auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2,3,1,1 } });
+
+    set_values(input1, { 0.5f, 0.7f, 0.2f, 0.4f });
+    set_values(input2, { 1.0f, 0.1f, 0.3f, -0.5f, 0.0f, -0.2f });
+    set_values(input3, { 1.0f, 0.3f, 0.0f, 0.1f, -0.5f, -0.2f });
+
+    topology topology;
+    topology.add(input_layout("input1", input1.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("input3", input3.get_layout()));
+    topology.add(concatenation("depth1", { "input1", "input2", "input3" }, concatenation::along_f));
+
+    network network(engine, topology);
+
+    network.set_input_data("input1", input1);
+    network.set_input_data("input2", input2);
+    network.set_input_data("input3", input3);
+
+    auto outputs = network.execute({});
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "depth1");
+
+    auto output = outputs.at("depth1").get_memory();
+
+    auto output_ptr = output.pointer<float>();
+    EXPECT_FLOAT_EQ(0.5f, output_ptr[0]);
+    EXPECT_FLOAT_EQ(0.7f, output_ptr[1]);
+    EXPECT_FLOAT_EQ(0.2f, output_ptr[2]);
+    EXPECT_FLOAT_EQ(0.4f, output_ptr[3]);
+    EXPECT_FLOAT_EQ(1.0f, output_ptr[4]);
+    EXPECT_FLOAT_EQ(0.1f, output_ptr[5]);
+    EXPECT_FLOAT_EQ(0.3f, output_ptr[6]);
+    EXPECT_FLOAT_EQ(-0.5f, output_ptr[7]);
+    EXPECT_FLOAT_EQ(0.0f, output_ptr[8]);
+    EXPECT_FLOAT_EQ(-0.2f, output_ptr[9]);
+    EXPECT_FLOAT_EQ(1.0f, output_ptr[10]);
+    EXPECT_FLOAT_EQ(0.1f, output_ptr[11]);
+    EXPECT_FLOAT_EQ(0.3f, output_ptr[12]);
+    EXPECT_FLOAT_EQ(-0.5f, output_ptr[13]);
+    EXPECT_FLOAT_EQ(0.0f, output_ptr[14]);
+    EXPECT_FLOAT_EQ(-0.2f, output_ptr[15]);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
 //                      Exhaustive Negative Matrix tests                    //
@@ -124,7 +201,6 @@ TEST(NegativeDepthConcatenateTest, DISABLED_TestAll) {
     auto od = data_types::f16;
 
     auto f = format::bfyx;
-    auto of = format::yxfb;
 
     std::vector<int> t { 1, 2, 3, 4 };
     std::vector<int> t0 { 7, 2, 3, 4 };
@@ -135,15 +211,12 @@ TEST(NegativeDepthConcatenateTest, DISABLED_TestAll) {
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ }, { }, { }));
 
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, od }, { tensor(t), tensor(t) }, { f, f }));
-    ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d }, { tensor(t), tensor(t) }, { f, of }));
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d }, { tensor(t), tensor(t0) }, { f, f }));
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d }, { tensor(t), tensor(t1) }, { f, f }));
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d }, { tensor(t), tensor(t2) }, { f, f }));
 
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, od, d }, { tensor(t), tensor(t), tensor(t) }, { f, f, f }));
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d, od }, { tensor(t), tensor(t), tensor(t) }, { f, f, f }));
-    ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d, d }, { tensor(t), tensor(t), tensor(t) }, { f, of, f }));
-    ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d, d }, { tensor(t), tensor(t), tensor(t) }, { f, f, of }));
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d, d }, { tensor(t), tensor(t0), tensor(t) }, { f, f, f }));
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d, d }, { tensor(t), tensor(t1), tensor(t) }, { f, f, f }));
     ASSERT_ANY_THROW(setup_depth_concatatenate_network({ d, d, d }, { tensor(t), tensor(t2), tensor(t) }, { f, f, f }));

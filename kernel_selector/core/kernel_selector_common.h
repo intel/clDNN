@@ -44,6 +44,7 @@ namespace KernelSelector {
 #define FORCE_PRIORITY_8 (0.0000008f)
 #define FORCE_PRIORITY_9 (0.0000009f)
 #define DONT_USE_IF_HAVE_SOMETHING_ELSE (1000000.f)
+#define TUTORIAL_PRIORITY (DONT_USE_IF_HAVE_SOMETHING_ELSE + 1.f)
 #define NOT_SUPPORTED (FLT_MAX)
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,6 +278,7 @@ namespace KernelSelector {
         case KernelSelector::DataLayout::bs_f_bsv8__af8:    return "BS_F_BSV8__AF8";
         case KernelSelector::DataLayout::bs_f_bsv16__af8:   return "BS_F_BSV16__AF8";
         case KernelSelector::DataLayout::brfyx:             return "BRFYX";
+        case KernelSelector::DataLayout::winograd_2x3_s1_data: return "WINOGRAD_2x3_S1_DATA";
         default: return "";
         }
     }
@@ -400,6 +402,7 @@ namespace KernelSelector {
         case KernelDividerMode::DONT_CARE:  return "DONT_CARE";
         case KernelDividerMode::FIXED:      return "FIXED";
         case KernelDividerMode::DYNAMIC:    return "DYNAMIC";
+        case KernelDividerMode::DYNAMIC_WITH_PADDING:    return "DYNAMIC_WITH_PADDING";
         default: return "";
         }
     }
@@ -442,6 +445,7 @@ namespace KernelSelector {
         case WeightsLayout::i_yxs_os_yxsv2_osv16:       return "I_YXS_OS_YXSV2_OSV16";
         case WeightsLayout::iy_xs_os_xsv2_osv16__ao32:  return "IY_XS_OS_XSV2_OSV16__AO32";
         case WeightsLayout::iy_xs_os_xsv2_osv8__ao32:   return "IY_XS_OS_XSV2_OSV8__AO32";
+        case WeightsLayout::winograd_2x3_s1_weights:    return "WINOGRAD_2x3_S1_WEIGHTS";
         default:
             return "";
             break;
@@ -456,6 +460,16 @@ namespace KernelSelector {
         case ConcatAxis::Y:         return "Y";
         case ConcatAxis::FEATURE:   return "FEATURE";
         case ConcatAxis::BATCH:     return "BATCH";
+        default: return "";
+        }
+    }
+
+    inline std::string toString(SampleType type)
+    {
+        switch (type)
+        {
+        case SampleType::NEAREST: return "SAMPLE_TYPE_NEAREST";
+        case SampleType::BILINEAR: return "SAMPLE_TYPE_BILINEAR";
         default: return "";
         }
     }

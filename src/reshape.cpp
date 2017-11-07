@@ -19,6 +19,7 @@
 #include "primitive_type_base.h"
 #include "memory_impl.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -31,22 +32,25 @@ primitive_type_id reshape_type_id()
 
 layout reshape_inst::calc_output_layout(reshape_node const& node)
 {
-    auto input_layout = node.input().get_output_layout();
+    auto input_layout = node.input().get_non_padded_output_layout();
     input_layout.size = node.get_primitive()->output_shape;
     return input_layout;
 }
 
 std::string reshape_inst::to_string(reshape_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc = node.get_primitive();
-    auto& input = node.input();
-    primitive_description << "id: " << desc->id << ", type: reshape" <<
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\toutput shape: " << desc->output_shape <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ", size: " << node.get_output_layout().size << '\n';
+    auto desc      = node.get_primitive();
+    auto node_info = node.desc_to_json();
+    auto& input    = node.input();
+
+    std::stringstream primitive_description;
+
+    json_composite reshape_info;
+    reshape_info.add("input id", input.id());
+    reshape_info.add("output shape", desc->output_shape);
+
+    node_info.add("reshape info", reshape_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

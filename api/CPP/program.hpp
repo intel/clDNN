@@ -19,6 +19,7 @@
 #include "cldnn_defs.h"
 #include "topology.hpp"
 #include "engine.hpp"
+#include <iostream>
 
 #include <memory>
 
@@ -186,7 +187,7 @@ private:
         {
             result[i] = stor[i].c_str();
         }
-        return std::move(result);
+        return result;
     }
 
     static std::vector<primitive_id> make_outputs_from_ref(const cldnn_build_option& value)

@@ -36,6 +36,30 @@ Accelerate Deep Learning Inference with Intel® Processor Graphics whitepaper [l
 
 ## Changelog
 
+### Drop 5.0
+	New features:
+	- split primitive
+	- upsampling primitive
+	- add CLK support
+	- uint8 weights support
+	- versioning
+	- offline autotuner cache
+	- Winograd phase 1 - not used yet
+	Bug fixes:
+	- in-place crop optimization bug fix
+	- output spatial padding in yxfb kernels fix
+	- local work sizes fix in softmax
+	- underflow fix in batch normalization
+	- average pooling corner case fix
+	UX:
+	- graph logger, dumps graphwiz format files
+	- extended documentation with API diagram and graph compilation steps
+	Performance:
+	- softmax optimization
+	- lrn within channel optimization
+	- priorbox optimization
+	- constant propagation
+
 ### Drop 4.0
 	New features:
 	- OOOQ execution model implementation
@@ -161,7 +185,7 @@ Download [clDNN source code](https://github.com/01org/cldnn/archive/master.zip)
 or clone the repository to your system:
 
 ```
-    git clone https://github.com/01org/cldnn.git
+    git clone  https://github.com/intel/cldnn.git
 ```
 
 Satisfy all software dependencies and ensure that the versions are correct before building.

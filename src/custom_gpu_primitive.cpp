@@ -18,6 +18,7 @@
 #include "custom_gpu_primitive_inst.h"
 #include "primitive_type_base.h"
 #include <sstream>
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -30,12 +31,21 @@ primitive_type_id custom_gpu_primitive_type_id()
 
 std::string custom_gpu_primitive_inst::to_string(custom_gpu_primitive_node const& node)
 {
+    auto desc      = node.get_primitive();
+    auto node_info = node.desc_to_json();
+    
     std::stringstream primitive_description;
-    auto desc = node.get_primitive();
 
-    primitive_description << "id: " << desc->id << ", type: custom primitive" << 
-        "\n\tentry point: " << desc->kernel_entry_point << '\n';
+    json_composite custom_gpu_prim_info;
+    custom_gpu_prim_info.add("entry point",   desc->kernel_entry_point);
+    custom_gpu_prim_info.add("kernels code",  desc->kernels_code.ref());
+    custom_gpu_prim_info.add("build options", desc->build_options);
+    custom_gpu_prim_info.add("gws", desc->gws);
+    custom_gpu_prim_info.add("lws", desc->lws);
     // TODO: consider printing more information here
+    node_info.add("custom primitive info", custom_gpu_prim_info);
+    node_info.dump(primitive_description);
+
     return primitive_description.str();
 }
 

@@ -40,7 +40,7 @@ namespace KernelSelector
                     {
                         if (blockWidth * blockHeight <= maxBlockSize)
                         {
-                            autoTuneOptions.emplace_back(blockWidth, blockHeight, prefetch, executionMode);
+                            autoTuneOptions.emplace_back(AutoTuneOption{ blockWidth, blockHeight, prefetch, executionMode });
                         }
                     }
                 }
@@ -98,7 +98,91 @@ namespace KernelSelector
         return std::make_pair(input_block_array_size, input_block_read_width);
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_os_iyx_osv16::SetDefaultInternal(const ConvolutionParams& arg, const size_t blockWidth, const size_t blockHeight, const size_t prefetch) const
+    static void shrink_blocks_to_output_size(size_t output_x, size_t output_y, size_t &block_x, size_t &block_y)
+    {
+        // how many elements we will compute in each dimension
+        size_t computed_x = Align(output_x, block_x);
+        size_t computed_y = Align(output_y, block_y);
+        // how many simds we need in each dimension
+        size_t simds_x = computed_x / block_x;
+        size_t simds_y = computed_y / block_y;
+        // how many unused values we have in each dimension
+        size_t unused_x = computed_x - output_x;
+        size_t unused_y = computed_y - output_y;
+
+        block_x -= unused_x / simds_x;
+        block_y -= unused_y / simds_y;
+    }
+
+    ConvolutionKernel_bfyx_os_iyx_osv16::AutoTuneOption ConvolutionKernel_bfyx_os_iyx_osv16::GetAutoTuneOptions(const Params& p, int autoTuneIndex) const
+    {
+        if ((autoTuneIndex >= 0) && (autoTuneIndex < (int)autoTuneOptions.size()))
+        {
+            return autoTuneOptions[autoTuneIndex];
+        }
+
+        // Sub-group size used by "kernel_name_bfyx_os_iyx_osv16" kernel.
+        constexpr size_t sub_group_size = 16;
+
+        AutoTuneOption option = { 0, 0, 0, ROUND_ROBIN };
+
+        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
+        const auto cp = params.convParams;
+
+        if (cp.stride.x == 1 && cp.stride.y == 1)
+        {
+            if (cp.filterSize.x == 1 && cp.filterSize.y == 1)
+            {
+                option.blockWidth = 16;
+                option.blockHeight = 1;
+                option.prefetch = 4;
+            }
+            //if less than 16 values is required to compute one single row of output
+            //then each WI shall compute one single row to maximize reuse within SIMD subgroup (this gives very nice performance results)
+            else if (params.output.X().v + (cp.filterSize.x - 1)*cp.dilation.x < sub_group_size)
+            {
+                option.blockWidth = params.output.X().v;
+                option.blockHeight = 1;
+                option.prefetch = 4;
+            }
+            else if (cp.filterSize.x < 5 && cp.filterSize.y < 5)
+            {
+                option.blockWidth = sub_group_size - cp.filterSize.x + 1;
+                option.blockHeight = 2;
+                option.prefetch = 4;
+            }
+            else
+            {
+                option.blockWidth = 4;
+                option.blockHeight = 3;
+                option.prefetch = 4;
+            }
+        }
+        else if (cp.stride.x == 2 && cp.stride.y == 2)
+        {
+            option.blockWidth = 5;
+            option.blockHeight = 4;
+            option.prefetch = 4;
+        }
+        else
+        {
+            option.blockWidth = 4;
+            option.blockHeight = 3;
+            option.prefetch = 5;
+            //run_info.effiency = FORCE_PRIORITY_7; // GEMM is better
+        }
+
+        // if this is not 1x1 batch1 case then shrink filters, other way we're memory bound and it's best to use 16x1 block sizes
+        if (params.convParams.filterSize.x != 1 || params.convParams.filterSize.y != 1 || params.output.Batch().v != 1)
+        {
+            shrink_blocks_to_output_size(params.output.X().v, params.output.Y().v,
+                option.blockWidth, option.blockHeight);
+        }
+
+        return option;
+    }
+
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_os_iyx_osv16::SetDefault(const ConvolutionParams& arg, int autoTuneIndex) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
 
@@ -113,60 +197,13 @@ namespace KernelSelector
 
         runInfo.effiency = FORCE_PRIORITY_3;
 
-        if (blockWidth == 0 || blockHeight == 0 || prefetch == 0) // Default case
-        {
-            if (cp.stride.x == 1 && cp.stride.y == 1)
-            {
-                if (cp.filterSize.x == 1 && cp.filterSize.y == 1)
-                {
-                	runInfo.cldnnStyle.blockWidth = 16;
-                	runInfo.cldnnStyle.blockHeight = 1;
-                	runInfo.cldnnStyle.prefetch = 4;
-                }
-                //if less than 16 values is required to compute one single row of output
-                //then each WI shall compute one single row to maximize reuse within SIMD subgroup (this gives very nice performance results)
-                else if (arg.output.X().v + (cp.filterSize.x - 1)*cp.dilation.x < sub_group_size)
-                {
-                	runInfo.cldnnStyle.blockWidth = arg.output.X().v;
-                	runInfo.cldnnStyle.blockHeight = 1;
-                	runInfo.cldnnStyle.prefetch = 4;
-                }
-                else if (cp.filterSize.x < 5 && cp.filterSize.y < 5)
-                {
-                	runInfo.cldnnStyle.blockWidth = sub_group_size - cp.filterSize.x + 1;
-                	runInfo.cldnnStyle.blockHeight = 2;
-                	runInfo.cldnnStyle.prefetch = 4;
-                }
-                else
-                {
-                	runInfo.cldnnStyle.blockWidth = 4;
-                	runInfo.cldnnStyle.blockHeight = 3;
-                	runInfo.cldnnStyle.prefetch = 4;
-                }
-            }
-            else if (cp.stride.x == 2 && cp.stride.y == 2)
-            {
-            	runInfo.cldnnStyle.blockWidth = 5;
-            	runInfo.cldnnStyle.blockHeight = 4;
-            	runInfo.cldnnStyle.prefetch = 4;
-            }
-            else
-            {
-            	runInfo.cldnnStyle.blockWidth = 4;
-            	runInfo.cldnnStyle.blockHeight = 3;
-            	runInfo.cldnnStyle.prefetch = 5;
-                //run_info.effiency = FORCE_PRIORITY_7; // GEMM is better
-            }
-        }
-        else // Auto-tuner case
-        {
-            runInfo.cldnnStyle.blockWidth = blockWidth;
-            runInfo.cldnnStyle.blockHeight = blockHeight;
-            runInfo.cldnnStyle.prefetch = prefetch;
-        }     
+        auto tuneOptions = GetAutoTuneOptions(arg, autoTuneIndex);
+        runInfo.cldnnStyle.blockWidth = tuneOptions.blockWidth;
+        runInfo.cldnnStyle.blockHeight = tuneOptions.blockHeight;
+        runInfo.cldnnStyle.prefetch = tuneOptions.prefetch;
 
         auto input_block_dims = get_bfyx_req_input_block_dims(
-            runInfo.cldnnStyle.blockWidth, 
+            runInfo.cldnnStyle.blockWidth,
             runInfo.cldnnStyle.blockHeight,
             cp.filterSize,
             cp.stride,
@@ -188,11 +225,6 @@ namespace KernelSelector
         return runInfo;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_os_iyx_osv16::SetDefault(const ConvolutionParams& arg) const
-    {
-        return SetDefaultInternal(arg);
-    }
-
     bool ConvolutionKernel_bfyx_os_iyx_osv16::Validate(const Params& p, const OptionalParams& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o) ||
@@ -204,85 +236,33 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, const int autoTuneIndex) const
+    JitConstants ConvolutionKernel_bfyx_os_iyx_osv16::GetJitConstants(const ConvolutionParams& params, DispatchData runInfo) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
+        auto jit = Parent::GetJitConstants(params, runInfo);
 
-        if (autoTuneIndex == -1)
-        {
-            return GetKernelsData(params, options);
-        }
-
-        if ((autoTuneIndex < 0) || (autoTuneIndex >= (int)autoTuneOptions.size()))
-        {
-            return{};
-        }
-
-        std::tuple<size_t, size_t, size_t, std::string> dispatchData = autoTuneOptions[autoTuneIndex];
-
-        KernelData kd = GetKernelDataInternal(params, options, std::get<3>(dispatchData), std::get<0>(dispatchData), std::get<1>(dispatchData), std::get<2>(dispatchData));
-
-        return { kd };
-    }
-
-    KernelData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelDataInternal(const Params& params, const OptionalParams& options, const std::string exeMode, const size_t blockWidth, const size_t blockHeight, const size_t prefetch) const
-    {
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
-
-        DispatchData runInfo = SetDefaultInternal(newParams, blockWidth, blockHeight, prefetch);
-
-        kd.reorderInput = CovolutionUpdateInputParams(newParams);
-
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            { WeightsLayout::os_iyx_osv16 },
-            kd.weightsReorderParams);
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto cldnn_jit = GetJitConstants(newParams, runInfo);
-        cldnn_jit.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", runInfo.lws2));
-        cldnn_jit.AddConstant(MakeJitConstant("OUTPUT_BLOCK_WIDTH", runInfo.cldnnStyle.blockWidth));
-        cldnn_jit.AddConstant(MakeJitConstant("OUTPUT_BLOCK_HEIGHT", runInfo.cldnnStyle.blockHeight));
-        cldnn_jit.AddConstant(MakeJitConstant("IN_BLOCK_ARRAY_SIZE", runInfo.cldnnStyle.inputBlockArraySize));
-        cldnn_jit.AddConstant(MakeJitConstant("IN_BLOCK_WIDTH", runInfo.cldnnStyle.inputBlockWidth));
-        cldnn_jit.AddConstant(MakeJitConstant("PREFETCH", runInfo.cldnnStyle.prefetch));
+        jit.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", runInfo.lws2));
+        jit.AddConstant(MakeJitConstant("OUTPUT_BLOCK_WIDTH", runInfo.cldnnStyle.blockWidth));
+        jit.AddConstant(MakeJitConstant("OUTPUT_BLOCK_HEIGHT", runInfo.cldnnStyle.blockHeight));
+        jit.AddConstant(MakeJitConstant("IN_BLOCK_ARRAY_SIZE", runInfo.cldnnStyle.inputBlockArraySize));
+        jit.AddConstant(MakeJitConstant("IN_BLOCK_WIDTH", runInfo.cldnnStyle.inputBlockWidth));
+        jit.AddConstant(MakeJitConstant("PREFETCH", runInfo.cldnnStyle.prefetch));
 
         if (runInfo.cldnnStyle.leftovers)
         {
-            cldnn_jit.AddConstant(MakeJitConstant("LEFTOVERS", runInfo.cldnnStyle.leftovers));
+            jit.AddConstant(MakeJitConstant("LEFTOVERS", runInfo.cldnnStyle.leftovers));
         }
 
-        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
+        return jit;
+    }
 
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, exeMode, true, !newParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return kd;
+    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, const int autoTuneIndex) const
+    {
+        return GetCommonKernelsData(params, options, GetAutoTuneOptions(params, autoTuneIndex).exeMode, autoTuneIndex);
     }
 
     KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        KernelData kd = GetKernelDataInternal(params, options, ROUND_ROBIN);
-
-        return { kd };
+        return GetTunedKernelsDataByIndex(params, options, -1);
     }
 
     KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelsDataForAutoTune(const Params& params, const OptionalParams& options) const
@@ -293,14 +273,14 @@ namespace KernelSelector
         }
 
         KernelsData res = {};
-        int index = 0;
 
-        for (auto autoTuneOption : autoTuneOptions)
+        for (size_t i = 0 ; i < autoTuneOptions.size(); i++)
         {
-            KernelData kd = GetKernelDataInternal(params, options, std::get<3>(autoTuneOption), std::get<0>(autoTuneOption), std::get<1>(autoTuneOption), std::get<2>(autoTuneOption));
-            kd.autoTuneIndex = index;
-            res.emplace_back(kd);
-            index++;
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
         }
 
         KernelsData defaultKds = GetKernelsData(params, options);

@@ -47,15 +47,12 @@ struct softmax_gpu : typed_primitive_gpu_impl<softmax>
             sm.dim = kernel_selector::softmax_dim::Y;
             break;
         case softmax::normalize_fyx: /* fallthru */
-            // W/A for bf/bx issue of cldnn
+            // Flatten fused with softmax
             input = input.FlattenFeatureAndSpatials();
             output = output.FlattenFeatureAndSpatials();
         case softmax::normalize_f:
             sm.dim = kernel_selector::softmax_dim::FEATURE;
             break;
-        case softmax::normalize_bfyx: /* fallthru */
-        case softmax::normalize_yx:   /* fallthru */
-        case softmax::normalize_b:    /* fallthru */
         default:
             throw std::runtime_error("Wrong API - no such softmax");
         }

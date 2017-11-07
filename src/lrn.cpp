@@ -17,6 +17,7 @@
 #include "lrn_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -28,27 +29,32 @@ primitive_type_id lrn_type_id()
 
 layout lrn_inst::calc_output_layout(lrn_node const& node)
 {
-    return node.input().get_output_layout();
+    return node.input().get_non_padded_output_layout();
 }
 
 std::string lrn_inst::to_string(lrn_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto& input                 = node.input();
-    auto norm_size              = desc->size;
-    auto k                      = desc->k;
-    auto alpha                  = desc->alpha;
-    auto beta                   = desc->beta;
-    auto norm_region            = desc->norm_region == cldnn_lrn_norm_region::cldnn_lrn_norm_region_across_channel ? "across channel" : "within channel";
+    auto node_info   = node.desc_to_json();
+    auto desc        = node.get_primitive();
+    auto norm_size   = desc->size;
+    auto k           = desc->k;
+    auto alpha       = desc->alpha;
+    auto beta        = desc->beta;
+    auto norm_region = desc->norm_region == cldnn_lrn_norm_region::cldnn_lrn_norm_region_across_channel ? "across channel" : "within channel";
+    auto& input      = node.input();
 
-    primitive_description << "id: " << desc->id << ", type: lrn" << 
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\tk: "     << k << ", alpha: " << alpha << ", beta: " << beta <<
-        "\n\tsize of normalization: " << norm_size << ", normalization region: " << norm_region <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: size: " << node.get_output_layout().size << '\n';
+    std::stringstream primitive_description;
+
+    json_composite lrn_info;
+    lrn_info.add("input id", input.id());
+    lrn_info.add("k", k);
+    lrn_info.add("alpha", alpha);
+    lrn_info.add("beta", beta);
+    lrn_info.add("size of normalization", norm_size);
+    lrn_info.add("normalization region", norm_region);
+
+    node_info.add("lrn info", lrn_info);
+    node_info.dump(primitive_description);
    
     return primitive_description.str();
 }

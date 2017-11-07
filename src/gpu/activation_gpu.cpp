@@ -19,6 +19,7 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "api/CPP/activation.hpp"
 
 namespace cldnn { namespace gpu {
 

@@ -18,6 +18,7 @@
 #include "primitive_type_base.h"
 #include "network_impl.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -43,14 +44,17 @@ layout detection_output_inst::calc_output_layout(detection_output_node const& no
 
 std::string detection_output_inst::to_string(detection_output_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto& input_location        = node.location();
-    auto& input_confidence      = node.confidence();
-    auto& input_prior_box       = node.prior_box();
-    auto share_location         = desc->share_location ? "true" : "false"; 
-    auto variance_encoded       = desc->variance_encoded_in_target ? "true" : "false";
-    std::string                 str_code_type;
+    auto node_info         = node.desc_to_json();
+    auto desc              = node.get_primitive();
+    auto share_location    = desc->share_location ? "true" : "false"; 
+    auto variance_encoded  = desc->variance_encoded_in_target ? "true" : "false";
+    auto& input_location   = node.location();
+    auto& input_prior_box  = node.prior_box();
+    auto& input_confidence = node.confidence();
+    
+    
+    std::stringstream primitive_description;
+    std::string       str_code_type;
 
     switch (desc->code_type)
     {
@@ -68,23 +72,24 @@ std::string detection_output_inst::to_string(detection_output_node const& node)
         break;
     }
     
-    primitive_description << "id: " << desc->id << ", type: detection_output" <<
-        "\n\tinput_location: " << input_location.id() << ", sizes: " << input_location.get_output_layout().size <<
-        "\n\tinput_confidence: " << input_confidence.id() << ", sizes: " << input_confidence.get_output_layout().size <<
-        "\n\tinput_prior_box: " << input_prior_box.id() << ", sizes: " << input_prior_box.get_output_layout().size <<
-        "\n\tnum_classes: " << desc->num_classes << 
-        "\n\tkeep_top_k: " << desc->keep_top_k << 
-        "\n\tshare_location: " << share_location << 
-        "\n\tbackground_label_id: " << desc->background_label_id << 
-        "\n\tnms_treshold: " << desc->nms_threshold <<
-        "\n\ttop_k: " << desc->top_k << 
-        "\n\teta: " << desc->eta << 
-        "\n\tcode_type: " << str_code_type << 
-        "\n\tvariance_encoded: " << variance_encoded << 
-        "\n\tconfidence_threshold: " << desc->confidence_threshold <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    json_composite detec_out_info;
+    detec_out_info.add("input location id", input_location.id());
+    detec_out_info.add("input confidence id", input_confidence.id());
+    detec_out_info.add("input prior box id", input_prior_box.id());
+    detec_out_info.add("num_classes:", desc->num_classes);
+    detec_out_info.add("keep_top_k", desc->keep_top_k);
+    detec_out_info.add("share_location", share_location);
+    detec_out_info.add("background_label_id", desc->background_label_id);
+    detec_out_info.add("nms_treshold", desc->nms_threshold);
+    detec_out_info.add("top_k", desc->top_k);
+    detec_out_info.add("eta", desc->eta);
+    detec_out_info.add("code_type", str_code_type);
+    detec_out_info.add("variance_encoded", variance_encoded);
+    detec_out_info.add("confidence_threshold", desc->confidence_threshold);
+    detec_out_info.dump(primitive_description);
+    
+    node_info.add("dection output info", detec_out_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

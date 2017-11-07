@@ -35,6 +35,7 @@
 #include "permute/permute_kernel_selector.h"
 #include "reshape/reshape_kernel_selector.h"
 #include "concatenation/concatenation_kernel_selector.h"
+#include "upsampling/upsampling_kernel_selector.h"
 #include "jitter.h"
 
 using namespace cldnn;
@@ -66,7 +67,8 @@ namespace kernel_selector
     using softmax_dim                       = KernelSelector::SoftmaxDim;
     using mean_subtruct_mode                = KernelSelector::MeanSubtractMode;
     using concat_axis                       = KernelSelector::ConcatAxis;
-	using tuning_mode                       = KernelSelector::TuningMode;
+    using tuning_mode                       = KernelSelector::TuningMode;
+    using sample_type                       = KernelSelector::SampleType;
 
     using data_tensor                       = KernelSelector::DataTensor;
     using weights_tensor                    = KernelSelector::WeightsTensor;
@@ -94,6 +96,7 @@ namespace kernel_selector
     using concatenation_params              = KernelSelector::ConcatenationParams;
     using weights_reorder_params            = KernelSelector::WeightsReorderParams;
     using generic_kernel_params             = KernelSelector::GenericKernelParams;
+    using upsampling_params                 = KernelSelector::UpSamplingParams;
 
     using optional_params                   = KernelSelector::OptionalParams;
     using weights_bias_optional_params      = KernelSelector::WeightsBiasOptionalParams;
@@ -109,6 +112,7 @@ namespace kernel_selector
     using eltwise_optional_params           = KernelSelector::EltwiseOptionalParams;
     using reorder_optional_params           = KernelSelector::ReorderOptionalParams;
     using concatenation_optional_params     = KernelSelector::ConcatenationOptionalParams;
+    using upsampling_optional_params        = KernelSelector::UpSamplingOptionalParams;
 
     using convolution_kernel_selector       = KernelSelector::ConvolutionKernelSelctor;
     using deconvolution_kernel_selector     = KernelSelector::DeconvolutionKernelSelctor;
@@ -124,6 +128,7 @@ namespace kernel_selector
     using reshape_kernel_selector           = KernelSelector::ReshapeKernelSelctor;
     using permute_kernel_selector           = KernelSelector::PermuteKernelSelctor;
     using concatenation_kernel_selector     = KernelSelector::ConcatenationKernelSelctor;
+    using upsampling_kernel_selector        = KernelSelector::UpSamplingKernelSelector;
 }
 
 inline kernel_selector::data_type to_data_type(data_types dt)
@@ -131,6 +136,7 @@ inline kernel_selector::data_type to_data_type(data_types dt)
     switch (dt)
     {
     case cldnn::data_types::i8:     return kernel_selector::data_type::INT8;
+    case cldnn::data_types::u8:     return kernel_selector::data_type::UINT8;
     case cldnn::data_types::f16:    return kernel_selector::data_type::F16;
     case cldnn::data_types::f32:    return kernel_selector::data_type::F32;
     default:
@@ -144,6 +150,7 @@ inline data_types from_data_type(kernel_selector::data_type dt)
     switch (dt)
     {
     case kernel_selector::data_type::INT8:   return cldnn::data_types::i8;
+    case kernel_selector::data_type::UINT8:   return cldnn::data_types::u8;
     case kernel_selector::data_type::F16:    return cldnn::data_types::f16;
     case kernel_selector::data_type::F32:    return cldnn::data_types::f32;
     default:
@@ -189,6 +196,7 @@ inline kernel_selector::data_layout to_data_layout(format f)
     case format::bs_x_bsv16:        return kernel_selector::data_layout::bs_f_bsv16__af8;
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::data_layout::bs_f_bsv8__af8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::data_layout::bs_f_bsv16__af8;
+    case format::winograd_2x3_s1_data:  return kernel_selector::data_layout::winograd_2x3_s1_data;
 //     case format::brfyx:          return kernel_selector::data_layout::brfyx;
     default:
         return kernel_selector::data_layout::bfyx;
@@ -208,6 +216,7 @@ static inline cldnn::format from_data_layout(kernel_selector::data_layout l)
     case kernel_selector::data_layout::bs_f_bsv8__af8:    return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::data_layout::bs_f_bsv16__af8:   return cldnn::format::bs_x_bsv16;
     case kernel_selector::data_layout::brfyx:             return cldnn::format::bfyx;
+    case kernel_selector::data_layout::winograd_2x3_s1_data:   return cldnn::format::winograd_2x3_s1_data;
     default:
         return cldnn::format::bfyx;
         break;
@@ -226,6 +235,7 @@ inline kernel_selector::weights_layout to_weights_layout(format f)
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::weights_layout::os_i_osv8__ai8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::weights_layout::os_i_osv16__ai8;
     case format::bs_x_bsv16:        return kernel_selector::weights_layout::os_i_osv16;
+    case format::winograd_2x3_s1_weights:        return kernel_selector::weights_layout::winograd_2x3_s1_weights;
     default:
         return kernel_selector::weights_layout::oi;
     }
@@ -245,6 +255,7 @@ static inline cldnn::format from_weights_layout(kernel_selector::weights_layout 
     case kernel_selector::weights_layout::os_i_osv16:         return cldnn::format::bs_x_bsv16;
     case kernel_selector::weights_layout::os_i_osv8__ai8:     return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::weights_layout::os_i_osv16__ai8:    return cldnn::format::bs_xs_xsv8_bsv16;
+    case kernel_selector::weights_layout::winograd_2x3_s1_weights:    return cldnn::format::winograd_2x3_s1_weights;
     default:
         return cldnn::format::bfyx;
     }
@@ -260,6 +271,13 @@ inline kernel_selector::tuning_mode to_tuning_mode(cldnn::tuning_mode mode)
     default:
         return kernel_selector::tuning_mode::TUNING_DISABLED;
     }
+}
+
+inline std::string to_host_version(const cldnn::version_t& version)
+{
+    std::stringstream ss;
+    ss << version.major << "." << version.minor << "." << version.build << "." << version.revision;
+    return ss.str();
 }
 
 inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_t split = 1, const tensor view_offset = {})
@@ -401,6 +419,9 @@ inline params_t get_default_params(const arg_t& arg, uint32_t split = 1)
     params.engineInfo.bFP64Support          = context->extension_supported("cl_khr_fp64");
     params.engineInfo.maxWorkGroupSize      = engine_info.max_work_group_size;
     params.engineInfo.maxLocalMemSize       = engine_info.max_local_mem_size;
+    params.engineInfo.deviceId              = engine_info.dev_id;
+    params.engineInfo.driverVersion         = engine_info.driver_version;
+    params.engineInfo.hostVersion           = to_host_version(cldnn::get_version());
     
     const auto& input_layout    = arg.input().get_output_layout();
     const auto& output_layout   = arg.get_output_layout();
@@ -444,8 +465,8 @@ inline optional_params_t get_default_optional_params(const program_impl& program
     params.allowStaticInputReordering   = program.get_options().get<build_option_type::optimize_data>()->enabled();
     params.allowInputReordering         = false;
     params.allowOutputReordering        = false;
-	
-	const auto& tuning_config = program.get_options().get<build_option_type::tuning_config>();
+    
+    const auto& tuning_config = program.get_options().get<build_option_type::tuning_config>();
     params.tuningParams.mode = to_tuning_mode(tuning_config->config.mode);
     params.tuningParams.cacheFilePath = tuning_config->config.cache_file_path;
 

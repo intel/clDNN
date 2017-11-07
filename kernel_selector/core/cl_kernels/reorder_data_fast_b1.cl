@@ -13,7 +13,10 @@
 // limitations under the License.
 
 
-#include "include/include_all.cl"
+#include "include/fetch.cl"
+#include "include/data_types.cl"
+#include "include/reshape_dims.cl"
+#include "include/activation_functions.cl"
 
 ///////////////////////// Input Index /////////////////////////
 inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
@@ -43,8 +46,8 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
 }
 
 KERNEL (reorder_data_fast_b1)(
-    const __global INPUT0_TYPE* input, 
-    __global OUTPUT_TYPE* output
+    const __global INPUT_REORDER_TYPE* input, 
+    __global OUTPUT_REORDER_TYPE* output
 #ifdef MEAN_SUBTRACT_IN_BUFFER
     , __global MEAN_SUBTRACT_TYPE* mean_subtract
 #endif
@@ -54,6 +57,7 @@ KERNEL (reorder_data_fast_b1)(
     if(data_idx >= ELEMENTS_COUNT)
         return;
  
+ // We're checking output layout instead of input layout intentionally for performance reason
  #if defined OUTPUT_LAYOUT_BFYX
     uint tmp_data_idx = data_idx / INPUT0_BATCH_NUM;
     const uint b = data_idx - tmp_data_idx * INPUT0_BATCH_NUM;
@@ -63,6 +67,8 @@ KERNEL (reorder_data_fast_b1)(
     const uint f = data_idx - tmp_data_idx * INPUT0_FEATURE_NUM;
     data_idx = tmp_data_idx;
 
+    // We're first iterating over Y then over X for performance reason
+    // Otherwise we could compute X and Y in reverse order
     tmp_data_idx = data_idx / INPUT0_SIZE_X;
     const uint x = data_idx - tmp_data_idx * INPUT0_SIZE_X;
     data_idx = tmp_data_idx;
@@ -70,6 +76,8 @@ KERNEL (reorder_data_fast_b1)(
     tmp_data_idx  = data_idx / INPUT0_SIZE_Y;
     const uint y = data_idx - tmp_data_idx * INPUT0_SIZE_Y;
 #elif defined OUTPUT_LAYOUT_YXFB
+    // We're first iterating over Y then over X for performance reason
+    // Otherwise we could compute X and Y in reverse order
     uint tmp_data_idx = data_idx / INPUT0_SIZE_X;
     const uint x = data_idx - tmp_data_idx * INPUT0_SIZE_X;
     data_idx = tmp_data_idx;
@@ -113,7 +121,5 @@ KERNEL (reorder_data_fast_b1)(
     res -= TO_CALC_TYPE(mean_subtract[GET_DATA_INDEX_SAFE(MEAN_SUBTRACT, msv[0], msv[1], msv[2], msv[3])]);
 #endif
 
-    output[output_idx] = ACTIVATION(TO_OUTPUT_TYPE(res), NL_M ,NL_N);
+    output[output_idx] = ACTIVATION(TO_OUTPUT_REORDER_TYPE(res), NL_M ,NL_N);
 }
-
-#undef GET_DATA_INDEX_SAFFFE

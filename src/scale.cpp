@@ -17,6 +17,7 @@
 #include "scale_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -28,9 +29,9 @@ primitive_type_id scale_type_id()
 
 layout scale_inst::calc_output_layout(scale_node const& node)
 {
-    auto result = node.input().get_output_layout();
+    auto result = node.input().get_non_padded_output_layout();
 
-    auto scale_sizes = node.scale_in().get_output_layout().size;
+    auto scale_sizes = node.scale_in().get_non_padded_output_layout().size;
     auto input_sizes = result.size;
 
     auto scale_x_size = scale_sizes.spatial[0];
@@ -53,19 +54,19 @@ layout scale_inst::calc_output_layout(scale_node const& node)
 
 std::string scale_inst::to_string(scale_node const& node)
 {
-    std::stringstream               primitive_description;
-    auto desc                        = node.get_primitive();
-    auto bias_count                  = desc->bias == "" ? 0 : node.bias().get_output_layout().count();
-    auto& input                      = node.input();
-    auto& scale_input                = node.scale_in();
+    auto desc         = node.get_primitive();
+    auto node_info    = node.desc_to_json();
+    auto& input       = node.input();
+    auto& scale_input = node.scale_in();
 
-    primitive_description << "id: " << desc->id << ", type: scale" << 
-        "\n\tinput: "         << input.id() << ", count: " << input.get_output_layout().count() << ",  size: " << input.get_output_layout().size <<
-        "\n\tscale input: "   << scale_input.id() << ", count: " << scale_input.get_output_layout().count() << ",  size: " << scale_input.get_output_layout().size <<
-        "\n\tbias count: "    << bias_count <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    std::stringstream primitive_description;
+
+    json_composite scale_info;
+    scale_info.add("input", input.id());
+    scale_info.add("scale input", scale_input.id());
+
+    node_info.add("scale info", scale_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }
@@ -101,7 +102,7 @@ scale_inst::typed_primitive_inst(network_impl& network, scale_node const& node)
         for (size_t i = 0; i < bias_memory().get_layout().size.raw.size(); ++i)
         {
             if (scale_memory().get_layout().size.raw[i] != bias_raw_sizes[i])
-                CLDNN_ERROR_MESSAGE(node.id(), "Scale input size do not match bias size! Size index:" + i);
+                CLDNN_ERROR_MESSAGE(node.id(), "Scale input size do not match bias size! Size index:" + std::to_string(i));
         }
     }
 }

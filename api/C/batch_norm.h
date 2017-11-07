@@ -31,25 +31,19 @@ extern "C" {
 #endif
 
 /// @brief Batch normalization primitive.
-/// @details Performs batch normalization as discribed in
+/// @details Performs batch normalization as described in
 /// "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift" by Ioffe, Szegedy
 /// @n See: http://arxiv.org/abs/1502.03167
 /// 
 /// <b>Algorithm:</b>
 /// @n global stats can be computed as:
-/// @n mean = &Sigma;(whole_feature_map_accros_batch)/(batch_size*in_x*in_y)
-/// @n variance = &Sigma;((x[i] - mean)^2)/(batch_size*in_x*in_y) 
 /// @n out[i] = in[i] - mean[b] / sqrt(variance[b] + epsilon)
-/// @n when global_stats argument is set, mean and variance computation is skipped, values are provided from API.
-/// Otherwise mean and variance primitives are ignored
 
 CLDNN_BEGIN_PRIMITIVE_DESC(batch_norm)
 /// @brief Primitive id containing mean data.
 cldnn_primitive_id mean;
 /// @brief Primitive id containing variance.
 cldnn_primitive_id variance;
-/// @brief Use global statistics.
-uint32_t use_global_stats;
 /// @brief Epsilon.
 float epsilon;
 CLDNN_END_PRIMITIVE_DESC(batch_norm)

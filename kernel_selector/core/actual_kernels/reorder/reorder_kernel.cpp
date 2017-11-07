@@ -22,6 +22,7 @@ namespace KernelSelector
     ParamsKey ReorderKernelRef::GetSupportedKey() const
     {
         ParamsKey k;
+        k.EnableInputDataType(Datatype::UINT8);
         k.EnableInputDataType(Datatype::F16);
         k.EnableInputDataType(Datatype::F32);
         k.EnableOutputDataType(Datatype::F16);
@@ -44,33 +45,7 @@ namespace KernelSelector
 
     KernelsData ReorderKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-        assert(params.GetType() == KernelType::REORDER);
-
-        KernelData kd = KernelData::Default<ReorderParams>(params);
-        ReorderParams& newParams = *static_cast<ReorderParams*>(kd.params.get());
-
-        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto cldnn_jit = GetJitConstants(newParams);
-        std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
-        
-        auto& kernel = kd.kernels[0];
-
-        kernel.workGroups.global = GetTensorFriendlyWorkGroups(newParams.inputs[0]);
-        kernel.workGroups.local = GetOptimalLocalWorkGroupSizes(kernel.workGroups.global);
-
-        kernel.kernelString = GetKernelString(kernelName, jit, entry_point, ROUND_ROBIN);
-        kernel.arguments = GetArgsDesc(1, false, false);
-        if (newParams.reorderParams.mode == MeanSubtractMode::IN_BUFFER)
-        {
-            kernel.arguments.push_back({ ArgumentDescriptor::Types::BIAS, 0 });
-        }
-
-        kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
-
-        return{ kd };
+        const ReorderParams& orgParams = static_cast<const ReorderParams&>(params);
+        return GetCommonKernelsData(orgParams, options, DONT_USE_IF_HAVE_SOMETHING_ELSE);
     }
 }

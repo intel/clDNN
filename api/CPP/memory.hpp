@@ -35,6 +35,8 @@ namespace cldnn
 
 template<typename T> struct pointer;
 
+namespace details { struct memory_c_to_cpp_converter; }
+
 /// @brief Represents buffer with particular @ref layout.
 /// @details Usually allocated by @ref engine except cases when attached to user-allocated buffer.
 struct memory
@@ -42,6 +44,7 @@ struct memory
     friend struct data;
     friend struct network;
     friend struct network_output;
+    friend struct details::memory_c_to_cpp_converter;
 
     /// Allocate memory on @p engine using specified @p layout
     static memory allocate(const engine& engine, const layout& layout)
@@ -184,6 +187,19 @@ private:
         check_status<void>("memory unlock failed", [=](status_t* status) { return cldnn_unlock_memory(_impl, status); });
     }
 };
+
+namespace details
+{
+//we need this hackish structure as long as primitives (which are used internally) use c++ api 'memory' (see: cldnn::data)
+struct memory_c_to_cpp_converter
+{
+    //does not retain @p c_mem
+    static memory convert(cldnn_memory c_mem)
+    {
+        return memory{ c_mem };
+    }
+};
+}
 
 /// @brief Helper class to get an access @ref memory data
 /// @details

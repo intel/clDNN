@@ -38,8 +38,12 @@ public:
     auto requires_reinterpret() const { return req_reinterpr; }
     void requires_reinterpret(bool val) { req_reinterpr = (optimized && val); }
 
+    void set_input_offset(tensor const& io) { input_offset = io; }
+    tensor get_input_offset() const { return input_offset; }
+
 private:
     bool req_reinterpr = false;
+    tensor input_offset = tensor{ 0 }; //used by reorder to winograd domain
 };
 
 using reorder_node = typed_program_node<reorder>;

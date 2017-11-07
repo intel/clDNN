@@ -24,13 +24,12 @@ namespace KernelSelector {
     {
     public:
         FullyConnected_bf_io_input_spatial() : FullyConnectedKernelBase("fully_connected_gpu_bf_io_input_spatial") {}
-        virtual ~FullyConnected_bf_io_input_spatial() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
+        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        ParamsKey GetSupportedKey() const override;
 
     protected:
         bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const FullyConnectedParams& arg) const override;
+        std::unique_ptr<DispatchData> SetDefault(const FullyConnectedParams& arg) const override;
     };
 }

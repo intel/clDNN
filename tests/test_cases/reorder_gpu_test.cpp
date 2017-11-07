@@ -19,6 +19,7 @@
 #include "api/CPP/memory.hpp"
 #include <api/CPP/input_layout.hpp>
 #include "api/CPP/reorder.hpp"
+#include "api/CPP/crop.hpp"
 #include <api/CPP/topology.hpp>
 #include <api/CPP/network.hpp>
 #include <api/CPP/engine.hpp>
@@ -558,6 +559,130 @@ TEST(reorder_gpu, basic_convert_f16_f32_f16) {
     }
 }
 
+TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
+	//  Converts an ARGB(uint8) image to common clDNN input of bfyx FP32
+	//
+	//  Input               : 1x5x5x4 (UINT8)
+	//  Intermediate        : 1x4x5x5 (FP32) {different mem format and ordering}
+	//  Output              : 1x3x5x5 (FP32) {using crop layer to reduce feature dimention and drop A from RGBA}
+	//
+	//  Output is expected to contain the same value as input 
+	//
+	const int kernel_size = 5;
+	const int feature_size = 4;
+	engine engine;
+
+	if (!engine.get_info().supports_fp16)
+	{
+		std::cout << "[ SKIPPED ] The test is skipped (cl_khr_fp16 is not supported)." << std::endl;
+		EXPECT_EQ(1, 1);
+		return;
+	}
+
+	std::initializer_list<uint8_t> input_i8 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+		55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36,
+		101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
+		155, 154, 153, 152, 151, 150, 149, 148, 147, 146, 145, 144, 143, 142, 141, 140, 139, 138, 137, 136,
+		255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 243, 242, 241, 240, 239, 238, 237, 236
+	};
+
+	layout in_layout = { type_to_data_type<uint8_t>::value,format::byxf,{ 1,4,kernel_size,kernel_size } };
+	layout output_layout = { type_to_data_type<float>::value, format::bfyx, {1,4,kernel_size,kernel_size } };
+
+	// Allocate memory for input image.
+	auto input_memory = memory::allocate(engine, in_layout);
+	set_values(input_memory, input_i8);
+
+
+
+
+	// Create input_layout description
+	// "input" - is the primitive id inside topology
+	input_layout input("input", in_layout);
+
+	// Create topology object with 2 primitives
+	topology topology(
+		// 1. input layout primitive.
+		input,
+		// 2. reorder primitive with id "reorder_input"
+		reorder("reorder_input",
+			// input primitive for reorder (implicitly converted to primitive_id)
+			input,
+			// output layout for reorder
+			output_layout)
+	);
+
+	tensor crop_reference_input_tensor(spatial(kernel_size, kernel_size), batch(1), feature(4 - 1));
+	tensor crop_offset_tensor(spatial(0, 0), batch(0), feature(0));
+	padding output_padding = padding({ 0,0,0,0 }, { 0,0,0,0 }, 0);
+	topology.add(
+		// cropping primitive with id "crop1"
+		crop("crop",
+			"reorder_input",    // primitive id of the cropping input
+			crop_reference_input_tensor,  // input tensor
+			crop_offset_tensor,    // bias primitive id
+			output_padding
+		)
+	);
+
+	network network(
+		engine,
+		topology,
+		{
+			build_option::outputs({ "reorder_input", "crop" })
+		});
+
+    network.set_input_data("input", input_memory);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(2));
+    EXPECT_TRUE(outputs.find("reorder_input") != outputs.end());
+    EXPECT_TRUE(outputs.find("crop") != outputs.end());
+
+    auto interm = outputs.at("reorder_input").get_memory();
+    auto interm_ptr = interm.pointer<float>();
+    auto interm_size = outputs.at("reorder_input").get_memory().count();
+    EXPECT_EQ(interm_size,(size_t) (1*feature_size*kernel_size*kernel_size));
+
+    // Sample positive.
+    EXPECT_TRUE(are_equal(interm_ptr[0], 1.0f));
+    size_t source_index = 0;
+    size_t target_index = 0;
+    std::vector<uint8_t> testinput;// This will be used to direct access elements of test input in the next test
+    for (auto it = input_i8.begin(); it < input_i8.end(); it++)
+    {
+        
+        uint8_t val = *it;
+        testinput.push_back(val); // This will be used to direct access elements of test input in the next test
+        size_t current_feature = source_index % feature_size;
+        size_t current_x = (source_index / feature_size) % kernel_size;
+        size_t current_y = (source_index / (feature_size * kernel_size));
+        target_index = current_x + current_y*kernel_size + current_feature*(kernel_size*kernel_size);
+        EXPECT_TRUE(are_equal(val, interm_ptr[target_index]));
+        source_index++;
+    }
+
+    auto output = outputs.at("crop").get_memory();
+    auto output_ptr = output.pointer<float>();
+    auto output_size = outputs.at("crop").get_memory().count();
+    EXPECT_EQ(output_size,(size_t) (1 * (feature_size-1)*kernel_size*kernel_size));
+
+    for (target_index = 0; target_index < output_size; target_index++)
+    {
+        float output_val = output_ptr[target_index];
+        int current_x = target_index % kernel_size;
+        int current_y = (target_index / kernel_size) % kernel_size;
+        size_t current_feature = target_index / (kernel_size*kernel_size);
+
+        source_index = current_x*feature_size + current_y*(kernel_size*feature_size) + current_feature;
+        EXPECT_TRUE(are_equal(output_val, testinput[source_index]));
+    }
+
+}
+
+
+
+
 TEST(reorder_gpu_f32, basic_yxfb_to_bfyx_input_padding)
 {
     //  Input               : yxfb:2x2x2x2
@@ -729,14 +854,14 @@ TEST(reorder_gpu_opt, basic_remove_redundant)
     };
 
     build_options opts;
-    opts.set_option(build_option::debug(true)); //to enable query for optimized memory
     opts.set_option(build_option::optimize_data(true));
 
     network net(eng, tpl, opts);
     net.set_input_data("in", in);
     auto outputs = net.execute();
+    auto executed_primitives = net.get_executed_primitives();
 
-    EXPECT_TRUE(outputs.count("r1") == 0);
+    EXPECT_TRUE(executed_primitives.count("r1") == 0);
     ASSERT_TRUE(outputs.count("r2") == 1);
     EXPECT_TRUE(outputs.at("r2").get_memory().get_layout().format == format::yxfb);
 }
@@ -755,16 +880,17 @@ TEST(reorder_gpu_opt, basic_remove_redundant_due_to_implicit_reorders)
     };
 
     build_options opts;
-    opts.set_option(build_option::debug(true)); //to enable query for optimized memory
     opts.set_option(build_option::optimize_data(true));
 
     network net(eng, tpl, opts);
     net.set_input_data("in", in);
     auto outputs = net.execute();
+    auto executed_primitives = net.get_executed_primitives();
 
-    EXPECT_TRUE(outputs.count("r1") == 0);
-    ASSERT_TRUE(outputs.count("conv") == 1);
-    EXPECT_TRUE(outputs.at("conv").get_memory().get_layout().format == format::bfyx);
+    //remove redundant reorder optimization should replace redundant reorder node with convolution
+    EXPECT_TRUE(executed_primitives.count("conv") == 0);
+    ASSERT_TRUE(outputs.count("r1") == 1);
+    EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
 }
 
 TEST(reorder_gpu_opt, basic_remove_redundant_output_due_to_implicit_reorders)
@@ -807,17 +933,18 @@ TEST(reorder_gpu_opt, non_trivial_remove_redundant)
 
     build_options opts;
 
-    opts.set_option(build_option::debug(true));
     opts.set_option(build_option::optimize_data(true));
 
     network net(eng, tpl, opts);
     net.set_input_data("in", in);
     auto outputs = net.execute();
+    auto executed_primitives = net.get_executed_primitives();
+    auto all_primitives = net.get_all_primitives();
 
-    ASSERT_TRUE(outputs.count("in") == 1);
+    ASSERT_TRUE(executed_primitives.count("in") == 1);
+    ASSERT_TRUE(all_primitives.at("r1") == "_optimized_");
+    EXPECT_TRUE(executed_primitives.at("in") == outputs.at("r1").get_event());
     ASSERT_TRUE(outputs.count("r1") == 1);
-    EXPECT_TRUE(outputs.at("r1").get_memory().is_the_same_buffer(outputs.at("in").get_memory()));
-    EXPECT_TRUE(outputs.at("in").get_memory().get_layout().format == format::yxfb);
     EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
 }
 

@@ -16,17 +16,21 @@
 
 #pragma once
 
-#include "kernel_base.h"
- 
-namespace KernelSelector {
-    
-    class ConvolutionKernel_Tutorial1 : public KernelBase
+#include "common_kernel_base.h"
+
+namespace KernelSelector
+{
+    class UpSamplingKernelBase : public CommonKernelBase
     {
     public:
-        ConvolutionKernel_Tutorial1() : KernelBase("convolution_tutorial1") {}
-        virtual ~ConvolutionKernel_Tutorial1() {}
+        using CommonKernelBase::CommonKernelBase;
+        virtual ~UpSamplingKernelBase() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
+        using DispatchData = CommonDispatchData;
+
+    protected:
+        virtual bool Validate(const Params& p, const OptionalParams& o) const override;
+        virtual JitConstants GetJitConstants(const UpSamplingParams& params) const;
+        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams& options) const;
     };
 }

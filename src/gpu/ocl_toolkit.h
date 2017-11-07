@@ -102,7 +102,7 @@ class gpu_toolkit : public std::enable_shared_from_this<gpu_toolkit>
     friend class context_holder;
 
 protected:
-    gpu_toolkit(const configuration& configuration = configuration());
+    gpu_toolkit(const configuration& aconfiguration = configuration());
 
 public:
     static std::shared_ptr<gpu_toolkit> create(const configuration& cfg = configuration());

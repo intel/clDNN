@@ -23,6 +23,7 @@ namespace KernelSelector
     class ConvolutionKernel_bfyx_3x3_dw_opt : public ConvolutionKernelBase
     {
     public:
+        using Parent = ConvolutionKernelBase;
         ConvolutionKernel_bfyx_3x3_dw_opt();
         virtual ~ConvolutionKernel_bfyx_3x3_dw_opt() {}
 
@@ -33,10 +34,17 @@ namespace KernelSelector
     
     protected:
         bool Validate(const Params&, const OptionalParams&) const override;
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts()  const override { return{ WeightsLayout::oiyx }; }
-        KernelData GetKernelDataInternal(const Params& params, const OptionalParams& options, const std::string exeMode, const size_t tileXDim = 0, const size_t tileYDim = 0) const;
+        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&)  const override { return{ WeightsLayout::oiyx }; }
         JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
-        DispatchData SetDefaultInternal(const ConvolutionParams& params, const size_t tileXDim = 0, const size_t tileYDim = 0) const;
-        std::vector<std::tuple<size_t, size_t, std::string>> autoTuneOptions = {};
+        DispatchData SetDefault(const ConvolutionParams& params, int autoTuneIndex = -1) const override;
+
+        struct AutoTuneOption
+        {
+            stSize tileDims;
+            std::string exeMode;
+        };
+
+        AutoTuneOption GetAutoTuneOptions(const Params& arg, int autoTuneIndex) const;
+        std::vector<AutoTuneOption> autoTuneOptions = {};
     };
 }

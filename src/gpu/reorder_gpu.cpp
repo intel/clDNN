@@ -51,6 +51,9 @@ public:
 
     static primitive_impl* create(const reorder_node& arg)
     {
+        auto&& input_layout = arg.input().get_output_layout();
+        auto&& output_layout = arg.get_output_layout();
+
         auto reorder_params = get_default_params<kernel_selector::reorder_params>(arg);
         auto reorder_optional_params = get_default_optional_params<kernel_selector::reorder_optional_params>(arg.get_program());
 
@@ -69,6 +72,15 @@ public:
         {
             reorder_params.reorderParams.mode = kernel_selector::mean_subtruct_mode::NONE;
         }
+
+        if (output_layout.format == format::winograd_2x3_s1_data)
+        {
+            reorder_params.reorderParams.winograd_input_offset_x = arg.get_input_offset().spatial[0];
+            reorder_params.reorderParams.winograd_input_offset_y = arg.get_input_offset().spatial[1];
+            reorder_params.reorderParams.winograd_nr_tiles_x = ceil_div(output_layout.size.spatial[0], 4);
+        }
+
+        reorder_params.reorderParams.winograd = input_layout.format.is_winograd() || output_layout.format.is_winograd();
 
         auto& kernel_selector = kernel_selector::reorder_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(reorder_params, reorder_optional_params);

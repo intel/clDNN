@@ -145,29 +145,28 @@ struct network
         return result;
     }
 
+    /// @brief Returns the list of executed primitives.
+    std::vector<primitive_id> get_executed_primitive_ids() const
+    {
+        return get_prim_ids(cldnn_get_network_executed_primitive_names);
+    }
+
+    /// @brief Returns the list of all primitives ids in network.
+    std::vector<primitive_id> get_all_primitive_ids() const
+    {
+        return get_prim_ids(cldnn_get_network_all_primitive_names);
+    }
+
+    /// @brief Returns the list of all primitives ids in network before graph optimization.
+    std::vector<primitive_id> get_all_primitive_org_ids() const
+    {
+        return get_prim_ids(cldnn_get_network_all_primitive_org_names);
+    }
 
     /// @brief Returns the list of available network outputs.
     std::vector<primitive_id> get_output_ids() const
     {
-        size_t size_ret = 0;
-        status_t err_invalid_arg = CLDNN_SUCCESS;
-        cldnn_get_network_output_names(_impl, nullptr, 0, &size_ret, &err_invalid_arg);
-        assert(err_invalid_arg == CLDNN_INVALID_ARG);
-        assert(size_ret > 0);
-        std::vector<char> names_buf(size_ret);
-        
-        check_status<void>("get network output ids failed", [&](status_t* status)
-        {
-            cldnn_get_network_output_names(_impl, names_buf.data(), names_buf.size(), &size_ret, status);
-        });
-        assert(names_buf.size() == size_ret);
-
-        std::vector<primitive_id> result;
-        for(auto buf_ptr = names_buf.data(); *buf_ptr != 0; buf_ptr += result.back().size() + 1)
-        {
-            result.emplace_back(buf_ptr);
-        }
-        return result;
+        return get_prim_ids(cldnn_get_network_output_names);
     }
 
     /// @brief Returns @ref network_output object for particular @p output. Can't be called before network execution
@@ -190,6 +189,54 @@ struct network
             return cldnn_get_network_output_memory(_impl, output_id.c_str(), status);
         });
         return output;
+    }
+
+    /// @brief Returns @ref event object for particular @p primitive. Can't be called before network execution
+    event get_primitive_event(const primitive_id& output_id) const
+    {
+        cldnn_event output =
+            check_status<cldnn_event>("get output event failed", [&](status_t* status)
+        {
+            return cldnn_get_network_output_event(_impl, output_id.c_str(), status);
+        });
+        return output;
+    }
+
+    /// @brief Returns the list of @ref event for the primitives that were executed in network.
+    std::map<primitive_id, event> get_executed_primitives() const
+    {
+        auto primitive_ids = get_executed_primitive_ids();
+        auto all_primitive_ids = get_all_primitive_ids();
+        auto all_primitive_org_ids = get_all_primitive_org_ids();
+        //Get list of optimized prmitives
+        std::vector<primitive_id> optimized_primitives;
+        for (decltype(all_primitive_org_ids.size()) i = 0; i < all_primitive_org_ids.size(); i++)
+        {
+            if (all_primitive_ids[i] == "_optimized_")
+                optimized_primitives.push_back(all_primitive_org_ids[i]);
+        }
+        std::map<primitive_id, event> result;
+        for (auto& id : primitive_ids)
+        {
+            if(std::find(optimized_primitives.begin(), optimized_primitives.end(), id) == optimized_primitives.end())
+                result.emplace(id, get_primitive_event(id));
+        }
+        return result;
+    }
+
+    /// @brief Returns the list of primitive ids before and after graph optimization.
+    /// @details If primitive was not optimized, the old and actual id will be the same.
+    /// @n If primitive was optimized during graph optimization, the actual id will be "_optimized_".
+    std::map<primitive_id, primitive_id> get_all_primitives() const
+    {
+        auto primitive_ids = get_all_primitive_ids();
+        auto primitive_org_ids = get_all_primitive_org_ids();
+        std::map<primitive_id, primitive_id> result;
+        for (decltype(primitive_org_ids.size()) i = 0; i < primitive_org_ids.size(); i++)
+        {
+            result.emplace(primitive_org_ids[i], primitive_ids[i]);
+        }
+        return result;
     }
 
     /// @brief Executes network and returns the list of @ref network_output.
@@ -224,6 +271,8 @@ struct network
 private:
     cldnn_network _impl;
 
+    typedef void(*get_prim_ids_func_t)(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status);
+
     void retain()
     {
         check_status<void>("retain topology failed", [=](status_t* status) { cldnn_retain_network(_impl, status); });
@@ -232,6 +281,30 @@ private:
     {
         check_status<void>("retain topology failed", [=](status_t* status) { cldnn_release_network(_impl, status); });
     }
+
+    std::vector<primitive_id> get_prim_ids(get_prim_ids_func_t func) const
+    {
+        size_t size_ret = 0;
+        status_t err_invalid_arg = CLDNN_SUCCESS;
+        func(_impl, nullptr, 0, &size_ret, &err_invalid_arg);
+        assert(err_invalid_arg == CLDNN_INVALID_ARG);
+        assert(size_ret > 0);
+        std::vector<char> names_buf(size_ret);
+
+        check_status<void>("get network output ids failed", [&](status_t* status)
+        {
+            func(_impl, names_buf.data(), names_buf.size(), &size_ret, status);
+        });
+        assert(names_buf.size() == size_ret);
+
+        std::vector<primitive_id> result;
+        for (auto buf_ptr = names_buf.data(); *buf_ptr != 0; buf_ptr += result.back().size() + 1)
+        {
+            result.emplace_back(buf_ptr);
+        }
+        return result;
+    }
+
 };
 CLDNN_API_CLASS(network)
 /// @}

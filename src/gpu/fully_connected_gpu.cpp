@@ -43,7 +43,7 @@ struct fully_connected_gpu : typed_primitive_gpu_impl<fully_connected>
 
 protected:
 
-    virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<fully_connected>& instance, int32_t) const
+    virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<fully_connected>& instance, int32_t) const override
     {
         kernel::kernel_arguments_data args;
 

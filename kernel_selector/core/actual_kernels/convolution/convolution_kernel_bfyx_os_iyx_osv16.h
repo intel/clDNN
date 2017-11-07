@@ -23,6 +23,7 @@ namespace KernelSelector {
     class ConvolutionKernel_bfyx_os_iyx_osv16 : public ConvolutionKernelBase
     {
     public:
+        using Parent = ConvolutionKernelBase;
         ConvolutionKernel_bfyx_os_iyx_osv16();
         virtual ~ConvolutionKernel_bfyx_os_iyx_osv16() {}
 
@@ -32,13 +33,23 @@ namespace KernelSelector {
         virtual ParamsKey GetSupportedKey() const override;
     
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts()  const override { return{ WeightsLayout::os_i_osv16 }; }
+        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&)  const override { return{ WeightsLayout::os_iyx_osv16 }; }
+        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
         bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const ConvolutionParams& arg) const override;
+        bool NeedPaddedInput() const override { return true; }
+        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
 
     private:
-        KernelData GetKernelDataInternal(const Params& params, const OptionalParams& options, const std::string exeMode, const size_t blockWidth=0, const size_t blockHeight=0, const size_t prefetch=0) const;
-        DispatchData SetDefaultInternal(const ConvolutionParams& arg, const size_t blockWidth=0, const size_t blockHeight=0, const size_t prefetch=0) const;
-        std::vector<std::tuple<size_t, size_t, size_t, std::string>> autoTuneOptions = {};
+        struct AutoTuneOption
+        {
+            size_t blockWidth;
+            size_t blockHeight;
+            size_t prefetch;
+            std::string exeMode;
+        };
+
+        AutoTuneOption GetAutoTuneOptions(const Params& arg, int autoTuneIndex) const;
+
+        std::vector<AutoTuneOption> autoTuneOptions = {};
     };
 }

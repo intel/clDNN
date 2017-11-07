@@ -31,7 +31,7 @@ namespace KernelSelector
         default: break;
         }
 
-        return Tensor::Channelndex(params.inputs[0].GetLayout(), name);
+        return Tensor::Channelndex(params.output.GetLayout(), name);
     }
 
     bool ConcatenationKernelBase::Validate(const Params& p, const OptionalParams&) const
@@ -44,11 +44,6 @@ namespace KernelSelector
         const ConcatenationParams& params = static_cast<const ConcatenationParams&>(p);
 
         if (GetConcatChannelIndex(params) == -1)
-        {
-            return false;
-        }
-
-        if (params.activationFunc != ActivationFunction::NONE)
         {
             return false;
         }
@@ -69,9 +64,18 @@ namespace KernelSelector
 
         const auto& dims = params.inputs[0].GetDims();
         // Determine global work sizes.
-        kd.gws0 = dims.size() < 2 ? 1 : dims[1].v;
-        kd.gws1 = dims.size() < 3 ? 1 : dims[2].v;
-        kd.gws2 = dims.size() < 4 ? 1 : dims[3].v;
+        if (params.inputs[0].GetLayout() != params.output.GetLayout())
+        {
+            kd.gws0 = dims.size() < 2 ? 1 : dims[2].v;
+            kd.gws1 = dims.size() < 3 ? 1 : dims[1].v;
+            kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;                         
+        }
+        else
+        {
+            kd.gws0 = dims.size() < 2 ? 1 : dims[1].v;
+            kd.gws1 = dims.size() < 3 ? 1 : dims[2].v;
+            kd.gws2 = dims.size() < 4 ? 1 : dims[3].v;
+        }
 
         kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
         while (kd.gws0 % kd.lws0 != 0)

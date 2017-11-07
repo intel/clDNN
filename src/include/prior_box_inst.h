@@ -24,6 +24,22 @@
 namespace cldnn
 {
 
+template <>
+struct typed_program_node<prior_box> : typed_program_node_base<prior_box>
+{
+    using parent = typed_program_node_base<prior_box>;
+
+    typed_program_node(std::shared_ptr<prior_box> prim, program_impl& prog);
+
+    decltype(auto) input() const { return get_dependency(0); }
+
+    void calc_result();
+    memory_impl& get_result_buffer() const { return *result; }
+
+private:
+    memory_impl::ptr result;
+};
+
 using prior_box_node = typed_program_node<prior_box>;
 
 template <>
@@ -38,9 +54,6 @@ public:
     typed_primitive_inst(network_impl& network, prior_box_node const& node);
 
     decltype(auto) input_memory() const { return dep_memory(0); }
-
-private:
-    template<typename dtype> void generate_output();
 };
 
 using prior_box_inst = typed_primitive_inst<prior_box>;

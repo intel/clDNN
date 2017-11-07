@@ -103,8 +103,10 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
     //Wait for previous execution completion
     reset_execution(false);
 
-    for(auto& inst : _exec_order)
+    for (auto& inst : _exec_order)
         execute_primitive(inst, events);
+    for (auto& dout : _data_outputs) //data primitives are not executed so if they are marked as output we need to add them valid events manually
+        _events[dout->id()] = get_engine().create_user_event(true);
 
     for (auto& prim : _primitives)
         prim.second->reset_output_change();
@@ -121,6 +123,36 @@ std::vector<primitive_id> network_impl::get_output_ids() const
     ret.reserve(_outputs.size());
     for (auto const& output : _outputs)
         ret.push_back(output->id());
+    return ret;
+}
+
+std::vector<primitive_id> network_impl::get_executed_primitive_ids() const
+{
+    std::vector<primitive_id> ret;
+    ret.reserve(_exec_order.size());
+    for (auto const& executed_primitive : _exec_order)
+        ret.push_back(executed_primitive->id());
+    return ret;
+}
+
+std::vector<primitive_id> network_impl::get_all_primitive_ids() const
+{
+    std::vector<primitive_id> ret;
+    ret.reserve(_primitives.size());
+    for (auto const& primitive : _primitives)
+        if(primitive.second->can_be_optimized())
+            ret.push_back("_optimized_");
+        else
+            ret.push_back(primitive.second->id());
+    return ret;
+}
+
+std::vector<primitive_id> network_impl::get_all_primitive_org_ids() const
+{
+    std::vector<primitive_id> ret;
+    ret.reserve(_primitives.size());
+    for (auto const& primitive : _primitives)
+        ret.push_back(primitive.second->org_id());
     return ret;
 }
 
@@ -177,7 +209,11 @@ void network_impl::allocate_primitive_instance(program_node const& node)
     if (node.is_input())
         _inputs.push_back(inst);
     if (node.is_output())
+    {
         _outputs.push_back(inst);
+        if (node.is_type<data>())
+            _data_outputs.push_back(inst);
+    }
 }
 
 }

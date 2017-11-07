@@ -89,6 +89,14 @@ public:
         if(primitive->with_activation)
             convert_activation_func_params(primitive, conv_params);
 
+        if (input_layout.format == format::winograd_2x3_s1_data)
+        {
+            conv_params.convParams.winograd_tile_n = 4;
+            conv_params.convParams.winograd_tile_m = 8;
+            conv_params.convParams.winograd_input_tile_width = 4;
+            conv_params.convParams.winograd_input_tile_height = 1;
+        }
+
         conv_params.convParams.depthwiseSeparableOpt = depthwise_separable_opt;
 
         conv_params.convParams.split = split;
@@ -137,6 +145,8 @@ namespace{
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::winograd_2x3_s1_data), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::winograd_2x3_s1_data), convolution_gpu::create);
         }
         ~attach() {}
     };

@@ -36,16 +36,11 @@ generic_layer_inst::typed_primitive_inst(network_impl& network, generic_layer_no
 
 std::string generic_layer_inst::to_string(generic_layer_node const& node)
 {
-    std::stringstream primitive_description;
-    auto desc = node.get_primitive();
-    auto& input = node.input();
-    auto output_layout_data = desc->output_layout.data_type == data_types::f16 ? "f16" : "f32";
+    auto node_info = node.desc_to_json();
 
-    primitive_description << "id: " << desc->id << ", type: generic_layer"
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: data_type:" << output_layout_data << ", count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    std::stringstream primitive_description;
+
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

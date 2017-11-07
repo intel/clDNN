@@ -16,12 +16,14 @@
 
 #include "reorder_weights_kernel_selector.h"
 #include "reorder_weights_kernel.h"
+#include "reorder_weights_winograd_2x3_kernel.h"
  
 namespace KernelSelector {
 
     ReorderWeightsKernelSelctor::ReorderWeightsKernelSelctor()
     {
         Attach<ReorderWeightsKernel>();
+        Attach<ReorderWeightsWinograd2x3Kernel>();
     }
 
     KernelsData ReorderWeightsKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const

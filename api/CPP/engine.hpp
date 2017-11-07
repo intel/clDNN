@@ -44,6 +44,7 @@ struct engine_configuration
     const bool enable_parallelisation;      ///< Enables parallel execution of primitives which don't depend on each other. Disabled by default.
     const std::string engine_log;           ///< Specifies a file to which engine log should be dumped. Empty by default (means no logging).
     const std::string sources_dumps_dir;    ///< Specifies a directory where sources of cldnn::program objects should be dumped. Empty by default (means no dumping).
+    const uint32_t priority_mode;           ///< Placeholder for priority mode (support of priority hints in command queue). Currently ignored.
 
     /// @brief Constructs engine configuration with specified options.
     /// @param profiling Enable per-primitive profiling.
@@ -59,7 +60,8 @@ struct engine_configuration
             const std::string& single_kernel = std::string(),
             bool primitives_parallelisation = false,
             const std::string& engine_log = std::string(),
-            const std::string& sources_dumps_dir = std::string())
+            const std::string& sources_dumps_dir = std::string(),
+            uint32_t priority_mode = 0)
         : enable_profiling(profiling)
         , meaningful_kernels_names(decorate_kernel_names)
         , dump_custom_program(dump_custom_program)
@@ -68,6 +70,7 @@ struct engine_configuration
         , enable_parallelisation(primitives_parallelisation)
         , engine_log(engine_log)
         , sources_dumps_dir(sources_dumps_dir)
+        , priority_mode(priority_mode)
     {}
 
     engine_configuration(const cldnn_engine_configuration& c_conf)
@@ -79,6 +82,7 @@ struct engine_configuration
         , enable_parallelisation(c_conf.enable_parallelisation != 0)
         , engine_log(c_conf.engine_log)
         , sources_dumps_dir(c_conf.sources_dumps_dir)
+        , priority_mode(c_conf.priority_mode)
     {}
 
     /// @brief Implicit conversion to C API @ref ::cldnn_engine_configuration
@@ -92,7 +96,8 @@ struct engine_configuration
             single_kernel_name.c_str(),
             enable_parallelisation,
             engine_log.c_str(),
-            sources_dumps_dir.c_str()
+            sources_dumps_dir.c_str(),
+            priority_mode
         };
     }
 };

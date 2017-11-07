@@ -19,12 +19,19 @@
 #include "kd_selector.h"
 #include "network_impl.h"
 #include "implementation_map.h"
+#include "math_utils.h"
 
 #include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <xmmintrin.h>
+
+#ifdef FIX_OPENMP_RELEASE_ISSUE
+#ifdef OPENMP_FOUND
+#include <omp.h>
+#endif
+#endif
 
 namespace cldnn { namespace gpu {
 
@@ -215,7 +222,15 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
             const std::vector<std::vector<bounding_box> >& bboxes_per_image = all_bboxes[image];
             std::vector<std::vector<std::pair<float,int>>>& conf_per_image = confidences[image];
             int num_det = 0;
-            for (uint32_t cls = 0; cls < args.num_classes; ++cls)
+#ifdef FIX_OPENMP_RELEASE_ISSUE
+#ifdef OPENMP_FOUND
+            int num_available_threads = omp_get_max_threads();
+            //half available threads usage shows the best perf results for both SKL (4c8t) and APL (4c4t) for this part of detection output
+            int num_threads_to_use = (omp_in_parallel() == 0) ? num_available_threads/2 : 1;
+            #pragma omp parallel for num_threads(num_threads_to_use) reduction(+:num_det)
+#endif
+#endif
+            for (int cls = 0; cls < (int)args.num_classes; ++cls)
             {
                 if ((int)cls == args.background_label_id)
                 {

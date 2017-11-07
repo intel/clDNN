@@ -19,7 +19,8 @@
 #include "kernel_base.h"
 #include "kernel_selector_common.h"
 #include "kernel_selector_params.h"
-#include "kernel_runner_interface.h" 
+#include "kernel_runner_interface.h"
+#include "auto_tuner.h"
 
 namespace KernelSelector 
 {
@@ -48,8 +49,6 @@ namespace KernelSelector
         KernelList implementations;
         ForceList forceKernels;
 
-    private:
-        virtual std::map<std::string, std::tuple<std::string, int>> LoadTunedKernels(const std::string& cacheFilePath) const;
-        virtual void StoreTunedKernel(const std::string hash, const std::string name, const int autoTuneIndex, const std::string& cacheFilePath) const;
+        static AutoTuner autoTuner;
     };
 }

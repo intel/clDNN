@@ -19,6 +19,7 @@
 #include "primitive_type_base.h"
 #include "sliding_window_utils.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -64,13 +65,15 @@ layout deconvolution_inst::calc_output_layout(deconvolution_node const& node)
 
 std::string deconvolution_inst::to_string(deconvolution_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto& input                 = node.input();
-    auto strd                   = desc->stride;
-    auto activation             = desc->with_activation ? " true" : "false";
-    auto ud_out_size            = desc->with_output_size ? " true" : "false";
-    std::stringstream           ss_weights, ss_biases;
+    auto desc       = node.get_primitive();
+    auto strd       = desc->stride;
+    auto split      = desc->split();
+    auto node_info  = node.desc_to_json();
+    auto activation = desc->with_activation ? " true" : "false";
+
+    std::stringstream primitive_description;
+    std::stringstream ss_weights, ss_biases;
+
     for (size_t i = 0; i < desc->weights.size(); ++i)
     {
         ss_weights << node.weights(i).id();
@@ -85,19 +88,21 @@ std::string deconvolution_inst::to_string(deconvolution_node const& node)
         i != (desc->bias.size() - 1) ? ss_biases << ", " : ss_biases << "";
     }
 
-    primitive_description << "id: " << desc->id << ", type: deconvolution" << 
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ",  size: " << input.get_output_layout().size <<
-        "\n\tweights count: " << desc->weights.size() << 
-        "\n\tweights: " << ss_weights.str() << 
-        "\n\tbiases count: " << desc->bias.size() <<
-        "\n\tbiases: " << ss_biases.str() << 
-        "\n\tstride: " << strd.spatial[0] << "x" << strd.spatial[1] <<
-        "\n\twith activation: " << activation << ", slope: " << desc->activation_negative_slope <<
-        "\n\twith user-defined out size: " << ud_out_size << ", dims: " << desc->output_size.spatial[0] << "x" << desc->output_size.spatial[1] <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
-
+    json_composite deconv_info;
+    deconv_info.add("weights count", desc->weights.size());
+    deconv_info.add("bias count", desc->bias.size());
+    deconv_info.add("string", strd.to_string());
+    deconv_info.add("split", split);
+    deconv_info.add("with activation", activation);
+    deconv_info.add("slope", desc->activation_negative_slope);
+    if (desc->with_output_size)
+    {
+        json_composite ud_out_size_info;
+        ud_out_size_info.add("size", desc->output_size.to_string());
+        deconv_info.add("with_user_defined_output_size", ud_out_size_info);
+    }
+    node_info.add("deconvolution info", deconv_info);
+    node_info.dump(primitive_description);
     return primitive_description.str();
 }
 

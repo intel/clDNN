@@ -54,6 +54,9 @@ public:
     }
 
     std::vector<primitive_id> get_output_ids() const;
+    std::vector<primitive_id> get_executed_primitive_ids() const;
+    std::vector<primitive_id> get_all_primitive_ids() const;
+    std::vector<primitive_id> get_all_primitive_org_ids() const;
     void execute(const std::vector<event_impl::ptr>& events);
 
     // Implementation specific calls
@@ -71,6 +74,7 @@ private:
     std::vector<std::shared_ptr<primitive_inst>> _inputs;
     std::vector<std::shared_ptr<primitive_inst>> _outputs;
     std::list<std::shared_ptr<primitive_inst>> _exec_order;
+    std::list<std::shared_ptr<primitive_inst>> _data_outputs;
 
     std::unordered_map<primitive_id, event_impl::ptr> _events;
 

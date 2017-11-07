@@ -23,6 +23,7 @@ namespace KernelSelector {
     class ConvolutionKernel_yxfb_yxio_b16 : public ConvolutionKernelBase
     {
     public:
+        using Parent = ConvolutionKernelBase;
         ConvolutionKernel_yxfb_yxio_b16() : ConvolutionKernelBase("convolution_gpu_yxfb_yxio_b16") {}
         virtual ~ConvolutionKernel_yxfb_yxio_b16() {}
 
@@ -30,8 +31,10 @@ namespace KernelSelector {
         virtual ParamsKey GetSupportedKey() const override;
     
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts() const override { return{ WeightsLayout::yxio }; }
-        virtual bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const ConvolutionParams& arg) const override;
+        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override { return{ WeightsLayout::yxio }; }
+        std::string GetKernelName(const ConvolutionParams&) const override;
+        bool Validate(const Params& p, const OptionalParams& o) const override;
+        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
+        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
     };
 }

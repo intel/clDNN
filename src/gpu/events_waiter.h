@@ -35,6 +35,9 @@ public:
             return{ ev, false };
         }
 
+        if (dependencies.size() == 1)
+            return dependencies[0];
+
         return context()->enqueue_marker(dependencies);
     }
 };

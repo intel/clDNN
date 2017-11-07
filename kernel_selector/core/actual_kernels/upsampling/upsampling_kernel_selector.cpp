@@ -1,4 +1,5 @@
-// Copyright (c) 2016-2017 Intel Corporation
+﻿/*
+// Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,14 +12,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+*/
 
-//#include "put here your include files"
-
-__kernel void convolution_tutorial1(
-    const __global UNIT_TYPE* input,
-    __global UNIT_TYPE* output,
-    const __global UNIT_TYPE* filter,
-    const __global UNIT_TYPE* bias)
+#include "upsampling_kernel_selector.h"
+#include "upsampling_kernel_ref.h"
+ 
+namespace KernelSelector 
 {
-	// fill here your kernel
+    UpSamplingKernelSelector::UpSamplingKernelSelector()
+    {
+        Attach<UpSamplingKernelRef>();
+    }
+
+    KernelsData UpSamplingKernelSelector::GetBestKernels(const Params& params, const OptionalParams& options) const
+    {
+        return GetNaiveBestKernel(params, options, KernelType::UPSAMPLING);
+    }
 }

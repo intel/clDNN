@@ -35,17 +35,17 @@ namespace KernelSelector
         return k;
     }
 
-    FullyConnected_fb_oi_b8_ref::DispatchData FullyConnected_fb_oi_b8_ref::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_fb_oi_b8_ref::DispatchData> FullyConnected_fb_oi_b8_ref::SetDefault(const FullyConnectedParams& arg) const
     {
-        DispatchData kd = FullyConnectedKernelBase::SetDefault(arg);
+        auto kd = FullyConnectedKernelBase::SetDefault(arg);
 
         const auto& output = arg.output;
-        kd.gws0 = output.Batch().v;
-        kd.gws1 = output.LogicalSize() / kd.gws0;
-        kd.lws0 = 8;
-        kd.lws1 = 1;
+        kd->gws0 = output.Batch().v;
+        kd->gws1 = output.LogicalSize() / kd->gws0;
+        kd->lws0 = 8;
+        kd->lws1 = 1;
 
-        return kd;
+        return std::move(kd);
     }
 
     bool FullyConnected_fb_oi_b8_ref::Validate(const Params& p, const OptionalParams& o) const

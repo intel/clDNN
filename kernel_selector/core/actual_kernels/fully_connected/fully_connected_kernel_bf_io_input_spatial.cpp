@@ -36,18 +36,18 @@ namespace KernelSelector
         return k;
     }
 
-    FullyConnected_bf_io_input_spatial::DispatchData FullyConnected_bf_io_input_spatial::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_bf_io_input_spatial::DispatchData> FullyConnected_bf_io_input_spatial::SetDefault(const FullyConnectedParams& arg) const
     {
-        DispatchData kd = FullyConnectedKernelBase::SetDefault(arg);
+        auto kd = FullyConnectedKernelBase::SetDefault(arg);
 
-        kd.gws0 = Align(arg.output.LogicalSize() / arg.inputs[0].Batch().v, 16);
-        kd.gws1 = arg.inputs[0].Batch().v;
-        kd.gws2 = 1;
-        kd.lws0 = 16;
-        kd.lws1 = 1;
-        kd.lws2 = 1;
+        kd->gws0 = Align(arg.output.LogicalSize() / arg.inputs[0].Batch().v, 16);
+        kd->gws1 = arg.inputs[0].Batch().v;
+        kd->gws2 = 1;
+        kd->lws0 = 16;
+        kd->lws1 = 1;
+        kd->lws2 = 1;
 
-        kd.effiency = DONT_USE_IF_HAVE_SOMETHING_ELSE;
+        kd->effiency = DONT_USE_IF_HAVE_SOMETHING_ELSE;
 
         const auto &input = arg.inputs[0];
         const auto &output = arg.output;
@@ -56,11 +56,11 @@ namespace KernelSelector
         {
             if ((input.LogicalSize() / output.Batch().v >= 9216) && (output.Feature().v >= 4096))
             {
-                kd.effiency = FORCE_PRIORITY_1;
+                kd->effiency = FORCE_PRIORITY_1;
             }
         }
 
-        return kd;
+        return std::move(kd);
     }
 
     bool FullyConnected_bf_io_input_spatial::Validate(const Params& p, const OptionalParams& o) const

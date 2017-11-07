@@ -81,6 +81,8 @@ set(CLDNN__KERNEL_SELECTOR_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/kernel_selecto
 # Path which points to directory with binaries for Intel OpenCL SDK ICD (Installable Client Driver).
 set(CLDNN__IOCL_ICD_DIR  "${CLDNN__COMMON_DIR}/intel_ocl_icd")
 
+
+
 # Path which points to directory with boost libraries (only selection).
 set(CLDNN__BOOST_DIR     "${CLDNN__COMMON_DIR}/boost")
 
@@ -118,6 +120,9 @@ set(CLDNN__CODEGEN_DIR     "${CLDNN__CODEGEN_BASEDIR}/${CLDNN__TARGET_CFG_VAR}")
 # Path which points to automatically included directory with code generated elements
 # (to support "copy-if-different" optimization).
 set(CLDNN__CODEGEN_INCDIR  "${CLDNN__CODEGEN_DIR}/include")
+
+# Version file.
+set(CLDNN__VERSION_FILE_NAME "${CLDNN__MAIN_DIR}/version.json")
 
 # ======================================================================================================
 # ======================================================================================================
@@ -231,48 +236,42 @@ endfunction()
 
 
 # Expressing CMake setting for current build configuration as option and providing a way to correct it (treat as case-insensitive).
-if(NOT CLDNN_BUILT_FROM_OPENVX)
-  if(DEFINED CMAKE_BUILD_TYPE)
-    string(TOLOWER "${CMAKE_BUILD_TYPE}" __CLDNN_BuildType)
-    string(STRIP "${__CLDNN_BuildType}" __CLDNN_BuildType)
+if(DEFINED CMAKE_BUILD_TYPE)
+  string(TOLOWER "${CMAKE_BUILD_TYPE}" __CLDNN_BuildType)
+  string(STRIP "${__CLDNN_BuildType}" __CLDNN_BuildType)
 
-    if(__CLDNN_BuildType MATCHES "^release$")
-      set(__CLDNN_BuildType "Release")
-    elseif(__CLDNN_BuildType MATCHES "^debug$")
-      set(__CLDNN_BuildType "Debug")
-    else()
-      set(__CLDNN_BuildType "Debug")
-      if(NOT CLDNN__MULTI_CFG_GEN)
-        message(WARNING "[clDNN] CMAKE_BUILD_TYPE: Unknown build configuration. The following configurations are available: ${CMAKE_CONFIGURATION_TYPES}.
-            The \"${__CLDNN_BuildType}\" configuration will be used.
-
-            This value has meaning only for single-configuration generators (like Make). It will be ignored for MSVC/XCode."
-          )
-      endif()
-    endif()
+  if(__CLDNN_BuildType MATCHES "^release$")
+    set(__CLDNN_BuildType "Release")
+  elseif(__CLDNN_BuildType MATCHES "^debug$")
+    set(__CLDNN_BuildType "Debug")
   else()
     set(__CLDNN_BuildType "Debug")
     if(NOT CLDNN__MULTI_CFG_GEN)
-      message(WARNING "[clDNN] CMAKE_BUILD_TYPE: No build configuration specified. The following configurations are available: ${CMAKE_CONFIGURATION_TYPES}.
+      message(WARNING "[clDNN] CMAKE_BUILD_TYPE: Unknown build configuration. The following configurations are available: ${CMAKE_CONFIGURATION_TYPES}.
           The \"${__CLDNN_BuildType}\" configuration will be used.
 
           This value has meaning only for single-configuration generators (like Make). It will be ignored for MSVC/XCode."
         )
     endif()
   endif()
-  set(CMAKE_BUILD_TYPE "${__CLDNN_BuildType}")
-  unset(__CLDNN_BuildType)
+else()
+  set(__CLDNN_BuildType "Debug")
+  if(NOT CLDNN__MULTI_CFG_GEN)
+    message(WARNING "[clDNN] CMAKE_BUILD_TYPE: No build configuration specified. The following configurations are available: ${CMAKE_CONFIGURATION_TYPES}.
+        The \"${__CLDNN_BuildType}\" configuration will be used.
+
+        This value has meaning only for single-configuration generators (like Make). It will be ignored for MSVC/XCode."
+      )
+  endif()
 endif()
+set(CMAKE_BUILD_TYPE "${__CLDNN_BuildType}")
+unset(__CLDNN_BuildType)
 
 # ======================================================================================================
 
 # Detecting, setting and validating target architecture for compilation.
 
-if(CLDNN_BUILT_FROM_OPENVX)
-  set(__CLDNN_RequestedArch __ARCH)
-else()
-  set(__CLDNN_RequestedArch "")
-endif()
+set(__CLDNN_RequestedArch "")
 
 intel_arch_detect(__CLDNN_DetectedArch_Target __CLDNN_DetectedArch_Host __CLDNN_RequestedArch)
 intel_arch_validate(__CLDNN_DetectedArchValid_Target "${__CLDNN_DetectedArch_Target}")
@@ -324,6 +323,7 @@ endif()
 
 # ======================================================================================================
 
+
 # Detecting all versions of added boost package in the project.
 if(NOT EXISTS "${CLDNN__BOOST_DIR}")
   message(FATAL_ERROR "[clDNN] Root for boost libraries is invalid or does not exist.
@@ -345,10 +345,8 @@ endif()
 # ======================================================================================================
 
 # Current build configuration (only for single-configuration generators).
-if(NOT CLDNN_BUILT_FROM_OPENVX)
-  set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Current build configuration (only for single-configuration generators)." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
-endif()
+set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Current build configuration (only for single-configuration generators)." FORCE)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
 
 # ======================================================================================================
 
@@ -397,7 +395,6 @@ set_property(CACHE CLDNN__BOOST_VERSION PROPERTY STRINGS ${__CLDNN_BoostVersions
 
 # ======================================================================================================
 
-# Include and build: Core of clDNN.
 set(CLDNN__INCLUDE_CORE ON CACHE BOOL "Include and build: clDNN core.")
 mark_as_advanced(CLDNN__INCLUDE_CORE)
 
@@ -429,6 +426,7 @@ mark_as_advanced(CLDNN__RUN_TESTS)
 
 # Compile / Link: Use static C++ Runtime library.
 set(CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME OFF CACHE BOOL "Compile / Link: Use static version of C++ Runtime library instead of shared one.")
+
 mark_as_advanced(CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME)
 
 # ======================================================================================================
@@ -585,10 +583,7 @@ set(Boost_NO_SYSTEM_PATHS ON)
 set(Boost_USE_STATIC_LIBS    ON)
 set(Boost_USE_DEBUG_RUNTIME  ON)
 set(Boost_USE_STATIC_RUNTIME ${CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME})
-set(CLDNN_BOOST_USAGE system date_time program_options)
-if(NOT CLDNN_BUILT_FROM_OPENVX)
-  set(CLDNN_BOOST_USAGE ${CLDNN_BOOST_USAGE} filesystem)
-endif()
+set(CLDNN_BOOST_USAGE system date_time program_options filesystem)
 find_package(Boost "${CLDNN__BOOST_VERSION}" EXACT REQUIRED
       COMPONENTS ${CLDNN_BOOST_USAGE}
     )
@@ -611,10 +606,78 @@ unset(__CLDNN_TargetOs)
 unset(__CLDNN_TargetCpu)
 unset(__CLDNN_TargetCpuDir)
 
+# ====================================== Version Calculation ===========================================
+
+if(EXISTS "${CLDNN__VERSION_FILE_NAME}")
+  file(READ "${CLDNN__VERSION_FILE_NAME}" __CLDNN_VersionFileContent)
+
+  # Extracting JSON object with version.
+  set(__CLDNN_VersionJsonObject "")
+  if("${__CLDNN_VersionFileContent}" MATCHES "\\\"version\\\"[ \t\n\r]*:[ \t\n\r]*\\{[ \t\n\r]*(.*)[ \t\n\r]*\\}")
+    set(__CLDNN_VersionJsonObject "${CMAKE_MATCH_1}")
+  endif()
+
+  # Extracting field values.
+  set(__CLDNN_VersionJsonMajor   "0")
+  set(__CLDNN_VersionJsonMinor   "-1")
+  set(__CLDNN_VersionJsonBuild   "-1")
+  set(__CLDNN_VersionJsonRevBase "0")
+  set(__CLDNN_VersionJsonRevMin  "-1")
+  if("${__CLDNN_VersionJsonObject}" MATCHES "\\\"major\\\"[ \t\n\r]*:[ \t\n\r]*([-+]?[0-9]+)[ \t\n\r#,}]")
+    set(__CLDNN_VersionJsonMajor "${CMAKE_MATCH_1}")
+  endif()
+  if("${__CLDNN_VersionJsonObject}" MATCHES "\\\"minor\\\"[ \t\n\r]*:[ \t\n\r]*([-+]?[0-9]+)[ \t\n\r#,}]")
+    set(__CLDNN_VersionJsonMinor "${CMAKE_MATCH_1}")
+  endif()
+  if("${__CLDNN_VersionJsonObject}" MATCHES "\\\"build\\\"[ \t\n\r]*:[ \t\n\r]*([-+]?[0-9]+)[ \t\n\r#,}]")
+    set(__CLDNN_VersionJsonBuild "${CMAKE_MATCH_1}")
+  endif()
+  if("${__CLDNN_VersionJsonObject}" MATCHES "\\\"revision_base\\\"[ \t\n\r]*:[ \t\n\r]*([-+]?[0-9]+)[ \t\n\r#,}]")
+    set(__CLDNN_VersionJsonRevBase "${CMAKE_MATCH_1}")
+  endif()
+  if("${__CLDNN_VersionJsonObject}" MATCHES "\\\"revision_min\\\"[ \t\n\r]*:[ \t\n\r]*([-+]?[0-9]+)[ \t\n\r#,}]")
+    set(__CLDNN_VersionJsonRevMin "${CMAKE_MATCH_1}")
+  endif()
+
+  # Fetching revision identifier (first from env. variable, next from CMake variable).
+  if(DEFINED "ENV{CLDNN__REV_ID}")
+    set(__CLDNN_VersionRevId "$ENV{CLDNN__REV_ID}")
+  elseif(DEFINED CLDNN__REV_ID)
+    set(__CLDNN_VersionRevId "${CLDNN__REV_ID}")
+  else()
+    set(__CLDNN_VersionRevId "0")
+  endif()
+
+  # Calculating version components (WA for lack of support for unary operators in CMake math()).
+  math(EXPR CLDNN__VERSION_MAJOR    "(0${__CLDNN_VersionJsonMajor})")
+  math(EXPR CLDNN__VERSION_MINOR    "(0${__CLDNN_VersionJsonMinor})")
+  math(EXPR CLDNN__VERSION_BUILD    "(0${__CLDNN_VersionJsonBuild})")
+  math(EXPR CLDNN__VERSION_REVISION "(0${__CLDNN_VersionRevId})-(0${__CLDNN_VersionJsonRevBase})")
+  math(EXPR __CLDNN_VersionJsonRevMin "(0${__CLDNN_VersionJsonRevMin})")
+  if("${CLDNN__VERSION_REVISION}" LESS "${__CLDNN_VersionJsonRevMin}")
+    set(CLDNN__VERSION_REVISION "${__CLDNN_VersionJsonRevMin}")
+  endif()
+
+  unset(__CLDNN_VersionFileContent)
+  unset(__CLDNN_VersionJsonObject)
+  unset(__CLDNN_VersionJsonMajor)
+  unset(__CLDNN_VersionJsonMinor)
+  unset(__CLDNN_VersionJsonBuild)
+  unset(__CLDNN_VersionJsonRevBase)
+  unset(__CLDNN_VersionJsonRevMin)
+else()
+  set(CLDNN__VERSION_MAJOR    "0")
+  set(CLDNN__VERSION_MINOR    "-1")
+  set(CLDNN__VERSION_BUILD    "-1")
+  set(CLDNN__VERSION_REVISION "-1")
+endif()
+
 # ============================================= Status =================================================
 
 # Display status.
 message(STATUS "[clDNN] ======================== ${CLDNN__PROJ_NAME} Project =======================")
+message(STATUS "[clDNN] Version:          ${CLDNN__VERSION_MAJOR}.${CLDNN__VERSION_MINOR}.${CLDNN__VERSION_BUILD}.${CLDNN__VERSION_REVISION}")
+message(STATUS "[clDNN]")
 message(STATUS "[clDNN] Build type:       ${CMAKE_BUILD_TYPE} (for single-configuration generators)")
 message(STATUS "[clDNN] Av. build types:  ${CMAKE_CONFIGURATION_TYPES} (for multi-configuration generators)")
 message(STATUS "[clDNN]")
@@ -727,12 +790,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/CMakeCompilerLinkerOpts.txt" NO_POLICY_SCOP
 
 # ======================================= Handle C++14 Stuffs ==========================================
 
-if(CLDNN_BUILT_FROM_OPENVX)
-  # currently OpenVX Klockwork doesn't support c++14
-  set(__CLDNN_UseCxx14 OFF)
-else()
-  set(__CLDNN_UseCxx14 ${CLDNN__COMPILER_SUPPORTS_CXX14})
-endif()
+set(__CLDNN_UseCxx14 ${CLDNN__COMPILER_SUPPORTS_CXX14})
 
 if(NOT __CLDNN_UseCxx14)
   if(CLDNN__INCLUDE_CORE OR CLDNN__INCLUDE_TESTS)
@@ -818,23 +876,7 @@ foreach(__CLDNN_CompilerFlagName IN ITEMS "CMAKE_CXX_FLAGS" "CMAKE_C_FLAGS")
         )
     endif()
   elseif(CMAKE_COMPILER_IS_INTEL)
-    if (CLDNN_BUILT_FROM_OPENVX)
-      intel_config_flag_apply_settings(
-          CompilerOptions
-          "${__CLDNN_CompilerFlagName}"
-          ALL_PATTERN ""
-          SET_RAW
-            -Wno-error=missing-field-initializers
-            -Wno-error=unused-parameter
-            -Wno-error=unused-function
-            -wd11074
-            -wd11076
-            -fPIC
-            -Wl,--no-undefined
-        )
-    else()
-      message(FATAL_ERROR "TODO Support native ICC")
-    endif()
+    message(FATAL_ERROR "TODO Support native ICC")
   # Adding needed settings specific to GCC.
   # NOTE: Following options can be needed in the future (although some not recommended: NR):
   # [NR] -fno-short-enums
@@ -880,24 +922,24 @@ foreach(__CLDNN_CompilerFlagName IN ITEMS "CMAKE_CXX_FLAGS" "CMAKE_C_FLAGS")
       )
   elseif((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^Clang$"))
     intel_config_flag_apply_settings(
-        CompilerOptions
-        "${__CLDNN_CompilerFlagName}"
-        ALL_PATTERN ""
-        SET_RAW
-          -pipe
-          -fvisibility=hidden
-          -fvisibility-inlines-hidden
-          -Wall
-          -Wcovered-switch-default
-          -Wextra
-          -Wno-unused-parameter
-          -Wno-gnu
-          -pedantic
-          -finline
-          -finline-functions
-          -fkeep-inline-functions
-          -msse4.2
-      )
+          CompilerOptions
+          "${__CLDNN_CompilerFlagName}"
+          ALL_PATTERN ""
+          SET_RAW
+            -pipe
+            -fvisibility=hidden
+            -fvisibility-inlines-hidden
+            -Wall
+            -Wno-covered-switch-default
+            -Wextra
+            -Wno-unused-parameter
+            -Wno-gnu
+            -pedantic
+            -finline
+            -msse4.2
+            -fPIE
+            -fPIC
+        )
   endif()
 endforeach()
 
@@ -954,10 +996,10 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     )
 endif()
 
-# NOTE: When compiling with Clang, use the flags below for C++ files. These flags cannot be enabled when compiliing
+# NOTE: When compiling with Clang, use the flags below for C++ files. These flags cannot be enabled when compiling
 #       C files.
 if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^Clang$"))
-  if(LLVM_ON_DARWIN)
+  if(NOT ANDROID)
     intel_config_flag_apply_settings(
         CompilerOptions
         CMAKE_CXX_FLAGS
@@ -1066,12 +1108,6 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     _GLIBCXX_USE_CXX11_ABI=0
     $<$<CONFIG:Release>:_FORTIFY_SOURCE=2>
   )
-endif()
-
-if(CLDNN_BUILT_FROM_OPENVX)
-    set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
-        CLDNN_BUILT_FROM_OPENVX
-      )
 endif()
 
 # ===================================== Include/Link directories =======================================

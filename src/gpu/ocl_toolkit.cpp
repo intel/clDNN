@@ -20,6 +20,8 @@
 #include "ocl_user_event.h"
 
 #include <cassert>
+#include <iomanip>
+#include <ios>
 
 namespace {
     std::string ndrange_to_string(cl::NDRange const& range)
@@ -102,14 +104,6 @@ namespace {
 
         return ok;
     }
-
-    bool starts_with(std::string const& str, std::string const& prefix)
-    {
-        if (str.size() < prefix.size())
-            return false;
-
-        return std::equal(prefix.begin(), prefix.end(), str.begin());
-    }
 }
 
 cl::Device get_gpu_device(const configuration& config)
@@ -170,27 +164,29 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
     {
         open_log()
             << "Engine configuration:\n"
-            << "    profiling: " + std::to_string(_configuration.enable_profiling) << "\n"
-            << "    meaningful names: " + std::to_string(_configuration.enable_profiling) << "\n"
-            << "    dump custom program: " + std::to_string(_configuration.enable_profiling) << "\n"
-            << "    device type: " + std::to_string(_configuration.enable_profiling) << "\n"
-            << "    vendor type: " + std::to_string(_configuration.enable_profiling) << "\n"
-            << "    compiler options: " + _configuration.enable_profiling << "\n"
-            << "    single kernel name: " + _configuration.enable_profiling << "\n"
-            << "    out-of-order: " + std::to_string(_configuration.host_out_of_order) << "\n"
-            << "    engine log: " + _configuration.log << "\n"
-            << "    sources dumps: " + _configuration.ocl_sources_dumps_dir << "\n"
+            << "    profiling: "           << std::boolalpha << _configuration.enable_profiling << "\n"
+            << "    meaningful names: "    << std::boolalpha << _configuration.meaningful_kernels_names << "\n"
+            << "    dump custom program: " << std::boolalpha << _configuration.dump_custom_program << "\n"
+            << "    device type: "         << std::to_string(_configuration.device_type) << "\n"
+            << "    vendor type: "         << std::hex << std::setfill('0') << std::setw(4) << std::right
+                                           << std::to_string(_configuration.device_vendor) << "\n"
+                                           << std::dec << std::setfill(' ') << std::right
+            << "    compiler options: "    << _configuration.compiler_options << "\n"
+            << "    single kernel name: "  << _configuration.single_kernel_name << "\n"
+            << "    out-of-order: "        << std::boolalpha << _configuration.host_out_of_order << "\n"
+            << "    engine log: "          << _configuration.log << "\n"
+            << "    sources dumps: "       << _configuration.ocl_sources_dumps_dir << "\n"
             << "\nEngine info:\n"
-            << "    configuration: " + std::to_string(_engine_info.configuration) << "\n"
-            << "    model: " + std::to_string(_engine_info.model) << "\n"
-            << "    architecture: " + std::to_string(_engine_info.architecture) << "\n"
-            << "    cores count: " + std::to_string(_engine_info.cores_count) << "\n"
-            << "    core frequencey: " + std::to_string(_engine_info.core_frequency) << "\n"
-            << "    max work group size: " + std::to_string(_engine_info.max_work_group_size) << "\n"
-            << "    local memory size: " + std::to_string(_engine_info.max_local_mem_size) << "\n"
-            << "    fp16: " + std::to_string(_engine_info.supports_fp16) << "\n"
-            << "    fp16 denorms: " + std::to_string(_engine_info.supports_fp16_denorms) << "\n"
-            << "    subgroups short: " + std::to_string(_engine_info.supports_subgroups_short) << "\n"
+            << "    configuration: "       << std::to_string(_engine_info.configuration) << "\n"
+            << "    model: "               << std::to_string(_engine_info.model) << "\n"
+            << "    architecture: "        << std::to_string(_engine_info.architecture) << "\n"
+            << "    cores count: "         << _engine_info.cores_count << "\n"
+            << "    core frequencey: "     << _engine_info.core_frequency << "\n"
+            << "    max work group size: " << _engine_info.max_work_group_size << "\n"
+            << "    local memory size: "   << _engine_info.max_local_mem_size << "\n"
+            << "    fp16: "                << std::boolalpha << (_engine_info.supports_fp16 != 0) << "\n"
+            << "    fp16 denorms: "        << std::boolalpha << (_engine_info.supports_fp16_denorms != 0) << "\n"
+            << "    subgroups short: "     << std::boolalpha << (_engine_info.supports_subgroups_short != 0) << "\n"
             << std::endl;
     }
 }

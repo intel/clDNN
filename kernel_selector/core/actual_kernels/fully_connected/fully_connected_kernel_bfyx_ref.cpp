@@ -40,22 +40,22 @@ namespace KernelSelector
         return k;
     }
 
-    FullyConnected_bfyx_Ref::Parent::DispatchData FullyConnected_bfyx_Ref::SetDefault(const FullyConnectedParams& params) const
+    std::unique_ptr<FullyConnected_bfyx_Ref::Parent::DispatchData> FullyConnected_bfyx_Ref::SetDefault(const FullyConnectedParams& params) const
     {
         auto runInfo = Parent::SetDefault(params);
         
         std::vector<size_t> global = { params.output.Feature().v, params.output.Batch().v };
         std::vector<size_t> local  = GetOptimalLocalWorkGroupSizes(global);
 
-        runInfo.gws0 = global[0];
-        runInfo.gws1 = global[1];
-        runInfo.gws2 = 1;
+        runInfo->gws0 = global[0];
+        runInfo->gws1 = global[1];
+        runInfo->gws2 = 1;
 
-        runInfo.lws0 = local[0];
-        runInfo.lws1 = local[1];
-        runInfo.lws2 = 1;
+        runInfo->lws0 = local[0];
+        runInfo->lws1 = local[1];
+        runInfo->lws2 = 1;
 
-        return runInfo;
+        return std::move(runInfo);
     }
 
     KernelsData FullyConnected_bfyx_Ref::GetKernelsData(const Params& params, const OptionalParams& options) const

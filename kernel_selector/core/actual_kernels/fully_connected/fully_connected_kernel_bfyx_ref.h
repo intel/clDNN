@@ -26,12 +26,11 @@ namespace KernelSelector {
         using Parent = FullyConnectedKernelBase;
 
         FullyConnected_bfyx_Ref() : Parent("fully_connected_gpu_bfyx_ref") {}
-        virtual ~FullyConnected_bfyx_Ref() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
+        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        ParamsKey GetSupportedKey() const override;
         
     protected:
-        virtual DispatchData SetDefault(const FullyConnectedParams& params) const override;
+        std::unique_ptr<DispatchData> SetDefault(const FullyConnectedParams& params) const override;
     };
 }

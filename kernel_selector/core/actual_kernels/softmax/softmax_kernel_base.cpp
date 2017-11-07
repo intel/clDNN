@@ -68,7 +68,7 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData SoftmaxKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, float estimated_time) const
+    KernelsData SoftmaxKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options) const
     {
         if (!Validate(params, options))
         {
@@ -86,7 +86,7 @@ namespace KernelSelector
         auto& kernel = kd.kernels[0];
         FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
 
-        kd.estimatedTime = estimated_time;
+        kd.estimatedTime = runInfo.effiency;
 
         return{ kd };
     }

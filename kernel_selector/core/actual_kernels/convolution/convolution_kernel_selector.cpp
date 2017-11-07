@@ -24,8 +24,9 @@
 #include "convolution_kernel_yxfb_yxio_b8.h"
 #include "convolution_kernel_yxfb_yxio_b1_block.h"
 #include "convolution_kernel_yxfb_yxio_b1_block_multiple_x.h"
-#include "convolution_kernel_tutorial1.h"
+#include "convolution_kernel_tutorial.h"
 #include "convolution_kernel_bfyx_3x3_dw_opt.h"
+#include "convolution_kernel_winograd_2x3_s1.h"
 #include <iostream>
  
 namespace KernelSelector 
@@ -41,21 +42,15 @@ namespace KernelSelector
         Attach<ConvolutionKernel_yxfb_yxio_b8>();
         //Attach<ConvolutionKernel_yxfb_yxio_b1_block>(); // TODO: need to finish integration
         Attach<ConvolutionKernel_yxfb_yxio_b1_block_mulitple_x>();
-        Attach<ConvolutionKernel_Tutorial1>();
         Attach<ConvolutionKernel_bfyx_3x3_dw_opt>();
+        Attach<ConvolutionKernel_Winograd_2x3_s1>();
+        Attach<ConvolutionKernel_Tutorial>();
     }
 
     KernelsData ConvolutionKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
     {
         //const ConvolutionParams& orgParams = static_cast<const ConvolutionParams&>(params);
         //std::cout << orgParams.to_string() << std::endl;
-        if (options.tuningParams.mode == TuningMode::TUNING_DISABLED)
-        {
-            return GetNaiveBestKernel(params, options, KernelType::CONVOLUTION);
-        }
-        else
-        {
-            return GetAutoTuneBestKernel(params, options, KernelType::CONVOLUTION);
-        }
+        return GetAutoTuneBestKernel(params, options, KernelType::CONVOLUTION);
     }
 }

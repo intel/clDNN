@@ -18,7 +18,6 @@
 
 #include "memory_impl.h"
 #include "engine_impl.h"
-#include "topology_impl.h"
 #include "meta_utils.h"
 
 #include "api/CPP/data.hpp"
@@ -75,9 +74,6 @@ public:
     };
 
 private:
-    bool _enabled;
-    topology_impl _topology;
-    engine_impl::ptr _engine;
     optimization_attributes _optimization_attributes;
     // TODO: Remove once we will get full support for input/output padding in all primitive implementations.
     bool _output_size_handling_enabled;
@@ -108,10 +104,10 @@ private:
     std::map<cache_key, std::shared_ptr<reorder>> _cached_reorders;
     std::map<cache_key, std::shared_ptr<generic_layer>> _cached_generic_layers;
 
-    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const convolution> prim, boost::optional<layout> const& output_layout);
-    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const fully_connected> prim, boost::optional<layout> const& output_layout);
-    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const deconvolution> prim, boost::optional<layout> const& output_layout);
-    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const detection_output> prim, boost::optional<layout> const& output_layout);
+    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const convolution> prim, layout const& output_or_weights_layout);
+    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const fully_connected> prim, layout const& output_or_weights_layout);
+    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const deconvolution> prim, layout const& output_or_weights_layout);
+    layout get_expected_layout(layout const& current_layout, data_type type, std::shared_ptr<const detection_output> prim, layout const& output_or_weights_layout);
 
     bool convolution_bfyx_opt(const layout& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv);
 
@@ -124,7 +120,7 @@ private:
     create_reorder_from_given_source(const cldnn::primitive_id& memid, layout const& expected_layout, const kernel_selector::weights_reorder_params& reorder_params);
 
 public:
-    explicit layout_optimizer(engine_impl::ptr eng, bool enabled = true, bool output_size_handling_enabled = true);
+    explicit layout_optimizer(bool output_size_handling_enabled = true);
 
     //this method creates reorder for data, which is currently in 'data_layout' format, to best format in context of 'user' primitive.
     //data is used by 'user' in a way described by 'type' (i.e. weights/bias/input).
@@ -142,15 +138,12 @@ public:
                      primitive_id const& id,
                      data_type type,
                      std::shared_ptr<const T> user,
-                     boost::optional<layout> user_layout = boost::optional<layout>())
+                     layout const& user_layout)
         -> std::enable_if_t<
             meta::is_any_of_v<T, convolution, fully_connected, deconvolution, detection_output>,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
         >
     {
-        if (!_enabled)
-            return meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>();
-
         auto expected_layout = get_expected_layout(data_layout, type, user, user_layout);
         return create_reorder_if_needed(data_layout, id, expected_layout);
     }
@@ -161,7 +154,7 @@ public:
                      primitive_id const& id,
                      data_type type,
                      std::shared_ptr<const T> user,
-                     boost::optional<layout> user_layout = boost::optional<layout>())
+                     layout const& user_layout)
         -> std::enable_if_t<
             !meta::is_any_of_v<T, convolution, fully_connected, deconvolution, detection_output>,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
@@ -171,104 +164,12 @@ public:
         return meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>();
     }
 
-    auto get_generic_layer(
+    std::vector<std::pair<std::shared_ptr<primitive>, bool>> get_generic_layer(
         const kernel_selector::weights_reorder_params& reorder_params,
         primitive_id input_id,
         const layout& old_layout,
-        data_type type)
-    {
-        std::vector<std::pair<std::shared_ptr<primitive>, bool>> ret;
+        data_type type);
 
-        if (reorder_params.engine != kernel_selector::weights_reorder_params::Engine::NONE &&
-            type == data_type::weights &&
-            _enabled)
-        {
-            if (reorder_params.engine == kernel_selector::weights_reorder_params::Engine::CPU &&
-                reorder_params.cpuKernel != nullptr)
-            {
-                const auto intermediate_format = from_weights_layout(reorder_params.cpuKernel->GetExpectedInputLayout());
-                const auto intermediate_type   = from_weights_type(reorder_params.cpuKernel->GetExpectedInputType());
-                if (intermediate_format != old_layout.format ||
-                    intermediate_type   != old_layout.data_type)
-                {
-                    const layout intermediate_layout = { intermediate_type, intermediate_format, old_layout.size.transform(intermediate_format, 1) };
-
-                    auto reorder = create_reorder_if_needed(old_layout, input_id, intermediate_layout);
-                    if (reorder.first)
-                    {
-                        ret.push_back(reorder);
-                        input_id = reorder.first->id;
-                    }
-                }
-            }
-
-            auto new_dtype = from_weights_type(reorder_params.dtype);
-            const auto bpp = data_type_traits::size_of(new_dtype);
-            layout expected_layout = {
-                new_dtype, format::bfyx, // simple linear format (flatten to x channel)
-                { 1,1,1,(tensor::value_type)(reorder_params.newBufferSize / bpp) }
-            };
-            auto reorder = create_reorder_from_given_source(input_id, expected_layout, reorder_params);
-            if (reorder.first)
-            {
-                ret.push_back(reorder);
-            }
-        }
-
-        return std::move(ret);
-    }
-
-    template <typename T>
-    void add_reoder_to_topology(T& reorder, const std::shared_ptr<data> src_data)
-    {
-        if (reorder.first)
-        {
-            _topology.add(src_data);
-            if (!reorder.second) //returned reorder is a new primitive (i.e. not cached), add it to topology and as an output
-            {
-                _topology.add(reorder.first);
-            }
-        }
-    }
-
-    template <class T>
-    auto add_weights_for_optimization(const std::shared_ptr<data> data_prim,
-                                      data_type type,
-                                      std::shared_ptr<const T> user,
-                                      boost::optional<layout> user_layout = boost::optional<layout>())
-    {
-        auto reorder = get_reorder(data_prim->mem.get_layout(), data_prim->id, type, user, user_layout);
-        add_reoder_to_topology(reorder, data_prim);
-        return reorder;
-    }
-
-    void add_weights_for_optimization(
-        const kernel_selector::weights_reorder_params& reorder_params,
-        const std::shared_ptr<data> data_prim,
-        data_type type)
-    {
-        auto reorders = get_generic_layer(reorder_params, data_prim->id, data_prim->mem.get_layout(), type);
-        for (auto& reorder : reorders)
-        {
-            add_reoder_to_topology(reorder, data_prim);
-        }
-    }
-
-    void set_optimization_attribute(optimization_attributes_type attribute, int32_t val)
-    {
-        switch (attribute)
-        {
-        case optimization_attributes_type::splitted_convolution:
-            _optimization_attributes.splitted_convolution = val;
-            break;
-        case optimization_attributes_type::bfyx_only_layer:
-            _optimization_attributes.bfyx_only_layer = val;
-            break;
-        default: throw std::out_of_range("unsupported layout optimization attribute");
-        }
-    }
-
-    std::map<primitive_id, memory_impl::ptr> optimize() const;
-    auto get_engine() { return _engine; }
+    void set_optimization_attribute(optimization_attributes_type attribute, int32_t val);
 };
 }

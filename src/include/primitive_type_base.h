@@ -71,7 +71,7 @@ struct primitive_type_base : ::cldnn_primitive_type
         return typed_primitive_inst<PType>::calc_output_layout(node);
     }
 
-    std::string to_string(const cldnn::program_node& node) const
+    std::string to_string(const cldnn::program_node& node) const override
     {
         if (node.type() != this)
             throw std::invalid_argument("primitive_type_base::to_string: primitive type mismatch");

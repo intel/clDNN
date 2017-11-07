@@ -40,7 +40,7 @@ namespace KernelSelector
         virtual bool Validate(const Params&, const OptionalParams&) const;
         virtual JitConstants GetJitConstants(const SoftmaxParams& params, DispatchData kd) const;
         virtual DispatchData SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const;
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams& optParams, float estimated_time = DONT_USE_IF_HAVE_SOMETHING_ELSE) const;
+        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams& optParams) const;
     };
 
     class SoftmaxKernelBaseBF : public SoftmaxKernelBase

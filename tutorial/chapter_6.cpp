@@ -32,9 +32,9 @@
 * In this chapter we will learn how to add a new Convolution kernel into clDNN kernel selector.
 * 
 * Please take a look in the files:
-*   "convolution_kernel_tutorial1.cpp"
-*   "convolution_kernel_tutorial1.h"
-*   "convolution_tutorial1.cl"
+*   "convolution_kernel_tutorial.cpp"
+*   "convolution_kernel_tutorial.h"
+*   "convolution_tutorial.cl"
 *
 * @include chapter_6.cpp
 *
@@ -88,11 +88,14 @@ void chapter_6(engine& engine)
     // Ready to go.
     auto outputs = network.execute();
 
+    // Get primitives that were executed and their events needed for profiling
+    auto executed_primitives = network.get_executed_primitives();
+
     // Now, we want to check what is the time of execution of each primitive:
     std::vector<cldnn::instrumentation::profiling_info> profiling_table;
-    for (auto& p : outputs)
+    for (auto& p : executed_primitives)
     {
-        profiling_table.push_back({ p.first, p.second.get_event().get_profiling_info() });
+        profiling_table.push_back({ p.first, p.second.get_profiling_info() });
     }
 
     // We have table of profiling metrics.

@@ -58,11 +58,14 @@ namespace KernelSelector
         };
     
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts() const = 0;
+        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const = 0;
+        virtual std::string GetKernelName(const ConvolutionParams&) const { return kernelName; }
+        virtual bool NeedPaddedInput() const { return false; }
         virtual bool Validate(const Params& p, const OptionalParams& o) const override;
         virtual JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const;
-        virtual DispatchData SetDefault(const ConvolutionParams& params) const;
+        virtual DispatchData SetDefault(const ConvolutionParams& params, int autoTuneIndex = -1) const;
         bool CheckWorkGroups(const DispatchData&) const;
         bool CheckPitchForSplitOnly(const ConvolutionParams& params) const;
+        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams& options, const std::string exeMode = ROUND_ROBIN, int autoTuneIndex = -1) const;
     };
 }

@@ -48,24 +48,50 @@ namespace KernelSelector
         {
             cldnnJit.AddConstant(MakeJitConstant("CHECK_FEATURES", 1));
         }
+
+        auto input_format = params.inputs[0].GetLayout();
+        auto output_format = params.output.GetLayout();
+
+        //default values when input_format = output_format
+        std::vector<uint32_t> dim_index = { 0, 1, 2, 3 };
+
+        //case for input == bfyx, output == yxfb and input == yxfb, output == bfyx
+        if (input_format != output_format)
+        {
+            dim_index[0] = 3;
+            dim_index[1] = 2;
+            dim_index[2] = 0;
+            dim_index[3] = 1;
+        }
+
+        cldnnJit.AddConstant(MakeJitConstant("INPUT_DIM_0", dim_index[0]));
+        cldnnJit.AddConstant(MakeJitConstant("INPUT_DIM_1", dim_index[1]));
+        cldnnJit.AddConstant(MakeJitConstant("INPUT_DIM_2", dim_index[2]));
+        cldnnJit.AddConstant(MakeJitConstant("INPUT_DIM_3", dim_index[3]));
+
         return cldnnJit;
     }
 
     KernelsData ConcatenationKernelRef::GetKernelsData(const Params& params, const OptionalParams& optParams) const
     {
         KernelsData kd = GetCommonKernelsData(params, optParams);
-        for (int i = 0; i < (int)kd[0].kernels.size(); i++)
-        {
-            auto& kernel = kd[0].kernels[i];
 
-            // to avoid cases when we execute with local work sizes 1x1x1
-            if (kernel.workGroups.local[0] == 1 &&
-                kernel.workGroups.global[1] != 1)
+        if (!kd.empty())
+        {
+            for (int i = 0; i < (int)kd[0].kernels.size(); i++)
             {
-                kernel.workGroups.global[1] = Align(kernel.workGroups.global[1], 32);
-                kernel.workGroups.local[1] = 32;
+                auto& kernel = kd[0].kernels[i];
+
+                // to avoid cases when we execute with local work sizes 1x1x1
+                if (kernel.workGroups.local[0] == 1 &&
+                    kernel.workGroups.global[1] != 1)
+                {
+                    kernel.workGroups.global[1] = Align(kernel.workGroups.global[1], 32);
+                    kernel.workGroups.local[1] = 32;
+                }
             }
         }
+
         return kd;
     }
 }

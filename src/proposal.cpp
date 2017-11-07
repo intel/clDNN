@@ -16,6 +16,7 @@
 
 #include "proposal_inst.h"
 #include "primitive_type_base.h"
+#include "json_object.h"
 
 #include <cmath>
 
@@ -62,10 +63,8 @@ static inline std::string stringify_vector(std::vector<float> v)
 static std::string stringify_port(const program_node & p)
 {
     std::stringstream res;
-
-    res << "{ id: " << p.id()
-        << ", layout: { count: " << p.get_output_layout().count()
-        << ", size: " << p.get_output_layout().size << " } }";
+    auto node_info = p.desc_to_json();
+    node_info.dump(res);
 
     return res.str();
 }
@@ -73,31 +72,29 @@ static std::string stringify_port(const program_node & p)
 
 std::string proposal_inst::to_string(proposal_node const& node)
 {
-    std::stringstream                   primitive_description;
-    auto desc                           = node.get_primitive();
-    auto scales_parm                    = desc->scales;
+    auto desc         = node.get_primitive();
+    auto node_info    = node.desc_to_json();
+    auto scales_parm  = desc->scales;
 
-    primitive_description
-        << "{"
-        << "\tid: " << desc->id << ", type: proposal\n"
-        << "\tcls_score: " << stringify_port(node.cls_score()) << ",\n"
-        << "\tbbox_pred: " << stringify_port(node.bbox_pred()) << ",\n"
-        << "\timage_info: " << stringify_port(node.image_info()) << ",\n"
-        << "\tparams: {\n"
-        << "\t\tmax_proposals: " << desc->max_proposals << ",\n"
-        << "\t\tiou_threshold: " << desc->iou_threshold << ",\n"
-        << "\t\tmin_bbox_size: " << desc->min_bbox_size << ",\n"
-        << "\t\tpre_nms_topn: " << desc->pre_nms_topn << ",\n"
-        << "\t\tpost_nms_topn: " << desc->post_nms_topn << ",\n"
-        << "\t\tratios: { " << stringify_vector(desc->ratios) << " },\n"
-        << "\t\tscales: { " << stringify_vector(desc->scales) << " }\n"
-        << "\t},\n"
-        << "\toutput: {\n"
-        << "\t\tpadding_lower_size: " << desc->output_padding.lower_size() << ",\n"
-        << "\t\tpadding_upper_size: " << desc->output_padding.upper_size() << ",\n"
-        << "\t\tcount: " << node.get_output_layout().count() << ",\n"
-        << "\t\tsize: " << node.get_output_layout().size << "}\n"
-        << "}\n";
+    std::stringstream primitive_description;
+
+    json_composite proposal_info;
+    proposal_info.add("cls score", stringify_port(node.cls_score()));
+    proposal_info.add("box pred", stringify_port(node.bbox_pred()));
+    proposal_info.add("image info", stringify_port(node.image_info()));
+
+    json_composite params;
+    params.add("max proposals", desc->max_proposals);
+    params.add("iou threshold", desc->iou_threshold);
+    params.add("min bbox size", desc->min_bbox_size);
+    params.add("pre nms topn", desc->pre_nms_topn);
+    params.add("post nms topn", desc->post_nms_topn);
+    params.add("ratios", stringify_vector(desc->ratios));
+    params.add("scales", stringify_vector(desc->scales));
+    proposal_info.add("params", params);
+
+    node_info.add("proposal info", proposal_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

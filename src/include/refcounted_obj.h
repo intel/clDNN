@@ -139,11 +139,10 @@ struct refcounted_obj_ptr
         return !(lhs == rhs);
     }
 
-    //for refcounted_obj_ptr<T>, allow conversion to refcounted_obj_ptr<const T>
-    template <class U = T, class = std::enable_if_t<!std::is_const<U>::value>>
-    operator refcounted_obj_ptr<std::add_const_t<T>> () const
+    // for refcounted_obj_ptr<T>, allow conversion to refcounted_obj_ptr<const T>
+    operator refcounted_obj_ptr<const T> () const
     {
-        return refcounted_obj_ptr<std::add_const_t<T>>(_ptr);
+        return refcounted_obj_ptr<const T>(_ptr);
     }
 
 private:

@@ -59,6 +59,8 @@
 
 /// @defgroup c_error Error Handling
 
+/// @defgroup c_version Version Information
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,6 +78,18 @@ extern "C" {
 
 /// @brief Represents errors status for all API calls
 typedef int32_t cldnn_status;
+/// @}
+
+/// @addtogroup c_version
+/// @{
+/// @brief Represents version information of API.
+typedef struct
+{
+    int32_t major;    ///< Major version component (major version of clDNN API interface).
+    int32_t minor;    ///< Minor version component (minor version of API interface - correlated with IE API version).
+    int32_t build;    ///< Build version component (version/revision of official Open Source drop of clDNN library).
+    int32_t revision; ///< Revision version component (incremental identifier of current build/compilation).
+} cldnn_version;
 /// @}
 
 /// @ingroup c_engine
@@ -122,6 +136,7 @@ typedef struct
     uint32_t enable_parallelisation;   ///< Enables parallel execution of primitives which don't depend on each other. Disabled by default.
     const char* engine_log;            ///< Specifies a file to which engine log should be dumped. Null/empty values means no logging.
     const char* sources_dumps_dir;     ///< Specifies a directory where sources of cldnn::program objects should be dumped. Null/empty values means no loggins.
+    uint32_t priority_mode;            ///< Placeholder for priority mode (support of priority hints in command queue). Currently ignored.
 }  cldnn_engine_configuration;
 
 /// @brief Information about the engine returned by cldnn_get_engine_info().
@@ -230,6 +245,7 @@ typedef enum /*:int32_t*/
 } cldnn_format_type;
 
 #define CLDNN_FLOAT_TYPE_MASK 0x80
+#define CLDNN_UINT_TYPE_MASK 0x40
 
 #define CLDNN_TENSOR_BATCH_DIM_MAX 1
 #define CLDNN_TENSOR_FEATURE_DIM_MAX 1
@@ -258,9 +274,11 @@ typedef struct
 /// @brief Data type stored in memory.
 typedef enum /*:size_t*/
 {
-    cldnn_i8  = sizeof(int8_t),
+	cldnn_i8  = sizeof(int8_t),
     cldnn_f16 = sizeof(int16_t) | CLDNN_FLOAT_TYPE_MASK,
     cldnn_f32 = sizeof(float) | CLDNN_FLOAT_TYPE_MASK,
+    cldnn_u8  = sizeof(uint8_t) | CLDNN_UINT_TYPE_MASK // TODO: move to top of list and re-compile inference engine
+
 } cldnn_data_type;
 
 /// @brief Memory layout description.
@@ -289,6 +307,13 @@ typedef struct
     const uint16_t* data; ///< Pointer to uint16_t array.
     size_t size;       ///< Size (in uint16_t) of the array.
 } cldnn_uint16_t_arr;
+
+/// @brief Represents reference to an array of tensor.
+typedef struct
+{
+    const cldnn_tensor* data; ///< Pointer to tensor array.
+    size_t size;       ///< Size (in tensor) of the array.
+} cldnn_tensor_arr;
 
 /// @brief Globally unique primitive's type id
 typedef const struct cldnn_primitive_type* cldnn_primitive_type_id;
@@ -375,6 +400,12 @@ typedef struct cldnn_activation_additional_params_t
 CLDNN_BEGIN_PRIMITIVE_DESC(primitive)
 CLDNN_END_PRIMITIVE_DESC(primitive)
 
+/// @}
+
+/// @addtogroup c_version
+/// @{
+/// @brief Get information about version of clDNN.
+CLDNN_API cldnn_version cldnn_get_version(cldnn_status* status);
 /// @}
 
 /// @addtogroup c_topology
@@ -526,6 +557,30 @@ CLDNN_API        cldnn_program cldnn_get_network_program(cldnn_network network, 
 /// @param[out] size_ret Required size (in chars) to store result.
 CLDNN_API                 void cldnn_get_network_output_names(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status);
 
+/// @brief Returns names of executed primitives.
+/// @details Function fills user provided buffer by primitive names. Each name is followed by '\0'.
+/// Empty name "\0\0" means end of data.
+/// @param[in] names Pointer to user-allocated buffer to store names.
+/// @param[in] size Size (in chars) of the buffer.
+/// @param[out] size_ret Required size (in chars) to store result.
+CLDNN_API                 void cldnn_get_network_executed_primitive_names(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status);
+
+/// @brief Returns names of all primitives in network.
+/// @details Function fills user provided buffer by primitive names. Each name is followed by '\0'.
+/// Empty name "\0\0" means end of data.
+/// @param[in] names Pointer to user-allocated buffer to store names.
+/// @param[in] size Size (in chars) of the buffer.
+/// @param[out] size_ret Required size (in chars) to store result.
+CLDNN_API                 void cldnn_get_network_all_primitive_names(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status);
+
+/// @brief Returns names of all primitives in network before graph optimization.
+/// @details Function fills user provided buffer by primitive names. Each name is followed by '\0'.
+/// Empty name "\0\0" means end of data.
+/// @param[in] names Pointer to user-allocated buffer to store names.
+/// @param[in] size Size (in chars) of the buffer.
+/// @param[out] size_ret Required size (in chars) to store result.
+CLDNN_API                 void cldnn_get_network_all_primitive_org_names(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status);
+
 /// @brief Executes network.
 /// @details User should call cldnn_set_network_input() for every @p input_layout defined in tho source @p topology.
 /// Function returns immediately, even if @p dependencies are not set yet.
@@ -546,6 +601,12 @@ CLDNN_API cldnn_network_output cldnn_get_network_output(cldnn_network network, c
 /// @param name Output name to get the result.
 /// @returns @ref cldnn_memory structure with the output information.
 CLDNN_API cldnn_memory cldnn_get_network_output_memory(cldnn_network network, const char* name, cldnn_status* status);
+
+/// @brief Returns @ref event corresponding to output with @p name.
+/// @details User can call this function even before calling cldnn_execute_network(), but then content of memory is uninitialized.
+/// @param name Output name to get the result.
+/// @returns @ref cldnn_event structure with the output information.
+CLDNN_API cldnn_event cldnn_get_network_output_event(cldnn_network network, const char* name, cldnn_status* status);
 /// @}
 
 /// @addtogroup c_memory

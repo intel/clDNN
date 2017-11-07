@@ -49,9 +49,9 @@ namespace KernelSelector
         // We have two units of data per work item in current implementation.
         auto local_mem_per_wi = 2 * (kd.fp16UnitUsed ? sizeof(short) : sizeof(float));
         // Combining device execution and local memory restrictions to compute maximum possible LWS.
-        auto max_lws = std::min(params.engineInfo.maxWorkGroupSize, params.engineInfo.maxLocalMemSize / local_mem_per_wi);
+        auto max_lws = static_cast<std::size_t>(std::min(params.engineInfo.maxWorkGroupSize, params.engineInfo.maxLocalMemSize / local_mem_per_wi));
 
-        kd.lws0 = kd.dataSetsCount;
+        kd.lws0 = std::min(kd.dataSetsCount, max_lws);
         // Compute maximum possible LWS that does not exceed device capabilities and optimizes number of global memory reads.
         while ((kd.itemsNum > 32 || kd.lws0 < kd.itemsNum) && (2 * kd.lws0 <= max_lws))
         {
@@ -65,11 +65,12 @@ namespace KernelSelector
 
         assert(kd.itemsNum > 0 && kd.lws0 && kd.gws0 > 0);
 
+        kd.effiency = FORCE_PRIORITY_6;
         return kd;
     }
 
     KernelsData SoftmaxKernel_fb::GetKernelsData(const Params& params, const OptionalParams& optParams) const
     {
-        return GetCommonKernelsData(params, optParams, FORCE_PRIORITY_6);
+        return GetCommonKernelsData(params, optParams);
     }
 }

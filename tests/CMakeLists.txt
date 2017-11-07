@@ -30,6 +30,7 @@ if (NOT MSVC)
       SET_RAW
         "-Wno-error=conversion-null"
         "-Wno-error=type-limits"
+        "-Wno-error=unused-variable"
     )
 endif ()
 
@@ -133,7 +134,7 @@ target_link_libraries("${CLDNN_BUILD__PROJ}"
 
 if(WIN32)
   target_link_libraries("${CLDNN_BUILD__PROJ}" setupapi)
-elseif(UNIX)
+elseif((NOT ANDROID) AND (UNIX))
   target_link_libraries("${CLDNN_BUILD__PROJ}" pthread)
 endif()
 

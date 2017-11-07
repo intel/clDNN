@@ -18,6 +18,7 @@
 #include "eltwise_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -29,17 +30,20 @@ primitive_type_id eltwise_type_id()
 
 layout eltwise_inst::calc_output_layout(eltwise_node const& node)
 {
-    return node.input().get_output_layout();
+    return node.input().get_non_padded_output_layout();
 }
 
 std::string eltwise_inst::to_string(eltwise_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto& input_1               = node.input();
-    auto& input_2               = node.input2();
-    auto activation             = desc->with_activation ? " true" : "false";
-    std::string                 str_mode;
+    auto node_info  = node.desc_to_json();
+    auto desc       = node.get_primitive();
+    auto activation = desc->with_activation ? " true" : "false";
+    auto& input_1   = node.input();
+    auto& input_2   = node.input2();
+
+    std::stringstream primitive_description;
+    std::string       str_mode;
+
     switch(desc->mode)
     {
     case eltwise_mode::sum:
@@ -59,14 +63,17 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
             break;
     }
 
-    primitive_description << "id: " << desc->id << ", type: eltwise" << 
-        "\n\tinput_1: " << input_1.id() << ", count: " << input_1.get_output_layout().count() << ",  size: " << input_1.get_output_layout().size <<
-        "\n\tinput_2: " << input_2.id() << ", count: " << input_2.get_output_layout().count() << ",  size: " << input_2.get_output_layout().size <<
-        "\n\tmode: " << str_mode <<
-        "\n\twith activation: " << activation << ", slope: " << desc->activation_negative_slope << 
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    json_composite eltwise_info;
+    eltwise_info.add("input_1", input_1.id());
+    eltwise_info.add("input_2", input_2.id());
+    eltwise_info.add("mode", str_mode);
+    if (desc->with_activation)
+    {
+        eltwise_info.add("with activation", activation);
+        eltwise_info.add("slope", desc->activation_negative_slope);
+    }
+    node_info.add("eltwise info", eltwise_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }
@@ -74,9 +81,20 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
 eltwise_inst::typed_primitive_inst(network_impl& network, eltwise_node const& node)
     :parent(network, node)
 {
-    auto input_layout = input_memory(0).get_layout();
-    auto input2_layout = input_memory(1).get_layout();
+    auto batch_size = input_memory(0).get_layout().size.batch[0];
+    auto feature_size = input_memory(0).get_layout().size.feature[0];
 
-    CLDNN_ERROR_LAYOUT_MISMATCH(node.id(), "input layout", input_layout, "input_2 layout", input2_layout, "Different layouts of eltwise's inputs");
+    auto input_batch_size = input_memory(0).get_layout().size.batch[0];
+    auto input_feature_size = input_memory(0).get_layout().size.feature[0];
+
+    if (batch_size != 1)
+    {
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Eltwise batch size", batch_size, "input batch size", input_batch_size, "");
+    }
+
+    if (feature_size != 1)
+    {
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Eltwise feature size", feature_size, "input feature size", input_feature_size, "");
+    }
 }
 }

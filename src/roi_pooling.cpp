@@ -17,6 +17,7 @@
 #include "roi_pooling_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -54,28 +55,21 @@ layout roi_pooling_inst::calc_output_layout(roi_pooling_node const& node)
 
 std::string roi_pooling_inst::to_string(roi_pooling_node const& node)
 {
-    std::stringstream primitive_description;
-    auto desc           = node.get_primitive();
-    auto mode           = desc->mode == pooling_mode::max ? "max" : "average";
+    auto desc      = node.get_primitive();
+    auto mode      = desc->mode == pooling_mode::max ? "max" : "average";
+    auto node_info = node.desc_to_json();
 
-    primitive_description
-        << "{\n"
-        << "\tid: " << desc->id << ",\n"
-        << "\ttype: roi_pooling,\n"
-        << "\tparams: {\n"
-        << "\t\tmode: " << mode << ",\n"
-        << "\t\tpooled_w: " << desc->pooled_width << ",\n"
-        << "\t\tpooled_h: " << desc->pooled_height << ",\n"
-        << "\t\tspatial_scale: " << desc->spatial_scale << ",\n"
-        << "\t\tgroup_sz: " << desc->group_sz << "\n"
-        << "\t}\n"
-        << "\toutput: {\n"
-        << "\t\tpad_lower_sz: " << desc->output_padding.lower_size() << ",\n"
-        << "\t\tpad_upper_sz: " << desc->output_padding.upper_size() << ",\n"
-        << "\t\tcount: " << node.get_output_layout().count() << ",\n"
-        << "\t\tsize: " << node.get_output_layout().size << "\n"
-        << "\t}\n"
-        << "}\n";
+    std::stringstream primitive_description;
+
+    json_composite roi_info;
+    roi_info.add("mode", mode);
+    roi_info.add("pooled_w", desc->pooled_width);
+    roi_info.add("pooled_h", desc->pooled_height);
+    roi_info.add("spatial_scale", desc->spatial_scale);
+    roi_info.add("group_sz", desc->group_sz);
+
+    node_info.add("roi info", roi_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

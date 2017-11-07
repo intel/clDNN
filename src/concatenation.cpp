@@ -17,6 +17,7 @@
 #include "concatenation_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -49,9 +50,12 @@ layout concatenation_inst::calc_output_layout(concatenation_node const& node)
 
 std::string concatenation_inst::to_string(concatenation_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    std::stringstream           ss_inputs;
+    auto node_info = node.desc_to_json();
+    auto desc      = node.get_primitive();
+     
+    std::stringstream ss_inputs;
+    std::stringstream primitive_description;
+
     for (size_t i = 0; i < node.inputs_count(); ++i)
     {
         ss_inputs << node.input(i).id();
@@ -59,13 +63,14 @@ std::string concatenation_inst::to_string(concatenation_node const& node)
         i != (node.inputs_count() - 1) ? ss_inputs << ", " : ss_inputs << "";
     }
 
-    primitive_description << "id: " << desc->id << ", type: depth_concatenate" << 
-        "\n\tconcat axis: " << desc->axis <<
-        "\n\tinputs count: " << node.inputs_count() << 
-        "\n\tinputs: " << ss_inputs.str() << 
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    json_composite concat_info;
+    concat_info.add("concat axis", desc->axis);
+    concat_info.add("inputs count", node.inputs_count());
+    concat_info.add("inputs", ss_inputs.str());
+    concat_info.dump(primitive_description);
+
+    node_info.add("concat info", concat_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }
@@ -83,15 +88,13 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
     {
         auto& input_mem = i->output_memory();
         auto input_mem_size = input_mem.get_layout().size;
-        if (input_mem.get_layout().fused_format() != input_format)
-            CLDNN_ERROR_MESSAGE(node.id(), "Every input must have the same format!");
         for (int dim = concatenation::along_b; dim <= concatenation::along_y; ++dim)
         {
             if (dim == node.get_primitive()->axis)
                 concat_count += input_mem_size.raw[dim];
             else
             {
-                CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size dim: " + dim, input_size.raw[dim], "input memory dim: " + dim, input_mem_size.raw[dim], "Every input must have the same size");
+                CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size dim: " + std::to_string(dim), input_size.raw[dim], "input memory dim: " + std::to_string(dim), input_mem_size.raw[dim], "Every input must have the same size");
             }
         }
     }
@@ -102,11 +105,11 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
     {
         if (dim == node.get_primitive()->axis)
         {
-            CLDNN_ERROR_NOT_EQUAL(node.id(), "Concat count", concat_count, "output size dim:" + dim, output_size.raw[dim], "Output size in concatenated dimension mismatch sum of inputs!");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Concat count", concat_count, "output size dim:" + std::to_string(dim), output_size.raw[dim], "Output size in concatenated dimension mismatch sum of inputs!");
         }
         else
         {
-            CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size dim: " + dim, input_size.raw[dim], "output size dim:" + dim, output_size.raw[dim], "Output size in non-concatenated dimension mistmatch input");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size dim: " + std::to_string(dim), input_size.raw[dim], "output size dim:" + std::to_string(dim), output_size.raw[dim], "Output size in non-concatenated dimension mistmatch input");
         }
     }
 

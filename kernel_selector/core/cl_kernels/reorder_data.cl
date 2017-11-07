@@ -46,7 +46,7 @@ KERNEL (reorder_data)(
     const __global INPUT_REORDER_TYPE* input, 
     __global OUTPUT_REORDER_TYPE* output
 #ifdef MEAN_SUBTRACT_IN_BUFFER
-    , __global MEAN_SUBTRACT_TYPE* mean_subtruct
+    , __global MEAN_SUBTRACT_TYPE* mean_subtract
 #endif
     )
 {
@@ -69,7 +69,7 @@ KERNEL (reorder_data)(
     res -= TO_CALC_TYPE(VALUE_TO_SUBTRACT[f % VALUE_TO_SUBTRACT_SIZE]);
 #elif defined MEAN_SUBTRACT_IN_BUFFER
     uint4 msv = FUNC_CALL(reshape_dims)(b,f,y,x, INPUT0_SIZE_Y, INPUT0_SIZE_X, MEAN_SUBTRACT_SIZE_Y, MEAN_SUBTRACT_SIZE_X, INPUT0_DIMS, MEAN_SUBTRACT_DIMS);
-    res -= TO_CALC_TYPE(mean_subtruct[GET_DATA_INDEX_SAFE(MEAN_SUBTRACT, msv[0], msv[1], msv[2], msv[3])]);
+    res -= TO_CALC_TYPE(mean_subtract[GET_DATA_INDEX_SAFE(MEAN_SUBTRACT, msv[0], msv[1], msv[2], msv[3])]);
 #endif
 
     output[output_idx] = ACTIVATION(TO_OUTPUT_REORDER_TYPE(res), NL_M ,NL_N);

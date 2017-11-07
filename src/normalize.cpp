@@ -17,6 +17,7 @@
 #include "normalize_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -28,25 +29,28 @@ primitive_type_id normalize_type_id()
 
 layout normalize_inst::calc_output_layout(normalize_node const& node)
 {
-    return node.input().get_output_layout();
+    return node.input().get_non_padded_output_layout();
 }
 
 std::string normalize_inst::to_string(normalize_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc = node.get_primitive();
-    auto& input = node.input();
+    auto node_info    = node.desc_to_json();
+    auto desc         = node.get_primitive();
+    auto epsilon      = desc->epsilon;
+    auto norm_region  = desc->across_spatial ? "across spatial" : "within spatial";
+    auto& input       = node.input();
     auto& scale_input = node.scale();
-    auto epsilon = desc->epsilon;
-    auto norm_region = desc->across_spatial ? "across spatial" : "within spatial";
+    
+    std::stringstream primitive_description;
 
-    primitive_description << "id: " << desc->id << ", type: normalize" <<
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\tscale input: " << scale_input.id() << ", count: " << scale_input.get_output_layout().count() << ",  size: " << scale_input.get_output_layout().size <<
-        "\n\tepsilon: " << epsilon << ", normalization region: " << norm_region <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: size: " << node.get_output_layout().size << '\n';
+    json_composite normalize_info;
+    normalize_info.add("input id", input.id());
+    normalize_info.add("scale input id", scale_input.id());
+    normalize_info.add("epsilon", epsilon);
+    normalize_info.add("normalization region", norm_region);
+
+    node_info.add("noramlize info", normalize_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

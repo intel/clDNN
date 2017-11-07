@@ -17,6 +17,7 @@
 #include "program_node.h"
 #include "program_impl.h"
 #include "primitive_inst.h"
+#include "to_string_utils.h"
 
 using namespace cldnn;
 
@@ -27,7 +28,8 @@ program_node::program_node(std::shared_ptr<primitive> prim, program_impl & prog)
 
     processing_itr = prog.processing_order.end();
 }
-void program_node::replace_dependency(size_t idx, program_node& new_dep)
+
+void program_node::replace_dependency(size_t idx, program_node& new_dep, bool detach_whole_branch)
 {
     if (idx >= dependencies.size())
         return;
@@ -35,7 +37,7 @@ void program_node::replace_dependency(size_t idx, program_node& new_dep)
         return;
 
     dependencies[idx]->users.remove(this);
-    myprog.remove_if_dangling(*dependencies[idx]);
+    myprog.remove_if_dangling(*dependencies[idx], detach_whole_branch);
 
     dependencies[idx] = &new_dep;
     if (!is_type<internal_primitive>())
@@ -43,17 +45,19 @@ void program_node::replace_dependency(size_t idx, program_node& new_dep)
     new_dep.users.push_back(this);
 }
 
-void program_node::replace_dependency(program_node const& old_dep, program_node& new_dep)
+void program_node::replace_dependency(program_node const& old_dep, program_node& new_dep, bool detach_whole_branch)
 {
     for (size_t i = 0; i < dependencies.size(); ++i)
         if (dependencies[i] == &old_dep)
-            return replace_dependency(i, new_dep);
+            return replace_dependency(i, new_dep, detach_whole_branch);
 }
 
-bool program_node::has_next() const
+std::vector<primitive_id> program_node::get_dependencies_ids() const
 {
-    auto itr = processing_itr;
-    return (++itr == myprog.processing_order.end());
+    std::vector<primitive_id> dep_ids;
+    for (auto& dependency : dependencies)
+        dep_ids.push_back(dependency->get_primitive()->id);
+    return dep_ids;
 }
 
 void program_node::remove_dependency(size_t idx)
@@ -66,25 +70,188 @@ void program_node::remove_dependency(size_t idx)
     dependencies.erase(dependencies.begin() + idx);
 }
 
-layout program_node::get_output_layout()
+json_composite program_node::desc_to_json() const
+{
+    json_composite node_info;
+    node_info.add("ptr", "node_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
+    node_info.add("id", id());
+    node_info.add("type", get_extr_type(typeid(*this).name()));
+    node_info.add("internal", bool_to_str(this->is_type<internal_primitive>()));
+    node_info.add("valid output layout", bool_to_str(valid_output_layout));
+    
+    json_composite output_layout_info;
+    output_layout_info.add("data_type", dt_to_str(output_layout.data_type));
+    output_layout_info.add("format", fmt_to_str(output_layout.format));
+    output_layout_info.add("size", output_layout.size.to_string());
+
+    json_composite padding_info;
+    padding_info.add("lower size", output_layout.data_padding.lower_size().to_string());
+    padding_info.add("upper size", output_layout.data_padding.upper_size().to_string());
+    output_layout_info.add("padding info", padding_info);
+
+    node_info.add("output layout", output_layout_info);
+
+    node_info.add("processing number", processing_num);
+    node_info.add("constant", bool_to_str(constant));
+    node_info.add("in data flow", bool_to_str(data_flow));
+    node_info.add("main branch", bool_to_str(main_branch));
+    node_info.add("dominator", std::to_string(reinterpret_cast<uintptr_t>(dominator)));
+    node_info.add("joint", std::to_string(reinterpret_cast<uintptr_t>(joint)));
+    node_info.add("output", bool_to_str(output));
+
+    std::vector<std::string> deps_ptrs;
+    {     
+        bool empty = true;
+        auto itr = dependencies.begin();
+        while (itr != dependencies.end())
+        {
+            if (empty)
+            {
+                empty = false;
+            }
+            deps_ptrs.push_back(std::to_string(reinterpret_cast<uintptr_t>(*itr++)));
+        }
+		if (deps_ptrs.empty())
+		{
+			deps_ptrs.push_back("null");
+		}
+    }
+    node_info.add("dependencies", deps_ptrs);
+
+    std::vector<std::string> users_ptrs;
+    {
+        bool empty = true;
+        auto itr = users.begin();
+        while (itr != users.end())
+        {
+            if (empty)
+            {
+                empty = false;
+            }
+            users_ptrs.push_back(std::to_string(reinterpret_cast<uintptr_t>(*itr++)));
+        }
+		if (users_ptrs.empty())
+		{
+			users_ptrs.push_back("null");
+		}
+    }
+    node_info.add("users", users_ptrs);
+
+    std::vector<std::string> impls;
+    if (!selected_impl)
+    {
+        impls.push_back("null");
+    }
+    else
+    {
+        #ifdef __clang__
+            #pragma clang diagnostic push
+            #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+        #endif
+        //todo: add proper impl dump\n";
+        impls.push_back(typeid(*selected_impl.get()).name());
+        #ifdef __clang__
+            #pragma clang diagnostic pop
+        #endif
+    }
+    node_info.add("implementation", impls);
+
+    return node_info;
+}
+
+void program_node::remove_dependency(program_node & node)
+{
+    for (size_t i = 0; i < dependencies.size(); ++i)
+        if (dependencies[i] == &node)
+            remove_dependency(i);
+}
+
+bool program_node::is_detached(bool whole_branch)
+{
+    if (!users.empty())
+        return false;
+    if (!whole_branch && !dependencies.empty())
+        return false;
+    if (joint != nullptr || dominator != nullptr)
+        return false;
+
+    return true;
+}
+
+bool program_node::has_next() const
+{
+    auto itr = processing_itr;
+    return (++itr == myprog.processing_order.end());
+}
+
+layout program_node::calc_output_layout() const
+{
+    return type()->calc_output_layout(*this);
+}
+
+layout program_node::get_output_layout(bool invalidate_users_if_changed)
 {
     if (valid_output_layout)
         return output_layout;
 
-    for (auto dep : dependencies)
-        dep->get_output_layout();
+    auto new_layout = calc_output_layout();
+    set_output_layout(new_layout, invalidate_users_if_changed);
+    return new_layout;
+}
 
-    auto new_layout = desc->type->calc_output_layout(*this);
-    //TODO: after merging padding into layout, calc_output_layout can now return padding as well
-    // for now just ignore it and preserve already set padding value - in future we should probably take care of this
-    // situation however.
+layout program_node::get_output_layout() const
+{
+    if (!valid_output_layout)
+        throw std::runtime_error("Output layout not calculated");
+
+    return output_layout;
+}
+
+layout program_node::get_non_padded_output_layout(bool invalidate_users_if_changed)
+{
+    auto out_layout = get_output_layout(invalidate_users_if_changed);
+    auto result = layout({ out_layout.data_type, out_layout.format, out_layout.size });
+    return result;
+}
+
+bool program_node::set_output_layout(layout new_layout, bool invalidate_users_if_changed)
+{
+    merge_output_padding(new_layout.data_padding);
     new_layout.data_padding = output_layout.data_padding;
-    if (new_layout != output_layout) //output_layout has changed! invalidate users
+    bool changed = (new_layout != output_layout);
+    if (changed && invalidate_users_if_changed) //output_layout has changed! invalidate users
         invalidate_users();
 
     output_layout = new_layout;
     valid_output_layout = true;
-    return std::move(new_layout);
+    return changed;
+}
+
+bool program_node::recalc_output_layout(bool invalidate_users_if_changed)
+{
+    return set_output_layout(calc_output_layout(), invalidate_users_if_changed);
+}
+
+bool program_node::has_padded_dependency()
+{
+    return std::any_of(get_dependencies().begin(), get_dependencies().end(), [](program_node* node) { return node->is_padded(); });
+}
+
+bool program_node::has_padded_dependency() const
+{
+    return std::any_of(get_dependencies().begin(), get_dependencies().end(), [](const program_node* node) { return node->is_padded(); });
+}
+
+void program_node::invalidate_users() const
+{
+    for (auto& user : users)
+    {
+        if (user->valid_output_layout)
+        {
+            user->valid_output_layout = false;
+            user->invalidate_users();
+        }
+    }
 }
 
 primitive_id details::internal_program_node_base::get_next_internal_id()

@@ -15,8 +15,6 @@
 */
 
 #include "convolution_kernel_yxfb_ref.h"
-#include "kernel_selector_utils.h"
-#include "common_tools.h"
 
 namespace KernelSelector 
 {
@@ -43,34 +41,8 @@ namespace KernelSelector
         return k;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_Ref::SetDefault(const ConvolutionParams& arg) const
-    {
-        DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
-        return runInfo;
-    }
-
     KernelsData ConvolutionKernel_yxfb_Ref::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        const ConvolutionParams& orgParams = static_cast<const ConvolutionParams&>(params);
-
-        DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-
-        auto cldnn_jit = GetJitConstants(orgParams, runInfo);
-        auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return{ kd };
+        return GetCommonKernelsData(params, options);
     }
 }

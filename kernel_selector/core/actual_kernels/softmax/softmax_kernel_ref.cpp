@@ -21,48 +21,16 @@ namespace KernelSelector
 {
     ParamsKey SoftmaxKernelRef::GetSupportedKey() const
     {
-        ParamsKey k;
-        k.EnableInputDataType(Datatype::F16);
-        k.EnableInputDataType(Datatype::F32);
-        k.EnableOutputDataType(Datatype::F16);
-        k.EnableOutputDataType(Datatype::F32);
-        k.EnableInputLayout(DataLayout::bfyx);
-        k.EnableInputLayout(DataLayout::yxfb);
-        k.EnableInputLayout(DataLayout::bf);
-        k.EnableInputLayout(DataLayout::fb);
-        k.EnableOutputLayout(DataLayout::bfyx);
-        k.EnableOutputLayout(DataLayout::yxfb);
-        k.EnableOutputLayout(DataLayout::bf);
-        k.EnableOutputLayout(DataLayout::fb);
-        k.EnableSoftmaxDim(SoftmaxDim::X);
-        k.EnableSoftmaxDim(SoftmaxDim::Y);
-        k.EnableSoftmaxDim(SoftmaxDim::FEATURE);
-        k.EnableTensorOffset();
-        k.EnableTensorPitches();
-        k.EnableBatching();
-        return k;
+        return GetDefaultSupportedKey();
     }
 
     SoftmaxKernelRef::Parent::DispatchData SoftmaxKernelRef::SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const
     {
         auto runInfo = Parent::SetDefault(params, optParams);
 
-        const auto& out = params.output;
-        std::vector<size_t> global;
-        switch (params.smParams.dim)
-        {
-        case SoftmaxDim::X:
-            global = { out.Y().v, out.Feature().v, out.Batch().v };
-            break;
-        case SoftmaxDim::Y:
-            global = { out.X().v, out.Feature().v, out.Batch().v };
-            break;
-        case SoftmaxDim::FEATURE:
-            global = { out.X().v, out.Y().v, out.Batch().v };
-            break;
-        default:
-            break;
-        }
+        const auto global = GetSoftmaxDimGlobalSizes(params.smParams.dim, params.output);
+
+        assert(global.size() == 3);
 
         auto local = GetOptimalLocalWorkGroupSizes(global);
 
@@ -74,63 +42,13 @@ namespace KernelSelector
         runInfo.lws1 = local[1];
         runInfo.lws2 = local[2];
 
+        runInfo.effiency = DONT_USE_IF_HAVE_SOMETHING_ELSE;
+
         return runInfo;
-    }
-
-    JitConstants SoftmaxKernelRef::GetJitConstants(const SoftmaxParams& params, DispatchData kd) const
-    {
-        auto jit = Parent::GetJitConstants(params, kd);
-
-        switch (params.smParams.dim)
-        {
-        case SoftmaxDim::X:
-            jit.AddConstants({
-                MakeJitConstant("INPUT0_OTHER0_PITCH",  "INPUT0_Y_PITCH"),
-                MakeJitConstant("INPUT0_OTHER1_PITCH",  "INPUT0_FEATURE_PITCH"),
-                MakeJitConstant("INPUT0_CLASS_PITCH",   "INPUT0_X_PITCH"),
-                MakeJitConstant("INPUT0_CLASS_NUM",     "INPUT0_SIZE_X"),
-                MakeJitConstant("OUTPUT_OTHER0_PITCH",  "OUTPUT_Y_PITCH"),
-                MakeJitConstant("OUTPUT_OTHER1_PITCH",  "OUTPUT_FEATURE_PITCH"),
-                MakeJitConstant("OUTPUT_CLASS_PITCH",   "OUTPUT_X_PITCH"),
-            });
-            break;
-        case SoftmaxDim::Y:
-            jit.AddConstants({
-                MakeJitConstant("INPUT0_OTHER0_PITCH",  "INPUT0_X_PITCH"),
-                MakeJitConstant("INPUT0_OTHER1_PITCH",  "INPUT0_FEATURE_PITCH"),
-                MakeJitConstant("INPUT0_CLASS_PITCH",   "INPUT0_Y_PITCH"),
-                MakeJitConstant("INPUT0_CLASS_NUM",     "INPUT0_SIZE_Y"),
-                MakeJitConstant("OUTPUT_OTHER0_PITCH",  "OUTPUT_X_PITCH"),
-                MakeJitConstant("OUTPUT_OTHER1_PITCH",  "OUTPUT_FEATURE_PITCH"),
-                MakeJitConstant("OUTPUT_CLASS_PITCH",   "OUTPUT_Y_PITCH"),
-            });
-            break;
-        case SoftmaxDim::FEATURE:
-            jit.AddConstants({
-                MakeJitConstant("INPUT0_OTHER0_PITCH",  "INPUT0_X_PITCH"),
-                MakeJitConstant("INPUT0_OTHER1_PITCH",  "INPUT0_Y_PITCH"),
-                MakeJitConstant("INPUT0_CLASS_PITCH",   "INPUT0_FEATURE_PITCH"),
-                MakeJitConstant("INPUT0_CLASS_NUM",     "INPUT0_FEATURE_NUM"),
-                MakeJitConstant("OUTPUT_OTHER0_PITCH",  "OUTPUT_X_PITCH"),
-                MakeJitConstant("OUTPUT_OTHER1_PITCH",  "OUTPUT_Y_PITCH"),
-                MakeJitConstant("OUTPUT_CLASS_PITCH",   "OUTPUT_FEATURE_PITCH"),
-            });
-            break;
-        default:
-            break;
-        }
-
-        // TODO: W/A - currently using low precision accumulator type. (for testing only)
-        if (params.output.GetDType() == Datatype::F16)
-        {
-            jit.AddConstant(MakeJitConstant("ACCUMULATOR_TYPE", "half"));
-        }
-
-        return jit;
     }
 
     KernelsData SoftmaxKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        return GetCommonKernelsData(params, options, DONT_USE_IF_HAVE_SOMETHING_ELSE);
+        return GetCommonKernelsData(params, options);
     }
 }

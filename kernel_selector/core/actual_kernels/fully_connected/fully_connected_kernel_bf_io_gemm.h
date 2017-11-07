@@ -25,13 +25,12 @@ namespace KernelSelector {
     public:
         using Parent = FullyConnectedKernelBase;
         FullyConnected_bf_io_GEMM() : Parent("fully_connected_gpu_bf_io_gemm") {}
-        virtual ~FullyConnected_bf_io_GEMM() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
+        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual DispatchData SetDefault(const FullyConnectedParams& params) const override;
-        virtual JitConstants GetJitConstants(const FullyConnectedParams& params, const DispatchData& kd) const override;
+        std::unique_ptr<DispatchData> SetDefault(const FullyConnectedParams& params) const override;
+        JitConstants GetJitConstants(const FullyConnectedParams& params, const DispatchData& kd) const override;
     };
 }

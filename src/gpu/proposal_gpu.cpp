@@ -38,8 +38,7 @@ namespace {
     *                                                                          *
     ****************************************************************************/
 
-    template <class T>
-    const T & clamp_v(const T & v, const T & lower, const T & upper)
+    inline const float & clamp(const float & v, const float & lower, const float & upper)
     {
         return std::max(lower, std::min(v, upper));
     }
@@ -55,29 +54,43 @@ namespace {
     {
         float x0, y0, x1, y1;
 
-        float area() const { return std::max<float>(0, y1 - y0 + 1) * std::max<float>(0, x1 - x0 + 1); }
-        roi_t intersect (roi_t other) const
-        {
-            return
-            {
-                std::max(x0, other.x0), std::max(y0, other.y0),
-                std::min(x1, other.x1), std::min(y1, other.y1)
-            };
-        }
-        roi_t clamp (roi_t other) const
-        {
-            return
-            {
-                clamp_v(x0, other.x0, other.x1),
-                clamp_v(y0, other.y0, other.y1),
-                clamp_v(x1, other.x0, other.x1),
-                clamp_v(y1, other.y0, other.y1)
-            };
+        inline float area() const 
+        { 
+            return std::max(0.f, y1 - y0 + 1.f) * std::max(0.f, x1 - x0 + 1.f); 
         }
     };
 
     struct delta_t { float shift_x, shift_y, log_w, log_h; };
-    struct proposal_t { roi_t roi; float confidence; size_t ord; };
+
+    struct proposal_t 
+    { 
+        proposal_t() = default;
+        proposal_t(const roi_t& r, const float c, const size_t& o) : roi(r), confidence(c), ord(o) {}
+
+        roi_t roi; 
+        float confidence; 
+        size_t ord; 
+    };
+
+    inline float float_read_helper(const float* mem)
+    {
+        return *mem;
+    }
+
+    inline float float_read_helper(const half_t* mem)
+    {
+        return float16_to_float32(*((uint16_t*)(mem)));
+    }
+
+    inline void float_write_helper(float* mem, float f)
+    {
+        *mem = f;
+    }
+
+    inline void float_write_helper(half_t* mem, float f)
+    {
+        *mem = (half_t)float32_to_float16(f);
+    }
 
     /****************************************************************************
      *                                                                          *
@@ -107,22 +120,24 @@ namespace {
             const proposal_inst::anchor& box,
             const delta_t& delta,
             int anchor_shift_x,
-            int anchor_shift_y)
+            int anchor_shift_y,
+            int img_w,
+            int img_h)
     {
-        float anchor_w = box.end_x - box.start_x + 1.0f;
-        float anchor_h = box.end_y - box.start_y + 1;
-        float center_x = box.start_x + anchor_w * .5f;
-        float center_y = box.start_y + anchor_h *.5f;
+        const float anchor_w = box.end_x - box.start_x + 1.0f;
+        const float anchor_h = box.end_y - box.start_y + 1;
+        const float center_x = box.start_x + anchor_w * .5f;
+        const float center_y = box.start_y + anchor_h *.5f;
 
-        float pred_center_x = delta.shift_x * anchor_w + center_x + anchor_shift_x;
-        float pred_center_y = delta.shift_y * anchor_h + center_y + anchor_shift_y;
-        float half_pred_w = std::exp(delta.log_w) * anchor_w * .5f;
-        float half_pred_h = std::exp(delta.log_h) * anchor_h * .5f;
+        const float pred_center_x = delta.shift_x * anchor_w + center_x + anchor_shift_x;
+        const float pred_center_y = delta.shift_y * anchor_h + center_y + anchor_shift_y;
+        const float half_pred_w = std::exp(delta.log_w) * anchor_w * .5f;
+        const float half_pred_h = std::exp(delta.log_h) * anchor_h * .5f;
 
         return
         {
-            pred_center_x - half_pred_w, pred_center_y - half_pred_h,
-            pred_center_x + half_pred_w, pred_center_y + half_pred_h
+            clamp(pred_center_x - half_pred_w, 0.f, img_w - 1.f), clamp(pred_center_y - half_pred_h, 0.f, img_h - 1.f),
+            clamp(pred_center_x + half_pred_w, 0.f, img_w - 1.f), clamp(pred_center_y + half_pred_h, 0.f, img_h - 1.f)
         };
     }
         
@@ -138,22 +153,24 @@ namespace {
         {
             const roi_t& bbox = prop.roi;
 
-            // For any realistic WL, this condition is true for all top_n values anyway
-            if (prop.confidence > 0)
+            bool overlaps = std::any_of(res.begin(), res.end(), [&](const roi_t& res_bbox)
             {
-                bool overlaps = std::any_of(res.begin(), res.end(), [&](const roi_t& res_bbox)
+                bool intersecting = (bbox.x0 < res_bbox.x1) & (res_bbox.x0 < bbox.x1) & (bbox.y0 < res_bbox.y1) & (res_bbox.y0 < bbox.y1);
+                float overlap = 0.0f;
+                if (intersecting)
                 {
-                    float interArea = bbox.intersect(res_bbox).area();
-                    float unionArea = res_bbox.area() + bbox.area() - interArea;
-
-                    return interArea > iou_threshold * unionArea;
-                });
-
-                if (!overlaps)
-                {
-                    res.push_back(bbox);
-                    if (res.size() == top_n) break;
+                    const float intersect_width = std::min(bbox.x1, res_bbox.x1) - std::max(bbox.x0, res_bbox.x0) + 1.f;
+                    const float intersect_height = std::min(bbox.y1, res_bbox.y1) - std::max(bbox.y0, res_bbox.y0) + 1.f;
+                    const float intersect_size = intersect_width * intersect_height;
+                    overlap = intersect_size / (bbox.area() + res_bbox.area() - intersect_size);
                 }
+                return overlap > iou_threshold;
+            });
+
+            if (!overlaps)
+            {
+                res.push_back(bbox);
+                if (res.size() == top_n) break;
             }
         }
 
@@ -169,89 +186,13 @@ namespace {
 *                                                                          *
 ****************************************************************************/
 
-template <>
-struct kd_default_value_selector<engine_info_internal::architectures>
-{
-    static constexpr engine_info_internal::architectures value = engine_info_internal::architectures::GEN_UNKNOWN;
-};
-
-template <>
-struct kd_default_value_selector<engine_info_internal::configurations>
-{
-    static constexpr engine_info_internal::configurations value = engine_info_internal::configurations::GT_UNKNOWN;
-};
-
 struct proposal_gpu : typed_primitive_impl<proposal>
 {
     const proposal_node& outer;
-    engine_info_internal _engine_info;
-
-    struct kernel_data 
-    {
-        size_t gws0, gws1, gws2; ///< Local work sizes (3D).
-        size_t lws0, lws1, lws2; ///< Global work sizes (3D).
-        std::string kernel_name;
-        bool fp16_unit_used;
-    } _kernel_data;
-
-    static kd_selector_t<kernel_data, proposal_node, data_types, format::type, kd_optional_selector_t, int, engine_info_internal::architectures, engine_info_internal::configurations> ks;
 
     proposal_gpu(const proposal_node& arg)
-        : outer(arg),
-        _engine_info(outer.get_program().get_engine().get_context()->get_engine_info()),
-        _kernel_data(ks.get_kernel(
-            outer,
-            outer.cls_score().get_output_layout().data_type,
-            outer.cls_score().get_output_layout().format,
-            outer.cls_score().get_output_layout().size.batch[0],
-            _engine_info.architecture,
-            _engine_info.configuration))
+        : outer(arg)
     {}
-
-    static kernel_data set_default(const proposal_node& outer)
-    {
-        kernel_data kd;
-
-        data_types input_dt = outer.cls_score().get_output_layout().data_type;
-
-        kd.fp16_unit_used = (input_dt == data_types::f16);
-
-        // Determine global work sizes.
-        kd.gws0 = 1;
-        kd.gws1 = 1;
-        kd.gws2 = 1;
-
-        // Find largest positive local work size that is divider for global work size.
-        kd.lws0 = 1;
-        kd.lws1 = 1;
-        kd.lws2 = 1;
-
-        kd.kernel_name = "warm_up_gpu";
-
-        return kd;
-    }
-
-    template<typename dtype>
-    inline float float_read_helper(const dtype* mem)
-    {
-        return ( sizeof(dtype) == 4 ? *mem : 
-                                      float16_to_float32(*((uint16_t*)(mem))) );
-    }
-
-    template<typename dtype>
-    inline void float_write_helper(dtype* mem, float f)
-    {
-        bool is_fp32 = (sizeof(dtype) == 4);
-
-        if (is_fp32) 
-        {
-            *mem = *((dtype*)&f);
-        }
-        else
-        {
-            *mem = (dtype)float32_to_float16(f);
-        }
-    }
     
     template<typename dtype>
     void execute(proposal_inst& instance)
@@ -265,8 +206,9 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         auto& image_info = instance.dep_memory(proposal_inst::image_info_index);
 
         // feat map sizes
-        int fm_h = cls_scores.get_layout().size.spatial[1];
-        int fm_w = cls_scores.get_layout().size.spatial[0];
+        const auto& score_size = cls_scores.get_layout().size;
+        int fm_h = score_size.spatial[1];
+        int fm_w = score_size.spatial[0];
         
         int fm_sz = fm_w * fm_h;
 
@@ -294,18 +236,19 @@ struct proposal_gpu : typed_primitive_impl<proposal>
 
         mem_lock<dtype> cls_scores_ptr{ cls_scores };
         mem_lock<dtype> bbox_pred_ptr{ bbox_pred };
-        dtype* cls_scores_mem = cls_scores_ptr.data();
-        dtype* bbox_pred_mem  = bbox_pred_ptr.data();
+        const dtype* cls_scores_mem = cls_scores_ptr.data();
+        const dtype* bbox_pred_mem  = bbox_pred_ptr.data();
 
         std::vector<proposal_t> sorted_proposals_confidence;
+        sorted_proposals_confidence.reserve(fm_h * fm_w * anchors_num);
         for (int y = 0; y < fm_h; ++y)
         {
-            int anchor_shift_y = y * instance.argument.feature_stride;
+            const int anchor_shift_y = y * instance.argument.feature_stride;
 
             for (int x = 0; x < fm_w; ++x)
             {
-                int anchor_shift_x = x * instance.argument.feature_stride;
-                int location_index = y * fm_w + x;
+                const int anchor_shift_x = x * instance.argument.feature_stride;
+                const int location_index = y * fm_w + x;
 
                 // we assume proposals are grouped by window location
                 for (unsigned int anchor_index = 0; anchor_index < anchors_num ; anchor_index++)
@@ -317,26 +260,24 @@ struct proposal_gpu : typed_primitive_impl<proposal>
 
                     delta_t bbox_delta { dx0, dy0, dx1, dy1 };
 
-                    unsigned int scores_index = location_index + fm_sz * (anchor_index + (unsigned int)anchors_num * 1);
+                    unsigned int scores_index = location_index + fm_sz * (anchor_index + (unsigned int)anchors_num);
                     float proposal_confidence = float_read_helper(cls_scores_mem + scores_index);
 
-                    roi_t tmp_roi = gen_bbox(anchors[anchor_index], bbox_delta, anchor_shift_x, anchor_shift_y);
-                    roi_t roi = tmp_roi.clamp({ 0, 0, float(img_w - 1), float(img_h - 1) });
+                    const roi_t& roi = gen_bbox(anchors[anchor_index], bbox_delta, anchor_shift_x, anchor_shift_y, img_w, img_h);
 
                     int bbox_w = (int)roi.x1 - (int)roi.x0 + 1;
                     int bbox_h = (int)roi.y1 - (int)roi.y0 + 1;
 
-                    if (bbox_w >= min_bbox_x && bbox_h >= min_bbox_y)
+                    if (bbox_w >= min_bbox_x && bbox_h >= min_bbox_y && proposal_confidence > 0)
                     {
-                        proposal_t proposal { roi, proposal_confidence, sorted_proposals_confidence.size() };
-                        sorted_proposals_confidence.push_back(proposal);
+                        sorted_proposals_confidence.emplace_back(roi, proposal_confidence, sorted_proposals_confidence.size());
                     }
                 }
             }
         }
 
         sort_and_keep_n_items(sorted_proposals_confidence, instance.argument.pre_nms_topn);
-        std::vector<roi_t> res = perform_nms(sorted_proposals_confidence, instance.argument.iou_threshold, instance.argument.post_nms_topn);
+        const std::vector<roi_t>& res = perform_nms(sorted_proposals_confidence, instance.argument.iou_threshold, instance.argument.post_nms_topn);
 
         auto& output = instance.output_memory();
         
@@ -357,19 +298,22 @@ struct proposal_gpu : typed_primitive_impl<proposal>
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, proposal_inst& instance) override
     {
-        for (auto& a : events) {
+        for (auto& a : events) 
+        {
             a->wait();
         }
 
         auto ev = instance.get_network().get_engine().create_user_event(false);
 
-        if (_kernel_data.fp16_unit_used) {
+        if (instance.dep_memory(proposal_inst::cls_scores_index).get_layout().data_type == data_types::f16)
+        {
             execute<data_type_to_type<data_types::f16>::type>(instance);
         }
-        else {
+        else
+        {
             execute<data_type_to_type<data_types::f32>::type>(instance);
         }
-       
+
         dynamic_cast<cldnn::user_event*>(ev.get())->set(); // set as complete
         return ev;
     }
@@ -387,13 +331,6 @@ struct proposal_gpu : typed_primitive_impl<proposal>
 
         return new proposal_gpu(arg);
     }
-};
-
-
-
-kd_selector_t<proposal_gpu::kernel_data, proposal_node, data_types, format::type, kd_optional_selector_t, int, engine_info_internal::architectures, engine_info_internal::configurations> proposal_gpu::ks = {
-    { std::make_tuple(data_types::f32, format::bfyx, 0, engine_info_internal::architectures::GEN_UNKNOWN, engine_info_internal::configurations::GT_UNKNOWN), set_default },
-    { std::make_tuple(data_types::f16, format::bfyx, 0, engine_info_internal::architectures::GEN_UNKNOWN, engine_info_internal::configurations::GT_UNKNOWN), set_default }
 };
 
 namespace {

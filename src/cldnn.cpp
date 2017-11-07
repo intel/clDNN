@@ -63,6 +63,31 @@ auto init_external_from_internal(T& obj_ref)
 extern "C"
 {
 
+#ifndef CLDNN_VERSION_MAJOR
+    #define CLDNN_VERSION_MAJOR (0)
+#endif
+
+#ifndef CLDNN_VERSION_MINOR
+    #define CLDNN_VERSION_MINOR (0)
+#endif
+
+#ifndef CLDNN_VERSION_BUILD
+    #define CLDNN_VERSION_BUILD (0)
+#endif
+
+#ifndef CLDNN_VERSION_REVISION
+    #define CLDNN_VERSION_REVISION (0)
+#endif
+
+cldnn_version cldnn_get_version(cldnn_status* status)
+{
+    return exception_handler<cldnn_version>(CLDNN_ERROR, status, {}, []() -> cldnn_version
+    {
+        return { CLDNN_VERSION_MAJOR, CLDNN_VERSION_MINOR, CLDNN_VERSION_BUILD, CLDNN_VERSION_REVISION };
+    });
+}
+
+
 cldnn_topology cldnn_create_topology(cldnn_status* status)
 {
     return exception_handler<cldnn_topology>(CLDNN_ERROR, status, nullptr, [&]()
@@ -191,7 +216,7 @@ void cldnn_release_engine(cldnn_engine engine, cldnn_status* status)
 
 cldnn_engine_info cldnn_get_engine_info(cldnn_engine engine, cldnn_status* status)
 {
-    return exception_handler<cldnn_engine_info>(CLDNN_ERROR, status, { 0, 0, 0, 0, 0, 0 }, [&]() -> cldnn_engine_info
+    return exception_handler<cldnn_engine_info>(CLDNN_ERROR, status, { 0, 0, 0, 0, 0, 0, 0 }, [&]() -> cldnn_engine_info
     {
         SHOULD_NOT_BE_NULL(engine, "Engine");
         auto info = api_cast(engine)->get_engine_info();
@@ -480,6 +505,132 @@ void cldnn_get_network_output_names(cldnn_network network, char* names, size_t s
     });
 }
 
+void cldnn_get_network_executed_primitive_names(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status)
+{
+    exception_handler(CLDNN_ERROR, status, [&]()
+    {
+        auto primitives_size = api_cast(network)->get_executed_primitive_ids().size();
+        SHOULD_NOT_BE_NULL(network, "Network");
+        SHOULD_NOT_EQUAL_0(primitives_size, "Primitives size");
+        auto&& primitive_ids = api_cast(network)->get_executed_primitive_ids();
+        *size_ret = std::accumulate(
+            std::begin(primitive_ids),
+            std::end(primitive_ids),
+            size_t(1), // final zero symbol
+            [](size_t acc, const cldnn::primitive_id& id)
+        {
+            return acc + id.size() + 1; // plus zero symbol
+        });
+
+        if (size < *size_ret)
+        {
+            if (status) *status = CLDNN_INVALID_ARG;
+            return;
+        }
+
+        size_t i = 0;
+        for (auto& id : primitive_ids)
+        {
+            // workaround for Microsoft VC++
+#if defined _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+            i += id.copy(names + i, size - i - 2);
+#if defined _MSC_VER
+#pragma warning(pop)
+#endif
+            names[i++] = 0; // plus zero symbol
+            assert(i < size);
+        }
+        names[i] = 0; // final zero symbol
+    });
+}
+
+void cldnn_get_network_all_primitive_names(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status)
+{
+    exception_handler(CLDNN_ERROR, status, [&]()
+    {
+        auto primitives_size = api_cast(network)->get_all_primitive_ids().size();
+        SHOULD_NOT_BE_NULL(network, "Network");
+        SHOULD_NOT_EQUAL_0(primitives_size, "Primitives size");
+        auto&& primitive_ids = api_cast(network)->get_all_primitive_ids();
+        *size_ret = std::accumulate(
+            std::begin(primitive_ids),
+            std::end(primitive_ids),
+            size_t(1), // final zero symbol
+            [](size_t acc, const cldnn::primitive_id& id)
+        {
+            return acc + id.size() + 1; // plus zero symbol
+        });
+
+        if (size < *size_ret)
+        {
+            if (status) *status = CLDNN_INVALID_ARG;
+            return;
+        }
+
+        size_t i = 0;
+        for (auto& id : primitive_ids)
+        {
+            // workaround for Microsoft VC++
+#if defined _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+            i += id.copy(names + i, size - i - 2);
+#if defined _MSC_VER
+#pragma warning(pop)
+#endif
+            names[i++] = 0; // plus zero symbol
+            assert(i < size);
+        }
+        names[i] = 0; // final zero symbol
+    });
+}
+
+void cldnn_get_network_all_primitive_org_names(cldnn_network network, char* names, size_t size, size_t* size_ret, cldnn_status* status)
+{
+    exception_handler(CLDNN_ERROR, status, [&]()
+    {
+        auto primitives_size = api_cast(network)->get_all_primitive_org_ids().size();
+        SHOULD_NOT_BE_NULL(network, "Network");
+        SHOULD_NOT_EQUAL_0(primitives_size, "Primitives size");
+        auto&& primitive_ids = api_cast(network)->get_all_primitive_org_ids();
+        *size_ret = std::accumulate(
+            std::begin(primitive_ids),
+            std::end(primitive_ids),
+            size_t(1), // final zero symbol
+            [](size_t acc, const cldnn::primitive_id& id)
+        {
+            return acc + id.size() + 1; // plus zero symbol
+        });
+
+        if (size < *size_ret)
+        {
+            if (status) *status = CLDNN_INVALID_ARG;
+            return;
+        }
+
+        size_t i = 0;
+        for (auto& id : primitive_ids)
+        {
+            // workaround for Microsoft VC++
+#if defined _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+            i += id.copy(names + i, size - i - 2);
+#if defined _MSC_VER
+#pragma warning(pop)
+#endif
+            names[i++] = 0; // plus zero symbol
+            assert(i < size);
+        }
+        names[i] = 0; // final zero symbol
+    });
+}
+
 void cldnn_execute_network(cldnn_network network, cldnn_event* dependencies, size_t deps_num, cldnn_status* status)
 {
     exception_handler(CLDNN_ERROR, status, [&]()
@@ -526,6 +677,19 @@ cldnn_memory cldnn_get_network_output_memory(cldnn_network network, const char* 
     });
 }
 
+cldnn_event cldnn_get_network_output_event(cldnn_network network, const char* name, cldnn_status* status)
+{
+    cldnn_event error_result = nullptr;
+    return exception_handler<cldnn_event>(CLDNN_ERROR, status, error_result, [&]() -> cldnn_event
+    {
+        SHOULD_NOT_BE_NULL(network, "Network");
+        SHOULD_NOT_BE_NULL(name, "ID of primitive");
+        cldnn::primitive_id id(name);
+        auto event = api_cast(network)->get_primitive_event(id);
+        return init_external_from_internal(event);
+    });
+}
+
 cldnn_memory cldnn_allocate_memory(cldnn_engine engine, cldnn_layout layout, cldnn_status* status)
 {
     return exception_handler<cldnn_memory>(CLDNN_ERROR, status, nullptr, [&]()
@@ -535,7 +699,8 @@ cldnn_memory cldnn_allocate_memory(cldnn_engine engine, cldnn_layout layout, cld
             throw std::invalid_argument("Unknown format of layout.");
         if (layout.data_type != cldnn_data_type::cldnn_f16 &&
             layout.data_type != cldnn_data_type::cldnn_f32 &&
-            layout.data_type != cldnn_data_type::cldnn_i8)
+            layout.data_type != cldnn_data_type::cldnn_i8 &&
+            layout.data_type != cldnn_data_type::cldnn_u8)
             throw std::invalid_argument("Unknown data_type of layout.");
 
         return init_external_from_internal(api_cast(engine)->allocate_buffer(layout));
@@ -697,3 +862,5 @@ PRIMITIVE_TYPE_ID_CALL_IMPL(detection_output)
 PRIMITIVE_TYPE_ID_CALL_IMPL(normalize)
 PRIMITIVE_TYPE_ID_CALL_IMPL(generic_layer)
 PRIMITIVE_TYPE_ID_CALL_IMPL(custom_gpu_primitive)
+PRIMITIVE_TYPE_ID_CALL_IMPL(split)
+PRIMITIVE_TYPE_ID_CALL_IMPL(upsampling)

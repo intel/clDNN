@@ -218,13 +218,13 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
 {
     static uint32_t current_file_index = 0;
 
-    bool dump_sources = !_context.get_configuration().ocl_sources_dumps_dir.empty();
+    bool dump_sources = !_context.get_configuration().ocl_sources_dumps_dir.empty() || program_source.dump_custom_program;
 
     std::string dump_file_name = "";
     if (dump_sources)
     {
         dump_file_name = _context.get_configuration().ocl_sources_dumps_dir;
-        if (dump_file_name.back() != '/')
+        if (!dump_file_name.empty() && dump_file_name.back() != '/')
             dump_file_name += '/';
 
         dump_file_name += "clDNN_program_" + std::to_string(current_file_index++) + "_part_";

@@ -20,15 +20,17 @@
 
 struct FLOAT16
 {
+    struct representation
+    {
+        uint16_t significand : 10;
+        uint16_t exponent : 5;
+        uint16_t sign : 1;
+    };
+
     union
     {
         uint16_t v = 0;
-        struct // added this struct for the .natvis file (for debug)
-        {
-            uint16_t significand : 10;
-            uint16_t exponent : 5;
-            uint16_t sign : 1;
-        } format;
+        representation format; // added this struct for the .natvis file (for debug)
     };
 
     static FLOAT16 min_val()

@@ -141,8 +141,6 @@ namespace KernelSelector { namespace
 
     inline bool UpdateWeightsParams(WeightBiasParams& newParams, const OptionalParams& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams)
     {
-        // TODO: handle padding per in x/y (for openvx)
-
         const WeightsBiasOptionalParams& optParams = static_cast<const WeightsBiasOptionalParams&>(options);
 
         const auto dtype = DataTypeToWeightsType(newParams.inputs[0].GetDType());

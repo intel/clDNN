@@ -31,7 +31,7 @@ namespace KernelSelector
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual JitConstants GetJitConstants(const LRNParams& params, DispatchData kd) const;
-        virtual DispatchData SetDefault(const LRNParams& params) const;
+        virtual JitConstants GetJitConstants(const LRNParams& params, DispatchData kd) const override;
+        virtual DispatchData SetDefault(const LRNParams& params) const override;
     };
 }

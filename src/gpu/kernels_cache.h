@@ -21,6 +21,7 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <string>
 
 namespace cl {
 class Kernel;

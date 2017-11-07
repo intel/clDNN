@@ -43,9 +43,12 @@ public:
 
     static primitive_impl* create(const batch_norm_node &arg) 
     { 
-        CLDNN_ERROR_BOOL(arg.id(), "!use_global_stats", !arg.get_primitive()->use_global_stats, "no_global_stats is not supported - it's for training only.");
         auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
         auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
+        const float epsilon =
+            (arg.input().get_output_layout().data_type == data_types::f16) ?
+            std::max(0.00007f, arg.get_primitive()->epsilon) : // prevent underflow if the epsilon is too small for fp16
+            arg.get_primitive()->epsilon;
 
         ew_params.inputs.push_back(convert_data_tensor(arg.mean().get_output_layout()));
         ew_params.inputs.push_back(convert_data_tensor(arg.variance().get_output_layout()));
@@ -54,11 +57,6 @@ public:
             { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
             kernel_selector::eltwise_mode::SUB });
 
-        const float epsilon =
-            (arg.input().get_output_layout().data_type == data_types::f16) ?
-            0.f : arg.get_primitive()->epsilon;
-        
-        // TODO: why do we ignore epsilon in case of FP16?
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Buffer(2), kernel_selector::eltwise_params::InputType::Scalar(epsilon) },
             kernel_selector::eltwise_mode::ADD });

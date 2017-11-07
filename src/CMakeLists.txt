@@ -29,6 +29,12 @@ set(CLDNN_BUILD__PROJ_LABEL       "${CLDNN_BUILD__PROJ_LABEL__clDNN}")
 set(CLDNN_BUILD__PROJ_OUTPUT_NAME "${CLDNN_BUILD__PROJ_OUTPUT_NAME__clDNN}")
 
 # ========================================== Compiler options ==========================================
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    add_definitions(-DOPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 intel_config_flag_apply_settings(
     CompilerOptions
@@ -43,6 +49,10 @@ intel_config_flag_apply_settings(
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
     CLDNN_EXPORTS
     EXPORT_NEURAL_SYMBOLS
+    "CLDNN_VERSION_MAJOR=${CLDNN__VERSION_MAJOR}"
+    "CLDNN_VERSION_MINOR=${CLDNN__VERSION_MINOR}"
+    "CLDNN_VERSION_BUILD=${CLDNN__VERSION_BUILD}"
+    "CLDNN_VERSION_REVISION=${CLDNN__VERSION_REVISION}"
   )
 
 # ========================================= Source/Header files ========================================
@@ -194,7 +204,7 @@ target_link_libraries("${CLDNN_BUILD__PROJ}"
 
 if(WIN32)
   target_link_libraries("${CLDNN_BUILD__PROJ}" setupapi)
-elseif(UNIX)
+elseif((NOT ANDROID) AND (UNIX))
   target_link_libraries("${CLDNN_BUILD__PROJ}" pthread)
 endif()
 

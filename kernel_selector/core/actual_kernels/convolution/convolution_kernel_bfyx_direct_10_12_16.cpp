@@ -17,7 +17,6 @@
 #include "convolution_kernel_bfyx_direct_10_12_16.h"
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
-#include <map>
 
 namespace KernelSelector {
 
@@ -60,7 +59,7 @@ namespace KernelSelector {
         return jit;
     }
 
-    ConvolutionKernel_bfyx_Direct_10_10_12::Parent::DispatchData ConvolutionKernel_bfyx_Direct_10_10_12::SetDefault(const ConvolutionParams& arg) const
+    ConvolutionKernel_bfyx_Direct_10_10_12::Parent::DispatchData ConvolutionKernel_bfyx_Direct_10_10_12::SetDefault(const ConvolutionParams& arg, int) const
     {
         Parent::DispatchData runInfo = Parent::SetDefault(arg);
 
@@ -116,39 +115,6 @@ namespace KernelSelector {
 
     KernelsData ConvolutionKernel_bfyx_Direct_10_10_12::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
-
-        kd.reorderInput = CovolutionUpdateInputParams(newParams);
-
-        DispatchData runInfo = SetDefault(newParams);
-
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            GetSupportedWeightLayouts(),
-            kd.weightsReorderParams);
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto cldnn_jit = GetJitConstants(newParams, runInfo);
-        auto entryPoint = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entryPoint);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entryPoint, AGE_BASED, true, !newParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return{ kd };
+        return GetCommonKernelsData(params, options, AGE_BASED);
     }
 }

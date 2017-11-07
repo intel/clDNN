@@ -20,42 +20,29 @@
 
 namespace KernelSelector 
 {
-    JitConstants FullyConnectedKernelBase::GetJitConstants(const FullyConnectedParams& params, const FullyConnectedKernelBase::DispatchData& data) const
+    JitConstants FullyConnectedKernelBase::GetJitConstants(const FullyConnectedParams& params, const FullyConnectedKernelBase::DispatchData&) const
     {
-        JitConstants mem_consts = MakeFullyConnectedJitConstants(params);
-
-        if (data.vload_kernel_type)
-        {
-            const auto batches_per_work_item = GetBatchesPerWorkItem(params);
-
-            mem_consts.AddConstant(MakeJitConstant("NEURONS_PER_WORK_ITEM", GetNeuronsPerWorkItem(params))); // how many neurons for a single batch will a single work item produce
-            mem_consts.AddConstant(MakeJitConstant("BATCHES_PER_WORK_ITEM", batches_per_work_item));             // how many batches will a single work item compute
-            mem_consts.AddConstant(MakeJitConstant("OUTPUT_ELEMENTS_COUNT", params.output.LogicalSize() / params.output.Batch().v));
-        }
-
-        return mem_consts;
+        return MakeFullyConnectedJitConstants(params);
     }
 
-    FullyConnectedKernelBase::DispatchData FullyConnectedKernelBase::SetDefault(const FullyConnectedParams& params) const
+    std::unique_ptr<FullyConnectedKernelBase::DispatchData> FullyConnectedKernelBase::SetDefault(const FullyConnectedParams& params) const
     {
-        DispatchData kd;
-
-        kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
+        std::unique_ptr<DispatchData> dispatchData = std::make_unique<DispatchData>();
+        dispatchData->fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
         // Determine global work sizes.
-        kd.gws0 = params.output.LogicalSize();
-        kd.gws1 = kd.gws2 = 1;
+        dispatchData->gws0 = params.output.LogicalSize();
+        dispatchData->gws1 = dispatchData->gws2 = 1;
 
         // Find largest positive local work size that is divider for global work size.
-        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
-        while (kd.gws0 % kd.lws0 != 0)
+        dispatchData->lws0 = std::min(std::max(dispatchData->gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
+        while (dispatchData->gws0 % dispatchData->lws0 != 0)
         {
-            --kd.lws0;
+            --dispatchData->lws0;
         }
-        kd.lws1 = kd.lws2 = 1;
-        kd.vload_kernel_type = false;
+        dispatchData->lws1 = dispatchData->lws2 = 1;
 
-        return kd;
+        return std::move(dispatchData);
     }
 
     KernelsData FullyConnectedKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time) const
@@ -108,12 +95,12 @@ namespace KernelSelector
         
         auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
 
-        DispatchData runInfo = SetDefault(newParams);
-        auto cldnn_jit = GetJitConstants(newParams, runInfo);
+        const std::unique_ptr<DispatchData> runInfo = SetDefault(newParams);
+        auto cldnn_jit = GetJitConstants(newParams, *runInfo.get());
         std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
+        FillCLKernelData(kernel, *runInfo.get(), kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
 
         kd.estimatedTime = estimated_time;
 

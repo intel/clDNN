@@ -15,6 +15,8 @@
 */
 
 #include "convolution_kernel_base.h"
+#include "kernel_selector_utils.h"
+#include "common_tools.h"
 
 namespace KernelSelector 
 {
@@ -31,7 +33,7 @@ namespace KernelSelector
 
         bool bSupportedWeightsLayout = false;
 
-        for (WeightsLayout l : GetSupportedWeightLayouts())
+        for (WeightsLayout l : GetSupportedWeightLayouts(params))
         {
             bSupportedWeightsLayout |= params.weights.GetLayout() == l;
         }
@@ -127,26 +129,33 @@ namespace KernelSelector
         return CheckTensorForSplit(params.inputs[0], params.convParams.split);
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernelBase::SetDefault(const ConvolutionParams& params) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernelBase::SetDefault(const ConvolutionParams& params, int) const
     {
-        auto batch_size = params.output.Batch().v;
-        auto output_features = params.output.Feature().v;
-
         DispatchData kd;
 
-        kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
-        size_t gws0 = output_features * batch_size;
-        size_t lws0 = std::min(gws0, static_cast<size_t>(32));
-        while (gws0 % lws0)
+        const auto& out = params.output;
+        kd.fp16UnitUsed = out.GetDType() == Datatype::F16;
+        std::vector<size_t> global;
+        if (params.output.GetLayout() == DataLayout::bfyx)
         {
-            lws0--;
+            global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
         }
-        kd.gws0 = gws0;
-        kd.gws1 = params.output.X().v;
-        kd.gws2 = params.output.Y().v;
-        kd.lws0 = lws0;
-        kd.lws1 = 1;
-        kd.lws2 = 1;
+        else
+        {
+            global = { out.Feature().v*out.Batch().v, out.X().v, out.Y().v };
+        }
+
+        auto local = GetOptimalLocalWorkGroupSizes(global);
+
+        kd.gws0 = global[0];
+        kd.gws1 = global[1];
+        kd.gws2 = global[2];
+
+        kd.lws0 = local[0];
+        kd.lws1 = local[1];
+        kd.lws2 = local[2];
+
+        
         kd.cldnnStyle.ofmPerWorkItem = 1;
         kd.cldnnStyle.batchesPerWorkItem = 1;
         kd.cldnnStyle.blockWidth = 1;
@@ -157,5 +166,53 @@ namespace KernelSelector
         kd.cldnnStyle.leftovers = 0;
         kd.effiency = DONT_USE_IF_HAVE_SOMETHING_ELSE;
         return kd;
+    }
+
+    KernelsData ConvolutionKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, const std::string exeMode, int autoTuneIndex) const
+    {
+        if (!Validate(params, options))
+        {
+            return{};
+        }
+
+        KernelData kd = KernelData::Default<ConvolutionParams>(params);
+        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
+
+        if (NeedPaddedInput())
+        {
+            kd.reorderInput = CovolutionUpdateInputParams(newParams);
+        }
+        DispatchData runInfo = SetDefault(newParams, autoTuneIndex);
+        
+        if (!CheckWorkGroups(runInfo))
+        {
+            // Internal Error - wrong calculation of global/local work group sizes
+            return{};
+        }
+
+        bool succeed = UpdateWeightsParams(
+            newParams,
+            options,
+            GetSupportedWeightLayouts(newParams),
+            kd.weightsReorderParams);
+
+        if (!succeed)
+        {
+            return{};
+        }
+
+        auto finalKernelName = GetKernelName(newParams);
+        auto cldnnJit = GetJitConstants(newParams, runInfo);
+        auto entryPoint = GetEntryPoint(finalKernelName, newParams.layerID, options);
+        auto jit = CreateJit(finalKernelName, cldnnJit, entryPoint);
+
+        auto& kernel = kd.kernels[0];
+        FillCLKernelData(kernel, runInfo, finalKernelName, jit, entryPoint, exeMode, true, !newParams.bias.empty());
+        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
+
+        kd.estimatedTime = runInfo.effiency;
+        kd.autoTuneIndex = autoTuneIndex;
+
+        return{ kd };
     }
 }

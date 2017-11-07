@@ -16,21 +16,20 @@
 
 #pragma once
 
-#include "fully_connected_kernel_base.h"
+#include "fully_connected_block_kernel_base.h"
 
 namespace KernelSelector {
 
-    class FullyConnected_bs_f_bsv16_af8 : public FullyConnectedKernelBase
+    class FullyConnected_bs_f_bsv16_af8 : public FullyConnectedBlockKernelBase
     {
     public:
-        FullyConnected_bs_f_bsv16_af8() : FullyConnectedKernelBase("fully_connected_gpu_bs_f_bsv16_af8_vload") {}
-        virtual ~FullyConnected_bs_f_bsv16_af8() {}
+        FullyConnected_bs_f_bsv16_af8() : FullyConnectedBlockKernelBase("fully_connected_gpu_bs_f_bsv16_af8_vload") {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
+        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        ParamsKey GetSupportedKey() const override;
     
     protected:
         bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const FullyConnectedParams& arg) const override;
+        std::unique_ptr<DispatchData> SetDefault(const FullyConnectedParams& arg) const override;
     };
 }

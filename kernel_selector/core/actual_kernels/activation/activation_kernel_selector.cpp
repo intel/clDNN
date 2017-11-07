@@ -17,6 +17,7 @@
 #include "activation_kernel_selector.h"
 #include "activation_kernel_opt.h"
 #include "activation_kernel_ref.h"
+#include "activation_kernel_tutorial.h"
  
 namespace KernelSelector 
 {
@@ -24,6 +25,7 @@ namespace KernelSelector
     {
         Attach<ActivationKernelRef>();
         Attach<ActivationKernelOpt>();
+        Attach<ActivationKernel_Tutorial>();
     }
 
     KernelsData ActivationKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const

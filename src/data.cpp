@@ -45,17 +45,23 @@ namespace {
 data_node::typed_program_node(const std::shared_ptr<data> dprim, program_impl& prog)
     : parent(dprim, prog), mem(api_cast(dprim->mem.get()))
 {
+    constant = true;
+    recalc_output_layout(false);
+}
+
+void data_node::attach_memory(memory_impl& new_mem, bool invalidate_users_if_changed)
+{
+    mem = &new_mem;
+    recalc_output_layout(invalidate_users_if_changed);
 }
 
 std::string data_inst::to_string(data_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto count                  = node.get_output_layout().count();
+    auto node_info = node.desc_to_json();
 
-    primitive_description << "id: " << desc->id << ", type: data" <<
-        "\n\tcount: "     << count <<", size: " << node.get_output_layout().size <<'\n';
-
+    std::stringstream primitive_description;
+    
+    node_info.dump(primitive_description);
     return primitive_description.str();
 }
 

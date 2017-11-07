@@ -24,13 +24,31 @@ namespace KernelSelector {
     {
     public:
         FullyConnected_bs_f_bsv16_b1() : FullyConnectedKernelBase("fully_connected_gpu_bs_f_bsv16_b1") {}
-        virtual ~FullyConnected_bs_f_bsv16_b1() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
+        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        ParamsKey GetSupportedKey() const override;
     
     protected:
-        JitConstants GetJitConstants(const FullyConnectedParams& params, const DispatchData& kd) const override;
-        DispatchData SetDefault(const FullyConnectedParams& arg) const;
+        struct DispatchData : public FullyConnectedKernelBase::DispatchData
+        {
+            DispatchData(const FullyConnectedKernelBase::DispatchData& base_dispatch_data)
+                : FullyConnectedKernelBase::DispatchData(base_dispatch_data),
+                unit_byte_size(0), chunk_type(nullptr), chunk_byte_size(0), units_per_chunk(0), bytes_per_sg_read(0),
+                units_per_sg_read(0), responses_per_sg_exec(0), in_chunk_prefetch_size(0), filter_chunk_prefetch_size(0)
+            {}
+
+            uint32_t    unit_byte_size;
+            const char* chunk_type;
+            uint32_t    chunk_byte_size;
+            uint32_t    units_per_chunk;
+            uint32_t    bytes_per_sg_read;
+            uint32_t    units_per_sg_read;
+            uint32_t    responses_per_sg_exec;
+            uint32_t    in_chunk_prefetch_size;
+            uint32_t    filter_chunk_prefetch_size;
+        };
+
+        JitConstants GetJitConstants(const FullyConnectedParams& params, const FullyConnectedKernelBase::DispatchData& kd) const override;
+        std::unique_ptr<FullyConnectedKernelBase::DispatchData> SetDefault(const FullyConnectedParams& arg) const override;
     };
 }

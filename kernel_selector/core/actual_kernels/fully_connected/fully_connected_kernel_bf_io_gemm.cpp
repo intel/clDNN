@@ -39,7 +39,7 @@ namespace KernelSelector {
         return k;
     }
 
-    FullyConnected_bf_io_GEMM::Parent::DispatchData FullyConnected_bf_io_GEMM::SetDefault(const FullyConnectedParams& params) const
+    std::unique_ptr<FullyConnected_bf_io_GEMM::Parent::DispatchData> FullyConnected_bf_io_GEMM::SetDefault(const FullyConnectedParams& params) const
     {
         auto runInfo = Parent::SetDefault(params);
 
@@ -49,17 +49,17 @@ namespace KernelSelector {
         std::vector<size_t> global = { globalWorkSizeX, params.output.Feature().v, params.output.Batch().v };
         std::vector<size_t> local = { localWorkSizeX, 1, 1 };
 
-        runInfo.gws0 = global[0];
-        runInfo.gws1 = global[1];
-        runInfo.gws2 = 1;
+        runInfo->gws0 = global[0];
+        runInfo->gws1 = global[1];
+        runInfo->gws2 = 1;
 
-        runInfo.lws0 = local[0];
-        runInfo.lws1 = local[1];
-        runInfo.lws2 = 1;
+        runInfo->lws0 = local[0];
+        runInfo->lws1 = local[1];
+        runInfo->lws2 = 1;
 
-        runInfo.effiency = FORCE_PRIORITY_6;
+        runInfo->effiency = FORCE_PRIORITY_6;
 
-        return runInfo;
+        return std::move(runInfo);
     }
 
     JitConstants FullyConnected_bf_io_GEMM::GetJitConstants(const FullyConnectedParams& params, const DispatchData& kd) const
@@ -90,7 +90,6 @@ namespace KernelSelector {
 
     KernelsData FullyConnected_bf_io_GEMM::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        // TODO: handle padding per in x/y (for openvx)
         return GetCommonKernelsData(params, options, DataLayout::bf, { WeightsLayout::oiyx }, FORCE_PRIORITY_6);
     }
 }

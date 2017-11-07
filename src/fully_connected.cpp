@@ -18,6 +18,7 @@
 #include "fully_connected_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -81,22 +82,21 @@ layout fully_connected_inst::calc_output_layout(fully_connected_node const& node
 
 std::string fully_connected_inst::to_string(fully_connected_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto& input                 = node.input();
-    auto weights_id             = desc->weights;
-    auto weights_count          = node.weights().get_output_layout().count();
-    auto bias_id                = desc->bias != "" ? desc->bias : "no bias";
-    auto bias_count             = desc->bias != "" ? node.bias().get_output_layout().count() : 0;
-    auto activation             = desc->with_activation ? " true" : "false";
+    auto desc       = node.get_primitive();
+    auto node_info  = node.desc_to_json();
+    auto bias_id    = desc->bias != "" ? desc->bias : "no bias";
+    auto weights_id = desc->weights;
+    auto activation = desc->with_activation ? " true" : "false";
 
-    primitive_description << "id: " << desc->id << ", type: fully connected" <<
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\tweights id: "<< weights_id <<", count: " << weights_count << ", bias id: "<< bias_id <<",count: " << bias_count <<
-        "\n\twith activation: " << activation <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    std::stringstream primitive_description;
+
+    json_composite fc_info;
+    fc_info.add("weights id", weights_id);
+    fc_info.add("bias id", bias_id);
+    fc_info.add("with activation", activation);
+
+    node_info.add("fully connected info", fc_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

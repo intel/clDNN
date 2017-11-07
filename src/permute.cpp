@@ -18,6 +18,7 @@
 #include "permute_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 #include <algorithm>
 
@@ -76,22 +77,26 @@ layout permute_inst::calc_output_layout(permute_node const& node)
 
 std::string permute_inst::to_string(permute_node const& node)
 {
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto& input                 = node.input();
-    auto permute_order          = desc->permute_order;
-    std::stringstream           ss_permute_order;
+    auto desc          = node.get_primitive();
+    auto node_info     = node.desc_to_json();
+    auto permute_order = desc->permute_order;
+    auto& input        = node.input();
+    
+    std::stringstream primitive_description;
+    std::stringstream ss_permute_order;
+
     for (size_t i = 0; i < permute_order.size(); ++i)
     {
         ss_permute_order << permute_order.at(i);
         i != (permute_order.size() - 1) ? ss_permute_order << ", " : ss_permute_order << "";
     }
 
-    primitive_description << "id: " << desc->id << ", type: permute" 
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\tpermute order: "  << ss_permute_order.str() <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() << '\n';
+    json_composite permute_info;
+    permute_info.add("input id", input.id());
+    permute_info.add("permute order", ss_permute_order.str());
+    
+    node_info.add("permute info", permute_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }

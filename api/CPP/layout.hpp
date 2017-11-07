@@ -17,6 +17,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "tensor.hpp"
+#include <cmath>
+#include <cstdlib>
 
 namespace cldnn
 {
@@ -30,6 +32,7 @@ namespace cldnn
 enum class data_types : size_t
 {
     i8 = cldnn_i8,/// Not supported in current HW
+    u8 = cldnn_u8,/// 
     f16 = cldnn_f16,
     f32 = cldnn_f32,
 };
@@ -38,7 +41,7 @@ enum class data_types : size_t
 template <typename T> struct type_to_data_type;
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 template<> struct type_to_data_type  <int8_t> { static const data_types value = data_types::i8; };
-template<> struct type_to_data_type <uint8_t> { static const data_types value = data_types::i8; };
+template<> struct type_to_data_type <uint8_t> { static const data_types value = data_types::u8; };
 template<> struct type_to_data_type  <half_t> { static const data_types value = data_types::f16; };
 template<> struct type_to_data_type   <float> { static const data_types value = data_types::f32; };
 #endif
@@ -57,7 +60,7 @@ struct data_type_traits
 {
     static size_t size_of(data_types data_type)
     {
-        return (static_cast<uint32_t>(data_type) & ~CLDNN_FLOAT_TYPE_MASK);
+        return (static_cast<uint32_t>(data_type) & ~(CLDNN_FLOAT_TYPE_MASK | CLDNN_UINT_TYPE_MASK));
     }
 
     static bool is_floating_point(data_types data_type)
@@ -220,11 +223,11 @@ private:
 struct layout
 {
     /// Constructs layout based on @p data_type and @p size information described by @ref tensor
-    layout(data_types data_type, cldnn::format fmt, tensor size, padding padding = padding())
+    layout(data_types data_type, cldnn::format fmt, tensor size, padding apadding = padding())
         : data_type(data_type)
         , format(fmt)
         , size(size)
-        , data_padding(padding)
+        , data_padding(apadding)
     {}
 
     /// Construct C++ layout based on C API @p cldnn_layout

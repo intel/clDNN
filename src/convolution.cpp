@@ -19,6 +19,7 @@
 #include "primitive_type_base.h"
 #include "sliding_window_utils.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -58,6 +59,33 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 //     CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial X", -input_offset.spatial[0], "input window size spatial X", filter_size.spatial[0], "First convolution is outside of image. please reduce input offset X");
 //     CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial Y", -input_offset.spatial[1], "input window size spatial Y", filter_size.spatial[1], "First convolution is outside of image. please reduce input offset Y");
 
+    if (input_layout.format == format::winograd_2x3_s1_weights)
+        CLDNN_ERROR_MESSAGE(node.id(), "Input for convolution should not be in windograd_2x3_s1_weights format - it is reserved for weights only");
+
+    if (input_layout.format == format::winograd_2x3_s1_data)
+    {
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "convolution split", split, "expected value", 1, "Convolution with winograd input only supports split == 1");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "stride spatial X", stride.spatial[0], "expected value", 1, "Convolution's input in winograd_2x3_s1_data format can only be used with stride 1x1");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "stride spatial Y", stride.spatial[1], "expected value", 1, "Convolution's input in winograd_2x3_s1_data format can only be used with stride 1x1");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Dilatation spatial X", dilation.spatial[0], "expected value", 1, "Winograd 2x3 convolution does not support dilatation");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Dilatation spatial Y", dilation.spatial[1], "expected value", 1, "Winograd 2x3 convolution does not support dilatation");
+        if (input_layout.size.feature[0] % 32 != 0)
+            CLDNN_ERROR_MESSAGE(node.id(), "Input for winograd 2x3 convolution should have features count divisable by 32");
+        if (weights_layout.size.batch[0] % 32 != 0)
+            CLDNN_ERROR_MESSAGE(node.id(), "Number of filters (OFM) for winograd 2x3 convolution should be divisable by 32");
+
+        if (node.get_primitive()->with_activation)
+            CLDNN_ERROR_MESSAGE(node.id(), "Winograd 2x3 convolution should not have activation fused - activation should be performed at transformation from winograd domain stage");
+
+        CLDNN_ERROR_LESS_THAN(node.id(), "input width", input_layout.size.spatial[0], "filter width", 3, "Convolution input is smaller than weights");
+        CLDNN_ERROR_LESS_THAN(node.id(), "input height", input_layout.size.spatial[1], "filter height", 3, "Convolution input is smaller than weights");
+
+        constexpr tensor::value_type filter_height = 3; //by definition of format::winograd_2x3_s1_data (our assumption)
+        constexpr tensor::value_type winograd_filter_height = filter_height; //for this format, winograd filter is considered to be a set of 1d filters so its height should remain the same as original filter's
+
+        return layout{ input_layout.data_type, input_layout.format, tensor{ input_layout.size.batch[0], weights_layout.size.batch[0], input_layout.size.spatial[0], input_layout.size.spatial[1] - winograd_filter_height + 1 }, input_layout.data_padding };
+    }
+
     // get output feature map from weights. It should be the same as number of biases. Will be verifed in convolution::create()
     auto number_of_features = weights_layout.size.batch[0] * static_cast<int32_t>(split);
 
@@ -80,26 +108,32 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 }
 
 std::string convolution_inst::to_string(convolution_node const& node)
-{
-    std::stringstream           primitive_description;
-    auto desc                   = node.get_primitive();
-    auto strd                   = desc->stride;
-    auto weights_count          = node.weights(0).get_output_layout().count();
-    auto bias_count             = node.bias_term() ? node.bias(0).get_output_layout().count() : 0;
-    auto& input                 = node.input();
-    auto activation             = desc->with_activation ? " true" : "false";
-    auto ud_out_size            = desc->with_output_size ? " true" : "false";
+{    
+    auto desc       = node.get_primitive();
+    auto strd       = desc->stride;
+    auto split      = node.get_split();
+    auto dilation   = desc->dilation;
+    auto node_info  = node.desc_to_json();
+    auto activation = desc->with_activation ? " true" : "false";
 
-    primitive_description << "id: " << desc->id << ", type: convolution" << 
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: " << input.get_output_layout().size <<
-        "\n\tweights count: " << weights_count << ", bias count: " << bias_count << 
-        "\n\tstride: " << strd.spatial[0] << "x" << strd.spatial[1] << 
-        "\n\twith activation: "<< activation <<", slope: "<< desc->activation_negative_slope <<
-        "\n\twith user-defined out size: " << ud_out_size << ", dims: " << desc->output_size.spatial[0] << "x" << desc->output_size.spatial[1] <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ", size: " << node.get_output_layout().size << '\n';
-    
+    std::stringstream primitive_description;
+
+    json_composite conv_info;
+    conv_info.add("stride", strd.to_string());
+    conv_info.add("split", split);
+    conv_info.add("dilation", dilation.to_string());
+    conv_info.add("with activation", activation);
+    conv_info.add("slope", desc->activation_negative_slope);
+    if (desc->with_output_size)
+    {
+        json_composite ud_out_size_info;
+        ud_out_size_info.add("size", desc->output_size.to_string());
+        conv_info.add("with user defined output size", ud_out_size_info);
+    }
+
+    node_info.add("convolution info", conv_info);
+    node_info.dump(primitive_description);
+
     return primitive_description.str();
 }
 

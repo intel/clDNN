@@ -41,7 +41,7 @@ namespace KernelSelector
         return k;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b1_block::SetDefault(const ConvolutionParams& arg) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b1_block::SetDefault(const ConvolutionParams& arg, int) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
         // TODO: fill the proper data here (I don't know where can I locate it).
@@ -50,44 +50,6 @@ namespace KernelSelector
 
     KernelsData ConvolutionKernel_yxfb_yxio_b1_block::GetKernelsData(const Params& params, const OptionalParams& options) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        const ConvolutionParams& orgParams = static_cast<const ConvolutionParams&>(params);
-        
-        if (!CheckPitchForSplitOnly(orgParams))
-        {
-            return{};
-        }
-
-        DispatchData runInfo = SetDefault(orgParams);
-
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
-
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            { WeightsLayout::yxio },
-            kd.weightsReorderParams);
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto cldnn_jit = GetJitConstants(orgParams, runInfo);
-        auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
-
-        kd.estimatedTime = runInfo.effiency;
-
-        return{ kd };
+        return GetCommonKernelsData(params, options);
     }
 }

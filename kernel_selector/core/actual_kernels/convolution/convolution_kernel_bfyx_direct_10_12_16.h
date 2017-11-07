@@ -31,10 +31,11 @@ namespace KernelSelector {
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts() const override { return{ WeightsLayout::i_yxs_os_yxsv2_osv16 }; }
+        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override { return{ WeightsLayout::i_yxs_os_yxsv2_osv16 }; }
 
-        virtual JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
+        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
         bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const ConvolutionParams& arg) const override;
+        bool NeedPaddedInput() const override { return true; }
+        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
     };
 }

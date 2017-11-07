@@ -58,6 +58,12 @@ struct eltwise_gpu : typed_primitive_gpu_impl<eltwise>
             { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
             convect_to_eltwise_mode(primitive->mode) });
 
+        for (size_t i = 0; i < ew_params.inputs.size(); i++)
+        {
+            if (!ew_params.inputs[i].SameDims(ew_params.output))
+                ew_params.eltwiseParams.layoutBased = true;
+        }
+
         auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
 

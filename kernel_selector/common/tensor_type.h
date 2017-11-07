@@ -45,6 +45,7 @@ namespace KernelSelector
             bs_f_bsv16__af8,    // for optimized FC
             // TODO: most of the kernel doesn't support ROI. we need to handle it correctly.
             brfyx,              // 4D+batch
+            winograd_2x3_s1_data, //winograd convolution input, F(2,3) -- filter 3x3 with stride 1
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +66,7 @@ namespace KernelSelector
             i_yxs_os_yxsv2_osv16,
             iy_xs_os_xsv2_osv16__ao32,
             iy_xs_os_xsv2_osv8__ao32,
+            winograd_2x3_s1_weights, //winograd convolution weights, F(2, 3) --filter 3x3 with stride 1
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +129,7 @@ namespace KernelSelector
                 { DataLayout::bs_f_bsv8__af8,   { -1,-1, 0,-1, 1 } },
                 { DataLayout::bs_f_bsv16__af8,  { -1,-1, 0,-1, 1 } },
                 { DataLayout::brfyx,            {  0, 1, 2, 3, 4 } },
+                { DataLayout::winograd_2x3_s1_data, {  2, 1, 0,-1, 3 } },
             };
 
             std::map<WeightsLayout, ChannelLocation> weightsChannelMap
@@ -144,6 +147,7 @@ namespace KernelSelector
                 { WeightsLayout::i_yxs_os_yxsv2_osv16,          {  1, 2, 3, 0 } },
                 { WeightsLayout::iy_xs_os_xsv2_osv16__ao32,     {  1, 2, 3, 0 } },
                 { WeightsLayout::iy_xs_os_xsv2_osv8__ao32,      {  1, 2, 3, 0 } },
+                { WeightsLayout::winograd_2x3_s1_weights,       {  3, 2, 1, 0 } },
             };
 
             template <typename MapT, typename Layout, typename ChannelName>

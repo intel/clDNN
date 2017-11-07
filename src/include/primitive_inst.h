@@ -43,7 +43,15 @@ class typed_primitive_inst;
 */
 struct primitive_impl
 {
-    primitive_impl() = default;
+    // NOTE: This constuctor in necessary since the spec says:
+    //   A defaulted default constructor for class X is defined as deleted if: [...] any non-variant non-static data
+    //   member of const-qualified type (or array thereof) with no brace-orequal-initializer does not have a
+    //   user-provided default constructor.
+    // and the classes with only declared brace-orequal-initializer on members are not considered to have user-provided
+    // default constructor:
+    //   A special member function is user-provided if it is user-declared and not explicitly defaulted or deleted
+    //   on its first declaration.
+    primitive_impl() : _weights_reorder_params() {}
     primitive_impl(const kernel_selector::weights_reorder_params& params) : _weights_reorder_params(params) {}
     virtual ~primitive_impl() = default;
 
@@ -77,6 +85,8 @@ public:
     size_t inputs_memory_count() const { return _node.get_primitive()->input.size(); }
     primitive_type_id type() const { return _node.type(); }
     primitive_id id() const { return _node.id(); }
+    primitive_id org_id() const { return _node.get_org_primitive_id(); }
+    bool can_be_optimized() const { return _node.can_be_optimized(); }
     const auto desc() const { return _node.get_primitive(); }
     network_impl& get_network() const { return _network; }
     
@@ -103,7 +113,15 @@ protected:
 
     std::shared_ptr<primitive_impl> _impl;
 
+    //this is a set of dependencies in terms of memory, if execution of this primitive requires data from another one, it should be added to this set
     std::vector<std::shared_ptr<primitive_inst>> _deps;
+
+    //this is a set of dependencies in terms of execution
+    // execution of all primitives from this set should be enough to guarantee that all memory deps (see _deps)
+    // will be valid when executing this primitive. Most of the time this set will be equal to the _deps minus all cldnn::data (which don't need to be execued) -- this is default,
+    // but it is also possible to have, for example, only one fused primitive which will calculate multiple outputs (for example device enqueue can work in such manner)
+    // in general - this member is introduced to relax logical connection between primitives which have to be executed and memories which are used by this primitive
+    std::vector<std::shared_ptr<primitive_inst>> _exec_deps;
 
     //_output is optional because its initialization might be postponed (reshape_inst may either allocate it's own buffer or attach input as output
     // depending on reshape_node.is_in_place())
@@ -113,6 +131,7 @@ protected:
     bool _has_valid_input = true; //by default all primitives has valid inputs, exception is input_layout (see input_layout_inst)
 
     memory_impl::ptr allocate_output();
+    static std::vector<std::shared_ptr<primitive_inst>> build_exec_deps(std::vector<std::shared_ptr<primitive_inst>> const& mem_deps);
 
     //event function called by primitive_inst::execute after checking if primitive should rerun and before calling _impl->execute()
     //mainly for reshape (to update output memory if reshape_node.is_in_place() == true)

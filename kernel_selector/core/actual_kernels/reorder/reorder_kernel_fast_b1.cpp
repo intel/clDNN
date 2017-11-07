@@ -49,48 +49,39 @@ namespace KernelSelector
         return jit;
     }
 
-    KernelsData ReorderKernelFastBatch1::GetKernelsData(const Params& params, const OptionalParams& options) const
+    ReorderKernelFastBatch1::DispatchData ReorderKernelFastBatch1::SetDefault(const ReorderParams& params) const
     {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-        assert(params.GetType() == KernelType::REORDER);
+        DispatchData kd;
 
-        KernelData kd = KernelData::Default<ReorderParams>(params);
-        ReorderParams& newParams = *static_cast<ReorderParams*>(kd.params.get());
-
-        auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto cldnn_jit = GetJitConstants(newParams);
-        std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
-        
-        auto& kernel = kd.kernels[0];
-
-        const auto& input = newParams.inputs[0];
-        const auto& output = newParams.output;
+        const auto& input = params.inputs[0];
 
         unsigned int gws = (unsigned int)input.LogicalSize();
 
-        kernel.workGroups.global = { Align(gws, 32),1,1 };
-        kernel.workGroups.local = { 32, 1, 1 };
+        kd.gws0 = Align(gws, 32);
+        kd.gws1 = 1;
+        kd.gws2 = 1;
 
-        kernel.kernelString = GetKernelString(kernelName, jit, entry_point, ROUND_ROBIN);
-        kernel.arguments = GetArgsDesc(1, false, false);
-        if (newParams.reorderParams.mode == MeanSubtractMode::IN_BUFFER)
-        {
-            kernel.arguments.push_back({ ArgumentDescriptor::Types::BIAS, 0 });
-        }
+        kd.lws0 = 32;
+        kd.lws1 = 1;
+        kd.lws2 = 1;
 
-        if (input.Batch().v == 1 &&
-            output.Batch().v == 1)
-        {
-            kd.estimatedTime = FORCE_PRIORITY_6;
-        }
-        else
-        {
-            kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
-        }
+        return kd;
+    }
 
-        return{ kd };
+    KernelsData ReorderKernelFastBatch1::GetKernelsData(const Params& params, const OptionalParams& options) const
+    {
+        assert(params.GetType() == KernelType::REORDER);
+
+        const ReorderParams& orgParams = static_cast<const ReorderParams&>(params);
+
+        const auto& input = orgParams.inputs[0];
+        const auto& output = orgParams.output;
+
+        auto estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
+
+        if (input.Batch().v == 1 && output.Batch().v == 1)
+            estimatedTime = FORCE_PRIORITY_6;
+
+        return GetCommonKernelsData(orgParams, options, estimatedTime);
     }
 }

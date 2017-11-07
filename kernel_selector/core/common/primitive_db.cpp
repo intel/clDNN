@@ -17,6 +17,11 @@
 #include <assert.h>
 #include <algorithm>
 
+#ifndef NDEBUG
+#include <fstream>
+#include <iostream>
+#endif
+
 namespace KernelSelector { namespace gpu { namespace cache {
 
 primitive_db::primitive_db() : primitives({
@@ -25,6 +30,24 @@ primitive_db::primitive_db() : primitives({
 
 std::vector<code> primitive_db::get(const primitive_id & id) const
 {
+#ifndef NDEBUG
+    {
+        std::ifstream kernel_file{ id + ".cl", std::ios::in | std::ios::binary };
+        if (kernel_file.is_open())
+        {
+            code ret;
+            auto beg = kernel_file.tellg();
+            kernel_file.seekg(0, std::ios::end);
+            auto end = kernel_file.tellg();
+            kernel_file.seekg(0, std::ios::beg);
+
+            ret.resize((size_t)(end - beg));
+            kernel_file.read(&ret[0], (size_t)(end - beg));
+
+            return{ std::move(ret) };
+        }
+    }
+#endif
     try
     {
         const auto codes = primitives.equal_range(id);

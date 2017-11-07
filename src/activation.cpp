@@ -17,6 +17,7 @@
 #include "activation_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
+#include "json_object.h"
 
 namespace cldnn
 {
@@ -28,24 +29,24 @@ primitive_type_id activation_type_id()
 
 layout activation_inst::calc_output_layout(activation_node const& node)
 {
-    return node.input().get_output_layout();
+    return node.input().get_non_padded_output_layout();
 }
 
 std::string activation_inst::to_string(activation_node const& node)
-{
-    std::stringstream            primitive_description;
-    auto desc                   = node.get_primitive();
-    auto& input                 = node.input();
+{   
+    auto node_info = node.desc_to_json();
+    auto desc      = node.get_primitive();
+       
+    std::stringstream primitive_description;
 
-    primitive_description << "id: " << desc->id << ", type: activation" <<
-        "\n\tinput: " << input.id() << ", count: " << input.get_output_layout().count() << ", size: "  << input.get_output_layout().size <<
-        "\n\tactivation_func: " << desc->activation_func <<
-        "\n\tadditional_params.a: " << desc->additional_params.a <<
-        "\n\tadditional_params.b: " << desc->additional_params.b <<
-        "\n\tadditional_params input: " << desc->additional_params_input <<
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
-        "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
+    json_composite activation_info;
+    activation_info.add("activation_func", desc->activation_func);
+    activation_info.add("additional_params.a", desc->additional_params.a);
+    activation_info.add("additional_params.b", desc->additional_params.b);
+    activation_info.add("additional_params input", desc->additional_params_input);
+
+    node_info.add("activation info", activation_info);
+    node_info.dump(primitive_description);
 
     return primitive_description.str();
 }
