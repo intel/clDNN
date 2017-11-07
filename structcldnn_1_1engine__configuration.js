@@ -1,6 +1,6 @@
 var structcldnn_1_1engine__configuration =
 [
-    [ "engine_configuration", "structcldnn_1_1engine__configuration.html#a437eb9bd9dcfef5707d7f952fb19765a", null ],
+    [ "engine_configuration", "structcldnn_1_1engine__configuration.html#a45480a702085cc90245f454b1048276a", null ],
     [ "engine_configuration", "structcldnn_1_1engine__configuration.html#afa2a8c438b09dc7aa1260c9a8ab6d90c", null ],
     [ "operator::cldnn_engine_configuration", "structcldnn_1_1engine__configuration.html#a2072a038bd49fdcdd55fd859b8f32363", null ],
     [ "compiler_options", "structcldnn_1_1engine__configuration.html#a50822b299ebceebdbf12102c8421eb44", null ],
@@ -9,6 +9,7 @@ var structcldnn_1_1engine__configuration =
     [ "enable_profiling", "structcldnn_1_1engine__configuration.html#afaafe5dc19f6b9af7b6cd64862615070", null ],
     [ "engine_log", "structcldnn_1_1engine__configuration.html#ac9f20113ee267fe4fa1cb80117c7dc0a", null ],
     [ "meaningful_kernels_names", "structcldnn_1_1engine__configuration.html#a556439fc2da89c0a2971424d6f7fa60b", null ],
+    [ "priority_mode", "structcldnn_1_1engine__configuration.html#a4b76c5791bf1f1427ba97688ce8d92bc", null ],
     [ "single_kernel_name", "structcldnn_1_1engine__configuration.html#a2c555b0303ab67bbbb17434b6b5f3810", null ],
     [ "sources_dumps_dir", "structcldnn_1_1engine__configuration.html#afdd7c2afaea10876cbf68ed439bf94be", null ]
 ];

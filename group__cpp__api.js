@@ -1,6 +1,7 @@
 var group__cpp__api =
 [
     [ "Error Handling", "group__cpp__error.html", "group__cpp__error" ],
+    [ "Version Information", "group__cpp__version.html", "group__cpp__version" ],
     [ "Execution Engine", "group__cpp__engine.html", "group__cpp__engine" ],
     [ "Memory description and management", "group__cpp__memory.html", "group__cpp__memory" ],
     [ "Network Execution", "group__cpp__network.html", "group__cpp__network" ],

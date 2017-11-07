@@ -13,13 +13,12 @@ var group__cpp__primitives =
     ] ],
     [ "batch_norm", "structcldnn_1_1batch__norm.html", [
       [ "dto", "structcldnn_1_1batch__norm.html#acf37717bdabc3becfe58be124c42079c", null ],
-      [ "batch_norm", "structcldnn_1_1batch__norm.html#ad620aa112e4af9e17b710bec367d81cb", null ],
+      [ "batch_norm", "structcldnn_1_1batch__norm.html#ad6760ac2948cd0836e10b3638ad75947", null ],
       [ "batch_norm", "structcldnn_1_1batch__norm.html#a22892073348ed0ee0e95b257c81b1df1", null ],
       [ "get_dependencies", "structcldnn_1_1batch__norm.html#ab5c19320edd65d1298508e20a76ac8d8", null ],
       [ "update_dto", "structcldnn_1_1batch__norm.html#aeaef25f8b5e965a8dd1275ab959a4d1d", null ],
       [ "epsilon", "structcldnn_1_1batch__norm.html#a28b80ff3c46c16f08a4d02cbde6220d9", null ],
       [ "mean", "structcldnn_1_1batch__norm.html#a9f22e872a0ef9954f79a762d657b3b22", null ],
-      [ "use_global_stats", "structcldnn_1_1batch__norm.html#a87cd7609933200b0dc8f8dc117a12697", null ],
       [ "variance", "structcldnn_1_1batch__norm.html#ab66d930d95a0199b3df5524e17c553df", null ]
     ] ],
     [ "concatenation", "structcldnn_1_1concatenation.html", [
@@ -262,17 +261,35 @@ var group__cpp__primitives =
     [ "softmax", "structcldnn_1_1softmax.html", [
       [ "dto", "structcldnn_1_1softmax.html#a9108705c93899223b27670c5e84a00e9", null ],
       [ "dimension_t", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79", [
-        [ "normalize_b", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a8ab037ff3d6d50e1ec113c7ad0e30c0b", null ],
         [ "normalize_f", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a62648bf0040e5e27d03db33b02f4d4ac", null ],
         [ "normalize_x", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79aec4bcfd42b60e9d48c39867d17bcf516", null ],
         [ "normalize_y", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a7d8ce88f47c43339f1b0262841a2ca78", null ],
-        [ "normalize_yx", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79acadfa96e70b85bf55defdec718f6c4d8", null ],
-        [ "normalize_fyx", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a94d34463ff528d05947b2c048b21076e", null ],
-        [ "normalize_bfyx", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79aeef2b56be55f369ee4b7029d9bc654ff", null ]
+        [ "normalize_fyx", "structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79a94d34463ff528d05947b2c048b21076e", null ]
       ] ],
       [ "softmax", "structcldnn_1_1softmax.html#a8fd42124f28e4cc3bb0f3505d3dc1ccd", null ],
       [ "softmax", "structcldnn_1_1softmax.html#ae8ed6f0a59550b68b9f34a77e73c26ce", null ],
       [ "dimension", "structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc", null ]
+    ] ],
+    [ "split", "structcldnn_1_1split.html", [
+      [ "dto", "structcldnn_1_1split.html#a3943ce1f8c332152698895b1b4912b02", null ],
+      [ "split", "structcldnn_1_1split.html#a4e4054d7ceeb380d918299213b76c939", null ],
+      [ "split", "structcldnn_1_1split.html#a4c0405570361bef476ae6560ca567943", null ],
+      [ "update_dto", "structcldnn_1_1split.html#ab3cdddcad0cf05fd16d5c96b8c8ac0dc", null ],
+      [ "_output_ids", "structcldnn_1_1split.html#afa04597b6268e28845cf55c165928aa3", null ],
+      [ "_output_offsets", "structcldnn_1_1split.html#a722e90fc8963b3239ee992c61ce4aba0", null ],
+      [ "output_ids", "structcldnn_1_1split.html#abdbc6fabe585a643e85d8fdb40490dbe", null ],
+      [ "output_offsets", "structcldnn_1_1split.html#a73b2c9f5fa8e4de67ea45ffb494945ec", null ]
+    ] ],
+    [ "upsampling", "structcldnn_1_1upsampling.html", [
+      [ "dto", "structcldnn_1_1upsampling.html#a81b3af56f4306a65ab96e9fffc8fc63e", null ],
+      [ "upsampling", "structcldnn_1_1upsampling.html#abce1f7d6b04de14d8a9d1117b8b33326", null ],
+      [ "upsampling", "structcldnn_1_1upsampling.html#a0fa614c2237851766076dbdea99e6935", null ],
+      [ "update_dto", "structcldnn_1_1upsampling.html#a8ad352f15840d5990b377e1af8d1c85d", null ],
+      [ "activation_negative_slope", "structcldnn_1_1upsampling.html#a0a470d0fdde0bb50880580cd298b3a96", null ],
+      [ "num_filter", "structcldnn_1_1upsampling.html#ac6ad6e2b34f04b7e7317bbb427d33f5f", null ],
+      [ "sample_type", "structcldnn_1_1upsampling.html#a320842078bcc721085c9228b66b85015", null ],
+      [ "scale", "structcldnn_1_1upsampling.html#adcb1ebd338a3236730944f5447da6007", null ],
+      [ "with_activation", "structcldnn_1_1upsampling.html#a0dd91bf5ca71da55d0f4328b5eb09d09", null ]
     ] ],
     [ "eltwise_mode", "group__cpp__primitives.html#gaa0a55214d8b45e135a753957707dace3", [
       [ "sum", "group__cpp__primitives.html#ggaa0a55214d8b45e135a753957707dace3a1d623b89683f9ce4e074de1676d12416", null ],
@@ -285,5 +302,9 @@ var group__cpp__primitives =
       [ "average", "group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a6927a3a7218a3195858411433ec20a21", null ],
       [ "average_no_padding", "group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a195162bdfea26e6b522a57dee456936e", null ]
     ] ],
-    [ "prior_box_code_type", "group__cpp__primitives.html#gac2f4652cc84cb5af9bba0b58529a6669", null ]
+    [ "prior_box_code_type", "group__cpp__primitives.html#gac2f4652cc84cb5af9bba0b58529a6669", null ],
+    [ "upsampling_sample_type", "group__cpp__primitives.html#ga853afdc986ec8b911fdf87807a75b655", [
+      [ "nearest", "group__cpp__primitives.html#gga853afdc986ec8b911fdf87807a75b655ad879c351426770bc0b13c3628db1e636", null ],
+      [ "bilinear", "group__cpp__primitives.html#gga853afdc986ec8b911fdf87807a75b655a2c5c389d0b455c8246a86f5ca90528a3", null ]
+    ] ]
 ];

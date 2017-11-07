@@ -1,0 +1,5 @@
+<map id="cldnn_upsampling_desc" name="cldnn_upsampling_desc">
+<area shape="rect" id="node2" href="$group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="5,109,111,136"/>
+<area shape="rect" id="node3" href="$group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="10,5,106,32"/>
+<area shape="rect" id="node4" href="$group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="135,109,282,136"/>
+</map>

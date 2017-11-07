@@ -16,7 +16,6 @@ var group__c__primitives =
       [ "mean", "group__c__primitives.html#add3efee552a0c33fc786140df07f4a0e", null ],
       [ "output_padding", "group__c__primitives.html#aa55b9e04e693c467de44082b41356fe6", null ],
       [ "type", "group__c__primitives.html#a79e898b3ab1b94b635c26f8bce860ad1", null ],
-      [ "use_global_stats", "group__c__primitives.html#ac8ecef23b2d4551c40bf82915788b7a5", null ],
       [ "variance", "group__c__primitives.html#a7136e19484123679acb1c130d4bdeee6", null ]
     ] ],
     [ "cldnn_concatenation_desc", "group__c__primitives.html#structcldnn__concatenation__desc", [
@@ -241,6 +240,25 @@ var group__c__primitives =
       [ "output_padding", "group__c__primitives.html#aca3394881502c324d3dd59e0690416e8", null ],
       [ "type", "group__c__primitives.html#ad15db324642cf30bf7d2fa13cd783b97", null ]
     ] ],
+    [ "cldnn_split_desc", "group__c__primitives.html#structcldnn__split__desc", [
+      [ "id", "group__c__primitives.html#a44e2de68f1b608cc75dd281dca8bee4d", null ],
+      [ "input", "group__c__primitives.html#a52863020e4bbc7c6f627965ec5ab13f1", null ],
+      [ "output_ids", "group__c__primitives.html#a1b543f92fa6cafe7ca50c24d5e686253", null ],
+      [ "output_offsets", "group__c__primitives.html#ac5a1c86c21c3d9fc40b4ae980ec3d835", null ],
+      [ "output_padding", "group__c__primitives.html#a6866a71b45d9ce531f978ab9b6f096b7", null ],
+      [ "type", "group__c__primitives.html#ae75cf802873e0184fc885f8403a3fee5", null ]
+    ] ],
+    [ "cldnn_upsampling_desc", "group__c__primitives.html#structcldnn__upsampling__desc", [
+      [ "activation_negative_slope", "group__c__primitives.html#a8dbf2da105f04f311fff8b1c5ff70c6d", null ],
+      [ "id", "group__c__primitives.html#ab913f15f8ac531c1941420fcb924d10f", null ],
+      [ "input", "group__c__primitives.html#a0ec5fc92bf277f6e330800bfcf1e7f1c", null ],
+      [ "num_filter", "group__c__primitives.html#affd986178e4dd8dc2e824e0cffed1abe", null ],
+      [ "output_padding", "group__c__primitives.html#a547a39d6f6988eea925aa9c65ecfeff6", null ],
+      [ "sample_type", "group__c__primitives.html#a6b3a3996a6a93121a50278cc5961a137", null ],
+      [ "scale", "group__c__primitives.html#aca8552ee4273e857bfce0849e94247df", null ],
+      [ "type", "group__c__primitives.html#a9b71845ba44e189feb5d2cf2ee52aa33", null ],
+      [ "with_activation", "group__c__primitives.html#a267df814f0f32f4fa8392bab7b8bb07f", null ]
+    ] ],
     [ "cldnn_eltwise_mode", "group__c__primitives.html#ga72df0cc6c58496f2c1553ef91c8ef6df", [
       [ "cldnn_eltwise_sum", "group__c__primitives.html#gga72df0cc6c58496f2c1553ef91c8ef6dfad64e5fc71830577a40ff5eff39bc9945", null ],
       [ "cldnn_eltwise_sub", "group__c__primitives.html#gga72df0cc6c58496f2c1553ef91c8ef6dfabb430c513406869f03537191b99b5ab7", null ],
@@ -253,5 +271,9 @@ var group__c__primitives =
       [ "cldnn_pooling_average_no_padding", "group__c__primitives.html#gga083b7f10c26345d6afb7d88718e8f2eeaabee0714281e6f356c983237bc0d921d", null ]
     ] ],
     [ "cldnn_prior_box_code_type", "group__c__primitives.html#ga637eb91f32b8d5da425c47ddaaa09c37", null ],
-    [ "cldnn_softmax_dimension", "group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd", null ]
+    [ "cldnn_softmax_dimension", "group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd", null ],
+    [ "cldnn_upsampling_sample_type", "group__c__primitives.html#gaba6c8358e3a8e4414bda1470966973c3", [
+      [ "cldnn_upsampling_nearest", "group__c__primitives.html#ggaba6c8358e3a8e4414bda1470966973c3ad131cb5cf6afa0f50df213922a2f5af2", null ],
+      [ "cldnn_upsampling_bilinear", "group__c__primitives.html#ggaba6c8358e3a8e4414bda1470966973c3ae3c18cfd43f50b4bef8e20d8d06b163e", null ]
+    ] ]
 ];

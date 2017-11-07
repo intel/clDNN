@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['f16',['f16',['../group__cpp__memory.html#gga978c06d1af08c83d1f5bfa33a76fdbc0aa2449b6477c1fef79be4202906486876',1,'cldnn']]],
   ['feature',['feature',['../structcldnn_1_1tensor.html#a077e5c97879663e4b5c5c69aa78a7190',1,'cldnn::tensor']]],
   ['feature_5fchars',['feature_chars',['../structcldnn_1_1format__traits.html#a79132c301c6c6e7b1fe5a30c88c980c0',1,'cldnn::format_traits']]],
   ['feature_5fnum',['feature_num',['../structcldnn_1_1format__traits.html#aa485d2f4cc27eec992f2a4631f7e2cf6',1,'cldnn::format_traits::feature_num()'],['../structcldnn_1_1format.html#ab56dd3a05d59d11fd31a7347bf1c4b7a',1,'cldnn::format::feature_num(type fmt)'],['../structcldnn_1_1format.html#a405586b38d93aa76d834d4eab66c5e27',1,'cldnn::format::feature_num() const']]],

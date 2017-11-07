@@ -118,16 +118,10 @@ Collaboration diagram for cldnn::softmax:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a24fa7bcf94a3c32e0c3d306585a73a79"><td class="memItemLeft" align="right" valign="top"><a id="a24fa7bcf94a3c32e0c3d306585a73a79"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">dimension_t</a> { <br />
-&#160;&#160;<b>normalize_b</b> = cldnn_softmax_normalize_b, 
-<b>normalize_f</b> = cldnn_softmax_normalize_f, 
+<tr class="memitem:a24fa7bcf94a3c32e0c3d306585a73a79"><td class="memItemLeft" align="right" valign="top"><a id="a24fa7bcf94a3c32e0c3d306585a73a79"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">dimension_t</a> { <b>normalize_f</b> = cldnn_softmax_normalize_f, 
 <b>normalize_x</b> = cldnn_softmax_normalize_x, 
 <b>normalize_y</b> = cldnn_softmax_normalize_y, 
-<br />
-&#160;&#160;<b>normalize_yx</b> = cldnn_softmax_normalize_yx, 
-<b>normalize_fyx</b> = cldnn_softmax_normalize_fyx, 
-<b>normalize_bfyx</b> = cldnn_softmax_normalize_bfyx
-<br />
+<b>normalize_fyx</b> = cldnn_softmax_normalize_fyx
  }<tr class="memdesc:a24fa7bcf94a3c32e0c3d306585a73a79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enum type to specify softmax's normalization scope (see <a class="el" href="structcldnn_1_1softmax.html#ac2f6ddd9596a81745d0ae9c672d52adc" title="Defines a scope of a single softmax normalization. ">dimension</a>). <br /></td></tr>
 </td></tr>
 <tr class="separator:a24fa7bcf94a3c32e0c3d306585a73a79"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -285,7 +279,7 @@ virtual std::vector&lt; std::reference_wrapper&lt; const <a class="el" href="gro
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00059">59</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00056">56</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
 
 </div>
 </div>
@@ -307,13 +301,10 @@ virtual std::vector&lt; std::reference_wrapper&lt; const <a class="el" href="gro
 <li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_x </a> each input row is normalized independently,</li>
 <li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_y </a> each input column is normalized independently,</li>
 <li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_f </a> each in-depth vector of input is normalized independently,</li>
-<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_b </a> each pixel from a single 3d image is normalized toghether with corresponding pixels from other images within batch,</li>
-<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normallize_yx </a> each 2d image within input is normalized independently,</li>
-<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_fyx </a> each 3d image within input is normalized independently,</li>
-<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_bfyx </a> whole input is normalized as one data set. </li>
+<li>when set to <a class="el" href="structcldnn_1_1softmax.html#a24fa7bcf94a3c32e0c3d306585a73a79">softmax::normalize_fyx </a> each 3d image within input is normalized independently, </li>
 </ul>
 
-<p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00086">86</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="softmax_8hpp_source.html#l00080">80</a> of file <a class="el" href="softmax_8hpp_source.html">softmax.hpp</a>.</p>
 
 </div>
 </div>

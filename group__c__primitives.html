@@ -166,6 +166,12 @@ Classes</h2></td></tr>
 <tr class="memitem:structcldnn__softmax__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__softmax__desc">cldnn_softmax_desc</a></td></tr>
 <tr class="memdesc:structcldnn__softmax__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalizes results so they sum to 1. The scope of normalization is defined by a member <code>dimension</code>.  <a href="group__c__primitives.html#structcldnn__softmax__desc">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__softmax__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__split__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__split__desc">cldnn_split_desc</a></td></tr>
+<tr class="memdesc:structcldnn__split__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs split operation on input.  <a href="group__c__primitives.html#structcldnn__split__desc">More...</a><br /></td></tr>
+<tr class="separator:structcldnn__split__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__upsampling__desc"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#structcldnn__upsampling__desc">cldnn_upsampling_desc</a></td></tr>
+<tr class="memdesc:structcldnn__upsampling__desc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs nearest neighbor/bilinear upsampling Also supports built-in Relu activation available by setting it in arguments.  <a href="group__c__primitives.html#structcldnn__upsampling__desc">More...</a><br /></td></tr>
+<tr class="separator:structcldnn__upsampling__desc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -204,19 +210,18 @@ Enumerations</h2></td></tr>
  }<tr class="memdesc:ga083b7f10c26345d6afb7d88718e8f2ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select method for Pooling layer ( <a class="el" href="group__c__primitives.html#structcldnn__pooling__desc">cldnn_pooling_desc</a> ).  <a href="group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:ga083b7f10c26345d6afb7d88718e8f2ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga913f194198a0de9f3b10a6ad1ed5d5bd"><td class="memItemLeft" align="right" valign="top"><a id="ga913f194198a0de9f3b10a6ad1ed5d5bd"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_dimension</a> { <br />
-&#160;&#160;<b>cldnn_softmax_normalize_b</b>, 
-<b>cldnn_softmax_normalize_f</b>, 
+<tr class="memitem:ga913f194198a0de9f3b10a6ad1ed5d5bd"><td class="memItemLeft" align="right" valign="top"><a id="ga913f194198a0de9f3b10a6ad1ed5d5bd"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_dimension</a> { <b>cldnn_softmax_normalize_f</b>, 
 <b>cldnn_softmax_normalize_x</b>, 
 <b>cldnn_softmax_normalize_y</b>, 
-<br />
-&#160;&#160;<b>cldnn_softmax_normalize_yx</b>, 
-<b>cldnn_softmax_normalize_fyx</b>, 
-<b>cldnn_softmax_normalize_bfyx</b>
-<br />
+<b>cldnn_softmax_normalize_fyx</b>
  }<tr class="memdesc:ga913f194198a0de9f3b10a6ad1ed5d5bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enum type to specify softmax's normalization scope (see <a class="el" href="group__c__primitives.html#a8e42a43d3e3024058669fa77cf4962e0" title="Defines a scope of a single softmax normalization. ">cldnn_softmax_desc::dimension</a>). <br /></td></tr>
 </td></tr>
 <tr class="separator:ga913f194198a0de9f3b10a6ad1ed5d5bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaba6c8358e3a8e4414bda1470966973c3"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__primitives.html#gaba6c8358e3a8e4414bda1470966973c3">cldnn_upsampling_sample_type</a> { <a class="el" href="group__c__primitives.html#ggaba6c8358e3a8e4414bda1470966973c3ad131cb5cf6afa0f50df213922a2f5af2">cldnn_upsampling_nearest</a>, 
+<a class="el" href="group__c__primitives.html#ggaba6c8358e3a8e4414bda1470966973c3ae3c18cfd43f50b4bef8e20d8d06b163e">cldnn_upsampling_bilinear</a>
+ }<tr class="memdesc:gaba6c8358e3a8e4414bda1470966973c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample mode for upsampling layer ( <a class="el" href="group__c__primitives.html#structcldnn__upsampling__desc">cldnn_upsampling_desc</a> ​).  <a href="group__c__primitives.html#gaba6c8358e3a8e4414bda1470966973c3">More...</a><br /></td></tr>
+</td></tr>
+<tr class="separator:gaba6c8358e3a8e4414bda1470966973c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -289,6 +294,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ga13db68dc141877ed37890f0b5eb742f5"><td class="memItemLeft" align="right" valign="top"><a id="ga13db68dc141877ed37890f0b5eb742f5"></a>
 <a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_softmax_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
 <tr class="separator:ga13db68dc141877ed37890f0b5eb742f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae42e59293f614f621c132f07c2e8db77"><td class="memItemLeft" align="right" valign="top"><a id="gae42e59293f614f621c132f07c2e8db77"></a>
+<a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_split_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="separator:gae42e59293f614f621c132f07c2e8db77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabf42310a1f9a43f4b116f7ce1bb50dfe"><td class="memItemLeft" align="right" valign="top"><a id="gabf42310a1f9a43f4b116f7ce1bb50dfe"></a>
+<a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cldnn_upsampling_type_id</b> (<a class="el" href="group__c__error.html#gad578b26906887acbc43344a62d7b5ac1">cldnn_status</a> *status)</td></tr>
+<tr class="separator:gabf42310a1f9a43f4b116f7ce1bb50dfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <hr/><h2 class="groupheader">Class Documentation</h2>
@@ -384,16 +395,13 @@ Primitive type identificator. </td></tr>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Batch normalization primitive. </p>
-<p>Performs batch normalization as discribed in "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift" by Ioffe, Szegedy <br />
+<p>Performs batch normalization as described in "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift" by Ioffe, Szegedy <br />
  See: <a href="http://arxiv.org/abs/1502.03167">http://arxiv.org/abs/1502.03167</a></p>
 <p><b>Algorithm:</b> <br />
  global stats can be computed as: <br />
- mean = &Sigma;(whole_feature_map_accros_batch)/(batch_size*in_x*in_y) <br />
- variance = &Sigma;((x[i] - mean)^2)/(batch_size*in_x*in_y) <br />
- out[i] = in[i] - mean[b] / sqrt(variance[b] + epsilon) <br />
- when global_stats argument is set, mean and variance computation is skipped, values are provided from API. Otherwise mean and variance primitives are ignored </p>
+ out[i] = in[i] - mean[b] / sqrt(variance[b] + epsilon) </p>
 
-<p class="definition">Definition at line <a class="el" href="batch__norm_8h_source.html#l00046">46</a> of file <a class="el" href="batch__norm_8h_source.html">batch_norm.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="batch__norm_8h_source.html#l00042">42</a> of file <a class="el" href="batch__norm_8h_source.html">batch_norm.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_batch_norm_desc:</div>
 <div class="dyncontent">
@@ -442,12 +450,6 @@ Output padding information. </td></tr>
 type</td>
 <td class="fielddoc">
 Primitive type identificator. </td></tr>
-<tr><td class="fieldtype">
-<a id="ac8ecef23b2d4551c40bf82915788b7a5"></a>uint32_t</td>
-<td class="fieldname">
-use_global_stats</td>
-<td class="fielddoc">
-Use global statistics. </td></tr>
 <tr><td class="fieldtype">
 <a id="a7136e19484123679acb1c130d4bdeee6"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
 <td class="fieldname">
@@ -2219,7 +2221,7 @@ Primitive type identificator. </td></tr>
 </ul>
 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="softmax_8h_source.html#l00053">53</a> of file <a class="el" href="softmax_8h_source.html">softmax.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="softmax_8h_source.html#l00050">50</a> of file <a class="el" href="softmax_8h_source.html">softmax.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_softmax_desc:</div>
 <div class="dyncontent">
@@ -2237,14 +2239,11 @@ Collaboration diagram for cldnn_softmax_desc:</div>
 <td class="fieldname">
 dimension</td>
 <td class="fielddoc">
-Defines a scope of a single softmax normalization. <p>Being given a 4-dimensional input, which consists of b,f,y,x dimensions, softmax normalizes data which are divided into multiple independent sets. Specific behaviour is determined by this parameter, as follows:</p><ul>
+Defines a scope of a single softmax normalization. <p>Being given a 4-dimensional input, which consists of b,f,y,x dimensions, softmax normalizes data which are divided into multiple independent sets. Specific behavior is determined by this parameter, as follows:</p><ul>
 <li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_x </a> each input row is normalized independently,</li>
 <li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_y </a> each input column is normalized independently,</li>
 <li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_f </a> each in-depth vector of input is normalized independently,</li>
-<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_b </a> each pixel from a single 3d image is normalized toghether with corresponding pixels from other images within processing batch,</li>
-<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normallize_yx </a> each 2d image within input is normalized independently,</li>
-<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_fyx </a> each 3d image within input is normalized independently,</li>
-<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_bfyx </a> whole input is normalized as one data set. </li>
+<li>when set to <a class="el" href="group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd">cldnn_softmax_normalize_fyx </a> each 3d image within input is normalized independently, </li>
 </ul>
 </td></tr>
 <tr><td class="fieldtype">
@@ -2271,6 +2270,194 @@ Output padding information. </td></tr>
 type</td>
 <td class="fielddoc">
 Primitive type identificator. </td></tr>
+</table>
+
+</div>
+</div>
+<a name="structcldnn__split__desc" id="structcldnn__split__desc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__split__desc">&#9670;&nbsp;</a></span>cldnn_split_desc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_split_desc</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Performs split operation on input. </p>
+<p>splits the input data into n parts, for each user provides name and offsets. <br />
+ User cannot use split primitive directly. <br />
+ It is needed to refer to the output ids with the name "&lt;split_prim_id&gt;:&lt;split_output_id&gt;". <br />
+<br />
+<b>Assumptions</b> <br />
+ - offsets1 &lt; offsets2 &lt; offsets3 &lt; ... <br />
+ - size[n] = offsets[n+1] - offsets[n]; <br />
+ - last element: size[n] = split_input.size - offsets[n]; <br />
+ - no buffer overlapping, as the output size is calculated using offset and input size <br />
+ - split primitive id cannot be used by any other primitive (user needs to use output_ids only) <br />
+ Breaking any of this conditions will cause exeption throw. <br />
+<br />
+<b>Example:</b> <br />
+ Splitting output to 2 parts by the features: <br />
+ input_size = { 2, 4, 3, 5 }; <br />
+ split_id = "split"; <br />
+ output_ids_offsets[0] = { "out0", { 0,0,0,0 } }; <br />
+ output_ids_offsets[1] = { "out1", { 0,2,0,0 } }; <br />
+ After split there would be 2 primitives: "split:out0" and "split:out1" which contain 2 feature maps (lower and upper) </p>
+
+<p class="definition">Definition at line <a class="el" href="split_8h_source.html#l00054">54</a> of file <a class="el" href="split_8h_source.html">split.h</a>.</p>
+</div><div class="dynheader">
+Collaboration diagram for cldnn_split_desc:</div>
+<div class="dyncontent">
+<div class="center"><img src="structcldnn__split__desc__coll__graph.png" border="0" usemap="#cldnn__split__desc_coll__map" alt="Collaboration graph"/></div>
+<map name="cldnn__split__desc_coll__map" id="cldnn__split__desc_coll__map">
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="5,109,111,136"/>
+<area shape="rect" id="node3" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="82,5,178,32"/>
+<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__tensor__arr" title="Represents reference to an array of tensor. " alt="" coords="135,109,253,136"/>
+<area shape="rect" id="node5" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="278,109,425,136"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
+<table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="a44e2de68f1b608cc75dd281dca8bee4d"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
+<td class="fieldname">
+id</td>
+<td class="fielddoc">
+Primitive id unique within a topology. </td></tr>
+<tr><td class="fieldtype">
+<a id="a52863020e4bbc7c6f627965ec5ab13f1"></a><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td>
+<td class="fieldname">
+input</td>
+<td class="fielddoc">
+Input primitives ids. </td></tr>
+<tr><td class="fieldtype">
+<a id="a1b543f92fa6cafe7ca50c24d5e686253"></a><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td>
+<td class="fieldname">
+output_ids</td>
+<td class="fielddoc">
+List of output_ids. </td></tr>
+<tr><td class="fieldtype">
+<a id="ac5a1c86c21c3d9fc40b4ae980ec3d835"></a><a class="el" href="group__c__topology.html#structcldnn__tensor__arr">cldnn_tensor_arr</a></td>
+<td class="fieldname">
+output_offsets</td>
+<td class="fielddoc">
+Array of tensors with offsets. </td></tr>
+<tr><td class="fieldtype">
+<a id="a6866a71b45d9ce531f978ab9b6f096b7"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
+<td class="fieldname">
+output_padding</td>
+<td class="fielddoc">
+Output padding information. </td></tr>
+<tr><td class="fieldtype">
+<a id="ae75cf802873e0184fc885f8403a3fee5"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
+<td class="fieldname">
+type</td>
+<td class="fielddoc">
+Primitive type identificator. </td></tr>
+</table>
+
+</div>
+</div>
+<a name="structcldnn__upsampling__desc" id="structcldnn__upsampling__desc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__upsampling__desc">&#9670;&nbsp;</a></span>cldnn_upsampling_desc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_upsampling_desc</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Performs nearest neighbor/bilinear upsampling Also supports built-in Relu activation available by setting it in arguments. </p>
+
+<p class="definition">Definition at line <a class="el" href="upsampling_8h_source.html#l00044">44</a> of file <a class="el" href="upsampling_8h_source.html">upsampling.h</a>.</p>
+</div><div class="dynheader">
+Collaboration diagram for cldnn_upsampling_desc:</div>
+<div class="dyncontent">
+<div class="center"><img src="structcldnn__upsampling__desc__coll__graph.png" border="0" usemap="#cldnn__upsampling__desc_coll__map" alt="Collaboration graph"/></div>
+<map name="cldnn__upsampling__desc_coll__map" id="cldnn__upsampling__desc_coll__map">
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__padding" title="Padding information. " alt="" coords="5,109,111,136"/>
+<area shape="rect" id="node3" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="10,5,106,32"/>
+<area shape="rect" id="node4" href="group__c__topology.html#structcldnn__primitive__id__arr" title="Represents reference to an array of primitive ids. " alt="" coords="135,109,282,136"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
+<table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="a8dbf2da105f04f311fff8b1c5ff70c6d"></a>float</td>
+<td class="fieldname">
+activation_negative_slope</td>
+<td class="fielddoc">
+Relu activation slope. </td></tr>
+<tr><td class="fieldtype">
+<a id="ab913f15f8ac531c1941420fcb924d10f"></a><a class="el" href="group__c__topology.html#ga196d92d00c39d1e4ec171924e65f30db">cldnn_primitive_id</a></td>
+<td class="fieldname">
+id</td>
+<td class="fielddoc">
+Primitive id unique within a topology. </td></tr>
+<tr><td class="fieldtype">
+<a id="a0ec5fc92bf277f6e330800bfcf1e7f1c"></a><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td>
+<td class="fieldname">
+input</td>
+<td class="fielddoc">
+Input primitives ids. </td></tr>
+<tr><td class="fieldtype">
+<a id="affd986178e4dd8dc2e824e0cffed1abe"></a>uint32_t</td>
+<td class="fieldname">
+num_filter</td>
+<td class="fielddoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">num_filter</td><td>Input filter. Only used by bilinear sample_type. </td></tr>
+  </table>
+  </dd>
+</dl>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a547a39d6f6988eea925aa9c65ecfeff6"></a><a class="el" href="group__c__memory.html#structcldnn__padding">cldnn_padding</a></td>
+<td class="fieldname">
+output_padding</td>
+<td class="fielddoc">
+Output padding information. </td></tr>
+<tr><td class="fieldtype">
+<a id="a6b3a3996a6a93121a50278cc5961a137"></a>int32_t</td>
+<td class="fieldname">
+sample_type</td>
+<td class="fielddoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sample_type</td><td>Upsampling method (nearest neighbor/bilinear). </td></tr>
+  </table>
+  </dd>
+</dl>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aca8552ee4273e857bfce0849e94247df"></a>uint32_t</td>
+<td class="fieldname">
+scale</td>
+<td class="fielddoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">scale</td><td>Upsampling scale. </td></tr>
+  </table>
+  </dd>
+</dl>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9b71845ba44e189feb5d2cf2ee52aa33"></a><a class="el" href="group__c__topology.html#ga8860a68f6b5810b7ce9b3da09f95e58e">cldnn_primitive_type_id</a></td>
+<td class="fieldname">
+type</td>
+<td class="fielddoc">
+Primitive type identificator. </td></tr>
+<tr><td class="fieldtype">
+<a id="a267df814f0f32f4fa8392bab7b8bb07f"></a>uint32_t</td>
+<td class="fieldname">
+with_activation</td>
+<td class="fielddoc">
+Enables Relu activation. </td></tr>
 </table>
 
 </div>
@@ -2327,6 +2514,30 @@ Primitive type identificator. </td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="pooling_8h_source.html#l00034">34</a> of file <a class="el" href="pooling_8h_source.html">pooling.h</a>.</p>
+
+</div>
+</div>
+<a id="gaba6c8358e3a8e4414bda1470966973c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaba6c8358e3a8e4414bda1470966973c3">&#9670;&nbsp;</a></span>cldnn_upsampling_sample_type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__c__primitives.html#gaba6c8358e3a8e4414bda1470966973c3">cldnn_upsampling_sample_type</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sample mode for upsampling layer ( <a class="el" href="group__c__primitives.html#structcldnn__upsampling__desc">cldnn_upsampling_desc</a> ​). </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ggaba6c8358e3a8e4414bda1470966973c3ad131cb5cf6afa0f50df213922a2f5af2"></a>cldnn_upsampling_nearest&#160;</td><td class="fielddoc"><p>upsampling nearest neighbor. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggaba6c8358e3a8e4414bda1470966973c3ae3c18cfd43f50b4bef8e20d8d06b163e"></a>cldnn_upsampling_bilinear&#160;</td><td class="fielddoc"><p>upsampling bilinear. </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="upsampling_8h_source.html#l00034">34</a> of file <a class="el" href="upsampling_8h_source.html">upsampling.h</a>.</p>
 
 </div>
 </div>

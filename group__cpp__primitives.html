@@ -164,6 +164,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1softmax.html">cldnn::softmax</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalizes results so they sum to 1.  <a href="structcldnn_1_1softmax.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1split.html">cldnn::split</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs split operation on input.  <a href="structcldnn_1_1split.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1upsampling.html">cldnn::upsampling</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs nearest neighbor/bilinear upsampling Also supports built-in Relu <a class="el" href="structcldnn_1_1activation.html">activation</a> available by setting it in arguments.  <a href="structcldnn_1_1upsampling.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -186,6 +192,11 @@ Enumerations</h2></td></tr>
  }<tr class="memdesc:ga44a38e1c6afb8bfb7f74d0c20cd0fba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select method for the pooling layer.  <a href="group__cpp__primitives.html#ga44a38e1c6afb8bfb7f74d0c20cd0fba3">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:ga44a38e1c6afb8bfb7f74d0c20cd0fba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga853afdc986ec8b911fdf87807a75b655"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cpp__primitives.html#ga853afdc986ec8b911fdf87807a75b655">cldnn::upsampling_sample_type</a> : int32_t { <a class="el" href="group__cpp__primitives.html#gga853afdc986ec8b911fdf87807a75b655ad879c351426770bc0b13c3628db1e636">cldnn::upsampling_sample_type::nearest</a> = cldnn_upsampling_nearest, 
+<a class="el" href="group__cpp__primitives.html#gga853afdc986ec8b911fdf87807a75b655a2c5c389d0b455c8246a86f5ca90528a3">cldnn::upsampling_sample_type::bilinear</a> = cldnn_upsampling_bilinear
+ }<tr class="memdesc:ga853afdc986ec8b911fdf87807a75b655"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample mode for the upsampling layer.  <a href="group__cpp__primitives.html#ga853afdc986ec8b911fdf87807a75b655">More...</a><br /></td></tr>
+</td></tr>
+<tr class="separator:ga853afdc986ec8b911fdf87807a75b655"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
@@ -256,6 +267,38 @@ Enumerations</h2></td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="pooling_8hpp_source.html#l00032">32</a> of file <a class="el" href="pooling_8hpp_source.html">pooling.hpp</a>.</p>
+
+</div>
+</div>
+<a id="ga853afdc986ec8b911fdf87807a75b655"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga853afdc986ec8b911fdf87807a75b655">&#9670;&nbsp;</a></span>upsampling_sample_type</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__cpp__primitives.html#ga853afdc986ec8b911fdf87807a75b655">cldnn::upsampling_sample_type</a> : int32_t</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Sample mode for the <a class="el" href="structcldnn_1_1upsampling.html">upsampling</a> layer. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga853afdc986ec8b911fdf87807a75b655ad879c351426770bc0b13c3628db1e636"></a>nearest&#160;</td><td class="fielddoc"><p>upsampling nearest neighbor. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga853afdc986ec8b911fdf87807a75b655a2c5c389d0b455c8246a86f5ca90528a3"></a>bilinear&#160;</td><td class="fielddoc"><p>upsampling bilinear. </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="upsampling_8hpp_source.html#l00032">32</a> of file <a class="el" href="upsampling_8hpp_source.html">upsampling.hpp</a>.</p>
 
 </div>
 </div>

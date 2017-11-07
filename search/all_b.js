@@ -2,6 +2,7 @@ var searchData=
 [
   ['memory_20management',['Memory Management',['../group__c__memory.html',1,'']]],
   ['memory_20description_20and_20management',['Memory description and management',['../group__cpp__memory.html',1,'']]],
+  ['major',['major',['../group__c__version.html#aadeb44144cc747cff2d6a9bc6f6b8a45',1,'cldnn_version']]],
   ['make_5fdefault',['make_default',['../structcldnn_1_1detail_1_1build__option__traits.html#a1acdcf7a4f8e507e68ed05e2c6b35856',1,'cldnn::detail::build_option_traits']]],
   ['make_5foption',['make_option',['../structcldnn_1_1detail_1_1build__option__traits.html#ace5011e5668aba048ecba5471fbfc511',1,'cldnn::detail::build_option_traits']]],
   ['max',['max',['../structcldnn_1_1tensor.html#a3f6e289c067a925516a3df7728d470a6',1,'cldnn::tensor::max()'],['../group__cpp__primitives.html#ggaa0a55214d8b45e135a753957707dace3a2ffe4e77325d9a7152f7086ea7aa5114',1,'cldnn::max()'],['../group__cpp__primitives.html#gga44a38e1c6afb8bfb7f74d0c20cd0fba3a2ffe4e77325d9a7152f7086ea7aa5114',1,'cldnn::max()']]],
@@ -11,8 +12,10 @@ var searchData=
   ['meaningful_5fkernels_5fnames',['meaningful_kernels_names',['../group__c__engine.html#a47e35e895b6220b99dbdc6b2f8d3a504',1,'cldnn_engine_configuration::meaningful_kernels_names()'],['../structcldnn_1_1engine__configuration.html#a556439fc2da89c0a2971424d6f7fa60b',1,'cldnn::engine_configuration::meaningful_kernels_names()']]],
   ['mem',['mem',['../group__c__primitives.html#a7e2a68d022e80a31b68b7e55a7fa6ed8',1,'cldnn_data_desc::mem()'],['../structcldnn_1_1data.html#aee8fa96ddd4edea3915f397a19065f3f',1,'cldnn::data::mem()']]],
   ['memory',['memory',['../structcldnn_1_1memory.html',1,'cldnn::memory'],['../group__c__network.html#a16dd37c5975355503c4715ce3abb12de',1,'cldnn_network_output::memory()']]],
+  ['memory_5fc_5fto_5fcpp_5fconverter',['memory_c_to_cpp_converter',['../structcldnn_1_1details_1_1memory__c__to__cpp__converter.html',1,'cldnn::details']]],
   ['min',['min',['../structcldnn_1_1tensor.html#a068a9a143da3abeacbdd6ffc7e4c5b32',1,'cldnn::tensor']]],
   ['min_5fsizes',['min_sizes',['../group__c__primitives.html#a4b896f1712e345b5e91727a780162216',1,'cldnn_prior_box_desc::min_sizes()'],['../structcldnn_1_1prior__box.html#a171858e975b7c4a81cc1cf151bf695b1',1,'cldnn::prior_box::min_sizes()']]],
+  ['minor',['minor',['../group__c__version.html#a8e0a2d06420c10ba9eb7d1f8e2718b23',1,'cldnn_version']]],
   ['mode',['mode',['../group__c__network.html#a77be52a65339f77998c6a38dd33e7d16',1,'cldnn_tuning_config::mode()'],['../group__c__primitives.html#ac17c9962f86e8ed833ff5a00a7c25a7f',1,'cldnn_eltwise_desc::mode()'],['../group__c__primitives.html#ae3057452b410f2a8590c3a0c2faadc07',1,'cldnn_pooling_desc::mode()'],['../group__c__primitives.html#a2621fb0207b5d3acf996b41e65f98760',1,'cldnn_roi_pooling_desc::mode()'],['../structcldnn_1_1eltwise.html#ab002c0191df0f232bf2af07c7759a6b3',1,'cldnn::eltwise::mode()'],['../structcldnn_1_1pooling.html#a9a09927fae619117a55fc16ec53d11fa',1,'cldnn::pooling::mode()']]],
   ['mul',['mul',['../structcldnn_1_1tensor.html#a8f8593146edde8d993d74996cb18f14a',1,'cldnn::tensor']]]
 ];

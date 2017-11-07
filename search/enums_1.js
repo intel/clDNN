@@ -10,5 +10,6 @@ var searchData=
   ['cldnn_5fpooling_5fmode',['cldnn_pooling_mode',['../group__c__primitives.html#ga083b7f10c26345d6afb7d88718e8f2ee',1,'pooling.h']]],
   ['cldnn_5fprior_5fbox_5fcode_5ftype',['cldnn_prior_box_code_type',['../group__c__primitives.html#ga637eb91f32b8d5da425c47ddaaa09c37',1,'detection_output.h']]],
   ['cldnn_5fsoftmax_5fdimension',['cldnn_softmax_dimension',['../group__c__primitives.html#ga913f194198a0de9f3b10a6ad1ed5d5bd',1,'softmax.h']]],
-  ['cldnn_5ftuning_5fmode_5ftype',['cldnn_tuning_mode_type',['../group__c__network.html#ga852cb83960f054ca475df4c74bb3f877',1,'cldnn.h']]]
+  ['cldnn_5ftuning_5fmode_5ftype',['cldnn_tuning_mode_type',['../group__c__network.html#ga852cb83960f054ca475df4c74bb3f877',1,'cldnn.h']]],
+  ['cldnn_5fupsampling_5fsample_5ftype',['cldnn_upsampling_sample_type',['../group__c__primitives.html#gaba6c8358e3a8e4414bda1470966973c3',1,'upsampling.h']]]
 ];

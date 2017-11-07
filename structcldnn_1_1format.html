@@ -109,7 +109,9 @@ Public Types</h2></td></tr>
 <a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a0ccefb70ea52a57f7b72eca65b31b114">bs_xs_xsv8_bsv16</a> = cldnn_format_bs_xs_xsv8_bsv16, 
 <a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6ac8993da5ea821d3e667115a5cb7336d1">bs_x_bsv16</a> = cldnn_format_bs_x_bsv16, 
 <br />
-&#160;&#160;<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470">format_num</a> = cldnn_format_format_num, 
+&#160;&#160;<b>winograd_2x3_s1_data</b>, 
+<b>winograd_2x3_s1_weights</b>, 
+<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470">format_num</a> = cldnn_format_format_num, 
 <b>any</b> = cldnn_format_any
 <br />
  }</td></tr>
@@ -141,6 +143,10 @@ const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a cl
 size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1format.html#a3bec7c8db2b04c211ed96a2550036c24">dimension</a> () const</td></tr>
 <tr class="memdesc:a3bec7c8db2b04c211ed96a2550036c24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns number of dimensions contained within this format. <br /></td></tr>
 <tr class="separator:a3bec7c8db2b04c211ed96a2550036c24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91ca04c960ef8d0f535bd7bd2d1c7374"><td class="memItemLeft" align="right" valign="top"><a id="a91ca04c960ef8d0f535bd7bd2d1c7374"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1format.html#a91ca04c960ef8d0f535bd7bd2d1c7374">is_winograd</a> () const</td></tr>
+<tr class="memdesc:a91ca04c960ef8d0f535bd7bd2d1c7374"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if <code>format</code> is a winograd format. <br /></td></tr>
+<tr class="separator:a91ca04c960ef8d0f535bd7bd2d1c7374"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b12f42e7911a3bdcacc849698a375bc"><td class="memItemLeft" align="right" valign="top"><a id="a9b12f42e7911a3bdcacc849698a375bc"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1format.html#a9b12f42e7911a3bdcacc849698a375bc">format</a> (<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6">type</a> t)</td></tr>
 <tr class="memdesc:a9b12f42e7911a3bdcacc849698a375bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implicit conversion from <a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6">format::type</a>. <br /></td></tr>
@@ -188,6 +194,10 @@ static const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom
 static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1format.html#a6c0abe55b5b168101fa788a0ef990146">dimension</a> (<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6">type</a> fmt)</td></tr>
 <tr class="memdesc:a6c0abe55b5b168101fa788a0ef990146"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns number of dimensions contained within a <code>format</code>. <br /></td></tr>
 <tr class="separator:a6c0abe55b5b168101fa788a0ef990146"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8ade10eafc9d1089ed52afa8defee13f"><td class="memItemLeft" align="right" valign="top"><a id="a8ade10eafc9d1089ed52afa8defee13f"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1format.html#a8ade10eafc9d1089ed52afa8defee13f">is_winograd</a> (<a class="el" href="structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6">type</a> fmt)</td></tr>
+<tr class="memdesc:a8ade10eafc9d1089ed52afa8defee13f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if <code>format</code> is a winograd format. <br /></td></tr>
+<tr class="separator:a8ade10eafc9d1089ed52afa8defee13f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -208,7 +218,7 @@ Public Attributes</h2></td></tr>
  </li>
 </ul>
 
-<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00073">73</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00075">75</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
 </div><h2 class="groupheader">Member Enumeration Documentation</h2>
 <a id="a018851934d0e0137b01f068dcbc5e3b6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a018851934d0e0137b01f068dcbc5e3b6">&#9670;&nbsp;</a></span>type</h2>
@@ -266,7 +276,7 @@ Public Attributes</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00075">75</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="tensor_8hpp_source.html#l00077">77</a> of file <a class="el" href="tensor_8hpp_source.html">tensor.hpp</a>.</p>
 
 </div>
 </div>

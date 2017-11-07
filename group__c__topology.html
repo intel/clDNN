@@ -114,6 +114,9 @@ Classes</h2></td></tr>
 <tr class="memitem:structcldnn__uint16__t__arr"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#structcldnn__uint16__t__arr">cldnn_uint16_t_arr</a></td></tr>
 <tr class="memdesc:structcldnn__uint16__t__arr"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents reference to an array of uint16_t.  <a href="group__c__topology.html#structcldnn__uint16__t__arr">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__uint16__t__arr"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structcldnn__tensor__arr"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#structcldnn__tensor__arr">cldnn_tensor_arr</a></td></tr>
+<tr class="memdesc:structcldnn__tensor__arr"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents reference to an array of tensor.  <a href="group__c__topology.html#structcldnn__tensor__arr">More...</a><br /></td></tr>
+<tr class="separator:structcldnn__tensor__arr"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcldnn__primitive__id__arr"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__topology.html#structcldnn__primitive__id__arr">cldnn_primitive_id_arr</a></td></tr>
 <tr class="memdesc:structcldnn__primitive__id__arr"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents reference to an array of primitive ids.  <a href="group__c__topology.html#structcldnn__primitive__id__arr">More...</a><br /></td></tr>
 <tr class="separator:structcldnn__primitive__id__arr"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -245,7 +248,7 @@ CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of floats. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00280">280</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00298">298</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -277,7 +280,7 @@ Size (in floats) of the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of uint16_t. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00287">287</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00305">305</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -296,6 +299,46 @@ Size (in uint16_t) of the array. </td></tr>
 
 </div>
 </div>
+<a name="structcldnn__tensor__arr" id="structcldnn__tensor__arr"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structcldnn__tensor__arr">&#9670;&nbsp;</a></span>cldnn_tensor_arr</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct cldnn_tensor_arr</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Represents reference to an array of tensor. </p>
+
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00312">312</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+</div><div class="dynheader">
+Collaboration diagram for cldnn_tensor_arr:</div>
+<div class="dyncontent">
+<div class="center"><img src="structcldnn__tensor__arr__coll__graph.png" border="0" usemap="#cldnn__tensor__arr_coll__map" alt="Collaboration graph"/></div>
+<map name="cldnn__tensor__arr_coll__map" id="cldnn__tensor__arr_coll__map">
+<area shape="rect" id="node2" href="group__c__memory.html#structcldnn__tensor" title="N&#45;dimensional vector. Mostly used to represent memory size. " alt="" coords="17,5,113,32"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
+<table class="fieldtable">
+<tr><th colspan="3">Class Members</th></tr>
+<tr><td class="fieldtype">
+<a id="af2c0f13ac4264e25d995bc6471dd1568"></a>const <a class="el" href="group__c__memory.html#structcldnn__tensor">cldnn_tensor</a> *</td>
+<td class="fieldname">
+data</td>
+<td class="fielddoc">
+Pointer to tensor array. </td></tr>
+<tr><td class="fieldtype">
+<a id="a4391a2b250d9b57f894b5f6f9a872b65"></a>size_t</td>
+<td class="fieldname">
+size</td>
+<td class="fielddoc">
+Size (in tensor) of the array. </td></tr>
+</table>
+
+</div>
+</div>
 <a name="structcldnn__primitive__id__arr" id="structcldnn__primitive__id__arr"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structcldnn__primitive__id__arr">&#9670;&nbsp;</a></span>cldnn_primitive_id_arr</h2>
 
@@ -309,7 +352,7 @@ Size (in uint16_t) of the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Represents reference to an array of primitive ids. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00300">300</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00325">325</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -341,7 +384,7 @@ Number of ids in the array. </td></tr>
 </div><div class="memdoc">
 <div class="textblock"><p>Custom primitive kernel argument type. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00328">328</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00353">353</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -373,7 +416,7 @@ index</td>
 </div><div class="memdoc">
 <div class="textblock"><p>activation additional params </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00354">354</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00379">379</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -405,7 +448,7 @@ b</td>
 </div><div class="memdoc">
 <div class="textblock"><p>Basic primitive descriptor structure. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00379">379</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00404">404</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_primitive_desc:</div>
 <div class="dyncontent">
@@ -466,7 +509,7 @@ Primitive type identificator. </td></tr>
 <p>Begin primitive description definition. </p>
 <p>Defines <code>'cldnn_primitive_type_desc'</code> structure with first 5 fields common for all primitive descriptors. Other fields should be added after this macro. primitive descriptor definition should be closed by <a class="el" href="group__c__topology.html#ga62762eae9738ae5bfceca3a258a02cd1">CLDNN_END_PRIMITIVE_DESC</a>. Output padding information. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00363">363</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00388">388</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 
 </div>
 </div>

@@ -5,5 +5,6 @@ var searchData=
   ['is_5fallocated_5fby',['is_allocated_by',['../structcldnn_1_1memory.html#ad8448b6194533fbbc5bb6150f8db7c5e',1,'cldnn::memory']]],
   ['is_5fbatch_5fchar',['is_batch_char',['../structcldnn_1_1format__traits.html#a9b2146d762915269fb665881e1450ffa',1,'cldnn::format_traits']]],
   ['is_5ffeature_5fchar',['is_feature_char',['../structcldnn_1_1format__traits.html#a31e42f6e0c754c1e9cfc62d51d488d87',1,'cldnn::format_traits']]],
-  ['is_5fspatial_5fchar',['is_spatial_char',['../structcldnn_1_1format__traits.html#ae2b71595e4663bc92287e369bb1fd0bb',1,'cldnn::format_traits']]]
+  ['is_5fspatial_5fchar',['is_spatial_char',['../structcldnn_1_1format__traits.html#ae2b71595e4663bc92287e369bb1fd0bb',1,'cldnn::format_traits']]],
+  ['is_5fwinograd',['is_winograd',['../structcldnn_1_1format.html#a8ade10eafc9d1089ed52afa8defee13f',1,'cldnn::format::is_winograd(type fmt)'],['../structcldnn_1_1format.html#a91ca04c960ef8d0f535bd7bd2d1c7374',1,'cldnn::format::is_winograd() const']]]
 ];

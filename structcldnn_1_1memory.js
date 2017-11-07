@@ -12,6 +12,7 @@ var structcldnn_1_1memory =
     [ "size", "structcldnn_1_1memory.html#a44322dceda61c0fa99f2b74dfbf8f27c", null ],
     [ "cldnn::pointer", "structcldnn_1_1memory.html#a368149efda195b7c49629422e248dfec", null ],
     [ "data", "structcldnn_1_1memory.html#af9e652a62fb80ff8d98294ee353271a8", null ],
+    [ "details::memory_c_to_cpp_converter", "structcldnn_1_1memory.html#a803098d35af530f29c8746b8bd63ad26", null ],
     [ "engine", "structcldnn_1_1memory.html#a4d7b208b49e22753f356d941b2207872", null ],
     [ "network", "structcldnn_1_1memory.html#a92491e9c68c98ba70cba6b8e85602172", null ],
     [ "network_output", "structcldnn_1_1memory.html#af90e3fa07009c87be93a041c3e26d54e", null ],

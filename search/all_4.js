@@ -1,6 +1,7 @@
 var searchData=
 [
   ['engine_2c_20layout_2c_20tensor_2c_20memory_2c_20data_20and_20input',['Engine, layout, tensor, memory, data and input',['../c1.html',1,'tutorial']]],
+  ['extended_20profiling_20for_20networks_20built_20with_20optimized_20data_2e',['Extended profiling for networks built with optimized data.',['../c8.html',1,'tutorial']]],
   ['execution_20engine',['Execution Engine',['../group__c__engine.html',1,'']]],
   ['error_20handling',['Error Handling',['../group__c__error.html',1,'']]],
   ['execution_20engine',['Execution Engine',['../group__cpp__engine.html',1,'']]],
@@ -13,7 +14,7 @@ var searchData=
   ['enabled',['enabled',['../structcldnn_1_1build__option__bool.html#aa869d63160ab3f20e3538a630ab5e9f4',1,'cldnn::build_option_bool']]],
   ['end',['end',['../structcldnn_1_1pointer.html#ad8723dcb4b2bc565e0b06f9f62779c5f',1,'cldnn::pointer']]],
   ['engine',['engine',['../structcldnn_1_1engine.html',1,'cldnn::engine'],['../structcldnn_1_1engine.html#a8aab4f88727d6c9d23286a86bcd8f4cb',1,'cldnn::engine::engine(const engine_configuration &amp;configuration=engine_configuration())'],['../structcldnn_1_1engine.html#a490991eafe06780a8af41c3820bb6619',1,'cldnn::engine::engine(engine_types type, uint32_t engine_num, const engine_configuration &amp;configuration=engine_configuration())']]],
-  ['engine_5fconfiguration',['engine_configuration',['../structcldnn_1_1engine__configuration.html',1,'cldnn::engine_configuration'],['../structcldnn_1_1engine__configuration.html#a437eb9bd9dcfef5707d7f952fb19765a',1,'cldnn::engine_configuration::engine_configuration()']]],
+  ['engine_5fconfiguration',['engine_configuration',['../structcldnn_1_1engine__configuration.html',1,'cldnn::engine_configuration'],['../structcldnn_1_1engine__configuration.html#a45480a702085cc90245f454b1048276a',1,'cldnn::engine_configuration::engine_configuration()']]],
   ['engine_5fcount',['engine_count',['../structcldnn_1_1engine.html#a0175bcf132af459f11fc2ef9f62c6525',1,'cldnn::engine']]],
   ['engine_5finfo',['engine_info',['../group__cpp__engine.html#ga72098db11544155f4758b248a814b619',1,'cldnn']]],
   ['engine_5flog',['engine_log',['../group__c__engine.html#a054e25f0663e74e27dc28fdc43b53b81',1,'cldnn_engine_configuration::engine_log()'],['../structcldnn_1_1engine__configuration.html#ac9f20113ee267fe4fa1cb80117c7dc0a',1,'cldnn::engine_configuration::engine_log()']]],

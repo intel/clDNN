@@ -9,6 +9,8 @@ var structcldnn_1_1format =
       [ "bs_xs_xsv8_bsv8", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a5433802a572839c129d6d42ef6f8e362", null ],
       [ "bs_xs_xsv8_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a0ccefb70ea52a57f7b72eca65b31b114", null ],
       [ "bs_x_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6ac8993da5ea821d3e667115a5cb7336d1", null ],
+      [ "winograd_2x3_s1_data", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a8a38f1c8d422a04ae10be6758450a7c1", null ],
+      [ "winograd_2x3_s1_weights", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a1bb37593c2c63fd92bbed07ff6134061", null ],
       [ "format_num", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470", null ],
       [ "any", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6adf9e9d74e7741bfa7c73a3561c548f1d", null ]
     ] ],
@@ -18,6 +20,7 @@ var structcldnn_1_1format =
     [ "dimension", "structcldnn_1_1format.html#a3bec7c8db2b04c211ed96a2550036c24", null ],
     [ "feature_num", "structcldnn_1_1format.html#a405586b38d93aa76d834d4eab66c5e27", null ],
     [ "internal_order", "structcldnn_1_1format.html#a093fbd7876eb1beb451c9892671d2f55", null ],
+    [ "is_winograd", "structcldnn_1_1format.html#a91ca04c960ef8d0f535bd7bd2d1c7374", null ],
     [ "operator cldnn_format_type", "structcldnn_1_1format.html#aa44590b878e845bf8b040581c5f0c4ef", null ],
     [ "operator type", "structcldnn_1_1format.html#a0ac54e89c0828afd448e696449ec9685", null ],
     [ "order", "structcldnn_1_1format.html#aed51606d77c448af3a26d85f40a0ef8c", null ],

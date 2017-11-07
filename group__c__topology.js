@@ -9,6 +9,10 @@ var group__c__topology =
       [ "data", "group__c__topology.html#a914e9b659b2b7ab34316d441616aa135", null ],
       [ "size", "group__c__topology.html#a337cea0209f0f07d37ff0180ca5223a7", null ]
     ] ],
+    [ "cldnn_tensor_arr", "group__c__topology.html#structcldnn__tensor__arr", [
+      [ "data", "group__c__topology.html#af2c0f13ac4264e25d995bc6471dd1568", null ],
+      [ "size", "group__c__topology.html#a4391a2b250d9b57f894b5f6f9a872b65", null ]
+    ] ],
     [ "cldnn_primitive_id_arr", "group__c__topology.html#structcldnn__primitive__id__arr", [
       [ "data", "group__c__topology.html#aa454b6d15155de605e48a0b15f67fbf4", null ],
       [ "size", "group__c__topology.html#a22720ec907f798ec7b00f4f1f41d4076", null ]

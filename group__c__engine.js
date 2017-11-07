@@ -7,6 +7,7 @@ var group__c__engine =
       [ "enable_profiling", "group__c__engine.html#ac0f6ced9f9b06e459589e88b87419baf", null ],
       [ "engine_log", "group__c__engine.html#a054e25f0663e74e27dc28fdc43b53b81", null ],
       [ "meaningful_kernels_names", "group__c__engine.html#a47e35e895b6220b99dbdc6b2f8d3a504", null ],
+      [ "priority_mode", "group__c__engine.html#ac48fb19978543bbe7de939bde465c8e4", null ],
       [ "single_kernel_name", "group__c__engine.html#a6844fced17db9591815ab43a30662e78", null ],
       [ "sources_dumps_dir", "group__c__engine.html#ab5e63f9c893076057fdd3d8417a07587", null ]
     ] ],

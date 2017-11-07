@@ -23,6 +23,8 @@
 <area shape="rect" id="node43" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; roi_pooling, cldnn\l_roi_pooling_desc \&gt;" alt="" coords="208,1631,351,1687"/>
 <area shape="rect" id="node45" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; scale, cldnn_scale\l_desc \&gt;" alt="" coords="208,1711,351,1767"/>
 <area shape="rect" id="node47" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; softmax, cldnn_softmax\l_desc \&gt;" alt="" coords="193,1791,365,1847"/>
+<area shape="rect" id="node48" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; split, cldnn_split\l_desc \&gt;" alt="" coords="208,1871,351,1927"/>
+<area shape="rect" id="node49" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; upsampling, cldnn_upsampling\l_desc \&gt;" alt="" coords="173,1951,385,2007"/>
 <area shape="rect" id="node4" href="$structcldnn_1_1activation.html" title="Activation using rectified linear unit or parameterized rectified linear unit. " alt="" coords="481,86,596,113"/>
 <area shape="rect" id="node6" href="$structcldnn_1_1batch__norm.html" title="Batch normalization primitive. " alt="" coords="474,166,603,193"/>
 <area shape="rect" id="node8" href="$structcldnn_1_1concatenation.html" title="cldnn::concatenation" alt="" coords="467,246,610,273"/>
@@ -45,5 +47,4 @@
 <area shape="rect" id="node42" href="$structcldnn_1_1reshape.html" title="Changes information about inputs&#39;s layout effectively creating new memory which share underlaying buf..." alt="" coords="485,1566,592,1593"/>
 <area shape="rect" id="node44" href="$structcldnn_1_1roi__pooling.html" title="cldnn::roi_pooling" alt="" coords="477,1646,600,1673"/>
 <area shape="rect" id="node46" href="$structcldnn_1_1scale.html" title="Performs elementwise product of input and scale_input. " alt="" coords="493,1726,585,1753"/>
-<area shape="rect" id="node48" href="$structcldnn_1_1softmax.html" title="Normalizes results so they sum to 1. " alt="" coords="485,1806,592,1833"/>
 </map>

@@ -29,6 +29,8 @@ var searchData=
   ['primitive_5fbase_3c_20roi_5fpooling_2c_20cldnn_5froi_5fpooling_5fdesc_20_3e',['primitive_base&lt; roi_pooling, cldnn_roi_pooling_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20scale_2c_20cldnn_5fscale_5fdesc_20_3e',['primitive_base&lt; scale, cldnn_scale_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fbase_3c_20softmax_2c_20cldnn_5fsoftmax_5fdesc_20_3e',['primitive_base&lt; softmax, cldnn_softmax_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
+  ['primitive_5fbase_3c_20split_2c_20cldnn_5fsplit_5fdesc_20_3e',['primitive_base&lt; split, cldnn_split_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
+  ['primitive_5fbase_3c_20upsampling_2c_20cldnn_5fupsampling_5fdesc_20_3e',['primitive_base&lt; upsampling, cldnn_upsampling_desc &gt;',['../classcldnn_1_1primitive__base.html',1,'cldnn']]],
   ['primitive_5fid_5farr',['primitive_id_arr',['../structcldnn_1_1primitive_1_1primitive__id__arr.html',1,'cldnn::primitive']]],
   ['prior_5fbox',['prior_box',['../structcldnn_1_1prior__box.html',1,'cldnn']]],
   ['profiling_5finfo',['profiling_info',['../group__cpp__event.html#structcldnn_1_1instrumentation_1_1profiling__info',1,'cldnn::instrumentation']]],

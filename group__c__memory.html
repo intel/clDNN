@@ -116,6 +116,9 @@ Macros</h2></td></tr>
 <tr class="memitem:gae68ea9fb0a19fb4c1478560ec3d6f669"><td class="memItemLeft" align="right" valign="top"><a id="gae68ea9fb0a19fb4c1478560ec3d6f669"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CLDNN_FLOAT_TYPE_MASK</b>&#160;&#160;&#160;0x80</td></tr>
 <tr class="separator:gae68ea9fb0a19fb4c1478560ec3d6f669"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga701f8a6226ebf2210a3043af038b4e94"><td class="memItemLeft" align="right" valign="top"><a id="ga701f8a6226ebf2210a3043af038b4e94"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CLDNN_UINT_TYPE_MASK</b>&#160;&#160;&#160;0x40</td></tr>
+<tr class="separator:ga701f8a6226ebf2210a3043af038b4e94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga71bc3d9cee62d197fdd32aa66fb247dc"><td class="memItemLeft" align="right" valign="top"><a id="ga71bc3d9cee62d197fdd32aa66fb247dc"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CLDNN_TENSOR_BATCH_DIM_MAX</b>&#160;&#160;&#160;1</td></tr>
 <tr class="separator:ga71bc3d9cee62d197fdd32aa66fb247dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,7 +161,8 @@ Enumerations</h2></td></tr>
 <tr class="separator:ga5513ccecf02f37962076358d18fad277"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf6e9adb8d173eceb288fd5ce0f39e63b"><td class="memItemLeft" align="right" valign="top"><a id="gaf6e9adb8d173eceb288fd5ce0f39e63b"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__c__memory.html#gaf6e9adb8d173eceb288fd5ce0f39e63b">cldnn_data_type</a> { <b>cldnn_i8</b> = sizeof(int8_t), 
 <b>cldnn_f16</b> = sizeof(int16_t) | CLDNN_FLOAT_TYPE_MASK, 
-<b>cldnn_f32</b> = sizeof(float) | CLDNN_FLOAT_TYPE_MASK
+<b>cldnn_f32</b> = sizeof(float) | CLDNN_FLOAT_TYPE_MASK, 
+<b>cldnn_u8</b> = sizeof(uint8_t) | CLDNN_UINT_TYPE_MASK
  }<tr class="memdesc:gaf6e9adb8d173eceb288fd5ce0f39e63b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data type stored in memory. <br /></td></tr>
 </td></tr>
 <tr class="separator:gaf6e9adb8d173eceb288fd5ce0f39e63b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -219,7 +223,7 @@ CLDNN_API void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 </div><div class="memdoc">
 <div class="textblock"><p>N-dimensional vector. Mostly used to represent memory size. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00240">240</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00256">256</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Class Members</th></tr>
 <tr><td class="fieldtype">
@@ -263,7 +267,7 @@ spatial_num</td>
 </div><div class="memdoc">
 <div class="textblock"><p>Padding information. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00249">249</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00265">265</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_padding:</div>
 <div class="dyncontent">
@@ -310,7 +314,7 @@ Upper padding sizes. For spatials, it means size of right (X) and bottom (Y) pad
 </div><div class="memdoc">
 <div class="textblock"><p>Memory layout description. </p>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00267">267</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00285">285</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 </div><div class="dynheader">
 Collaboration diagram for cldnn_layout:</div>
 <div class="dyncontent">
@@ -419,7 +423,7 @@ N-dimensional vector describes size (in elements) of memory (excluding padding).
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00214">214</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cldnn_8h_source.html#l00229">229</a> of file <a class="el" href="cldnn_8h_source.html">cldnn.h</a>.</p>
 
 </div>
 </div>

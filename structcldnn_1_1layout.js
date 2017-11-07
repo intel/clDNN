@@ -1,6 +1,6 @@
 var structcldnn_1_1layout =
 [
-    [ "layout", "structcldnn_1_1layout.html#a2b088838be1f4a2109d2a4ab45f503cb", null ],
+    [ "layout", "structcldnn_1_1layout.html#a4c98d4b36f3016aa88eb4e860ad8c612", null ],
     [ "layout", "structcldnn_1_1layout.html#a6de02f5691d5cb02ace38791123b4613", null ],
     [ "layout", "structcldnn_1_1layout.html#a302f8e95086bda7a74b137872a23e4c7", null ],
     [ "bytes_count", "structcldnn_1_1layout.html#acfe67ab340441ca92e290418cea8930f", null ],

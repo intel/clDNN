@@ -95,9 +95,9 @@ $(document).ready(function(){initNavTree('structcldnn_1_1engine__configuration.h
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a437eb9bd9dcfef5707d7f952fb19765a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a437eb9bd9dcfef5707d7f952fb19765a">engine_configuration</a> (bool profiling=false, bool decorate_kernel_names=false, bool <a class="el" href="structcldnn_1_1engine__configuration.html#ae0d4e61480a4ff281d5e71d229bee728">dump_custom_program</a>=false, const std::string &amp;options=std::string(), const std::string &amp;single_kernel=std::string(), bool primitives_parallelisation=false, const std::string &amp;<a class="el" href="structcldnn_1_1engine__configuration.html#ac9f20113ee267fe4fa1cb80117c7dc0a">engine_log</a>=std::string(), const std::string &amp;<a class="el" href="structcldnn_1_1engine__configuration.html#afdd7c2afaea10876cbf68ed439bf94be">sources_dumps_dir</a>=std::string())</td></tr>
-<tr class="memdesc:a437eb9bd9dcfef5707d7f952fb19765a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs engine configuration with specified options.  <a href="#a437eb9bd9dcfef5707d7f952fb19765a">More...</a><br /></td></tr>
-<tr class="separator:a437eb9bd9dcfef5707d7f952fb19765a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45480a702085cc90245f454b1048276a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a45480a702085cc90245f454b1048276a">engine_configuration</a> (bool profiling=false, bool decorate_kernel_names=false, bool <a class="el" href="structcldnn_1_1engine__configuration.html#ae0d4e61480a4ff281d5e71d229bee728">dump_custom_program</a>=false, const std::string &amp;options=std::string(), const std::string &amp;single_kernel=std::string(), bool primitives_parallelisation=false, const std::string &amp;<a class="el" href="structcldnn_1_1engine__configuration.html#ac9f20113ee267fe4fa1cb80117c7dc0a">engine_log</a>=std::string(), const std::string &amp;<a class="el" href="structcldnn_1_1engine__configuration.html#afdd7c2afaea10876cbf68ed439bf94be">sources_dumps_dir</a>=std::string(), uint32_t <a class="el" href="structcldnn_1_1engine__configuration.html#a4b76c5791bf1f1427ba97688ce8d92bc">priority_mode</a>=0)</td></tr>
+<tr class="memdesc:a45480a702085cc90245f454b1048276a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs engine configuration with specified options.  <a href="#a45480a702085cc90245f454b1048276a">More...</a><br /></td></tr>
+<tr class="separator:a45480a702085cc90245f454b1048276a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa2a8c438b09dc7aa1260c9a8ab6d90c"><td class="memItemLeft" align="right" valign="top"><a id="afa2a8c438b09dc7aa1260c9a8ab6d90c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>engine_configuration</b> (const <a class="el" href="group__c__engine.html#structcldnn__engine__configuration">cldnn_engine_configuration</a> &amp;c_conf)</td></tr>
 <tr class="separator:afa2a8c438b09dc7aa1260c9a8ab6d90c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,14 +140,18 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
 const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#afdd7c2afaea10876cbf68ed439bf94be">sources_dumps_dir</a></td></tr>
 <tr class="memdesc:afdd7c2afaea10876cbf68ed439bf94be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies a directory where sources of <a class="el" href="structcldnn_1_1program.html" title="Compiled program build from topology by engine. ">cldnn::program</a> objects should be dumped. Empty by default (means no dumping). <br /></td></tr>
 <tr class="separator:afdd7c2afaea10876cbf68ed439bf94be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b76c5791bf1f1427ba97688ce8d92bc"><td class="memItemLeft" align="right" valign="top"><a id="a4b76c5791bf1f1427ba97688ce8d92bc"></a>
+const uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcldnn_1_1engine__configuration.html#a4b76c5791bf1f1427ba97688ce8d92bc">priority_mode</a></td></tr>
+<tr class="memdesc:a4b76c5791bf1f1427ba97688ce8d92bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Placeholder for priority mode (support of priority hints in command queue). Currently ignored. <br /></td></tr>
+<tr class="separator:a4b76c5791bf1f1427ba97688ce8d92bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Configuration parameters for created engine. </p>
 
 <p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00037">37</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a437eb9bd9dcfef5707d7f952fb19765a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a437eb9bd9dcfef5707d7f952fb19765a">&#9670;&nbsp;</a></span>engine_configuration()</h2>
+<a id="a45480a702085cc90245f454b1048276a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a45480a702085cc90245f454b1048276a">&#9670;&nbsp;</a></span>engine_configuration()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -201,7 +205,13 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>sources_dumps_dir</em> = <code>std::string()</code>&#160;</td>
+          <td class="paramname"><em>sources_dumps_dir</em> = <code>std::string()</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>priority_mode</em> = <code>0</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -228,7 +238,7 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00054">54</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="engine_8hpp_source.html#l00055">55</a> of file <a class="el" href="engine_8hpp_source.html">engine.hpp</a>.</p>
 
 </div>
 </div>

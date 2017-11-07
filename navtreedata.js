@@ -4,9 +4,9 @@ var NAVTREE =
     [ "clDNN Documentation", "index.html", [
       [ "Introduction", "index.html#intro", null ],
       [ "Programming Model", "index.html#model", null ],
+      [ "Graph compilation", "index.html#graph_compilation", null ],
       [ "C++ API Example MNIST network", "index.html#example", null ]
     ] ],
-    [ "Introduction to custom primitives.", "c7.html", null ],
     [ "clDNN Tutorial", "tutorial.html", "tutorial" ],
     [ "Modules", "modules.html", "modules" ],
     [ "Namespaces", null, [
@@ -39,10 +39,11 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"group__c__network.html#gadfaeab3efab33303da4eaa37a07c424e",
-"group__c__program.html#ga212acf96f51eaa6cb5998792b214175f",
-"structcldnn_1_1deconvolution.html#a74d5202944385ce474928c2d6de5089c",
-"structcldnn_1_1pointer.html#afd7e317200c625980d47d2d15b784410"
+"group__c__network.html#ga977afaffc1fe4050f7ddada10a8677ff",
+"group__c__primitives.html#structcldnn__batch__norm__desc",
+"structcldnn_1_1convolution.html#ad7a156cb5e7378969f24ff0069a0f944",
+"structcldnn_1_1network.html#acea6e2bd2355679c3642367268771177",
+"structcldnn_1_1tuning__config__options.html#a62e1bb4028dd7f495c30aea21fda2bd1"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

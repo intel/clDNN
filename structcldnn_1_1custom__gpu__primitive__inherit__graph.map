@@ -1,0 +1,4 @@
+<map id="cldnn::custom_gpu_primitive" name="cldnn::custom_gpu_primitive">
+<area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; custom_gpu_primitive,\l cldnn_custom_gpu_primitive_desc \&gt;" alt="" coords="5,80,241,136"/>
+<area shape="rect" id="node3" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="69,5,177,32"/>
+</map>

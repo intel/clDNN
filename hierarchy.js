@@ -43,9 +43,13 @@ var hierarchy =
     [ "cldnn_roi_pooling_desc", "group__c__primitives.html#structcldnn__roi__pooling__desc", null ],
     [ "cldnn_scale_desc", "group__c__primitives.html#structcldnn__scale__desc", null ],
     [ "cldnn_softmax_desc", "group__c__primitives.html#structcldnn__softmax__desc", null ],
+    [ "cldnn_split_desc", "group__c__primitives.html#structcldnn__split__desc", null ],
     [ "cldnn_tensor", "group__c__memory.html#structcldnn__tensor", null ],
+    [ "cldnn_tensor_arr", "group__c__topology.html#structcldnn__tensor__arr", null ],
     [ "cldnn_tuning_config", "group__c__network.html#structcldnn__tuning__config", null ],
     [ "cldnn_uint16_t_arr", "group__c__topology.html#structcldnn__uint16__t__arr", null ],
+    [ "cldnn_upsampling_desc", "group__c__primitives.html#structcldnn__upsampling__desc", null ],
+    [ "cldnn_version", "group__c__version.html#structcldnn__version", null ],
     [ "cldnn::data_type_to_type< Data_Type >", "group__cpp__memory.html#structcldnn_1_1data__type__to__type", null ],
     [ "cldnn::data_type_traits", "structcldnn_1_1data__type__traits.html", null ],
     [ "cldnn::details::dim_vec_kind_init< Kind >", "classcldnn_1_1details_1_1dim__vec__kind__init.html", null ],
@@ -57,6 +61,7 @@ var hierarchy =
     [ "cldnn::engine_configuration", "structcldnn_1_1engine__configuration.html", null ],
     [ "cldnn::event", "structcldnn_1_1event.html", null ],
     [ "false_type", null, [
+      [ "cldnn::meta::always_false< T >", "structcldnn_1_1meta_1_1always__false.html", null ],
       [ "cldnn::meta::always_false_ty_val< Ty, Val >", "structcldnn_1_1meta_1_1always__false__ty__val.html", null ],
       [ "cldnn::meta::is_any_of< T, U >", "structcldnn_1_1meta_1_1is__any__of.html", null ]
     ] ],
@@ -69,6 +74,7 @@ var hierarchy =
     ] ],
     [ "cldnn::layout", "structcldnn_1_1layout.html", null ],
     [ "cldnn::memory", "structcldnn_1_1memory.html", null ],
+    [ "cldnn::details::memory_c_to_cpp_converter", "structcldnn_1_1details_1_1memory__c__to__cpp__converter.html", null ],
     [ "cldnn::network", "structcldnn_1_1network.html", null ],
     [ "cldnn::network_output", "structcldnn_1_1network__output.html", null ],
     [ "cldnn::padding", "structcldnn_1_1padding.html", null ],
@@ -143,6 +149,12 @@ var hierarchy =
       ] ],
       [ "cldnn::primitive_base< softmax, cldnn_softmax_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::softmax", "structcldnn_1_1softmax.html", null ]
+      ] ],
+      [ "cldnn::primitive_base< split, cldnn_split_desc >", "classcldnn_1_1primitive__base.html", [
+        [ "cldnn::split", "structcldnn_1_1split.html", null ]
+      ] ],
+      [ "cldnn::primitive_base< upsampling, cldnn_upsampling_desc >", "classcldnn_1_1primitive__base.html", [
+        [ "cldnn::upsampling", "structcldnn_1_1upsampling.html", null ]
       ] ]
     ] ],
     [ "cldnn::primitive::primitive_id_arr", "structcldnn_1_1primitive_1_1primitive__id__arr.html", null ],

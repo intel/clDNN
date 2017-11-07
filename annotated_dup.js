@@ -15,6 +15,7 @@ var annotated_dup =
       [ "meta", null, [
         [ "all", "structcldnn_1_1meta_1_1all.html", null ],
         [ "all< Val, Values... >", "structcldnn_1_1meta_1_1all_3_01_val_00_01_values_8_8_8_01_4.html", null ],
+        [ "always_false", "structcldnn_1_1meta_1_1always__false.html", null ],
         [ "always_false_ty_val", "structcldnn_1_1meta_1_1always__false__ty__val.html", null ],
         [ "is_any_of", "structcldnn_1_1meta_1_1is__any__of.html", null ],
         [ "is_any_of< T, U, Rest... >", "structcldnn_1_1meta_1_1is__any__of_3_01_t_00_01_u_00_01_rest_8_8_8_01_4.html", null ],
@@ -67,10 +68,12 @@ var annotated_dup =
       [ "roi_pooling", "structcldnn_1_1roi__pooling.html", "structcldnn_1_1roi__pooling" ],
       [ "scale", "structcldnn_1_1scale.html", "structcldnn_1_1scale" ],
       [ "softmax", "structcldnn_1_1softmax.html", "structcldnn_1_1softmax" ],
+      [ "split", "structcldnn_1_1split.html", "structcldnn_1_1split" ],
       [ "tensor", "structcldnn_1_1tensor.html", "structcldnn_1_1tensor" ],
       [ "topology", "structcldnn_1_1topology.html", "structcldnn_1_1topology" ],
       [ "tuning_config_options", "structcldnn_1_1tuning__config__options.html", "structcldnn_1_1tuning__config__options" ],
-      [ "type_to_data_type", "group__cpp__memory.html#structcldnn_1_1type__to__data__type", null ]
+      [ "type_to_data_type", "group__cpp__memory.html#structcldnn_1_1type__to__data__type", null ],
+      [ "upsampling", "structcldnn_1_1upsampling.html", "structcldnn_1_1upsampling" ]
     ] ],
     [ "cldnn_activation_additional_params", "group__c__topology.html#structcldnn__activation__additional__params", "group__c__topology_structcldnn__activation__additional__params" ],
     [ "cldnn_activation_desc", "group__c__primitives.html#structcldnn__activation__desc", "group__c__primitives_structcldnn__activation__desc" ],
@@ -107,7 +110,11 @@ var annotated_dup =
     [ "cldnn_roi_pooling_desc", "group__c__primitives.html#structcldnn__roi__pooling__desc", "group__c__primitives_structcldnn__roi__pooling__desc" ],
     [ "cldnn_scale_desc", "group__c__primitives.html#structcldnn__scale__desc", "group__c__primitives_structcldnn__scale__desc" ],
     [ "cldnn_softmax_desc", "group__c__primitives.html#structcldnn__softmax__desc", "group__c__primitives_structcldnn__softmax__desc" ],
+    [ "cldnn_split_desc", "group__c__primitives.html#structcldnn__split__desc", "group__c__primitives_structcldnn__split__desc" ],
     [ "cldnn_tensor", "group__c__memory.html#structcldnn__tensor", "group__c__memory_structcldnn__tensor" ],
+    [ "cldnn_tensor_arr", "group__c__topology.html#structcldnn__tensor__arr", "group__c__topology_structcldnn__tensor__arr" ],
     [ "cldnn_tuning_config", "group__c__network.html#structcldnn__tuning__config", "group__c__network_structcldnn__tuning__config" ],
-    [ "cldnn_uint16_t_arr", "group__c__topology.html#structcldnn__uint16__t__arr", "group__c__topology_structcldnn__uint16__t__arr" ]
+    [ "cldnn_uint16_t_arr", "group__c__topology.html#structcldnn__uint16__t__arr", "group__c__topology_structcldnn__uint16__t__arr" ],
+    [ "cldnn_upsampling_desc", "group__c__primitives.html#structcldnn__upsampling__desc", "group__c__primitives_structcldnn__upsampling__desc" ],
+    [ "cldnn_version", "group__c__version.html#structcldnn__version", "group__c__version_structcldnn__version" ]
 ];

@@ -19,7 +19,7 @@ var group__cpp__memory =
       [ "operator==", "structcldnn_1_1padding.html#ac6a89ab421aee929eeff65142039b36b", null ]
     ] ],
     [ "layout", "structcldnn_1_1layout.html", [
-      [ "layout", "structcldnn_1_1layout.html#a2b088838be1f4a2109d2a4ab45f503cb", null ],
+      [ "layout", "structcldnn_1_1layout.html#a4c98d4b36f3016aa88eb4e860ad8c612", null ],
       [ "layout", "structcldnn_1_1layout.html#a6de02f5691d5cb02ace38791123b4613", null ],
       [ "layout", "structcldnn_1_1layout.html#a302f8e95086bda7a74b137872a23e4c7", null ],
       [ "bytes_count", "structcldnn_1_1layout.html#acfe67ab340441ca92e290418cea8930f", null ],
@@ -76,6 +76,7 @@ var group__cpp__memory =
       [ "size", "structcldnn_1_1memory.html#a44322dceda61c0fa99f2b74dfbf8f27c", null ],
       [ "cldnn::pointer", "structcldnn_1_1memory.html#a368149efda195b7c49629422e248dfec", null ],
       [ "data", "structcldnn_1_1memory.html#af9e652a62fb80ff8d98294ee353271a8", null ],
+      [ "details::memory_c_to_cpp_converter", "structcldnn_1_1memory.html#a803098d35af530f29c8746b8bd63ad26", null ],
       [ "engine", "structcldnn_1_1memory.html#a4d7b208b49e22753f356d941b2207872", null ],
       [ "network", "structcldnn_1_1memory.html#a92491e9c68c98ba70cba6b8e85602172", null ],
       [ "network_output", "structcldnn_1_1memory.html#af90e3fa07009c87be93a041c3e26d54e", null ],
@@ -99,6 +100,8 @@ var group__cpp__memory =
         [ "bs_xs_xsv8_bsv8", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a5433802a572839c129d6d42ef6f8e362", null ],
         [ "bs_xs_xsv8_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a0ccefb70ea52a57f7b72eca65b31b114", null ],
         [ "bs_x_bsv16", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6ac8993da5ea821d3e667115a5cb7336d1", null ],
+        [ "winograd_2x3_s1_data", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a8a38f1c8d422a04ae10be6758450a7c1", null ],
+        [ "winograd_2x3_s1_weights", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a1bb37593c2c63fd92bbed07ff6134061", null ],
         [ "format_num", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6a471f1dd949493bb4ab83f3cc90842470", null ],
         [ "any", "structcldnn_1_1format.html#a018851934d0e0137b01f068dcbc5e3b6adf9e9d74e7741bfa7c73a3561c548f1d", null ]
       ] ],
@@ -108,6 +111,7 @@ var group__cpp__memory =
       [ "dimension", "structcldnn_1_1format.html#a3bec7c8db2b04c211ed96a2550036c24", null ],
       [ "feature_num", "structcldnn_1_1format.html#a405586b38d93aa76d834d4eab66c5e27", null ],
       [ "internal_order", "structcldnn_1_1format.html#a093fbd7876eb1beb451c9892671d2f55", null ],
+      [ "is_winograd", "structcldnn_1_1format.html#a91ca04c960ef8d0f535bd7bd2d1c7374", null ],
       [ "operator cldnn_format_type", "structcldnn_1_1format.html#aa44590b878e845bf8b040581c5f0c4ef", null ],
       [ "operator type", "structcldnn_1_1format.html#a0ac54e89c0828afd448e696449ec9685", null ],
       [ "order", "structcldnn_1_1format.html#aed51606d77c448af3a26d85f40a0ef8c", null ],
@@ -130,10 +134,13 @@ var group__cpp__memory =
       [ "mul", "structcldnn_1_1tensor.html#a8f8593146edde8d993d74996cb18f14a", null ],
       [ "negate", "structcldnn_1_1tensor.html#a259e1ff9631e00a06ab81d1fc139a91f", null ],
       [ "operator cldnn_tensor", "structcldnn_1_1tensor.html#a2678802e605b061961aa3997afe37aaa", null ],
+      [ "operator+=", "structcldnn_1_1tensor.html#a0f837f12113cff24281385b9b185eaf6", null ],
+      [ "operator-=", "structcldnn_1_1tensor.html#a3332d70f3deaae552b4d6b0e02416869", null ],
       [ "operator=", "structcldnn_1_1tensor.html#a22adf377e6eecc5496c9ac576492b3c0", null ],
       [ "sizes", "structcldnn_1_1tensor.html#ad69a98cff1aa43117280977cbbf8e4ff", null ],
       [ "sizes", "structcldnn_1_1tensor.html#acbcabf44aa80da798b8dd161ad7eb249", null ],
       [ "sub", "structcldnn_1_1tensor.html#a925ea4a210ecb74b2e81c6cf6570ed3f", null ],
+      [ "to_string", "structcldnn_1_1tensor.html#ae19a2592d1f3b26b7315e2d87ec7712d", null ],
       [ "transform", "structcldnn_1_1tensor.html#af934fe7b9c031c1d16d97d4d2132c9a1", null ],
       [ "details::dim_vec_kind_init< details::dim_vec_kind::batch >", "structcldnn_1_1tensor.html#a0779e027dab4dd16edb33555af577786", null ],
       [ "details::dim_vec_kind_init< details::dim_vec_kind::feature >", "structcldnn_1_1tensor.html#ae9c8f894a1e6dfe1d35cb72b12dfed7c", null ],
@@ -148,7 +155,7 @@ var group__cpp__memory =
       [ "spatial", "structcldnn_1_1tensor.html#a4985c789e1a859219f88f8da99926576", null ]
     ] ],
     [ "data_types", "group__cpp__memory.html#ga978c06d1af08c83d1f5bfa33a76fdbc0", [
-      [ "f16", "group__cpp__memory.html#gga978c06d1af08c83d1f5bfa33a76fdbc0aa2449b6477c1fef79be4202906486876", null ]
+      [ "u8", "group__cpp__memory.html#gga978c06d1af08c83d1f5bfa33a76fdbc0a077393852be20e37026d6281827662f2", null ]
     ] ],
     [ "data_type_match", "group__cpp__memory.html#ga295bf941db1a6eef11e96ff2592d8761", null ],
     [ "fuse", "group__cpp__memory.html#ga7d01618b5894ddc654a82bfcaaa85146", null ],

@@ -34,6 +34,8 @@ var dir_22b5c7e0b7c35a0608cb0f635ae21c0a =
     [ "roi_pooling.hpp", "roi__pooling_8hpp_source.html", null ],
     [ "scale.hpp", "scale_8hpp_source.html", null ],
     [ "softmax.hpp", "softmax_8hpp_source.html", null ],
+    [ "split.hpp", "split_8hpp_source.html", null ],
     [ "tensor.hpp", "tensor_8hpp_source.html", null ],
-    [ "topology.hpp", "topology_8hpp_source.html", null ]
+    [ "topology.hpp", "topology_8hpp_source.html", null ],
+    [ "upsampling.hpp", "upsampling_8hpp_source.html", null ]
 ];
