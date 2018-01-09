@@ -46,3 +46,6 @@
     #define UNIT_VAL_ZERO 0.0f
     #define TO_UNIT_TYPE(v) (float)(v)
 #endif
+
+// Creates vector type.
+#define MAKE_VECTOR_TYPE(elem_type, size) CAT(elem_type, size)

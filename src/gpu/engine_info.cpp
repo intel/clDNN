@@ -164,6 +164,8 @@ engine_info_internal::engine_info_internal(const gpu_toolkit& context)
 
     max_work_group_size = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>());
     max_local_mem_size = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_LOCAL_MEM_SIZE>());
+    max_global_mem_size = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>());
+    max_alloc_mem_size = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>());
 
     // Check for supported features.
     auto extensions = context.device().getInfo<CL_DEVICE_EXTENSIONS>();

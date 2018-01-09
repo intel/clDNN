@@ -105,8 +105,25 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
         if (layout_optimizer::convolution_bfyx_opt(current_layout, output_or_weights_layout, prim)
             || (_output_size_handling_enabled && prim->with_output_size))
         {
-            expected_tensor = current_layout.size;
-            expected_format = cldnn::format::bfyx;
+            if (current_layout.data_type == data_types::f32 &&
+                current_layout.size.batch[0] % 16 == 0 &&
+                current_layout.format == format::bfyx &&
+                output_or_weights_layout.size.spatial[0] == 1 && output_or_weights_layout.size.spatial[1] == 1 &&
+                prim->stride.spatial[0] == 1 && prim->stride.spatial[1] == 1 &&
+                prim->input_offset.spatial[0] == 0 && prim->input_offset.spatial[1] == 0)
+            {
+                if (!((current_layout.size.feature[0] % 8) == 0 && (current_layout.size.spatial[0] * current_layout.size.spatial[1]) == 16 &&
+                    current_layout.data_padding == padding{ { 0,0,0,0 }, 0 }))
+                {
+                    expected_tensor = current_layout.size.transform(cldnn::format::bf8_xy16, 1);
+                    expected_format = cldnn::format::bf8_xy16;
+                }
+            }
+            else
+            {
+                expected_tensor = current_layout.size;
+                expected_format = cldnn::format::bfyx;
+            }
         }
         else
         {
@@ -257,9 +274,14 @@ std::vector<std::pair<std::shared_ptr<primitive>, bool>> layout_optimizer::get_g
 
     auto new_dtype = from_weights_type(reorder_params.dtype);
     const auto bpp = data_type_traits::size_of(new_dtype);
+    tensor expected_size = { 1,1,1,(tensor::value_type)(reorder_params.newBufferSize / bpp) };
+    
+    if (reorder_params.toImageType)
+        expected_size = old_layout.size;
+    
     layout expected_layout = {
-        new_dtype, format::bfyx, // simple linear format (flatten to x channel)
-        { 1,1,1,(tensor::value_type)(reorder_params.newBufferSize / bpp) }
+        new_dtype, reorder_params.toImageType ? from_weights_layout(reorder_params.destLayout) : format::bfyx, // simple linear format (flatten to x channel)
+        expected_size
     };
     auto reorder = create_reorder_from_given_source(input_id, expected_layout, reorder_params);
     if (reorder.first)

@@ -38,7 +38,7 @@ void kernel_runner::prepare_kernel_args(const KernelSelector::KernelsData& kerne
         for (const auto& input : base_params.inputs)
         {
             int num_of_input_elements = (int)input.PhysicalSize();
-            input_buffers.push_back(engine->allocate_buffer({ from_data_type(input.GetDType()), format::bfyx, tensor(1, 1, num_of_input_elements, 1) }));
+            input_buffers.push_back(engine->allocate_memory({ from_data_type(input.GetDType()), format::bfyx, tensor(1, 1, num_of_input_elements, 1) }));
         }
     }
     for (const auto& input : input_buffers)
@@ -50,7 +50,7 @@ void kernel_runner::prepare_kernel_args(const KernelSelector::KernelsData& kerne
     if (output_buffers.empty())
     {
         int num_of_output_elements = (int)base_params.output.PhysicalSize();
-        output_buffers.push_back(engine->allocate_buffer({ from_data_type(base_params.output.GetDType()), format::bfyx, tensor(1, 1, num_of_output_elements, 1) }));
+        output_buffers.push_back(engine->allocate_memory({ from_data_type(base_params.output.GetDType()), format::bfyx, tensor(1, 1, num_of_output_elements, 1) }));
     }
 
     args.output = output_buffers[0];
@@ -62,7 +62,7 @@ void kernel_runner::prepare_kernel_args(const KernelSelector::KernelsData& kerne
         int num_of_weight_elements = (int)weights_bias_params.weights.PhysicalSize();
         if (weight_buffers.empty())
         {
-            weight_buffers.push_back(engine->allocate_buffer({ from_weights_type(weights_bias_params.weights.GetDType()), format::bfyx, tensor(1, 1, num_of_weight_elements, 1) }));
+            weight_buffers.push_back(engine->allocate_memory({ from_weights_type(weights_bias_params.weights.GetDType()), format::bfyx, tensor(1, 1, num_of_weight_elements, 1) }));
         }
         while (weight_buffers[0]->get_layout().bytes_count() < weights_bias_params.weights.PhysicalSizeInBytes())
         {
@@ -70,7 +70,7 @@ void kernel_runner::prepare_kernel_args(const KernelSelector::KernelsData& kerne
             // (to avoid complex computations of the exact buffer size according to the chosen layout). 
             weight_buffers.clear();
             num_of_weight_elements *= 2;
-            weight_buffers.push_back(engine->allocate_buffer({ from_weights_type(weights_bias_params.weights.GetDType()), format::bfyx, tensor(1, 1, num_of_weight_elements, 1) }));
+            weight_buffers.push_back(engine->allocate_memory({ from_weights_type(weights_bias_params.weights.GetDType()), format::bfyx, tensor(1, 1, num_of_weight_elements, 1) }));
         }
         args.weights = weight_buffers[0];
 
@@ -80,7 +80,7 @@ void kernel_runner::prepare_kernel_args(const KernelSelector::KernelsData& kerne
             if (bias_buffers.empty())
             {
                 int num_of_bias_elements = (int)weights_bias_params.bias[0].PhysicalSize();
-                bias_buffers.push_back(engine->allocate_buffer({ from_data_type(weights_bias_params.bias[0].GetDType()), format::bfyx, tensor(1, 1, num_of_bias_elements, 1) }));
+                bias_buffers.push_back(engine->allocate_memory({ from_data_type(weights_bias_params.bias[0].GetDType()), format::bfyx, tensor(1, 1, num_of_bias_elements, 1) }));
             }
             args.bias = bias_buffers[0];
         }  

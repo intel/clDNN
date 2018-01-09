@@ -59,8 +59,8 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 //     CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial X", -input_offset.spatial[0], "input window size spatial X", filter_size.spatial[0], "First convolution is outside of image. please reduce input offset X");
 //     CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial Y", -input_offset.spatial[1], "input window size spatial Y", filter_size.spatial[1], "First convolution is outside of image. please reduce input offset Y");
 
-    if (input_layout.format == format::winograd_2x3_s1_weights)
-        CLDNN_ERROR_MESSAGE(node.id(), "Input for convolution should not be in windograd_2x3_s1_weights format - it is reserved for weights only");
+    if (input_layout.format == format::winograd_2x3_s1_weights || input_layout.format == format::winograd_2x3_s1_fused_weights)
+        CLDNN_ERROR_MESSAGE(node.id(), "Input for convolution should not be in windograd weights format - it is reserved for weights only");
 
     if (input_layout.format == format::winograd_2x3_s1_data)
     {
@@ -120,6 +120,7 @@ std::string convolution_inst::to_string(convolution_node const& node)
 
     json_composite conv_info;
     conv_info.add("stride", strd.to_string());
+    conv_info.add("input offset", desc->input_offset.to_string());
     conv_info.add("split", split);
     conv_info.add("dilation", dilation.to_string());
     conv_info.add("with activation", activation);

@@ -49,6 +49,8 @@ namespace KernelSelector
         const auto batchSize = arg.output.Batch().v;
 
         runInfo.lws0 = batchSize == 8 ? 8 : 16;
+        runInfo.lws1 = 1;
+        runInfo.lws2 = 1;
 
         if (((filterOfmNum * batchSize) / 16) % runInfo.lws0)
         {

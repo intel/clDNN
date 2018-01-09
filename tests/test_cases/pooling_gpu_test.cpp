@@ -903,6 +903,14 @@ static void generic_average_wo_padding_test(format fmt, tensor output, tensor in
 
     engine eng;
 
+    if (!eng.get_info().supports_fp16)
+    {
+        if(dt == data_types::f16)
+        {
+            return;
+        }
+    }
+
     auto input_mem = memory::allocate(eng, layout{ dt, fmt, input });
     set_values(input_mem, std::vector<DataType>(input.count(), DataType(1)));
     std::vector<DataType> expected_output(output.count(), DataType(1));
@@ -1035,7 +1043,7 @@ public:
 
     static tensor generate_input_offset(int x, int y, const tensor& window_size)
     {
-        return tensor(0, 0, -std::min(-x, window_size.spatial[0] - 1), -std::min(-y, window_size.spatial[1] - 1));
+        return tensor(0, 0, -std::min(x, window_size.spatial[0] - 1), -std::min(y, window_size.spatial[1] - 1));
     }
 
     static std::vector<cldnn::primitive*> generate_specific_test_params()
@@ -1054,7 +1062,7 @@ public:
                 {
                     // No padding
                     all_layer_params.push_back(new pooling("pooling", "input0", pooling_mode, size, stride));
-                    all_layer_params.push_back(new pooling("pooling", "input0", pooling_mode, size, stride, generate_input_offset(-4, 3, size)));
+                    all_layer_params.push_back(new pooling("pooling", "input0", pooling_mode, size, stride, generate_input_offset(4, 3, size)));
 
                     // Input padding
                     all_layer_params.push_back(new pooling("pooling", "reorder0", pooling_mode, size, stride));
@@ -1063,13 +1071,13 @@ public:
                     all_layer_params.push_back(new pooling("pooling", "input0", pooling_mode, size, stride, generate_input_offset(2, 3, size), { { 0, 0, 1, 5 },{ 0, 0, 19, 4 } }));
 
                     // Input + output padding
-                    all_layer_params.push_back(new pooling("pooling", "reorder0", pooling_mode, size, stride, generate_input_offset(-2, -3, size), { { 0, 0, 2, 1 },{ 0, 0, 3, 4 } }));
+                    all_layer_params.push_back(new pooling("pooling", "reorder0", pooling_mode, size, stride, generate_input_offset(2, 3, size), { { 0, 0, 2, 1 },{ 0, 0, 3, 4 } }));
                 }
             }
         }
 
         // This case tests the pooling_gpu_bfyx_average_opt kernel.
-        all_layer_params.push_back(new pooling("pooling", "input0", pooling_mode::average, tensor(1, 1, 3, 3), tensor(1, 1, 1, 1), generate_input_offset(-1, -1, tensor(1, 1, 3, 3))));
+        all_layer_params.push_back(new pooling("pooling", "input0", pooling_mode::average, tensor(1, 1, 3, 3), tensor(1, 1, 1, 1), generate_input_offset(1, 1, tensor(1, 1, 3, 3))));
 
         return all_layer_params;
     }
@@ -1155,6 +1163,8 @@ public:
         int height = inputs[0].get_layout().size.spatial[1];
         int width = inputs[0].get_layout().size.spatial[0];
 
+
+
         cldnn::pooling_mode pooling_mode = pooling->mode;
 
         int input_offset_width = pooling->input_offset.spatial[0];
@@ -1170,7 +1180,7 @@ public:
 
         int pooled_width = output_tensor.spatial[0];
         int pooled_height = output_tensor.spatial[1];
-
+         
         //Output is bfyx
         auto output = memory::allocate(engine, cldnn::layout(inputs[0].get_layout().data_type, cldnn::format::bfyx, output_tensor, pooling->output_padding));
 
@@ -1230,7 +1240,27 @@ public:
             case cldnn::pooling_mode::average:
             case cldnn::pooling_mode::average_no_padding:
             {
-                int fixed_pool_window_size = kernel_width * kernel_height;
+                auto kernel_size =  kernel_width * kernel_height;
+                auto dynamic_mode = (((output_tensor.spatial[0] - 1) * stride_width) + pooling->size.spatial[0]) > -2 * input_offset_width + width ||
+                    (((output_tensor.spatial[1] - 1) * stride_height) + pooling->size.spatial[1]) > -2 * input_offset_width + height;
+
+                auto divider = [=](auto actual_x, auto actual_y) {
+                    auto x = kernel_width;
+                    auto y = kernel_height;
+                    if (dynamic_mode)
+                    {
+                        if (actual_x + kernel_width > width + std::abs(input_offset_width))
+                        {
+                            x = (width + std::abs(input_offset_width)) - actual_x;
+                        }
+                        if (actual_y + kernel_height > height + std::abs(input_offset_height))
+                        {
+                            y = (height + std::abs(input_offset_height)) - actual_y;
+                        }
+                    }
+                    return y*x;
+                };
+
                 for (int i = 0; i < (int)output.get_layout().get_buffer_size().count(); i++)
                 {
                     output_mem[i] = 0;
@@ -1249,7 +1279,7 @@ public:
 
                                 int input_offset_y_start = h * stride_height + input_offset_height;
                                 int input_offset_y_end = std::min(input_offset_y_start + kernel_height, height);
-                                input_offset_y_start = std::max(input_offset_y_start, 0);		
+                                input_offset_y_start = std::max(input_offset_y_start, 0);	
 
                                 int output_index = (b * feature + f) * output_height * output_width;
                                 tensor lower_padding = pooling->output_padding.lower_size();
@@ -1261,26 +1291,24 @@ public:
                                     for (int x = input_offset_x_start; x < input_offset_x_end; x++) 
                                     {
                                         const size_t input_index = get_linear_index(inputs[0].get_layout(), b, f, y, x, input_desc);
-
                                         output_mem[output_index] += input_mem[input_index];
-                                        num_of_elements++;
+                                        if (!dynamic_mode || pooling_mode == cldnn::pooling_mode::average_no_padding)
+                                        {
+                                            num_of_elements++;
+                                        }
                                     }
+                                }
+                                if (pooling_mode == cldnn::pooling_mode::average)
+                                {
+                                        num_of_elements = divider(input_offset_x_start, input_offset_y_start);
                                 }
                                 if (num_of_elements == 0)
                                 {
                                     assert(0);
                                     return output;
                                 }
-                                if (pooling_mode == cldnn::pooling_mode::average)
-                                {
-                                    // The pool size is fixed for all elements in pooling_mode::average.
-                                    output_mem[output_index] /= (Type)fixed_pool_window_size;
-                                }
-                                else
-                                {
-                                    // The pool size is dynamic in pooling_mode::average_no_padding.
-                                    output_mem[output_index] /= (Type)num_of_elements;
-                                }            
+                                output_mem[output_index] /= (Type)num_of_elements;
+ 
                             }
                         }
                     }
@@ -1318,12 +1346,12 @@ private:
 std::vector<cldnn::primitive*> pooling_test::all_layer_params = {};
 std::vector<tests::test_params*> pooling_test::all_generic_params = {};
 
-TEST_P(pooling_test, DISABLED_test_all)
+TEST_P(pooling_test, POOLING)
 {
     run_single_test();
 }
 
-INSTANTIATE_TEST_CASE_P(POOLING,
+INSTANTIATE_TEST_CASE_P(DISABLED_POOLING,
                         pooling_test,
                         ::testing::Combine(::testing::ValuesIn(pooling_test::generate_generic_test_params()),
                                            ::testing::ValuesIn(pooling_test::generate_specific_test_params())),

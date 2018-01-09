@@ -39,6 +39,12 @@ namespace KernelSelector
                 newDims[0] = RoundUp(newDims[0], 8);
                 newDims[1] = RoundUp(newDims[1], 16);
                 break;
+            case bf8_xy16:
+                assert(newDims.size() == 4);
+                newDims[1] = RoundUp(newDims[1], 8);
+                newDims[3] = RoundUp(newDims[2] * newDims[3], 16);
+                newDims[2] = 1;
+                break;
             default:
                 break;
             }
@@ -246,7 +252,7 @@ namespace KernelSelector
                 vec[Channelndex(l, WeightsChannelName::OFM)] = OFM().v;
 
                 //requirement for winograd 2x3
-                if (l == WeightsLayout::winograd_2x3_s1_weights)
+                if (l == WeightsLayout::winograd_2x3_s1_weights || l == WeightsLayout::winograd_2x3_s1_fused_weights)
                 {
                     vec[Channelndex(l, WeightsChannelName::X)] = 4;
                     vec[Channelndex(l, WeightsChannelName::Y)] = 3;

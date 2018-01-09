@@ -75,6 +75,8 @@ extern "C" {
 #define CLDNN_UNSUPPORTED_SIZE      -5
 #define CLDNN_UNSUPPORTED_FORMAT    -6
 #define CLDNN_DIMENSION_MISMATCH    -7
+#define CLDNN_ALLOC_SIZE_EXCEEDED   -8
+#define CLDNN_GLOBAL_SIZE_EXCEEDED  -9
 
 /// @brief Represents errors status for all API calls
 typedef int32_t cldnn_status;
@@ -145,8 +147,10 @@ typedef struct
     uint32_t cores_count;              ///< Number of available HW cores.
     uint32_t core_frequency;           ///< Clock frequency in MHz.
 
-    uint64_t max_work_group_size;
-    uint64_t max_local_mem_size;
+    uint64_t max_work_group_size;      ///< Maximum number of work-items in a work-group executing a kernel using the data parallel execution model.
+    uint64_t max_local_mem_size;       ///< Maximum size of local memory arena in bytes.
+    uint64_t max_global_mem_size;      ///< Maximum size of global device memory in bytes.
+    uint64_t max_alloc_mem_size;       ///< Maximum size of memory object allocation in bytes.
 
     // Flags (for layout compatibility fixed size types are used).
     uint8_t supports_fp16;             ///< Does engine support FP16.
@@ -240,6 +244,12 @@ typedef enum /*:int32_t*/
                                   ///< \n \image html bs_xs_xsv8_bsv16.jpg
     cldnn_format_bs_x_bsv16,    ///< format used only for fully connected weights fp16 batch=1 : bs - batch slice (responses slice), bsv16 - 16 values of single batch slice, x - flattened plane of (fyx).
                                 ///< \n \image html bs_x_bsv16.jpg
+    cldnn_format_bf8_xy16,      ///< format used only for convolution 1x1 input, xy aligned to 16, f aligned to 8
+                                ///< \n \image html bf8_xy16.jpg
+    cldnn_format_image_2d_weights_c4_fyx_b, ///< image format for weights, image 2d, 4-channel, width size is f*y*x/4 (4-channels filled with fyx data), height is b
+                                      ///< \n \image html image_2d_weights_c4_fyx_b.jpg
+    cldnn_format_image_2d_weights_c1_b_fyx, ///< image format for weights, image 2d, single channel, width size is b, height is f*y*x
+                                      ///< \n \image html image_2d_weights_c1_b_fyx.jpg
     cldnn_format_format_num,    ///< number of format types
     cldnn_format_any = -1
 } cldnn_format_type;

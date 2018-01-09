@@ -26,9 +26,17 @@
 #define WORK_GROUP_SIZE 16
 #define INPUT0_ELEMENTS_COUNT (INPUT0_LENGTH/INPUT0_BATCH_NUM)
 
+#if FP16_UNIT_USED
+    #define ALIGNED_BLOCK_READ8(ptr, byte_offset) as_half8(intel_sub_group_block_read_us8((const __global ushort*)(ptr) + (byte_offset)))
+    #define ALIGNED_BLOCK_WRITE8(ptr, byte_offset, val) intel_sub_group_block_write_us8((__global ushort*)(ptr) + (byte_offset), as_ushort8(val))
+#else
+    #define ALIGNED_BLOCK_READ8(ptr, byte_offset) as_float8(intel_sub_group_block_read8((const __global uint*)(ptr) + (byte_offset)))
+    #define ALIGNED_BLOCK_WRITE8(ptr, byte_offset, val) intel_sub_group_block_write8((__global uint*)(ptr) + (byte_offset), as_uint8(val))
+#endif
+    
 __attribute__((reqd_work_group_size(1, WORK_GROUP_SIZE, 1)))
 __attribute__((intel_reqd_sub_group_size(WORK_GROUP_SIZE)))
-KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global float* output, uint output_offset_in_concat_axis)
+KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global UNIT_TYPE* input, __global UNIT_TYPE* output, uint output_offset_in_concat_axis)
 {
     const uint batch_id = get_group_id(0);
 
@@ -54,9 +62,9 @@ KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global
 
     if(element_group_offset + align_offset + WORK_GROUP_SIZE * ELEMENTS_PER_WORK_ITEM < INPUT0_ELEMENTS_COUNT)
     {
-        float8 in = as_float8(intel_sub_group_block_read8((const __global uint*)input + input_offset + align_offset));
-        intel_sub_group_block_write8((__global uint*)output + output_offset + align_offset, as_uint8(in));
-        
+        MAKE_VECTOR_TYPE(UNIT_TYPE, 8) in = ALIGNED_BLOCK_READ8(input, input_offset + align_offset);
+        ALIGNED_BLOCK_WRITE8(output, output_offset + align_offset, in);
+
         //Fill the values that were missed upon adding align_offset
         if((align_offset != 0) && (element_offset + output_batch_offset < group_start_pos + align_offset))
         {
@@ -82,3 +90,5 @@ KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global float* input, __global
 #undef INPUT0_ELEMENTS_COUNT
 #undef WORK_GROUP_SIZE
 #undef ELEMENTS_PER_WORK_ITEM
+#undef ALIGNED_BLOCK_READ8
+#undef ALIGNED_BLOCK_WRITE8

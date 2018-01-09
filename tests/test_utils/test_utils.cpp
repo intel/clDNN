@@ -25,39 +25,80 @@
 #include <api/CPP/engine.hpp>
 #include "test_utils.h"
 #include "float16.h"
+#include "instrumentation.h"
+#include <boost/filesystem.hpp>
+#include <iostream>
 
 using namespace cldnn;
 
 namespace tests 
 {
-    generic_test::generic_test() : generic_params(std::get<0>(GetParam())), layer_params(std::get<1>(GetParam())), max_ulps_diff_allowed(4)
+    generic_test::generic_test() : generic_params(std::get<0>(GetParam())), layer_params(std::get<1>(GetParam())), max_ulps_diff_allowed(4), random_values(true), dump_graphs(false), dump_memory(false)
     {
     }
-
     void generic_test::run_single_test()
     {
         assert((generic_params->data_type == data_types::f32) || (generic_params->data_type == data_types::f16));
-        
-        topology topology;               
-        topology.add(*layer_params);
-        
-        std::vector<memory> input_mems;
-
-        std::vector<std::string> input_layouts_names = {};
-
-        for (size_t i = 0 ; i < generic_params->input_layouts.size() ; i++)
-        {           
-            input_mems.push_back( memory::allocate(engine, generic_params->input_layouts[i]) );
-            
-            if (generic_params->data_type == data_types::f32)
+        if (dump_graphs)
+        {
+            std::string err = "";
+            auto graphs_dump_dir = test_info.create_dump_graph_dir(err);
+            if (err.empty())
             {
-                tests::set_random_values<float>(input_mems[i], -100, 100);
+                generic_params->network_build_options.set_option(cldnn::build_option::graph_dumps_dir(graphs_dump_dir));
             }
             else
             {
-                tests::set_random_values<FLOAT16>(input_mems[i], -100, 100);
-            }   
-            
+                std::cout << err << std::endl;
+            }
+        }
+        topology topology;               
+        topology.add(*layer_params);
+
+        std::vector<memory> input_mems;
+        std::vector<std::string> input_layouts_names = {};
+
+        size_t multipler = 0;
+        for (size_t i = 0 ; i < generic_params->input_layouts.size() ; i++)
+        {           
+            input_mems.push_back( memory::allocate(engine, generic_params->input_layouts[i]) );
+
+            if (random_values)
+            {
+                if (generic_params->data_type == data_types::f32)
+                {
+                    tests::set_random_values<float>(input_mems[i], true, 7, 10);
+                }
+                else
+                {
+                    tests::set_random_values<FLOAT16>(input_mems[i], true, 5, 10);
+                }
+            }
+            else
+            {
+                size_t size = generic_params->input_layouts[i].size.batch[0] * generic_params->input_layouts[i].size.feature[0];
+                
+                if (generic_params->data_type == data_types::f32)
+                {
+                    std::vector<float> values;
+                    for (size_t j = 1; j <= size; j++)
+                    {
+                        values.push_back(static_cast<float>(multipler + j));
+                    }
+                    tests::set_values_per_batch_and_feature<float>(input_mems[i], generic_params->input_layouts[i], values);
+                    multipler = values.size();
+                }
+                else
+                {
+                    std::vector<FLOAT16> values;
+                    for (size_t j = 1; j <= size; j++)
+                    {
+                        values.push_back(FLOAT16(static_cast<float>(multipler + j)));
+                    }
+                    tests::set_values_per_batch_and_feature<FLOAT16>(input_mems[i], generic_params->input_layouts[i], values);
+                    multipler = values.size();
+                }        
+            }                        
             std::string input_name = "input" + std::to_string(i);
             if ( (i == 0) && generic_params->network_build_options.get<cldnn::build_option_type::optimize_data>()->enabled() )
             {
@@ -109,9 +150,23 @@ namespace tests
         EXPECT_EQ(outputs.size(), size_t(1));
 
         auto output = outputs.begin()->second.get_memory();
-
+        
         auto output_ref = generate_reference(input_mems);
         
+
+        if (dump_memory)
+        {
+            std::string prefix = test_info.name();
+            for (size_t i = 0; i < generic_params->input_layouts.size(); i++)
+            {
+                ::instrumentation::logger::log_memory_to_file(input_mems[i], prefix + "input" + std::to_string(i));
+            }
+            for (size_t i = 0; i < outputs.size(); i++)
+            {
+                ::instrumentation::logger::log_memory_to_file(output, prefix + "output" + std::to_string(i));
+            }          
+        }
+
         if (output.get_layout().data_type == data_types::f32)
         {
             compare_buffers<float>(output, output_ref);
@@ -262,7 +317,7 @@ namespace tests
         //{ format::yx,{ 8,8 } } , { format::yx,{ 9,9 } } , { format::yx,{ 10,10 } } , { format::yx,{ 11,11 } } , { format::yx,{ 12,12 } } , { format::yx,{ 13,13 } } ,
         //{ format::yx,{ 14,14 } } , { format::yx,{ 15,15 } } , { format::yx,{ 16,16 } } };
 
-        for (cldnn::data_types data_type : test_data_types)
+        for (cldnn::data_types data_type : test_data_types())
         {
             for (cldnn::format fmt : test_input_formats)
             {
@@ -280,6 +335,38 @@ namespace tests
         }        
 
         return all_generic_params;
+    }
+
+    const std::string test_dump::name() const
+    {
+        std::string temp = name_str;
+        std::replace(temp.begin(), temp.end(), '/', '_');
+        return temp;
+    }
+
+    const std::string test_dump::test_case_name() const
+    {
+        size_t pos = test_case_name_str.find("/");
+        if (pos > test_case_name_str.length())
+        {
+            pos = 0;
+        }
+        std::string temp = test_case_name_str.substr(pos);
+        return temp;
+    }
+
+    const std::string test_dump::create_dump_graph_dir(std::string& str_err) const
+    {
+        const std::string dump_dir = graph_dump_dir + "/" + test_case_name() + "/" + name();
+        try
+        {
+            boost::filesystem::create_directories(dump_dir);
+        }
+        catch (boost::filesystem::filesystem_error const& err)
+        {
+            str_err = err.what();
+        }
+        return dump_dir;
     }
 
     std::string test_params::print_tensor(cldnn::tensor t)
@@ -307,9 +394,22 @@ namespace tests
         return str.str();
     }
     
-    std::vector<cldnn::data_types> generic_test::test_data_types = { cldnn::data_types::f32 , cldnn::data_types::f16 };
+    std::vector<cldnn::data_types> generic_test::test_data_types() 
+    {
+        std::vector<cldnn::data_types> result;
+        result.push_back(cldnn::data_types::f32);
+        
+        cldnn::engine temp;
+        if(temp.get_info().supports_fp16)
+        {
+            result.push_back(cldnn::data_types::f16);
+        }
+        return result;
+    }
+
     std::vector<cldnn::format> generic_test::test_input_formats = { cldnn::format::bfyx , cldnn::format::yxfb, cldnn::format::fyxb, cldnn::format::byxf };
     std::vector<int32_t> generic_test::test_batch_sizes = { 1, 2 };// 4, 8, 16};
     std::vector<int32_t> generic_test::test_feature_sizes = { 1, 2 };// , 3, 15};
-    std::vector<tensor> generic_test::test_input_sizes = { { 1, 1, 100,100 } ,{ 1, 1, 227,227 } ,{ 1, 1, 400,600 } };
+    std::vector<tensor> generic_test::test_input_sizes = { { 1, 1, 100, 100 } ,{ 1, 1, 277, 277 } ,{ 1, 1, 400, 600 } };
+
 }

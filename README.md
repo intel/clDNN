@@ -36,11 +36,29 @@ Accelerate Deep Learning Inference with Intel® Processor Graphics whitepaper [l
 
 ## Changelog
 
+### Drop 6.0
+	New features:
+	- fused winograd
+	- image support for weights
+	- yolo_region primitive support
+	- yolo_reorg primitive support
+	Bug fixes:
+	- winograd bias fix
+	- mean subtract fix
+	UX:
+	- update boost to 1.64.0
+	- extend graph dumps
+	Performance:
+	- update offline caches for newer drivers
+	- conv1x1 byxf optimization
+	- conv1x1 with images
+	- cascade depth concatenation fuse optimization
+
 ### Drop 5.0
 	New features:
 	- split primitive
 	- upsampling primitive
-	- add CLK support
+	- add preliminary Coffe Lake support
 	- uint8 weights support
 	- versioning
 	- offline autotuner cache
@@ -171,7 +189,7 @@ in CMake 3.4.3 and with CheckCXXCompilerFlag module in CMake 3.5.2, we strongly 
 
 - The software was validated on:
     * CentOS* 7.2 with GNU* Compiler Collection 5.2 (64-bit only), using Intel® intel-opencl-r.5.0 (SRB5.0) [Linux driver package](https://software.intel.com/en-us/articles/opencl-drivers) .
-    * Windows® 10 and Windows® Server 2012 R2 with MSVC 14.0, using [Intel® Graphics Driver for Windows* [15.46] driver package](https://downloadcenter.intel.com/download/26941).
+    * Windows® 10 and Windows® Server 2012 R2 with MSVC 14.0, using [Intel® Graphics Driver for Windows* [15.46] driver package](https://downloadcenter.intel.com/download/27058).
 
 	More information on Intel® OpenCL™ drivers can be found [here](https://software.intel.com/en-us/articles/opencl-drivers).
 

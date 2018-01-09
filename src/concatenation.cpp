@@ -114,7 +114,23 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
     }
 
     if (node.can_be_optimized())
-        for (auto const& i : _deps)
-            i->_output = _output;
+    {
+        std::list<std::vector<std::shared_ptr<primitive_inst>>*> stack = { &_deps };
+        while (!stack.empty())
+        {
+            auto nodes_list = stack.front();
+            stack.pop_front();
+        
+            for (auto processed_node : *nodes_list)
+            {
+                processed_node->_output = _output;
+                if (processed_node->type() == concatenation::type_id() && processed_node->can_be_optimized())
+                {
+                    if (!processed_node->_deps.empty())
+                        stack.push_back(&processed_node->_deps);
+                }
+            }
+        }
+    }
 }
 }

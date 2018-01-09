@@ -1,0 +1,611 @@
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_1.cpp:24: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_2.cpp:31: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_3.cpp:29: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_4.cpp:29: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_5.cpp:30: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_6.cpp:31: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_7.cpp:32: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/chapter_8.cpp:33: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/tutorial/main.cpp:18: warning: multiple use of section label 'intro' while adding section, (first occurrence: C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h, line 18)
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:185: warning: Compound cldnn::details::dim_vec_limits< dim_vec_kind::spatial > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:171: warning: Compound cldnn::details::dim_vec_limits< dim_vec_kind::batch > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:87: warning: Compound cldnn_version is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/roi_pooling.h:34: warning: Compound cldnn_roi_pooling_desc is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:153: warning: Compound cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:147: warning: Compound cldnn::half_impl is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:34: warning: Compound cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:178: warning: Compound cldnn::details::dim_vec_limits< dim_vec_kind::feature > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:35: warning: Compound cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/proposal.h:35: warning: Compound cldnn_proposal_desc is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:195: warning: Compound cldnn::details::memory_c_to_cpp_converter is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:603: warning: unable to resolve reference to `memory' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:609: warning: unable to resolve reference to `event' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/concatenation.hpp:79: warning: Found unknown command `\CLDNN_PRIMITIVE_DESC'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/detection_output.hpp:32: warning: unable to resolve reference to `detection' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/eltwise.h:48: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:46: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:33: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:49: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:366: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:40: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/lrn.hpp:72: warning: unable to resolve reference to `cldnn_normalization_desc' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/prior_box.hpp:110: warning: unable to resolve reference to `cldnn_prior-box_desc' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:290: warning: unable to resolve reference to `build_option_type' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:423: warning: explicit link request to 'cldnn_build_options' could not be resolved
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/upsampling.h:43: warning: unable to resolve reference to `activation' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:247: warning: Member CLDNN_FLOAT_TYPE_MASK (macro definition) of group c_memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:248: warning: Member CLDNN_UINT_TYPE_MASK (macro definition) of group c_memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:250: warning: Member CLDNN_TENSOR_BATCH_DIM_MAX (macro definition) of group c_memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:251: warning: Member CLDNN_TENSOR_FEATURE_DIM_MAX (macro definition) of group c_memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:252: warning: Member CLDNN_TENSOR_SPATIAL_DIM_MAX (macro definition) of group c_memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:253: warning: Member CLDNN_TENSOR_DIM_MAX (macro definition) of group c_memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:397: warning: Member CLDNN_PRIMITIVE_DESC(PType) (macro definition) of group c_topology is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:423: warning: The following parameters of cldnn_add_primitive(cldnn_topology topology, const struct cldnn_primitive_desc *dto, cldnn_status *status) are not documented:
+  parameter 'topology'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:430: warning: The following parameters of cldnn_get_primitive_ids(cldnn_topology topology, char *ids, size_t size, size_t *size_ret, cldnn_status *status) are not documented:
+  parameter 'topology'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:449: warning: The following parameters of cldnn_create_engine(int32_t type, uint32_t engine_num, const cldnn_engine_configuration *configuration, cldnn_status *status) are not documented:
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:603: warning: unable to resolve reference to `memory' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:609: warning: unable to resolve reference to `event' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:488: warning: The following parameters of cldnn_add_event_handler(cldnn_event event, cldnn_event_handler handler, void *param, cldnn_status *status) are not documented:
+  parameter 'event'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:526: warning: The following parameters of cldnn_allocate_network(cldnn_program program, cldnn_status *status) are not documented:
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:522: warning: The following parameters of cldnn_build_network(cldnn_engine engine, cldnn_topology topology, cldnn_build_option *options, size_t options_num, cldnn_status *status) are not documented:
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:592: warning: Found unknown command `\params'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:592: warning: unable to resolve reference to `cldnn_events' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:593: warning: The following parameters of cldnn_execute_network(cldnn_network network, cldnn_event *dependencies, size_t deps_num, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'dependencies'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:494: warning: The following parameters of cldnn_get_event_profiling_info(cldnn_event event, cldnn_profiling_interval *profiling, size_t size, size_t *size_ret, cldnn_status *status) are not documented:
+  parameter 'event'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:578: warning: The following parameters of cldnn_get_network_all_primitive_names(cldnn_network network, char *names, size_t size, size_t *size_ret, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:586: warning: The following parameters of cldnn_get_network_all_primitive_org_names(cldnn_network network, char *names, size_t size, size_t *size_ret, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:570: warning: The following parameters of cldnn_get_network_executed_primitive_names(cldnn_network network, char *names, size_t size, size_t *size_ret, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:601: warning: The following parameters of cldnn_get_network_output(cldnn_network network, const char *name, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:609: warning: unable to resolve reference to `event' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:613: warning: The following parameters of cldnn_get_network_output_event(cldnn_network network, const char *name, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:603: warning: unable to resolve reference to `memory' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:607: warning: The following parameters of cldnn_get_network_output_memory(cldnn_network network, const char *name, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:562: warning: The following parameters of cldnn_get_network_output_names(cldnn_network network, char *names, size_t size, size_t *size_ret, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:548: warning: The following parameters of cldnn_get_primitive_info(cldnn_network network, cldnn_primitive_id id, char *info, size_t size, size_t *size_ret, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:539: warning: The following parameters of cldnn_set_network_input(cldnn_network network, cldnn_primitive_id id, cldnn_memory mem, cldnn_status *status) are not documented:
+  parameter 'network'
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:70: warning: Member CLDNN_SUCCESS (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:71: warning: Member CLDNN_ERROR (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:72: warning: Member CLDNN_INVALID_ARG (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:73: warning: Member CLDNN_OUT_OF_RESOURCES (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:74: warning: Member CLDNN_DEVICE_ERROR (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:75: warning: Member CLDNN_UNSUPPORTED_SIZE (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:76: warning: Member CLDNN_UNSUPPORTED_FORMAT (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:77: warning: Member CLDNN_DIMENSION_MISMATCH (macro definition) of group c_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:412: warning: Member cldnn_get_version(cldnn_status *status) (function) of group c_version is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:212: warning: Member CLDNN_THROW(msg, status) (macro definition) of group cpp_error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:188: warning: Member status_t (typedef) of namespace cldnn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:215: warning: Member check_status(std::string err_msg, std::function< T(status_t *)> func) (function) of namespace cldnn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:225: warning: Member check_status< void >(std::string err_msg, std::function< void(status_t *)> func) (function) of namespace cldnn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:238: warning: Member version_t (typedef) of namespace cldnn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:40: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:49: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:212: warning: Member batch(InitTys &&... inits) (function) of namespace cldnn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:218: warning: Member feature(InitTys &&... inits) (function) of namespace cldnn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:224: warning: Member spatial(InitTys &&... inits) (function) of namespace cldnn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:204: warning: Member init_tensor_values(cldnn::tensor &t) (function) of class cldnn::details::dim_vec_kind_init is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:40: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:49: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:228: warning: Member CLDNN_DEFINE_TYPE_ID(PType) (macro definition) of group cpp_topology is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:236: warning: Member CLDNN_DECLATE_PRIMITIVE(PType) (macro definition) of group cpp_topology is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/eltwise.h:48: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/upsampling.h:43: warning: unable to resolve reference to `activation' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/proposal.h:33: warning: Member CLDNN_ROI_VECTOR_SIZE (macro definition) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/concatenation.h:34: warning: Member cldnn_concatenation_axis (enumeration) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/lrn.h:34: warning: Member cldnn_lrn_norm_region (enumeration) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/activation.h:56: warning: Member cldnn_activation_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/batch_norm.h:51: warning: Member cldnn_batch_norm_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/concatenation.h:66: warning: Member cldnn_concatenation_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/convolution.h:61: warning: Member cldnn_convolution_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/crop.h:56: warning: Member cldnn_crop_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/custom_gpu_primitive.h:60: warning: Member cldnn_custom_gpu_primitive_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/data.h:44: warning: Member cldnn_data_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/deconvolution.h:57: warning: Member cldnn_deconvolution_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/detection_output.h:67: warning: Member cldnn_detection_output_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/eltwise.h:60: warning: Member cldnn_eltwise_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/fully_connected.h:46: warning: Member cldnn_fully_connected_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/input_layout.h:44: warning: Member cldnn_input_layout_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/lrn.h:63: warning: Member cldnn_lrn_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/normalize.h:60: warning: Member cldnn_normalize_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/permute.h:46: warning: Member cldnn_permute_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/pooling.h:61: warning: Member cldnn_pooling_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/prior_box.h:60: warning: Member cldnn_prior_box_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/proposal.h:46: warning: Member cldnn_proposal_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/reorder.h:48: warning: Member cldnn_reorder_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/reshape.h:42: warning: Member cldnn_reshape_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/roi_pooling.h:49: warning: Member cldnn_roi_pooling_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/scale.h:51: warning: Member cldnn_scale_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/softmax.h:62: warning: Member cldnn_softmax_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/split.h:61: warning: Member cldnn_split_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/upsampling.h:57: warning: Member cldnn_upsampling_type_id(cldnn_status *status) (function) of group c_primitives is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/eltwise.h:48: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/upsampling.h:43: warning: unable to resolve reference to `activation' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/cldnn.h:505: warning: The following parameters of cldnn_build_program(cldnn_engine engine, cldnn_topology topology, cldnn_build_option *options, size_t options_num, cldnn_status *status) are not documented:
+  parameter 'status'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:46: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:33: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/detection_output.hpp:32: warning: unable to resolve reference to `detection' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:31: warning: unable to resolve reference to `eltwise' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/pooling.hpp:31: warning: unable to resolve reference to `pooling' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/upsampling.hpp:31: warning: unable to resolve reference to `upsampling' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/activation.hpp:41: warning: Member dto (typedef) of class cldnn::activation is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/activation.hpp:41: warning: Member type_id() (function) of class cldnn::activation is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/activation.hpp:104: warning: Member get_dependencies() const override (function) of class cldnn::activation is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/activation.hpp:111: warning: Member update_dto(dto &dto) const override (function) of class cldnn::activation is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< activation, cldnn_activation_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_activation_desc *dto) (function) of class primitive_base< activation, cldnn_activation_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/activation.hpp:48: warning: The following parameters of cldnn::activation::activation(const primitive_id &id, const primitive_id &input, cldnn_activation_func activation_func, cldnn_activation_additional_params additional_params={ 0.f, 0.f }, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/activation.hpp:68: warning: The following parameters of cldnn::activation::activation(const primitive_id &id, const primitive_id &input, const primitive_id &additional_params_input, cldnn_activation_func activation_func, const padding &output_padding=padding()) are not documented:
+  parameter 'activation_func'
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/batch_norm.hpp:42: warning: Member dto (typedef) of class cldnn::batch_norm is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/batch_norm.hpp:42: warning: Member type_id() (function) of class cldnn::batch_norm is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/batch_norm.hpp:82: warning: Member get_dependencies() const override (function) of class cldnn::batch_norm is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/batch_norm.hpp:84: warning: Member update_dto(dto &dto) const override (function) of class cldnn::batch_norm is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< batch_norm, cldnn_batch_norm_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_batch_norm_desc *dto) (function) of class primitive_base< batch_norm, cldnn_batch_norm_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/batch_norm.hpp:50: warning: The following parameters of cldnn::batch_norm::batch_norm(const primitive_id &id, const primitive_id &input, const primitive_id &mean, const primitive_id &variance, float epsilon, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:255: warning: Member directory_path (variable) of class cldnn::build_option_directory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:257: warning: argument 'outs' of command @param is not found in the argument list of cldnn::build_option_directory< OptType >::build_option_directory(const std::string &dir_path)
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:259: warning: The following parameters of cldnn::build_option_directory::build_option_directory(const std::string &dir_path) are not documented:
+  parameter 'dir_path'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:423: warning: explicit link request to 'cldnn_build_options' could not be resolved
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/concatenation.hpp:58: warning: Member concatenation_axis (enumeration) of class cldnn::concatenation is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/concatenation.hpp:55: warning: Member dto (typedef) of class cldnn::concatenation is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/concatenation.hpp:79: warning: Found unknown command `\CLDNN_PRIMITIVE_DESC'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/concatenation.hpp:55: warning: Member type_id() (function) of class cldnn::concatenation is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< concatenation, cldnn_concatenation_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_concatenation_desc *dto) (function) of class primitive_base< concatenation, cldnn_concatenation_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/concatenation.hpp:34: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/concatenation.hpp:69: warning: The following parameters of cldnn::concatenation::concatenation(const primitive_id &id, const std::vector< primitive_id > &input, const concatenation_axis axis, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:36: warning: Member dto (typedef) of class cldnn::convolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:36: warning: Member type_id() (function) of class cldnn::convolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:305: warning: Member get_dependencies() const override (function) of class cldnn::convolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:317: warning: Member update_dto(dto &dto) const override (function) of class cldnn::convolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< convolution, cldnn_convolution_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_convolution_desc *dto) (function) of class primitive_base< convolution, cldnn_convolution_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:302: warning: Member _weights (variable) of class cldnn::convolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:303: warning: Member _bias (variable) of class cldnn::convolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:50: warning: The following parameters of cldnn::convolution::convolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, const std::vector< primitive_id > &bias, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, tensor dilation={ 1, 1, 1, 1 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:89: warning: The following parameters of cldnn::convolution::convolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, tensor dilation={ 1, 1, 1, 1 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:127: warning: The following parameters of cldnn::convolution::convolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, const std::vector< primitive_id > &bias, tensor stride, tensor input_offset, tensor dilation, bool with_activation, float activation_slp, tensor output_size, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:169: warning: The following parameters of cldnn::convolution::convolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, tensor stride, tensor input_offset, tensor dilation, bool with_activation, float activation_slp, tensor output_size, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:229: warning: The following parameters of cldnn::convolution::create_with_output_size(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, const std::vector< primitive_id > &bias, tensor output_size, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, tensor dilation={ 1, 1, 1, 1 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/convolution.hpp:260: warning: The following parameters of cldnn::convolution::create_with_output_size(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, tensor output_size, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, tensor dilation={ 1, 1, 1, 1 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/crop.hpp:49: warning: Member dto (typedef) of class cldnn::crop is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/crop.hpp:49: warning: Member type_id() (function) of class cldnn::crop is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/crop.hpp:83: warning: Member update_dto(dto &dto) const override (function) of class cldnn::crop is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< crop, cldnn_crop_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_crop_desc *dto) (function) of class primitive_base< crop, cldnn_crop_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/crop.hpp:56: warning: The following parameters of cldnn::crop::crop(const primitive_id &id, const primitive_id &input, const tensor &reference_input, const tensor &offsets, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/custom_gpu_primitive.hpp:37: warning: Member dto (typedef) of class cldnn::custom_gpu_primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/custom_gpu_primitive.hpp:37: warning: Member type_id() (function) of class cldnn::custom_gpu_primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/custom_gpu_primitive.hpp:105: warning: Member update_dto(dto &dto) const override (function) of class cldnn::custom_gpu_primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< custom_gpu_primitive, cldnn_custom_gpu_primitive_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_custom_gpu_primitive_desc *dto) (function) of class primitive_base< custom_gpu_primitive, cldnn_custom_gpu_primitive_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/custom_gpu_primitive.hpp:103: warning: Member _kernels_code (variable) of class cldnn::custom_gpu_primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/data.hpp:38: warning: Member dto (typedef) of class cldnn::data is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/data.hpp:38: warning: Member type_id() (function) of class cldnn::data is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/data.hpp:62: warning: Member update_dto(dto &dto) const override (function) of class cldnn::data is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< data, cldnn_data_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_data_desc *dto) (function) of class primitive_base< data, cldnn_data_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:61: warning: Member size_of(data_types data_type) (function) of class cldnn::data_type_traits is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:66: warning: Member is_floating_point(data_types data_type) (function) of class cldnn::data_type_traits is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:71: warning: Member align_of(data_types data_type) (function) of class cldnn::data_type_traits is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:85: warning: Member name(data_types data_type) (function) of class cldnn::data_type_traits is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:36: warning: Member dto (typedef) of class cldnn::deconvolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:36: warning: Member type_id() (function) of class cldnn::deconvolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:268: warning: Member get_dependencies() const override (function) of class cldnn::deconvolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:280: warning: Member update_dto(dto &dto) const override (function) of class cldnn::deconvolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< deconvolution, cldnn_deconvolution_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_deconvolution_desc *dto) (function) of class primitive_base< deconvolution, cldnn_deconvolution_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:265: warning: Member _weights (variable) of class cldnn::deconvolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:266: warning: Member _bias (variable) of class cldnn::deconvolution is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:47: warning: The following parameters of cldnn::deconvolution::deconvolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, const std::vector< primitive_id > &bias, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:79: warning: The following parameters of cldnn::deconvolution::deconvolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:112: warning: The following parameters of cldnn::deconvolution::deconvolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, const std::vector< primitive_id > &bias, tensor stride, tensor input_offset, bool with_activation, float activation_slp, tensor output_size, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:147: warning: The following parameters of cldnn::deconvolution::deconvolution(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, tensor stride, tensor input_offset, bool with_activation, float activation_slp, tensor output_size, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:201: warning: The following parameters of cldnn::deconvolution::create_with_output_size(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, const std::vector< primitive_id > &bias, tensor output_size, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/deconvolution.hpp:228: warning: The following parameters of cldnn::deconvolution::create_with_output_size(const primitive_id &id, const primitive_id &input, const std::vector< primitive_id > &weights, tensor output_size, tensor stride={ 1, 1, 1, 1 }, tensor input_offset={ 0, 0, 0, 0 }, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/detection_output.hpp:45: warning: Member dto (typedef) of class cldnn::detection_output is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/detection_output.hpp:45: warning: Member type_id() (function) of class cldnn::detection_output is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/detection_output.hpp:129: warning: Member update_dto(dto &dto) const override (function) of class cldnn::detection_output is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< detection_output, cldnn_detection_output_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_detection_output_desc *dto) (function) of class primitive_base< detection_output, cldnn_detection_output_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/detection_output.hpp:62: warning: The following parameters of cldnn::detection_output::detection_output(const primitive_id &id, const primitive_id &input_location, const primitive_id &input_confidence, const primitive_id &input_prior_box, const uint32_t num_classes, const uint32_t keep_top_k, const bool share_location=true, const int background_label_id=0, const float nms_threshold=0.3, const int top_k=-1, const float eta=1.f, const prior_box_code_type code_type=prior_box_code_type::corner, const bool variance_encoded_in_target=false, const float confidence_threshold=-std::numeric_limits< float >::max(), const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:46: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:51: warning: Member dto (typedef) of class cldnn::eltwise is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:51: warning: Member type_id() (function) of class cldnn::eltwise is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:95: warning: Member update_dto(dto &dto) const override (function) of class cldnn::eltwise is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< eltwise, cldnn_eltwise_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_eltwise_desc *dto) (function) of class primitive_base< eltwise, cldnn_eltwise_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:46: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:60: warning: The following parameters of cldnn::eltwise::eltwise(const primitive_id &id, const primitive_id &input, const primitive_id &input2, eltwise_mode mode, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/engine.hpp:130: warning: Member engine(const engine &other) (function) of class cldnn::engine is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/engine.hpp:135: warning: Member operator=(const engine &other) (function) of class cldnn::engine is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/engine.hpp:149: warning: Member operator==(const engine &lhs, const engine &rhs) (friend) of class cldnn::engine is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/engine.hpp:150: warning: Member operator!=(const engine &lhs, const engine &rhs) (friend) of class cldnn::engine is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/engine.hpp:76: warning: Member engine_configuration(const cldnn_engine_configuration &c_conf) (function) of class cldnn::engine_configuration is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/engine.hpp:55: warning: The following parameters of cldnn::engine_configuration::engine_configuration(bool profiling=false, bool decorate_kernel_names=false, bool dump_custom_program=false, const std::string &options=std::string(), const std::string &single_kernel=std::string(), bool primitives_parallelisation=false, const std::string &engine_log=std::string(), const std::string &sources_dumps_dir=std::string(), uint32_t priority_mode=0) are not documented:
+  parameter 'primitives_parallelisation'
+  parameter 'engine_log'
+  parameter 'sources_dumps_dir'
+  parameter 'priority_mode'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:194: warning: Member error(const std::string &_Message, status_t status=CLDNN_ERROR) (function) of class cldnn::error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:200: warning: Member error(const char *_Message, status_t status=CLDNN_ERROR) (function) of class cldnn::error is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/event.hpp:49: warning: Member event(const event &other) (function) of class cldnn::event is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/event.hpp:54: warning: Member operator=(const event &other) (function) of class cldnn::event is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/event.hpp:68: warning: Member operator==(const event &lhs, const event &rhs) (friend) of class cldnn::event is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/event.hpp:69: warning: Member operator!=(const event &lhs, const event &rhs) (friend) of class cldnn::event is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:78: warning: Member type (enumeration) of class cldnn::format is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:138: warning: Member value (variable) of class cldnn::format is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:33: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:55: warning: Member dto (typedef) of class cldnn::fully_connected is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:55: warning: Member type_id() (function) of class cldnn::fully_connected is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:101: warning: Member get_dependencies() const override (function) of class cldnn::fully_connected is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:109: warning: Member update_dto(dto &dto) const override (function) of class cldnn::fully_connected is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< fully_connected, cldnn_fully_connected_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_fully_connected_desc *dto) (function) of class primitive_base< fully_connected, cldnn_fully_connected_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:33: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:39: warning: Invalid caption id `multi_row'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:64: warning: The following parameters of cldnn::fully_connected::fully_connected(const primitive_id &id, const primitive_id &input, const primitive_id &weights, const primitive_id &bias="", bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:151: warning: Member half_impl(T data) (function) of class cldnn::half_impl is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:153: warning: Member operator uint16_t() const (function) of class cldnn::half_impl is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:154: warning: Member operator float() const (function) of class cldnn::half_impl is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/cldnn_defs.h:162: warning: Member half_impl(float value) (function) of class cldnn::half_impl is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/input_layout.hpp:41: warning: Member dto (typedef) of class cldnn::input_layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/input_layout.hpp:41: warning: Member type_id() (function) of class cldnn::input_layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< input_layout, cldnn_input_layout_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_input_layout_desc *dto) (function) of class primitive_base< input_layout, cldnn_input_layout_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:247: warning: Member layout(const layout &other)=default (function) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:249: warning: Member operator=(const layout &other) (function) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:293: warning: Member get_pitches() const (function) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:303: warning: Member get_linear_offset(tensor element={ 0, 0, 0, 0 }) const (function) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:381: warning: Member has_fused_format(data_types const &dt, cldnn::format const &fmt) const (function) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:386: warning: Member fused_format() const -> decltype(fuse(data_type, format)) (function) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:366: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:260: warning: Member operator==(const layout &lhs, const layout &rhs) (friend) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:268: warning: Member operator!=(const layout &lhs, const layout &rhs) (friend) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:273: warning: Member operator<(const layout &lhs, const layout &rhs) (friend) of class cldnn::layout is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/lrn.hpp:44: warning: Member dto (typedef) of class cldnn::lrn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/lrn.hpp:72: warning: unable to resolve reference to `cldnn_normalization_desc' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/lrn.hpp:44: warning: Member type_id() (function) of class cldnn::lrn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/lrn.hpp:94: warning: Member update_dto(dto &dto) const override (function) of class cldnn::lrn is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< lrn, cldnn_lrn_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_lrn_desc *dto) (function) of class primitive_base< lrn, cldnn_lrn_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/lrn.hpp:54: warning: The following parameters of cldnn::lrn::lrn(const primitive_id &id, const primitive_id &input, uint32_t size, float k, float alpha, float beta, cldnn_lrn_norm_region lrn_norm_region, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:80: warning: Member memory(const memory &other) (function) of class cldnn::memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:87: warning: Member operator=(const memory &other) (function) of class cldnn::memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:126: warning: Member is_the_same_buffer(const memory &other) const (function) of class cldnn::memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:136: warning: Member pointer() const (function) of class cldnn::memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:104: warning: Member operator==(const memory &lhs, const memory &rhs) (friend) of class cldnn::memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:105: warning: Member operator!=(const memory &lhs, const memory &rhs) (friend) of class cldnn::memory is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:65: warning: The following parameters of cldnn::memory::attach(const cldnn::layout &layout, T *ptr, size_t size) are not documented:
+  parameter 'layout'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/network.hpp:128: warning: Member get_primitive_info(const primitive_id &id) const (function) of class cldnn::network is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/network.hpp:106: warning: Member operator==(const network &lhs, const network &rhs) (friend) of class cldnn::network is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/network.hpp:107: warning: Member operator!=(const network &lhs, const network &rhs) (friend) of class cldnn::network is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/normalize.hpp:49: warning: Member dto (typedef) of class cldnn::normalize is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/normalize.hpp:49: warning: Member type_id() (function) of class cldnn::normalize is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/normalize.hpp:92: warning: Member get_dependencies() const override (function) of class cldnn::normalize is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/normalize.hpp:97: warning: Member update_dto(dto &dto) const override (function) of class cldnn::normalize is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< normalize, cldnn_normalize_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_normalize_desc *dto) (function) of class primitive_base< normalize, cldnn_normalize_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/normalize.hpp:59: warning: The following parameters of cldnn::normalize::normalize(const primitive_id &id, const primitive_id &input, const primitive_id &scale_input, const bool across_spatial=true, const float epsilon=1e-10f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:197: warning: Member max(padding const &lhs, padding const &rhs, float filling_value=0.0f) (function) of class cldnn::padding is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:176: warning: Member operator==(const padding &lhs, const padding &rhs) (friend) of class cldnn::padding is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:183: warning: Member operator!=(const padding &lhs, const padding &rhs) (friend) of class cldnn::padding is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:188: warning: Member operator<(const padding &lhs, const padding &rhs) (friend) of class cldnn::padding is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/permute.hpp:41: warning: Member dto (typedef) of class cldnn::permute is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/permute.hpp:41: warning: Member type_id() (function) of class cldnn::permute is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/permute.hpp:69: warning: Member update_dto(dto &dto) const override (function) of class cldnn::permute is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< permute, cldnn_permute_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_permute_desc *dto) (function) of class primitive_base< permute, cldnn_permute_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/permute.hpp:47: warning: The following parameters of cldnn::permute::permute(const primitive_id &id, const primitive_id &input, const std::vector< uint16_t > &permute_order={}, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:247: warning: Member iterator (typedef) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:248: warning: Member const_iterator (typedef) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:249: warning: Member begin() & (function) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:250: warning: Member end() & (function) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:251: warning: Member begin() const & (function) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:252: warning: Member end() const & (function) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:267: warning: Member operator==(const pointer &lhs, const pointer &rhs) (friend) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:268: warning: Member operator!=(const pointer &lhs, const pointer &rhs) (friend) of class cldnn::pointer is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/pooling.hpp:46: warning: Member dto (typedef) of class cldnn::pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/pooling.hpp:46: warning: Member type_id() (function) of class cldnn::pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/pooling.hpp:144: warning: Member update_dto(dto &dto) const override (function) of class cldnn::pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< pooling, cldnn_pooling_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_pooling_desc *dto) (function) of class primitive_base< pooling, cldnn_pooling_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/pooling.hpp:54: warning: The following parameters of cldnn::pooling::pooling(const primitive_id &id, const primitive_id &input, pooling_mode mode, const tensor &size, const tensor &stride, const tensor &input_offset={ 0, 0, 0, 0 }, const padding &output_padding=padding()) are not documented:
+  parameter 'input_offset'
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/pooling.hpp:78: warning: The following parameters of cldnn::pooling::pooling(const primitive_id &id, const primitive_id &input, pooling_mode mode, const tensor &size, const tensor &stride, const tensor &input_offset, tensor output_size, const padding &output_padding=padding()) are not documented:
+  parameter 'input_offset'
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/pooling.hpp:116: warning: The following parameters of cldnn::pooling::create_with_output_size(const primitive_id &id, const primitive_id &input, tensor output_size, pooling_mode mode, const tensor &size, const tensor &stride, const tensor &input_offset={ 0, 0, 0, 0 }, const padding &output_padding=padding()) are not documented:
+  parameter 'input_offset'
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:70: warning: Member fixed_size_vector_ref(std::vector< primitive_id > &ref) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:73: warning: Member size() const -> decltype(vref.size()) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:74: warning: Member begin() const -> decltype(vref.begin()) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:75: warning: Member end() const -> decltype(vref.end()) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:76: warning: Member cbegin() const -> decltype(vref.cbegin()) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:77: warning: Member cned() const -> decltype(vref.cend()) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:79: warning: Member operator[](size_t idx) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:80: warning: Member operator[](size_t idx) const (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:82: warning: Member at(size_t idx) (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:83: warning: Member at(size_t idx) const (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:85: warning: Member data() (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:86: warning: Member data() const (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:88: warning: Member ref() const (function) of class cldnn::primitive::fixed_size_vector_ref is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:154: warning: Member primitive_id_arr(std::vector< primitive_id > const &vec) (function) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:157: warning: Member primitive_id_arr(std::vector< primitive_id > &&vec) (function) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:161: warning: Member primitive_id_arr(cldnn_primitive_id_arr c_id_arr) (function) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:171: warning: Member ref() const -> decltype(cldnn_primitive_id_arr (function) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:174: warning: Member for(size_t i=0;i< cpp_ids.size();++i) c_ids[i] (function) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:180: warning: Member size() const (function) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:168: warning: Member cpp_ids (variable) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:169: warning: Member c_ids (variable) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:177: warning: Member cldnn_primitive_id_arr (variable) of class cldnn::primitive::primitive_id_arr is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive_base is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const DTO *dto) (function) of class cldnn::primitive_base is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/prior_box.hpp:40: warning: Member dto (typedef) of class cldnn::prior_box is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/prior_box.hpp:110: warning: unable to resolve reference to `cldnn_prior-box_desc' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/prior_box.hpp:40: warning: Member type_id() (function) of class cldnn::prior_box is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< prior_box, cldnn_prior_box_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_prior_box_desc *dto) (function) of class primitive_base< prior_box, cldnn_prior_box_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/prior_box.hpp:55: warning: The following parameters of cldnn::prior_box::prior_box(const primitive_id &id, const primitive_id &input, const tensor &img_size, const std::vector< float > &min_sizes, const std::vector< float > &max_sizes={}, const std::vector< float > &aspect_ratios={}, const bool flip=true, const bool clip=false, const std::vector< float > &variance={}, const float step_width=0.f, const float step_height=0.f, const float offset=0.5f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:36: warning: Member dto (typedef) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:38: warning: Member proposal(const primitive_id &id, const primitive_id &cls_scores, const primitive_id &bbox_pred, const primitive_id &image_info, int max_proposals, float iou_threshold, int min_bbox_size, int feature_stride, int pre_nms_topn, int post_nms_topn, const std::vector< float > &ratios_param, const std::vector< float > &scales_param, const padding &output_padding=padding()) (function) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:65: warning: Member proposal(const dto *dto) (function) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:36: warning: Member type_id() (function) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:78: warning: Member max_proposals (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:79: warning: Member iou_threshold (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:80: warning: Member min_bbox_size (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:81: warning: Member feature_stride (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:82: warning: Member pre_nms_topn (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:83: warning: Member post_nms_topn (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:84: warning: Member ratios (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:85: warning: Member scales (variable) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/proposal.hpp:88: warning: Member update_dto(dto &dto) const override (function) of class cldnn::proposal is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< proposal, cldnn_proposal_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_proposal_desc *dto) (function) of class primitive_base< proposal, cldnn_proposal_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:38: warning: Member dto (typedef) of class cldnn::reorder is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:38: warning: Member type_id() (function) of class cldnn::reorder is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:140: warning: Member get_dependencies() const override (function) of class cldnn::reorder is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:147: warning: Member update_dto(dto &dto) const override (function) of class cldnn::reorder is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< reorder, cldnn_reorder_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_reorder_desc *dto) (function) of class primitive_base< reorder, cldnn_reorder_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:78: warning: argument 'output_layout' of command @param is not found in the argument list of cldnn::reorder::reorder(const primitive_id &id, const primitive_id &input, format output_format, data_types output_data_type, const std::vector< float > &values_to_subtract={}, const padding &output_padding=padding())
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:83: warning: The following parameters of cldnn::reorder::reorder(const primitive_id &id, const primitive_id &input, format output_format, data_types output_data_type, const std::vector< float > &values_to_subtract={}, const padding &output_padding=padding()) are not documented:
+  parameter 'output_format'
+  parameter 'output_data_type'
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:99: warning: argument 'output_layout' of command @param is not found in the argument list of cldnn::reorder::reorder(const primitive_id &id, const primitive_id &input, format output_format, data_types output_data_type, primitive_id const &mean, const padding &output_padding=padding())
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reorder.hpp:104: warning: The following parameters of cldnn::reorder::reorder(const primitive_id &id, const primitive_id &input, format output_format, data_types output_data_type, primitive_id const &mean, const padding &output_padding=padding()) are not documented:
+  parameter 'output_format'
+  parameter 'output_data_type'
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reshape.hpp:37: warning: Member dto (typedef) of class cldnn::reshape is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reshape.hpp:37: warning: Member type_id() (function) of class cldnn::reshape is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/reshape.hpp:66: warning: Member update_dto(dto &dto) const override (function) of class cldnn::reshape is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< reshape, cldnn_reshape_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_reshape_desc *dto) (function) of class primitive_base< reshape, cldnn_reshape_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:35: warning: Member dto (typedef) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:37: warning: Member roi_pooling(const primitive_id &id, const primitive_id &input_data, const primitive_id &input_rois, pooling_mode mode, int pooled_width, int pooled_height, float spatial_scale, int group_sz=0, const padding &output_padding=padding()) (function) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:56: warning: Member roi_pooling(const dto *dto) (function) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:35: warning: Member type_id() (function) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:65: warning: Member mode (variable) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:66: warning: Member pooled_width (variable) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:67: warning: Member pooled_height (variable) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:68: warning: Member spatial_scale (variable) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:69: warning: Member group_sz (variable) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/roi_pooling.hpp:72: warning: Member update_dto(dto &dto) const override (function) of class cldnn::roi_pooling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< roi_pooling, cldnn_roi_pooling_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_roi_pooling_desc *dto) (function) of class primitive_base< roi_pooling, cldnn_roi_pooling_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/scale.hpp:46: warning: Member dto (typedef) of class cldnn::scale is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/scale.hpp:46: warning: Member type_id() (function) of class cldnn::scale is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/scale.hpp:93: warning: Member get_dependencies() const override (function) of class cldnn::scale is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/scale.hpp:101: warning: Member update_dto(dto &dto) const override (function) of class cldnn::scale is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< scale, cldnn_scale_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_scale_desc *dto) (function) of class primitive_base< scale, cldnn_scale_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/scale.hpp:52: warning: The following parameters of cldnn::scale::scale(const primitive_id &id, const primitive_id &input, const primitive_id &scale_input, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/scale.hpp:68: warning: The following parameters of cldnn::scale::scale(const primitive_id &id, const primitive_id &input, const primitive_id &scale_input, const primitive_id &bias, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/softmax.hpp:41: warning: Member dto (typedef) of class cldnn::softmax is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/softmax.hpp:41: warning: Member type_id() (function) of class cldnn::softmax is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< softmax, cldnn_softmax_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_softmax_desc *dto) (function) of class primitive_base< softmax, cldnn_softmax_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/softmax.hpp:56: warning: The following parameters of cldnn::softmax::softmax(const primitive_id &id, const primitive_id &input, const dimension_t dimension=normalize_fyx, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:53: warning: Member dto (typedef) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:53: warning: Member type_id() (function) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:92: warning: Member update_dto(dto &dto) const override (function) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< split, cldnn_split_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_split_desc *dto) (function) of class primitive_base< split, cldnn_split_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:98: warning: Member extract_primitive_vector(const std::vector< std::pair< primitive_id, tensor > > &stor) (function) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:107: warning: Member extract_tensor_vector(const std::vector< std::pair< primitive_id, tensor > > &stor) (function) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:116: warning: Member tensor_arr_to_vector(const cldnn_tensor_arr &arr) (function) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:125: warning: Member tensor_arr_to_cldnn_vector(const cldnn_tensor_arr &arr) (function) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:134: warning: Member tensor_vector_to_cldnn_vector(const std::vector< tensor > &stor) (function) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:89: warning: Member _output_ids (variable) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:90: warning: Member _output_offsets (variable) of class cldnn::split is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/split.hpp:59: warning: The following parameters of cldnn::split::split(const primitive_id &id, const primitive_id &input, const std::vector< std::pair< primitive_id, tensor > > &output_ids_offsets, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:249: warning: Member tensor(value_type default_size=0) (function) of class cldnn::tensor is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:330: warning: Member tensor(format fmt, const std::vector< value_type > &sizes, value_type default_size=1) (function) of class cldnn::tensor is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:414: warning: Member to_string() const (function) of class cldnn::tensor is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:386: warning: Member operator==(const tensor &lhs, const tensor &rhs) (friend) of class cldnn::tensor is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:392: warning: Member operator!=(const tensor &lhs, const tensor &rhs) (friend) of class cldnn::tensor is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:397: warning: Member operator<(const tensor &lhs, const tensor &rhs) (friend) of class cldnn::tensor is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:408: warning: Member operator<<(std::ostream &os, const tensor &tensor) (friend) of class cldnn::tensor is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:612: warning: The following parameters of cldnn::tensor::get_linear_offset(const tensor &coord, cldnn::format fmt) const are not documented:
+  parameter 'fmt'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/topology.hpp:91: warning: Member get_primitive_ids() const (function) of class cldnn::topology is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/topology.hpp:70: warning: Member operator==(const topology &lhs, const topology &rhs) (friend) of class cldnn::topology is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/topology.hpp:71: warning: Member operator!=(const topology &lhs, const topology &rhs) (friend) of class cldnn::topology is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:79: warning: Member mode (variable) of class cldnn::tuning_config_options is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:80: warning: Member cache_file_path (variable) of class cldnn::tuning_config_options is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/upsampling.hpp:44: warning: Member dto (typedef) of class cldnn::upsampling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:91: warning: Member primitive(const primitive_type_id &type, const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/upsampling.hpp:44: warning: Member type_id() (function) of class cldnn::upsampling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/upsampling.hpp:96: warning: Member update_dto(dto &dto) const override (function) of class cldnn::upsampling is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:208: warning: Member primitive_base(const primitive_id &id, const std::vector< primitive_id > &input, const padding &output_padding=padding()) (function) of class primitive_base< upsampling, cldnn_upsampling_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:215: warning: Member primitive_base(const cldnn_upsampling_desc *dto) (function) of class primitive_base< upsampling, cldnn_upsampling_desc > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:185: warning: Member get_dependencies() const (function) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/primitive.hpp:183: warning: Member _input (variable) of class cldnn::primitive is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/upsampling.hpp:54: warning: The following parameters of cldnn::upsampling::upsampling(const primitive_id &id, const primitive_id &input, uint32_t scale, uint32_t num_filter, upsampling_sample_type sample_type, bool with_activation=false, float activation_slp=0.0f, const padding &output_padding=padding()) are not documented:
+  parameter 'output_padding'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:290: warning: unable to resolve reference to `build_option_type' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:290: warning: unable to resolve reference to `build_option_type' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:199: warning: Member dim_vec_kind_init(DimTys &&... values) (function) of class cldnn::details::dim_vec_kind_init is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:204: warning: Member init_tensor_values(cldnn::tensor &t) (function) of class cldnn::details::dim_vec_kind_init is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:206: warning: Member _sizes[_max_dimensionality] (variable) of class cldnn::details::dim_vec_kind_init is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:207: warning: Member _dimSize (variable) of class cldnn::details::dim_vec_kind_init is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:195: warning: Member _max_dimensionality (variable) of class cldnn::details::dim_vec_kind_init is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:196: warning: Member _dimOffset (variable) of class cldnn::details::dim_vec_kind_init is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:172: warning: Member max_dimentionality (variable) of class cldnn::details::dim_vec_limits< dim_vec_kind::batch > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:173: warning: Member dim_offset (variable) of class cldnn::details::dim_vec_limits< dim_vec_kind::batch > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:179: warning: Member max_dimentionality (variable) of class cldnn::details::dim_vec_limits< dim_vec_kind::feature > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:180: warning: Member dim_offset (variable) of class cldnn::details::dim_vec_limits< dim_vec_kind::feature > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:186: warning: Member max_dimentionality (variable) of class cldnn::details::dim_vec_limits< dim_vec_kind::spatial > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/tensor.hpp:187: warning: Member dim_offset (variable) of class cldnn::details::dim_vec_limits< dim_vec_kind::spatial > is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/memory.hpp:197: warning: Member convert(cldnn_memory c_mem) (function) of class cldnn::details::memory_c_to_cpp_converter is not documented.
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:290: warning: unable to resolve reference to `build_option_type' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:49: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:46: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:33: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:40: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/eltwise.h:48: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/upsampling.h:43: warning: unable to resolve reference to `activation' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/program.hpp:290: warning: unable to resolve reference to `build_option_type' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/eltwise.h:48: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/C/upsampling.h:43: warning: unable to resolve reference to `activation' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:49: warning: unable to resolve reference to `data_types' for \ref command
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/eltwise.hpp:46: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/fully_connected.hpp:33: warning: Found unknown command `\notes'
+C:/ML/MKL_DNN_master/master_no_branches_here/api/CPP/layout.hpp:40: warning: unable to resolve reference to `data_types' for \ref command

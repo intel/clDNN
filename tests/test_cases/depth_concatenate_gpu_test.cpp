@@ -163,6 +163,62 @@ TEST(depth_concatenate_f32_gpu, test02) {
     EXPECT_FLOAT_EQ(-0.2f, output_ptr[15]);
 }
 
+TEST(depth_concatenate_f32_gpu, test03_cascade_concat_opt) {
+    //  Test for cascade concatenation optimization.
+    //  Despite having concatenations one after another and connected to different non padded activation primitives,
+    //  graph should remove all concatenations from execution.
+
+    engine engine;
+    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1,2,2,1 } });
+
+    set_values(input1, { 16.0f, 32.0f, 128.0f, 256.0f });
+
+    topology topology;
+    topology.add(input_layout("input1", input1.get_layout()));
+    topology.add(activation("relu1", "input1", activation_relu));
+    topology.add(activation("relu2", "relu1", activation_sqrt));
+    topology.add(concatenation("depth1", { "relu2", "relu1" }, concatenation::along_f));
+    topology.add(activation("relu3", "depth1", activation_sqrt));
+    topology.add(concatenation("depth2", { "relu3", "depth1" }, concatenation::along_f));
+    topology.add(activation("relu4", "depth2", activation_sqrt));
+    topology.add(concatenation("depth3", { "relu4", "depth2" }, concatenation::along_f));
+    topology.add(activation("relu5", "depth3", activation_relu));
+
+    cldnn::build_options options;
+    options.set_option(cldnn::build_option::optimize_data(true));
+    network network(engine, topology, options);
+
+    network.set_input_data("input1", input1);
+
+    auto outputs = network.execute({});
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<float>();
+    auto executed_primitives = network.get_executed_primitives();
+
+    EXPECT_TRUE(executed_primitives.count("depth1") == 0);
+    EXPECT_TRUE(executed_primitives.count("depth2") == 0);
+    EXPECT_TRUE(executed_primitives.count("depth3") == 0);
+
+    EXPECT_NEAR(1.4142f, output_ptr[0], 1e-3);
+    EXPECT_NEAR(1.5422f, output_ptr[1], 1e-3);
+    EXPECT_NEAR(1.8340f, output_ptr[2], 1e-3);
+    EXPECT_NEAR(2.0f, output_ptr[3], 1e-3);
+    EXPECT_NEAR(2.0f, output_ptr[4], 1e-3);
+    EXPECT_NEAR(2.3784f, output_ptr[5], 1e-3);
+    EXPECT_NEAR(3.3635f, output_ptr[6], 1e-3);
+    EXPECT_NEAR(4.0f, output_ptr[7], 1e-3);
+    EXPECT_NEAR(2.0f, output_ptr[8], 1e-3);
+    EXPECT_NEAR(2.3784f, output_ptr[9], 1e-3);
+    EXPECT_NEAR(3.3635f, output_ptr[10], 1e-3);
+    EXPECT_NEAR(4.0f, output_ptr[11], 1e-3);
+    EXPECT_NEAR(4.0f, output_ptr[12], 1e-3);
+    EXPECT_NEAR(5.6568f, output_ptr[13], 1e-3);
+    EXPECT_NEAR(11.3137f, output_ptr[14], 1e-3);
+    EXPECT_NEAR(16.0f, output_ptr[15], 1e-3);
+
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
 //                      Exhaustive Negative Matrix tests                    //
@@ -270,7 +326,7 @@ public:
     {
         std::vector<tests::test_params*> all_generic_params;
 
-        for (cldnn::data_types dt : test_data_types)
+        for (cldnn::data_types dt : test_data_types())
         for (int32_t b : test_batch_sizes)
         for (tensor & t : test_input_sizes)
         {
@@ -464,12 +520,12 @@ private:
 std::vector<cldnn::primitive*> depth_concatenate_test::all_layer_params = {};
 std::vector<tests::test_params*> depth_concatenate_test::all_generic_params = {};
 
-TEST_P(depth_concatenate_test, DISABLED_TestAll)
+TEST_P(depth_concatenate_test, DEPTHCONCATENATE)
 {
     run_single_test();
 }
  
-INSTANTIATE_TEST_CASE_P(DEPTHCONCATENATE,
+INSTANTIATE_TEST_CASE_P(DISABLED_DEPTHCONCATENATE,
     depth_concatenate_test,
     ::testing::ValuesIn(depth_concatenate_test::generate_all_test_params()),
     depth_concatenate_test::custom_param_name);

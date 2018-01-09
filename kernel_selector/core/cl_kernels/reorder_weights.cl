@@ -30,6 +30,8 @@ inline uint FUNC(get_input_index)(uint o, uint i, uint y, uint x)
     return GET_FILTER_I_YXS_OS_YXSV2_OSV_INDEX(INPUT0, o, i, y, x, SUB_GROUP_SIZE);
 #elif defined INPUT0_LAYOUT_IY_XS_OS_XSV2_OSV16__AO32 || defined OUTPUT_LAYOUT_IY_XS_OS_XSV2_OSV8__AO32
     return GET_FILTER_IY_XS_OS_XSV2_OSV_INDEX(INPUT0, o, i, y, x, SUB_GROUP_SIZE);
+#elif defined INPUT0_LAYOUT_IMAGE_2D_WEIGHTS_C1_B_FYX
+    #error - not supported yet
 #else
 #error - not supported
 #endif
@@ -50,11 +52,29 @@ inline uint FUNC(get_output_index)(uint o, uint i, uint y, uint x)
     return GET_FILTER_I_YXS_OS_YXSV2_OSV_INDEX(OUTPUT, o, i, y, x, SUB_GROUP_SIZE);
 #elif defined OUTPUT_LAYOUT_IY_XS_OS_XSV2_OSV16__AO32 || defined OUTPUT_LAYOUT_IY_XS_OS_XSV2_OSV8__AO32
     return GET_FILTER_IY_XS_OS_XSV2_OSV_INDEX(OUTPUT, o, i, y, x, SUB_GROUP_SIZE);
+#elif defined OUTPUT_LAYOUT_IMAGE_2D_WEIGHTS_C1_B_FYX
+    return 0; //will not be used for images
 #else
 #error - not supported
 #endif
 }
 
+#if OUTPUT_LAYOUT_IMAGE_2D_WEIGHTS_C1_B_FYX
+KERNEL (reorder_weights)(const __global INPUT0_TYPE* input, write_only image2d_t output)
+{
+    const unsigned o = get_global_id(0);
+    const unsigned iyx = get_global_id(1);
+    const unsigned x = iyx % INPUT0_SIZE_X;
+    const unsigned y = (iyx / INPUT0_SIZE_X) % INPUT0_SIZE_Y;
+    const unsigned i = (iyx / INPUT0_SIZE_X) / INPUT0_SIZE_Y;
+    
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 4) input_val = (MAKE_VECTOR_TYPE(UNIT_TYPE, 4))(UNIT_VAL_ZERO, UNIT_VAL_ZERO, UNIT_VAL_ZERO, UNIT_VAL_ZERO);
+    const int2 coord = (int2)(o, iyx);
+    uint4 ir = FUNC_CALL(reshape_dims)(o,i,y,x, OUTPUT_SIZE_Y, OUTPUT_SIZE_X, INPUT0_SIZE_Y, INPUT0_SIZE_X, OUTPUT_DIMS, INPUT0_DIMS);
+    input_val.s0 = TO_OUTPUT_TYPE(input[FUNC_CALL(get_input_index)(ir[0],ir[1],ir[2],ir[3])]);
+    IMAGE_WRITE(output, coord, input_val);
+}
+#else
 KERNEL (reorder_weights)(const __global INPUT0_TYPE* input, __global OUTPUT_TYPE* output)
 {
     const unsigned o = get_global_id(0);
@@ -69,3 +89,4 @@ KERNEL (reorder_weights)(const __global INPUT0_TYPE* input, __global OUTPUT_TYPE
     uint4 ir = FUNC_CALL(reshape_dims)(o,i,y,x, OUTPUT_SIZE_Y, OUTPUT_SIZE_X, INPUT0_SIZE_Y, INPUT0_SIZE_X, OUTPUT_DIMS, INPUT0_DIMS);
     output[FUNC_CALL(get_output_index)(o, i, y, x)] = TO_OUTPUT_TYPE(input[FUNC_CALL(get_input_index)(ir[0],ir[1],ir[2],ir[3])]);
 }
+#endif

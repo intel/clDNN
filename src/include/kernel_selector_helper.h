@@ -30,6 +30,8 @@
 #include "fully_connected/fully_connected_kernel_selector.h"
 #include "activation/activation_kernel_selector.h"
 #include "softmax/softmax_kernel_selector.h"
+#include "region_yolo/region_yolo_kernel_selector.h"
+#include "reorg_yolo/reorg_yolo_kernel_selector.h"
 #include "eltwise/eltwise_kernel_selector.h"
 #include "reorder/reorder_kernel_selector.h"
 #include "permute/permute_kernel_selector.h"
@@ -88,6 +90,8 @@ namespace kernel_selector
     using fully_connected_params            = KernelSelector::FullyConnectedParams;
     using activation_params                 = KernelSelector::ActivationParams;
     using softmax_params                    = KernelSelector::SoftmaxParams;
+    using region_yolo_params                = KernelSelector::RegionYoloParams;
+    using reorg_yolo_params                 = KernelSelector::ReorgYoloParams;
     using eltwise_params                    = KernelSelector::EltwiseParams;
     using reorder_base_params               = KernelSelector::ReorderBaseParams;
     using permute_params                    = KernelSelector::PermuteParams;
@@ -109,6 +113,8 @@ namespace kernel_selector
     using fully_connected_optional_params   = KernelSelector::FullyConnectedOptionalParams;
     using activation_optional_params        = KernelSelector::ActivationOptionalParams;
     using softmax_optional_params           = KernelSelector::SoftmaxOptionalParams;
+    using region_yolo_optional_params       = KernelSelector::RegionYoloOptionalParams;
+    using reorg_yolo_optional_params        = KernelSelector::ReorgYoloOptionalParams;
     using eltwise_optional_params           = KernelSelector::EltwiseOptionalParams;
     using reorder_optional_params           = KernelSelector::ReorderOptionalParams;
     using concatenation_optional_params     = KernelSelector::ConcatenationOptionalParams;
@@ -123,6 +129,8 @@ namespace kernel_selector
     using fully_connected_kernel_selector   = KernelSelector::FullyConnectedKernelSelctor;
     using activation_kernel_selector        = KernelSelector::ActivationKernelSelctor;
     using softmax_kernel_selector           = KernelSelector::SoftmaxKernelSelctor;
+    using region_yolo_kernel_selector       = KernelSelector::RegionYoloKernelSelctor;
+    using reorg_yolo_kernel_selector        = KernelSelector::ReorgYoloKernelSelctor;
     using eltwise_kernel_selector           = KernelSelector::EltwiseKernelSelctor;
     using reorder_kernel_selector           = KernelSelector::ReorderKernelSelctor;
     using reshape_kernel_selector           = KernelSelector::ReshapeKernelSelctor;
@@ -196,6 +204,7 @@ inline kernel_selector::data_layout to_data_layout(format f)
     case format::bs_x_bsv16:        return kernel_selector::data_layout::bs_f_bsv16__af8;
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::data_layout::bs_f_bsv8__af8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::data_layout::bs_f_bsv16__af8;
+    case format::bf8_xy16:          return kernel_selector::data_layout::bf8_xy16;
     case format::winograd_2x3_s1_data:  return kernel_selector::data_layout::winograd_2x3_s1_data;
 //     case format::brfyx:          return kernel_selector::data_layout::brfyx;
     default:
@@ -215,6 +224,7 @@ static inline cldnn::format from_data_layout(kernel_selector::data_layout l)
     case kernel_selector::data_layout::fyxb:              return cldnn::format::fyxb;
     case kernel_selector::data_layout::bs_f_bsv8__af8:    return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::data_layout::bs_f_bsv16__af8:   return cldnn::format::bs_x_bsv16;
+    case kernel_selector::data_layout::bf8_xy16:          return cldnn::format::bf8_xy16;
     case kernel_selector::data_layout::brfyx:             return cldnn::format::bfyx;
     case kernel_selector::data_layout::winograd_2x3_s1_data:   return cldnn::format::winograd_2x3_s1_data;
     default:
@@ -235,13 +245,16 @@ inline kernel_selector::weights_layout to_weights_layout(format f)
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::weights_layout::os_i_osv8__ai8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::weights_layout::os_i_osv16__ai8;
     case format::bs_x_bsv16:        return kernel_selector::weights_layout::os_i_osv16;
-    case format::winograd_2x3_s1_weights:        return kernel_selector::weights_layout::winograd_2x3_s1_weights;
+    case format::image_2d_weights_c4_fyx_b:     return kernel_selector::weights_layout::image_2d_weights_c4_fyx_b;
+    case format::image_2d_weights_c1_b_fyx:     return kernel_selector::weights_layout::image_2d_weights_c1_b_fyx;
+    case format::winograd_2x3_s1_weights:       return kernel_selector::weights_layout::winograd_2x3_s1_weights;
+    case format::winograd_2x3_s1_fused_weights: return kernel_selector::weights_layout::winograd_2x3_s1_fused_weights;
     default:
         return kernel_selector::weights_layout::oi;
     }
 }
 
-static inline cldnn::format from_weights_layout(kernel_selector::weights_layout l)
+static inline cldnn::format::type from_weights_layout(kernel_selector::weights_layout l)
 {
     switch (l)
     {
@@ -255,7 +268,10 @@ static inline cldnn::format from_weights_layout(kernel_selector::weights_layout 
     case kernel_selector::weights_layout::os_i_osv16:         return cldnn::format::bs_x_bsv16;
     case kernel_selector::weights_layout::os_i_osv8__ai8:     return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::weights_layout::os_i_osv16__ai8:    return cldnn::format::bs_xs_xsv8_bsv16;
-    case kernel_selector::weights_layout::winograd_2x3_s1_weights:    return cldnn::format::winograd_2x3_s1_weights;
+    case kernel_selector::weights_layout::image_2d_weights_c4_fyx_b:        return cldnn::format::image_2d_weights_c4_fyx_b;
+    case kernel_selector::weights_layout::image_2d_weights_c1_b_fyx:        return cldnn::format::image_2d_weights_c1_b_fyx;
+    case kernel_selector::weights_layout::winograd_2x3_s1_weights:          return cldnn::format::winograd_2x3_s1_weights;
+    case kernel_selector::weights_layout::winograd_2x3_s1_fused_weights:    return cldnn::format::winograd_2x3_s1_fused_weights;
     default:
         return cldnn::format::bfyx;
     }

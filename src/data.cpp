@@ -34,7 +34,7 @@ namespace {
         if (mem.is_allocated_by(engine))
             return &mem;
 
-        memory_impl::ptr result = engine.allocate_buffer(mem.get_layout());
+        memory_impl::ptr result = engine.allocate_memory(mem.get_layout());
         mem_lock<char> src(mem);
         mem_lock<char> dst(result);
         std::copy(src.begin(), src.end(), dst.begin());

@@ -112,10 +112,10 @@ protected:
             switch (layout.data_type)
             {
             case cldnn::data_types::f32:
-                tests::set_random_values<float>(mem_primitive, -1.0f, 1.0f);
+                tests::set_random_values<float>(mem_primitive, true, 10, 1);
                 break;
             case cldnn::data_types::f16:
-                tests::set_random_values<FLOAT16>(mem_primitive, -1.0f, 1.0f);
+                tests::set_random_values<FLOAT16>(mem_primitive, true, 4, 1);
                 break;
             default:
                 assert(0);
@@ -467,7 +467,7 @@ std::vector<topology_test::topology_generator::topology_layer_type*> topology_te
 };
 const cldnn::primitive_id topology_test::topology_generator::output_layer_id("tg_output_layer");
 
-TEST_P(topology_test, DISABLED_random_topology)
+TEST_P(topology_test, TOPOLOGY)
 {
      try
      {
@@ -484,7 +484,7 @@ TEST_P(topology_test, DISABLED_random_topology)
      }
 }
 
-INSTANTIATE_TEST_CASE_P(TOPOLOGY,
+INSTANTIATE_TEST_CASE_P(DISABLED_TOPOLOGY,
     topology_test,
     ::testing::Combine( ::testing::ValuesIn(topology_test::generate_all_output_layouts()),
                         ::testing::ValuesIn(topology_test::all_generator_vectors<3>())),

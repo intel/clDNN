@@ -24,9 +24,11 @@
 #include <iostream>
 #include <limits>
 #include <random>
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <api/CPP/primitive.hpp>
 #include "float16.h"
+#include "random_gen.h"
 #include "api/CPP/concatenation.hpp"
 #include "api/CPP/lrn.hpp"
 #include "api/CPP/roi_pooling.hpp"
@@ -41,7 +43,7 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 namespace tests {
-
+    const std::string graph_dump_dir = "graph_dumps/" + std::to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 #define USE_RANDOM_SEED 0
 #if USE_RANDOM_SEED
     std::random_device rnd_device;
@@ -99,6 +101,7 @@ std::vector<T> generate_random_1d(size_t a, int min, int max, int k = 8) {
     // 1/k is the resolution of the floating point numbers
     std::uniform_int_distribution<int> distribution(k * min, k * max);
     std::vector<T> v(a);
+
     for (size_t i = 0; i < a; ++i) {
         v[i] = (T)distribution(generator);
         v[i] /= k;
@@ -162,38 +165,41 @@ void set_values(const cldnn::memory& mem, std::vector<T> args) {
 }
 
 template<typename T>
-void set_random_values(const cldnn::memory& mem, float min, float max) 
+void set_values_per_batch_and_feature(const cldnn::memory& mem, const cldnn::layout& layout, std::vector<T> args)
+{
+    auto mem_ptr = mem.pointer<T>();
+    auto&& pitches = mem.get_layout().get_pitches();
+    auto&& size = mem.get_layout().size;
+    for (cldnn::tensor::value_type b = 0; b < size.batch[0]; ++b)
+    {
+        for (cldnn::tensor::value_type f = 0; f < size.feature[0]; ++f)
+        {
+            for (cldnn::tensor::value_type y = 0; y < size.spatial[1]; ++y)
+            {
+                for (cldnn::tensor::value_type x = 0; x < size.spatial[0]; ++x)
+                {
+                    unsigned int input_it = b*pitches.batch[0] + f*pitches.feature[0] + y*pitches.spatial[1] + x*pitches.spatial[0];
+                    mem_ptr[input_it] = args[b*size.feature[0] + f];
+                }
+            }
+        }
+    }
+
+
+}
+
+template<typename T>
+void set_random_values(const cldnn::memory& mem, bool sign = false, unsigned significand_bit = 8, unsigned scale = 1)
 {
     auto ptr = mem.pointer<T>();
 
-    std::default_random_engine generator(1);
-    std::uniform_real_distribution<float> distribution(min, max);
-
+    std::mt19937 gen;
     for (auto it = ptr.begin(); it != ptr.end(); ++it)
-    {
-        *it = distribution(generator);
+    {   
+        *it = rnd_generators::gen_number<T>(gen, significand_bit, sign, false, scale);
     }
 }
 
-// todo remove
-// [[deprecated]]
-template <typename T>
-bool values_comparison(T first, T second, T threshold) {
-
-    if (first == second) return true;
-
-    auto abs_first = std::abs(first);
-    auto abs_second = std::abs(second);
-    auto delta = std::abs(abs_first - abs_second);
-
-    if (abs_first == 0 || abs_second == 0 || delta < std::numeric_limits<T>::min()) {
-        if (delta > threshold)
-            return false;
-    } else if ((delta / abs_first) > threshold)
-        return false;
-
-    return true;
-}
 
 // Checks equality of floats.
 // For values less than absoulte_error_limit, absolute error will be counted
@@ -294,6 +300,16 @@ struct memory_desc
     size_t offset;
 };
 
+struct test_dump
+{
+    const std::string create_dump_graph_dir(std::string& str_err) const;
+    const std::string name() const;
+    const std::string test_case_name() const;
+private:
+    const std::string test_case_name_str = ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name();
+    const std::string name_str = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+};
+
 class generic_test : public ::testing::TestWithParam<std::tuple<test_params*, cldnn::primitive*>>
 {
 
@@ -312,6 +328,8 @@ public:
 
     static std::vector<test_params*> generate_generic_test_params(std::vector<test_params*>& all_generic_params);
 
+    static void dump_graph(const std::string test_name, cldnn::build_options& bo);
+
     virtual bool is_format_supported(cldnn::format format) = 0;
 
     virtual cldnn::tensor get_expected_output_tensor();
@@ -325,8 +343,12 @@ public:
 protected:
     cldnn::engine engine;
     test_params* generic_params;
+    test_dump test_info;
     cldnn::primitive* layer_params;
     int max_ulps_diff_allowed; //Max number of ulps allowed between 2 values when comparing the output buffer and the reference buffer.
+    bool random_values; // if set memory buffers will be filled with random values
+    bool dump_graphs; // if set tests will dump graphs to file   
+    bool dump_memory; // if set memory buffers will be dumped to file
     virtual cldnn::memory generate_reference(const std::vector<cldnn::memory>& inputs) = 0;
     // Allows the test to override the random input data that the framework generates
 
@@ -335,7 +357,7 @@ protected:
         inputs = inputs;
     }
    
-    static std::vector<cldnn::data_types> test_data_types;
+    static std::vector<cldnn::data_types> test_data_types();
     static std::vector<cldnn::format> test_input_formats;
     static std::vector<cldnn::format> test_weight_formats;
     static std::vector<int32_t> test_batch_sizes;

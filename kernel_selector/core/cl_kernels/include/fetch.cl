@@ -41,6 +41,27 @@
         ((b) / (sub_group_size))*CAT(prefix, _BATCH_PITCH)              \
     )
 
+inline uint FUNC(get_bf8_xy16_index)(uint b, uint f, uint y, uint x, uint x_size, uint y_size, uint f_size, uint offset)
+{
+    const uint xy_idx = x + y * x_size;
+    const uint xy_offset = (xy_idx % 16) + (xy_idx / 16) * 16 * 8;
+    const uint xy_block_num = (x_size * y_size + 16 - 1) / 16;
+    const uint f_offset = (f % 8) * 16 + (f / 8) * xy_block_num * 16 * 8;
+    const uint f_block_num = (f_size + 8 - 1) / 8;
+    const uint b_offset = b * f_block_num * xy_block_num * 128;
+
+    const size_t idx = offset + xy_offset + f_offset + b_offset;
+
+    return idx;
+}
+
+#define GET_DATA_BF8_XY16_INDEX(prefix, b, f, y, x)     \
+    FUNC_CALL(get_bf8_xy16_index)(                      \
+        b, f, y, x, CAT(prefix, _SIZE_X ),              \
+        CAT(prefix, _SIZE_Y),                           \
+        CAT(prefix, _FEATURE_NUM),                      \
+        CAT(prefix, _OFFSET))
+
 #define GET_FILTER_INDEX(prefix, o, i, y, x)    \
     CAT(prefix, _OFFSET) +                      \
     (x)*CAT(prefix, _X_PITCH) +                 \
@@ -136,3 +157,13 @@ inline uint FUNC(get_iy_xs_os_xsv2_osv_index)(uint o, uint i, uint y, uint x, ui
         CAT(prefix, _X_PITCH),                                                  \
         CAT(prefix, _OFFSET),                                                   \
         sub_group_size)
+
+#define DECLARE_SAMPLER const sampler_t imageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST
+
+#if FP16_UNIT_USED
+    #define IMAGE_READ(image, coord) read_imageh((image), imageSampler, (coord))
+    #define IMAGE_WRITE(image, coord, val) write_imageh((image), (coord), (val))
+#else
+    #define IMAGE_READ(image, coord) read_imagef((image), imageSampler, (coord))
+    #define IMAGE_WRITE(image, coord, val) write_imagef((image), (coord), (val))
+#endif

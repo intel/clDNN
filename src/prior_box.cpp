@@ -174,7 +174,7 @@ void prior_box_node::calc_result()
     CLDNN_ERROR_BOOL(id(), "Prior box padding", is_padded(), "Prior-box layer doesn't support output padding.");
 
     //allocate storage
-    result = get_program().get_engine().allocate_buffer(get_output_layout());
+    result = get_program().get_engine().allocate_memory(get_output_layout());
 
     //perform calculations
     if (input().get_output_layout().data_type == data_types::f32)

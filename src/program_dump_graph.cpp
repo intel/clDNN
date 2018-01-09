@@ -70,6 +70,9 @@ namespace
             case format::bs_xs_xsv8_bsv8: out = "bs_xs_xsv8_bsv8"; break;
             case format::bs_xs_xsv8_bsv16: out = "bs_xs_xsv8_bsv16"; break;
             case format::bs_x_bsv16: out = "bs_x_bsv16"; break;
+            case format::bf8_xy16: out = "bf8_xy16"; break;
+            case format::image_2d_weights_c1_b_fyx: out = "image_2d_weights_c1_b_fyx"; break;
+            case format::image_2d_weights_c4_fyx_b: out = "image_2d_weights_c4_fyx_b"; break;
             case format::any: out = "any"; break;
             default:
                 out = "unk format";
@@ -93,7 +96,7 @@ namespace
                 #pragma clang diagnostic push
                 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
             #endif
-            graph << "    " << get_node_id(node.get()) << "[label=\"" << node->id() << ":\\n" << get_extr_type(typeid(*node).name()) << "\n out format: " + extr_oformat(node.get()) << "\"";
+            graph << "    " << get_node_id(node.get()) << "[label=\"" << node->id() << ":\\n" << get_extr_type(typeid(*node).name()) << "\n out format: " + extr_oformat(node.get()) << (node->can_be_optimized() ? "\\n optimized out" : "") << "\"";
             #ifdef __clang__
                 #pragma clang diagnostic pop
             #endif

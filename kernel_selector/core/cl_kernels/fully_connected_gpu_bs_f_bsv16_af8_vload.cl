@@ -15,14 +15,6 @@
 
 #include "include/include_all.cl"
 
-#define CONCAT_TOKEN_HANDLER1(prefix, suffix) prefix##suffix
-
-// Expands and concatenates two tokens into one.
-#define CONCAT_TOKEN(prefix, suffix) CONCAT_TOKEN_HANDLER1(prefix, suffix)
-
-// Creates vector type.
-#define MAKE_VECTOR_TYPE(elem_type, size) CONCAT_TOKEN(elem_type, size)
-
 #if FP16_UNIT_USED
     // Block read - currently block is 4 bytes aligned.
     #define ALIGNED_BLOCK_READ8(ptr, byte_offset) as_half8(intel_sub_group_block_read_us8((const __global ushort*)(ptr) + (byte_offset)))

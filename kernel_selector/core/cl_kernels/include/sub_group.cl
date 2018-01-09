@@ -90,6 +90,24 @@
                  intel_sub_group_shuffle(_block, 14),  \
                  intel_sub_group_shuffle(_block, 15));
 
+#define TRANSPOSE_BLOCK_16(_block)  \
+        (float16)(intel_sub_group_shuffle(_block, 0),  \
+                 intel_sub_group_shuffle(_block, 1),  \
+                 intel_sub_group_shuffle(_block, 2),  \
+                 intel_sub_group_shuffle(_block, 3),  \
+                 intel_sub_group_shuffle(_block, 4),  \
+                 intel_sub_group_shuffle(_block, 5),  \
+                 intel_sub_group_shuffle(_block, 6),  \
+                 intel_sub_group_shuffle(_block, 7),  \
+                 intel_sub_group_shuffle(_block, 8),  \
+                 intel_sub_group_shuffle(_block, 9),  \
+                 intel_sub_group_shuffle(_block, 10),  \
+                 intel_sub_group_shuffle(_block, 11),  \
+                 intel_sub_group_shuffle(_block, 12),  \
+                 intel_sub_group_shuffle(_block, 13),  \
+                 intel_sub_group_shuffle(_block, 14),  \
+                 intel_sub_group_shuffle(_block, 15));
+
 #define DOT_PRODUCT_8( _result, _rowA, colB )    \
 {   \
         _result.s0 = mad( _rowA, intel_sub_group_shuffle( colB, 0 ), _result.s0 );  \

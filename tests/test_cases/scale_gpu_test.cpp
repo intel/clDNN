@@ -25,6 +25,8 @@
 #include "test_utils/test_utils.h"
 #include "api/CPP/reorder.hpp"
 
+#include <iostream>
+
 using namespace cldnn;
 using namespace tests;
 
@@ -1325,7 +1327,7 @@ public:
 
         std::vector<tests::test_params*> all_generic_params;
 
-        for (cldnn::data_types dt : test_data_types)
+        for (cldnn::data_types dt : test_data_types())
         for (tensor & t : test_input_sizes)
         {
             std::vector<std::vector<int>> attempted_dims;
@@ -1449,10 +1451,10 @@ public:
                 const int in2_w = bias_sizes[3]; (void) in2_w;
 
                 // scale/bias dims must be equal to in/out or be 1 for broadcast
-                assert(in2_b == 1 || in2_b == in0_b);
-                assert(in2_b == 1 || in2_b == in0_f);
-                assert(in2_b == 1 || in2_b == in0_h);
-                assert(in2_b == 1 || in2_b == in0_w);
+                assert(in2_b == 1 || in2_b == in1_b);
+                assert(in2_b == 1 || in2_f == in1_f);
+                assert(in2_b == 1 || in2_h == in1_h);
+                assert(in2_b == 1 || in2_w == in1_w);
             }
         }
 
@@ -1481,7 +1483,6 @@ public:
                 out_mem[out_idx] += in2_mem[in2_idx];
             }
         }
-
         return output;
     }
 
@@ -1533,12 +1534,12 @@ private:
 std::vector<std::unique_ptr<cldnn::primitive>> scale_test::all_layer_params = {};
 std::vector<std::unique_ptr<tests::test_params>> scale_test::all_generic_params = {};
 
-TEST_P(scale_test, DISABLED_TestAll)
+TEST_P(scale_test, SCALE)
 {
     run_single_test();
 }
 
-INSTANTIATE_TEST_CASE_P(SCALE,
+INSTANTIATE_TEST_CASE_P(DISABLED_SCALE,
     scale_test,
     ::testing::ValuesIn(scale_test::generate_all_test_params()),
     scale_test::custom_param_name);

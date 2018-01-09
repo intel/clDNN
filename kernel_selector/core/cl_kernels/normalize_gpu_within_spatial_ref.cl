@@ -39,9 +39,17 @@ KERNEL (normalize_gpu_within_spatial_bfyx)(const __global UNIT_TYPE* input, __gl
         norm = mad(value, value, norm);
         input_idx += INPUT0_FEATURE_PITCH;
     }
-    norm = native_powr(norm, -0.5f);
-
+   
     uint output_idx = OUTPUT_OFFSET + b*OUTPUT_BATCH_PITCH + y*OUTPUT_Y_PITCH + x*OUTPUT_X_PITCH;
+
+    if(norm <= THRESHOLD)
+    {
+        norm = 0;
+    }
+    else
+    {
+        norm = native_powr(norm, -0.5f);
+    }
 
     // Scale the input
     input_idx = input_first;

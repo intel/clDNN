@@ -106,7 +106,7 @@ public:
     void reset_output_change() { _output_changed = false; }
 
 protected:
-    primitive_inst(network_impl& network, program_node const& node, bool allocate_buffer);
+    primitive_inst(network_impl& network, program_node const& node, bool allocate_memory);
 
     network_impl& _network;
     program_node const& _node;
@@ -184,8 +184,8 @@ namespace details
         {}
 
     protected:
-        api_typed_primitive_inst_base(network_impl& network, typed_node const& node, bool allocate_buffer)
-            : primitive_inst(network, node, allocate_buffer)
+        api_typed_primitive_inst_base(network_impl& network, typed_node const& node, bool allocate_memory)
+            : primitive_inst(network, node, allocate_memory)
             , node(_node)
             , argument(*node.get_primitive())
         {}
@@ -220,8 +220,8 @@ namespace details
         }
 
     protected:
-        internal_typed_primitive_inst_base(network_impl& network, typed_node const& node, bool allocate_buffer)
-            : primitive_inst(network, node, allocate_buffer)
+        internal_typed_primitive_inst_base(network_impl& network, typed_node const& node, bool allocate_memory)
+            : primitive_inst(network, node, allocate_memory)
             , node(_node)
         {}
 

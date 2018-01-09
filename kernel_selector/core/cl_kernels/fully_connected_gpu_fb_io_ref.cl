@@ -45,6 +45,7 @@ KERNEL (fully_connected_gpu_xb_xb)(
 
     uint input_idx = MULTIPLY_OFFSET(UNIT_TYPE, batch_id);
     uint weight_idx = MULTIPLY_OFFSET(UNIT_TYPE, outXIdx);
+
     for (uint i = 0; i < INPUT0_ELEMENTS_COUNT; i++)
     {
         UNIT_TYPE _in = *OFFSET_GLOBAL_PTR(UNIT_TYPE, input, input_idx);
@@ -53,8 +54,10 @@ KERNEL (fully_connected_gpu_xb_xb)(
         input_idx  += MULTIPLY_OFFSET(UNIT_TYPE, INPUT0_BATCH_NUM);
         weight_idx += MULTIPLY_OFFSET(UNIT_TYPE, FILTER_OFM_NUM);
     }
+
 #if BIAS_TERM
     result += bias[outXIdx];
 #endif
+
     output[x] = ACTIVATION(result, NL_M, NL_N);
 }

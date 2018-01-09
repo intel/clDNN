@@ -62,7 +62,7 @@ struct typed_primitive_gpu_impl : public typed_primitive_impl<PType>
             };
 
             auto& eimpl = arg.get_program().get_engine();
-            _intermediates_memory.push_back(eimpl.allocate_buffer(expected_layout));
+            _intermediates_memory.push_back(eimpl.allocate_memory(expected_layout));
         }
     }
 protected:

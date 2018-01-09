@@ -83,6 +83,7 @@ std::string pooling_inst::to_string(pooling_node const& node)
     pooling_info.add("mode", mode);
     pooling_info.add("stride", strd.to_string());
     pooling_info.add("kernel size", kernel_size.to_string());
+    pooling_info.add("input offset", desc->input_offset.to_string());
     if (desc->with_output_size)
     {
         json_composite ud_out_size_info;

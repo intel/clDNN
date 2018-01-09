@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,20 @@ namespace KernelSelector
 
     JitConstants ConvolutionKernelBase::GetJitConstants(const ConvolutionParams& params, ConvolutionKernelBase::DispatchData kd) const
     {
-        JitConstants mem_consts = MakeConvolutionParamsJitConstants(params);
+        std::vector<uint32_t> unrollLoopParams{
+            params.convParams.filterSize.x,
+            params.convParams.filterSize.y,
+            (uint32_t)kd.gemmStyle.globalWorkSizeDX,
+            (uint32_t)kd.gemmStyle.globalWorkSizeDY,
+            (uint32_t)kd.gemmStyle.globalWorkSizeDZ,
+            (uint32_t)kd.gemmStyle.subBlockDimM,
+            (uint32_t)kd.gemmStyle.subBlockDimK,
+            (uint32_t)kd.gemmStyle.subBlockDimN
+        };
+
+        auto loopCount = *std::max_element(unrollLoopParams.begin(), unrollLoopParams.end());
+
+        JitConstants mem_consts = MakeLoopUnrollParamsJitConstants(params, loopCount);
 
         if (params.inputs[0].GetLayout() == DataLayout::yxfb &&
             params.weights.GetLayout() == WeightsLayout::yxio)

@@ -17,7 +17,7 @@
 @echo off
 
 set "ROOT_DIR=%~dp0"
-set "BOOST_VERSION=1.61.0"
+set "BOOST_VERSION=1.64.0"
 set "SOLUTION_TARGET32=Windows32"
 set "SOLUTION_DIR32=%ROOT_DIR%\build\%SOLUTION_TARGET32%"
 

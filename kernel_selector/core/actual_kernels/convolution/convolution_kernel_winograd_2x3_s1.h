@@ -35,7 +35,6 @@ namespace KernelSelector {
 
         JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
         bool Validate(const Params& p, const OptionalParams& o) const override;
-        bool NeedPaddedInput() const override { return true; }
         DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
     };
 }

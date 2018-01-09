@@ -3,3 +3,4 @@ build/*
 *~
 UnixMk
 **/.idea/*
+src/caps/private/*.inc

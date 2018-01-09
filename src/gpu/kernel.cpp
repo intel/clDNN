@@ -72,13 +72,19 @@ namespace {
             case kernel_selector::kernel_argument_types::OUTPUT:
                 if (data.output)
                 {
-                    status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.output).get_buffer());
+                    if (data.output->get_layout().format.is_image_2d())
+                        status = kernel.setArg(i, dynamic_cast<const gpu::gpu_image2d&>(*data.output).get_buffer());
+                    else
+                        status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.output).get_buffer());
                 }
                 break;
             case kernel_selector::kernel_argument_types::WEIGHTS:
                 if (data.weights)
                 {
-                    status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.weights).get_buffer());
+                    if (data.weights->get_layout().format.is_image_2d())
+                        status = kernel.setArg(i, dynamic_cast<const gpu::gpu_image2d&>(*data.weights).get_buffer());
+                    else
+                        status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.weights).get_buffer());
                 }
                 break;
             case kernel_selector::kernel_argument_types::BIAS:

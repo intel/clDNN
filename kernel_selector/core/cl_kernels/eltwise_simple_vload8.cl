@@ -15,9 +15,6 @@
 
 #include "include/include_all.cl"
 
-// Creates vector type.
-#define MAKE_VECTOR_TYPE(elem_type, size) CAT(elem_type, size)
-
 KERNEL(eltwise_gpu_vload8)(
     INPUTS_DECLS
     __global UNIT_TYPE* output)

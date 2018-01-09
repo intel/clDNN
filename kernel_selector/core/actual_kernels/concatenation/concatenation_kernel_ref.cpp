@@ -44,7 +44,7 @@ namespace KernelSelector
     {
         auto cldnnJit = ConcatenationKernelBase::GetJitConstants(params);
         const ConcatenationParams& orgParams = static_cast<const ConcatenationParams&>(params);
-        if (orgParams.inputs[0].X().v == 1 && orgParams.inputs[0].Y().v == 1)
+        if (orgParams.inputs[0].Feature().v != 1)
         {
             cldnnJit.AddConstant(MakeJitConstant("CHECK_FEATURES", 1));
         }
@@ -93,5 +93,5 @@ namespace KernelSelector
         }
 
         return kd;
-    }
+     }
 }

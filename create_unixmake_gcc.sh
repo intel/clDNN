@@ -14,7 +14,7 @@
 
 #!/bin/bash
 
-BOOST_VERSION="1.61.0"
+BOOST_VERSION="1.64.0"
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BUILD_DIR="${ROOT_DIR}/build/Linux64"
 OUT_DIR="${ROOT_DIR}/build/out/Linux64"

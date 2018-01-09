@@ -15,15 +15,6 @@
 
 #include "include/include_all.cl"
 
-// TODO: use CAT
-#define CONCAT_TOKEN_HANDLER1(prefix, suffix) prefix##suffix
-
-// Expands and concatenates two tokens into one.
-#define CONCAT_TOKEN(prefix, suffix) CONCAT_TOKEN_HANDLER1(prefix, suffix)
-
-// Creates vector type.
-#define MAKE_VECTOR_TYPE(elem_type, size) CONCAT_TOKEN(elem_type, size)
-
 #if FP16_UNIT_USED
     #define MULTIPLY_BLOCKS_8x8(_result, _blockA, _blockB)  \
     {   \

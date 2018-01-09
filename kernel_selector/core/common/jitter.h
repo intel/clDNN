@@ -481,6 +481,32 @@ inline JitConstants MakeConvolutionParamsJitConstants(const ConvolutionParams& p
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MakeLoopUnrollParamsJitConstants
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+inline JitConstants MakeLoopUnrollParamsJitConstants(const ConvolutionParams& params, uint32_t loopCount)
+{
+    JitConstants jit = MakeConvolutionParamsJitConstants(params);
+
+    jit.AddConstants({
+        MakeJitConstant("LOOP0(VAR, STMT)", ""),
+        MakeJitConstant("LOOP1(VAR, STMT)", "(STMT); (VAR)++;"),
+    });
+
+    for (uint32_t i = 2; i <= loopCount + 1; i++)
+    {
+        jit.AddConstant({
+            MakeJitConstant("LOOP" + toCodeString(i) + "(VAR, STMT)", "LOOP" + toCodeString(i - 1) + "(VAR, STMT); (STMT); (VAR)++;"),
+        });
+    }
+
+    jit.AddConstant({
+        MakeJitConstant("LOOP(N, VAR, STMT)", "CAT(LOOP, N)((VAR), (STMT))"),
+    });
+
+    return jit;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MakeFullyConnectedJitConstants
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 inline JitConstants MakeFullyConnectedJitConstants(const FullyConnectedParams& params)
@@ -548,12 +574,45 @@ inline JitConstants MakeSoftmaxJitConstants(const SoftmaxParams& params)
     const auto& sm = params.smParams;
 
     jit.AddConstants({
-        MakeJitConstant("ALONG_" + toString(sm.dim), ""),
+        MakeJitConstant("ALONG_" + toString(sm.dim), "")
     });
 
     return jit;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MakeRegionYoloJitConstants
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+inline JitConstants MakeRegionYoloJitConstants(const RegionYoloParams& params)
+{
+    JitConstants jit = MakeBaseParamsJitConstants(params);
+
+    const auto& ry = params.ryParams;
+
+    jit.AddConstants({
+        MakeJitConstant("COORDS_",  ry.coords),
+        MakeJitConstant("CLASSES_",  ry.classes),
+        MakeJitConstant("NUM_", ry.num)
+    });
+
+    return jit;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MakeReorgYoloJitConstants
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+inline JitConstants MakeReorgYoloJitConstants(const ReorgYoloParams& params)
+{
+    JitConstants jit = MakeBaseParamsJitConstants(params);
+
+    const auto& ry = params.ryParams;
+
+    jit.AddConstants({
+        MakeJitConstant("STRIDE",  ry.stride),
+    });
+
+    return jit;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MakeNormalizeJitConstants
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -567,6 +626,7 @@ inline JitConstants MakeNormalizeJitConstants(const NormalizeParams& params)
         MakeJitConstant("SCALE_TABLE",          np.scaleTable),
         MakeJitConstant("EPSILON",              np.epsilon),
         MakeJitConstant(toString(np.normMode),  ""),
+        MakeJitConstant("THRESHOLD",            0.0001f),
     });
 
     return jit;
@@ -645,10 +705,12 @@ inline JitConstants MakeReorderJitConstants(const ReorderParams& params)
     if (params.reorderParams.mode == MeanSubtractMode::INSIDE_PARAMS)
     {
         jit.AddConstant(MakeJitConstant("VALUE_TO_SUBTRACT", params.reorderParams.meanValues));
+        jit.AddConstant(MakeJitConstant("TO_MEAN_TYPE", "convert_float"));
     }
     else if (params.reorderParams.mode == MeanSubtractMode::IN_BUFFER)
     {
         jit.AddConstant(MakeJitConstant("MEAN_SUBTRACT", params.reorderParams.mean));
+        jit.AddConstant(MakeJitConstant("TO_MEAN_TYPE", "convert_" + toCLType(params.reorderParams.mean.GetDType())));
     }
 
     //half->half without subtraction (so plain reorder) can be done on shorts without explicit fp16 support

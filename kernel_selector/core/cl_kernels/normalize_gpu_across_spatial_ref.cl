@@ -46,7 +46,14 @@ KERNEL (normalize_gpu_across_spatial_bfyx)(const __global UNIT_TYPE* input, __gl
         }
         input_idx += INPUT0_FEATURE_PITCH - INPUT0_Y_PITCH*INPUT0_SIZE_Y;
     }
-    norm = native_powr(norm, -0.5f);
+    if(norm <= THRESHOLD)
+    {
+        norm = 0;
+    }
+    else
+    {
+        norm = native_powr(norm, -0.5f);
+    }
 
     uint output_idx = OUTPUT_OFFSET + b * OUTPUT_BATCH_PITCH;
 

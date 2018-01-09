@@ -23,6 +23,8 @@ inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
 #elif defined INPUT0_LAYOUT_BS_F_BSV8__AF8  || \
       defined INPUT0_LAYOUT_BS_F_BSV16__AF8
     return GET_DATA_BS_FYX_BSV8_INDEX(INPUT0, b, f, y, x, SUB_GROUP_SIZE);
+#elif defined INPUT0_LAYOUT_BF8_XY16
+    return GET_DATA_BF8_XY16_INDEX(INPUT0, b, f, y, x);
 #else
 #error - not supported
 #endif
@@ -37,6 +39,8 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
 #elif defined OUTPUT_LAYOUT_BS_F_BSV8__AF8  || \
       defined OUTPUT_LAYOUT_BS_F_BSV16__AF8
     return GET_DATA_BS_FYX_BSV8_INDEX(OUTPUT, b, f, y, x, SUB_GROUP_SIZE);
+#elif defined OUTPUT_LAYOUT_BF8_XY16
+    return GET_DATA_BF8_XY16_INDEX(OUTPUT, b, f, y, x);
 #else
 #error - not supported
 #endif
@@ -63,13 +67,16 @@ KERNEL (reorder_data)(
     uint4 ov = FUNC_CALL(reshape_dims)(b,f,y,x, INPUT0_SIZE_Y, INPUT0_SIZE_X, OUTPUT_SIZE_Y, OUTPUT_SIZE_X, INPUT0_DIMS, OUTPUT_DIMS);
     const uint input_idx  = FUNC_CALL(get_input_index)(b, f, y, x);
     const uint output_idx = FUNC_CALL(get_output_index)(ov[0],ov[1],ov[2],ov[3]);
-    CALC_TYPE res = TO_CALC_TYPE(input[input_idx]);
     
 #if   defined MEAN_SUBTRACT_INSIDE_PARAMS
-    res -= TO_CALC_TYPE(VALUE_TO_SUBTRACT[f % VALUE_TO_SUBTRACT_SIZE]);
+    float res = TO_MEAN_TYPE(input[input_idx]);
+    res -= VALUE_TO_SUBTRACT[f % VALUE_TO_SUBTRACT_SIZE];
 #elif defined MEAN_SUBTRACT_IN_BUFFER
+    MEAN_SUBTRACT_TYPE res = TO_MEAN_TYPE(input[input_idx]);
     uint4 msv = FUNC_CALL(reshape_dims)(b,f,y,x, INPUT0_SIZE_Y, INPUT0_SIZE_X, MEAN_SUBTRACT_SIZE_Y, MEAN_SUBTRACT_SIZE_X, INPUT0_DIMS, MEAN_SUBTRACT_DIMS);
-    res -= TO_CALC_TYPE(mean_subtract[GET_DATA_INDEX_SAFE(MEAN_SUBTRACT, msv[0], msv[1], msv[2], msv[3])]);
+    res -= mean_subtract[GET_DATA_INDEX_SAFE(MEAN_SUBTRACT, msv[0], msv[1], msv[2], msv[3])];
+#else
+    CALC_TYPE res = TO_CALC_TYPE(input[input_idx]);
 #endif
 
     output[output_idx] = ACTIVATION(TO_OUTPUT_REORDER_TYPE(res), NL_M ,NL_N);

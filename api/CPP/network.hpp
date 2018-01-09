@@ -135,7 +135,7 @@ struct network
         assert(size_ret > 0);
         std::vector<char> names_buf(size_ret);
 
-        check_status<void>("get network output ids failed", [&](status_t* status)
+        check_status<void>("get primitive info failed", [&](status_t* status)
         {
             cldnn_get_primitive_info(_impl, id.c_str(), names_buf.data(), names_buf.size(), &size_ret, status);
         });

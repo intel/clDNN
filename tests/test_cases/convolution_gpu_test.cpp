@@ -144,9 +144,9 @@ TEST(DISABLED_convolution_f32_fw_gpu, winograd)
     auto bias = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 32, 1 } });
     tensor input_offset = { 0, 0, -1, -1 };
 
-    set_random_values<float>(input, 1.0f, 10.0f);
-    set_random_values<float>(weights, -5.0f, 5.0f);
-    set_random_values<float>(bias, 1.0f, 1.0f);
+    set_random_values<float>(input, false, 8, 10);
+    set_random_values<float>(weights, true, 8, 5);
+    set_random_values<float>(bias, false, 8, 1);
 
     topology tpl;
     tpl.add(input_layout("in", input.get_layout()));
@@ -2456,7 +2456,7 @@ public:
 
         std::vector<tensor> input_tensor_size = { tensor(1, 5, 59, 72), tensor(8, 3, 63, 56), tensor(16, 2, 50, 50), tensor(32, 1, 44, 62) };
 
-        for (cldnn::data_types data_type : test_data_types)
+        for (cldnn::data_types data_type : test_data_types())
         {
             for (cldnn::format input_format : input_formats)
             {
@@ -2708,12 +2708,12 @@ std::vector<tests::test_params*> convolution_test::all_generic_params = {};
 std::vector<cldnn::primitive*> convolution_test::all_layer_params = {};
 std::vector<std::tuple<tests::test_params*, cldnn::primitive*>> convolution_test::all_test_params = {};
 
-TEST_P(convolution_test, DISABLED_test_all)
+TEST_P(convolution_test, CONVOLUTION)
 {
     run_single_test();
 }
 
-INSTANTIATE_TEST_CASE_P(CONVOLUTION, 
+INSTANTIATE_TEST_CASE_P(DISABLED_CONVOLUTION, 
                         convolution_test, 
                         ::testing::ValuesIn(convolution_test::generate_all_test_params()),
                         tests::generic_test::custom_param_name_functor());

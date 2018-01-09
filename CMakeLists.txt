@@ -15,6 +15,11 @@
 cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
 include(CheckCXXCompilerFlag)
 
+if(CMAKE_VERSION VERSION_LESS 3.9)
+  # Register module overrides for boost package if cmake is too old.
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/common/boost/cmake/modules")
+endif()
+
 # Register Intel helper modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/utils/build/cmake/modules")
 include(IntelHelpers)
@@ -80,8 +85,6 @@ set(CLDNN__KERNEL_SELECTOR_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/kernel_selecto
 
 # Path which points to directory with binaries for Intel OpenCL SDK ICD (Installable Client Driver).
 set(CLDNN__IOCL_ICD_DIR  "${CLDNN__COMMON_DIR}/intel_ocl_icd")
-
-
 
 # Path which points to directory with boost libraries (only selection).
 set(CLDNN__BOOST_DIR     "${CLDNN__COMMON_DIR}/boost")
@@ -172,7 +175,7 @@ function(cldnn_locate_component_versions retVarNameVersions retVarNamePaths retV
     set("${retVarNameDefaultVersion}" "0" PARENT_SCOPE)
     return()
   endif()
-                                         
+
   # Detecting all versions of added component in the project.
   file(GLOB __CLDNN_F_CompVersionPaths RELATIVE "${componentBaseDir}" "${componentBaseDir}/[0-9rRvV]*")
   set(__CLDNN_F_CompVersions "")
@@ -323,7 +326,6 @@ endif()
 
 # ======================================================================================================
 
-
 # Detecting all versions of added boost package in the project.
 if(NOT EXISTS "${CLDNN__BOOST_DIR}")
   message(FATAL_ERROR "[clDNN] Root for boost libraries is invalid or does not exist.
@@ -395,12 +397,13 @@ set_property(CACHE CLDNN__BOOST_VERSION PROPERTY STRINGS ${__CLDNN_BoostVersions
 
 # ======================================================================================================
 
+# Include and build: Core of clDNN framework.
 set(CLDNN__INCLUDE_CORE ON CACHE BOOL "Include and build: clDNN core.")
 mark_as_advanced(CLDNN__INCLUDE_CORE)
 
 # ======================================================================================================
 
-# Include and build: kernel selector.
+# Include and build: Kernel selector for clDNN framework.
 set(CLDNN__INCLUDE_KERNEL_SELECTOR ON CACHE BOOL "Include and build: clDNN kernel selector.")
 mark_as_advanced(CLDNN__INCLUDE_KERNEL_SELECTOR)
 
@@ -426,7 +429,6 @@ mark_as_advanced(CLDNN__RUN_TESTS)
 
 # Compile / Link: Use static C++ Runtime library.
 set(CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME OFF CACHE BOOL "Compile / Link: Use static version of C++ Runtime library instead of shared one.")
-
 mark_as_advanced(CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME)
 
 # ======================================================================================================
@@ -488,6 +490,12 @@ elseif(__CLDNN_TargetCpu STREQUAL "64")
   set(__CLDNN_TargetCpuDir "x64")
 else()
   set(__CLDNN_TargetCpuDir "${__CLDNN_TargetCpu}")
+endif()
+
+if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^Clang$"))
+  set(__CLDNN_TargetCompilerDir "clang")
+else()
+  set(__CLDNN_TargetCompilerDir ".")
 endif()
 
 # ======================================================================================================
@@ -563,6 +571,7 @@ unset(__CLDNN_IOclIcdPaths)
 unset(__CLDNN_IOclIcdDefaultVersion)
 unset(__CLDNN_IOclIcdVersionIdx)
 
+
 # ======================================================================================================
 
 # Selecting boost libraries version and path.
@@ -577,15 +586,15 @@ set(CLDNN__BOOST_ROOT "${CLDNN__BOOST_ROOT}" CACHE INTERNAL "Path to boost libra
 # Setting paths for find_package.
 set(BOOST_ROOT            "${CLDNN__BOOST_ROOT}")
 set(BOOST_INCLUDEDIR      "${CLDNN__BOOST_ROOT}")
-set(BOOST_LIBRARYDIR      "${CLDNN__BOOST_ROOT}/${__CLDNN_TargetOs}/${__CLDNN_TargetCpuDir}/lib")
+set(BOOST_LIBRARYDIR      "${CLDNN__BOOST_ROOT}/${__CLDNN_TargetOs}/${__CLDNN_TargetCpuDir}/${__CLDNN_TargetCompilerDir}/lib")
 set(Boost_NO_SYSTEM_PATHS ON)
 # Setting preferred types of libraries.
 set(Boost_USE_STATIC_LIBS    ON)
 set(Boost_USE_DEBUG_RUNTIME  ON)
 set(Boost_USE_STATIC_RUNTIME ${CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME})
-set(CLDNN_BOOST_USAGE system date_time program_options filesystem)
+set(CLDNN__BOOST_USAGE system date_time program_options filesystem)
 find_package(Boost "${CLDNN__BOOST_VERSION}" EXACT REQUIRED
-      COMPONENTS ${CLDNN_BOOST_USAGE}
+      COMPONENTS ${CLDNN__BOOST_USAGE}
     )
 
 
@@ -605,6 +614,7 @@ cldnn_dmsg("")
 unset(__CLDNN_TargetOs)
 unset(__CLDNN_TargetCpu)
 unset(__CLDNN_TargetCpuDir)
+unset(__CLDNN_TargetCompilerDir)
 
 # ====================================== Version Calculation ===========================================
 
@@ -691,9 +701,9 @@ message(STATUS "[clDNN]")
 message(STATUS "[clDNN]")
 message(STATUS "[clDNN] Advanced:")
 if (CLDNN__IOCL_ICD_USE_EXTERNAL)
-  message(STATUS "[clDNN]  - ICD version used to build:   N/A (installed externally)")
+  message(STATUS "[clDNN]  - ICD version used to build:     N/A (installed externally)")
 else()
-  message(STATUS "[clDNN]  - ICD version used to build:   ${CLDNN__IOCL_ICD_VERSION}")
+  message(STATUS "[clDNN]  - ICD version used to build:     ${CLDNN__IOCL_ICD_VERSION}")
 endif()
 message(STATUS "[clDNN]  - boost ver. used to build:      ${CLDNN__BOOST_VERSION}")
 message(STATUS "[clDNN]")
@@ -746,11 +756,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CLDNN__OUTPUT_BIN_DIR}")
 
 
 # Main targets' output names.
-if(ANDROID)
-  set(CLDNN__OUT_CPU_SUFFIX "")
-else()
-  intel_arch_get_cpu(CLDNN__OUT_CPU_SUFFIX "${CLDNN__ARCHITECTURE_TARGET}")
-endif()
+intel_arch_get_cpu(CLDNN__OUT_CPU_SUFFIX "${CLDNN__ARCHITECTURE_TARGET}")
 
 set(CLDNN_BUILD__PROJ_OUTPUT_NAME__clDNN "clDNN${CLDNN__OUT_CPU_SUFFIX}")
 
@@ -796,7 +802,7 @@ if(NOT __CLDNN_UseCxx14)
   if(CLDNN__INCLUDE_CORE OR CLDNN__INCLUDE_TESTS)
     message(WARNING "Due to lack of support of c++14 switch cldnn_core/examples/tests projects will not be included in created solution")
   endif()
-  
+
   set(CLDNN__INCLUDE_CORE OFF CACHE BOOL "" FORCE)
   set(CLDNN__INCLUDE_TESTS OFF CACHE BOOL "" FORCE)
 endif()
@@ -922,24 +928,24 @@ foreach(__CLDNN_CompilerFlagName IN ITEMS "CMAKE_CXX_FLAGS" "CMAKE_C_FLAGS")
       )
   elseif((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^Clang$"))
     intel_config_flag_apply_settings(
-          CompilerOptions
-          "${__CLDNN_CompilerFlagName}"
-          ALL_PATTERN ""
-          SET_RAW
-            -pipe
-            -fvisibility=hidden
-            -fvisibility-inlines-hidden
-            -Wall
-            -Wno-covered-switch-default
-            -Wextra
-            -Wno-unused-parameter
-            -Wno-gnu
-            -pedantic
-            -finline
-            -msse4.2
-            -fPIE
-            -fPIC
-        )
+        CompilerOptions
+        "${__CLDNN_CompilerFlagName}"
+        ALL_PATTERN ""
+        SET_RAW
+          -pipe
+          -fvisibility=hidden
+          -fvisibility-inlines-hidden
+          -Wall
+          -Wno-covered-switch-default
+          -Wextra
+          -Wno-unused-parameter
+          -Wno-gnu
+          -pedantic
+          -finline
+          -msse4.2
+          -fPIE
+          -fPIC
+      )
   endif()
 endforeach()
 
@@ -972,19 +978,7 @@ endif()
 unset(__CLDNN_UseCxx14)
 
 
-# NOTE: [WA] Workaround for possible crash problem (double destruction of static objects on bionic).
-#            This switch is not conformant with C++ standard (order of destruction of static elements is not met) but
-#            it is used in Android build system (possibliy due to Android bionic __cxa_atexit limitations).
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  if(ANDROID)
-    intel_config_flag_apply_settings(
-        CompilerOptions
-        CMAKE_CXX_FLAGS
-        ALL_PATTERN ""
-        SET_RAW
-          -fno-use-cxa-atexit
-      )
-  endif()
   intel_config_flag_apply_settings(
       CompilerOptions
       CMAKE_CXX_FLAGS
@@ -999,15 +993,13 @@ endif()
 # NOTE: When compiling with Clang, use the flags below for C++ files. These flags cannot be enabled when compiling
 #       C files.
 if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^Clang$"))
-  if(NOT ANDROID)
-    intel_config_flag_apply_settings(
-        CompilerOptions
-        CMAKE_CXX_FLAGS
-        ALL_PATTERN ""
-        SET_RAW
-          -stdlib=libc++
-      )
-  endif()
+  intel_config_flag_apply_settings(
+      CompilerOptions
+      CMAKE_CXX_FLAGS
+      ALL_PATTERN ""
+      SET_RAW
+        -stdlib=libc++
+    )
 endif()
 
 unset(__CLDNN_RtType)
@@ -1015,6 +1007,9 @@ unset(__CLDNN_RtTypeDebug)
 unset(__CLDNN_CompilerFlagName)
 
 # ======================================== Generic linker options ======================================
+
+# Additional libraries that needs to be linked to shared objects/executables.
+set(CLDNN__SYSTEM_LINK_LIBRARIES)
 
 foreach(__CLDNN_LinkerFlagName IN ITEMS "CMAKE_EXE_LINKER_FLAGS" "CMAKE_SHARED_LINKER_FLAGS")
   # Change some generic settings of linker.
@@ -1049,16 +1044,6 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         SET_RAW
           -Wl,-z,noexecstack,-z,relro,-z,now
       )
-
-  if(ANDROID)
-    intel_config_flag_apply_settings(
-        LinkerOptions
-        CMAKE_SHARED_LINKER_FLAGS
-        ALL_PATTERN ""
-        SET_RAW
-          -static
-      )
-  endif()
 endif()
 
 if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^Clang$"))
@@ -1071,6 +1056,8 @@ if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^C
         -Wl,-undefined,dynamic_lookup
         -Wl,-headerpad_max_install_names
     )
+
+  list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "c++" "c++abi" "supc++")
 endif()
 
 unset(__CLDNN_LinkerFlagName)
@@ -1115,7 +1102,7 @@ endif()
 include_directories(
     ${CLDNN__IOCL_ICD_INCDIRS}
     "${CLDNN__KHR_CLHPP_DIR}"
-#    "${CLDNN__API_DIR}"
+    ${Boost_INCLUDE_DIRS}
     "${CLDNN__CODEGEN_INCDIR}"
   )
 link_directories(
@@ -1138,6 +1125,7 @@ if(CLDNN__INCLUDE_TUTORIAL)
 endif()
 
 add_subdirectory(docs)
+
 
 # ======================================================================================================
 # ======================================================================================================

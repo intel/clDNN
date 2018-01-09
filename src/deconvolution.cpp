@@ -91,7 +91,8 @@ std::string deconvolution_inst::to_string(deconvolution_node const& node)
     json_composite deconv_info;
     deconv_info.add("weights count", desc->weights.size());
     deconv_info.add("bias count", desc->bias.size());
-    deconv_info.add("string", strd.to_string());
+    deconv_info.add("stride", strd.to_string());
+    deconv_info.add("input offset", desc->input_offset.to_string());
     deconv_info.add("split", split);
     deconv_info.add("with activation", activation);
     deconv_info.add("slope", desc->activation_negative_slope);

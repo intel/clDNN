@@ -58,11 +58,6 @@
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-// Creates vector type.
-#define MAKE_VECTOR_TYPE(elem_type, size) CONCAT_TOKEN(elem_type, size)
-
-// ---------------------------------------------------------------------------------------------------------------------
-
 // Converts scalar expression to scalar of unit type.
 #if FP16_UNIT_USED
     #define CVT_UNIT(expression) CONCAT_TOKEN(convert_, UNIT_TYPE)(expression)

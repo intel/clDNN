@@ -625,12 +625,12 @@ private:
 std::vector<cldnn::primitive*> softmax_test::all_layer_params = {};
 std::vector<tests::test_params*> softmax_test::all_generic_params = {};
 
-TEST_P(softmax_test, DISABLED_TestAll)
+TEST_P(softmax_test, SOFTMAX)
 {
     run_single_test();
 }
 
-INSTANTIATE_TEST_CASE_P(SOFTMAX,
+INSTANTIATE_TEST_CASE_P(DISABLED_SOFTMAX,
     softmax_test,
     ::testing::Combine(::testing::ValuesIn(softmax_test::generate_generic_test_params()), ::testing::ValuesIn(softmax_test::generate_specific_test_params())),
     softmax_test::custom_param_name);

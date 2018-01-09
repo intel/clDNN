@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -205,6 +205,8 @@ namespace KernelSelector {
     {
         size_t newBufferSize = 0;
         WeightsType dtype = WeightsType::F16;
+        WeightsLayout destLayout = WeightsLayout::oiyx;
+        bool toImageType = false;
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,6 +279,7 @@ namespace KernelSelector {
         case KernelSelector::DataLayout::fyxb:              return "FYXB";
         case KernelSelector::DataLayout::bs_f_bsv8__af8:    return "BS_F_BSV8__AF8";
         case KernelSelector::DataLayout::bs_f_bsv16__af8:   return "BS_F_BSV16__AF8";
+        case KernelSelector::DataLayout::bf8_xy16:          return "BF8_XY16";
         case KernelSelector::DataLayout::brfyx:             return "BRFYX";
         case KernelSelector::DataLayout::winograd_2x3_s1_data: return "WINOGRAD_2x3_S1_DATA";
         default: return "";
@@ -322,6 +325,8 @@ namespace KernelSelector {
         case KernelType::FULLY_CONNECTED:   return "FULLY_CONNECTED";
         case KernelType::ACTIVATION:        return "ACTIVATION";
         case KernelType::SOFT_MAX:          return "SOFT_MAX";
+        case KernelType::REGION_YOLO:       return "REGION_YOLO";
+        case KernelType::REORG_YOLO:        return "REORG_YOLO";
         case KernelType::ELTWISE:           return "ELTWISE";
         case KernelType::REORDER:           return "REORDER";
         default:
@@ -445,7 +450,10 @@ namespace KernelSelector {
         case WeightsLayout::i_yxs_os_yxsv2_osv16:       return "I_YXS_OS_YXSV2_OSV16";
         case WeightsLayout::iy_xs_os_xsv2_osv16__ao32:  return "IY_XS_OS_XSV2_OSV16__AO32";
         case WeightsLayout::iy_xs_os_xsv2_osv8__ao32:   return "IY_XS_OS_XSV2_OSV8__AO32";
+        case WeightsLayout::image_2d_weights_c4_fyx_b:  return "IMAGE_2D_WEIGHTS_C4_FYX_B";
+        case WeightsLayout::image_2d_weights_c1_b_fyx:  return "IMAGE_2D_WEIGHTS_C1_B_FYX";
         case WeightsLayout::winograd_2x3_s1_weights:    return "WINOGRAD_2x3_S1_WEIGHTS";
+        case WeightsLayout::winograd_2x3_s1_fused_weights:    return "WINOGRAD_2x3_S1_FUSED_WEIGHTS";
         default:
             return "";
             break;

@@ -20,10 +20,13 @@
 #include <api/CPP/input_layout.hpp>
 #include "api/CPP/fully_connected.hpp"
 #include <api/CPP/topology.hpp>
+#include <api/CPP/tensor.hpp>
 #include <api/CPP/network.hpp>
 #include <api/CPP/engine.hpp>
 #include "test_utils/test_utils.h"
 #include <api/CPP/data.hpp>
+#include "instrumentation.h"
+#include <boost/filesystem.hpp>
 
 namespace cldnn
 {
@@ -52,27 +55,27 @@ VVVVF<T> fully_connected_reference(VVVVF<T> &input, VVVVF<T> &weights, VF<T> &bi
     size_t output_b = input.size();        // input is assumed to be bfyx
     size_t output_x = weights.size();    // weights is assumed to be bfyx
     VVVVF<T> output(output_b, VVVF<T>(1, VVF<T>(1, VF<T>(output_x))));
-    T res;
+    float res;
     for (size_t b = 0; b < output_b; ++b) {
         for (size_t n = 0; n < output_x; ++n) {
             res = bias[n];
             for (size_t f = 0; f < input_f; ++f) {
                 for (size_t y = 0; y < input_y; ++y) {
                     for (size_t x = 0; x < input_x; ++x) {
-                        res += input[b][f][y][x] * weights[n][f][y][x];
+                        res += (float)input[b][f][y][x] * (float)weights[n][f][y][x];
                     }
                 }
             }
-            if (relu && res < (T)0)
-                res *= slope;
-            output[b][0][0][n] = res;
+            if (relu && res < (float)0)
+                res *= (float)slope;
+            output[b][0][0][n] = (T)res;
         }
     }
     return output;
 }
 
 template <typename T>
-void generic_fully_connected_test(cldnn::format test_input_fmt, cldnn::format test_weights_fmt, int input_b, int f, int y, int x, int output_x, bool relu, T slope) {
+void generic_fully_connected_test(cldnn::format test_input_fmt, cldnn::format test_weights_fmt, int input_b, int f, int y, int x, int output_x, bool relu, T slope = 0) {
     int min_random = -2, max_random = 2;
     VVVVF<T> input_rnd = generate_random_4d<T>(input_b, f, y, x, min_random, max_random);
     VVVVF<T> weights_rnd = generate_random_4d<T>(output_x, f, y, x, min_random, max_random);
@@ -81,8 +84,8 @@ void generic_fully_connected_test(cldnn::format test_input_fmt, cldnn::format te
     VF<T> weights_rnd_vec = flatten_4d<T>(test_weights_fmt, weights_rnd);
 
     engine engine;
-    tensor input_tensor( input_b, f, x, y );
-    tensor weights_tensor( output_x, f, x, y );
+    tensor input_tensor(input_b, f, x, y);
+    tensor weights_tensor(output_x, f, x, y);
     auto input = memory::allocate(engine, { type_to_data_type<T>::value, test_input_fmt, input_tensor });
     auto weights = memory::allocate(engine, { type_to_data_type<T>::value, test_weights_fmt, weights_tensor });
     auto bias = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1,1,output_x,1 } });
@@ -114,21 +117,23 @@ void generic_fully_connected_test(cldnn::format test_input_fmt, cldnn::format te
     int x_size = output_tensor.spatial[0];
     EXPECT_EQ(b_size, input_b);
     EXPECT_EQ(x_size, output_x);
-    
+    unsigned num_of_operations = f * x * y * 2;
+    float ulp = (1.0f / 1024.0f) * num_of_operations;
     bool test_is_correct = true;
     VVVVF<T> output_cpu = fully_connected_reference<T>(input_rnd, weights_rnd, bias_rnd_vec, relu, slope);
     VF<T> output_cpu_vec = flatten_4d<T>(layout_4d(output_layout.format), output_cpu);
     for (size_t i = 0; i < output_cpu_vec.size(); ++i) {
-        if (!floating_point_equal(output_cpu_vec[i], output_ptr[i])) {
+        if (abs(float(output_cpu_vec[i]) - float(output_ptr[i])) > ulp) {
             EXPECT_FLOAT_EQ(output_cpu_vec[i], output_ptr[i]); // to print the problematic values
             test_is_correct = false;
             break;
         }
     }
+
     EXPECT_EQ(test_is_correct, true) << std::endl
         << "failing test parameters:" << std::endl
-        << "test_input_fmt = " << test_input_fmt.value << std::endl
-        << "test_weights_fmt = " << test_weights_fmt.value << std::endl
+        << "test_input_fmt = " << format::traits(test_input_fmt).order << std::endl
+        << "test_weights_fmt = " << format::traits(test_weights_fmt).order << std::endl
         << "input_b = " << input_b << std::endl
         << "f = " << f << std::endl
         << "y = " << y << std::endl
@@ -143,8 +148,9 @@ TEST(DISABLED_fully_connected_gpu, generic_random_short) {
     VF<cldnn::format> test_input_fmts = { cldnn::format::bfyx, cldnn::format::yxfb };
     VF<cldnn::format> test_weights_fmts = { cldnn::format::yxfb };
     VF<bool> relu = { true, false };
-    VF<float> slopes = { 0.0f, 3.125f };
-    std::vector<std::pair<int, int>> input_sizes = { { 100, 100 },{ 400, 600 },{ 531, 777 },{ 4096, 1980 } };
+    std::vector<int> batches = { 1, 2, 4, 8, 16 };
+    std::vector<int> features = { 1, 2 };
+    std::vector<std::pair<int, int>> input_sizes = { {28, 28}, {64, 64}, {100, 100}, {227, 227}, {1000, 1}, {1, 4096} };
     VF<int> outputs_x = { 5, 16 };
 
     engine engine;
@@ -155,24 +161,21 @@ TEST(DISABLED_fully_connected_gpu, generic_random_short) {
 
     for (cldnn::format test_input_fmt : test_input_fmts) {
         for (cldnn::format test_weights_fmt : test_weights_fmts) {
-            for (int input_b = 1; input_b <= 16; input_b *= 2) {
-                for (int input_f = 2; input_f <= 2; ++input_f) {
-                    for (std::pair<int, int> &input_yx : input_sizes) {
+            for (const auto& b : batches) {
+                for(const auto& f : features) {
+                    for (const auto& sizes : input_sizes) {
                         for (int output_x : outputs_x) {
                             for (bool relu_activated : relu) {
-                                for (float slope : slopes) {
-                                    generic_fully_connected_test<float>(test_input_fmt, test_weights_fmt, input_b, input_f, input_yx.first, input_yx.second, output_x, relu_activated, slope);
+                                    generic_fully_connected_test<float>(test_input_fmt, test_weights_fmt, b, f, sizes.second, sizes.first, output_x, relu_activated);
                                     if (!f16_supported) continue;
-                                    generic_fully_connected_test<FLOAT16>(test_input_fmt, test_weights_fmt, input_b, input_f, input_yx.first, input_yx.second, output_x, relu_activated, (FLOAT16)slope);
-                                }
+                                    generic_fully_connected_test<FLOAT16>(test_input_fmt, test_weights_fmt, b, f, sizes.second, sizes.first, output_x, relu_activated);
                             }
                         }
                     }
                 }
             }
         }
-    }
-    
+    }  
 }
 
 TEST(fully_connected_gpu, no_biases) {

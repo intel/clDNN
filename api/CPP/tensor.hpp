@@ -88,8 +88,15 @@ struct format
                                                          ///< \n \image html bs_xs_xsv8_bsv16.jpg
         bs_x_bsv16 = cldnn_format_bs_x_bsv16, ///< format used only for fully connected weights fp16 batch=1 : bs - batch slice (responses slice), bsv16 - 16 values of single batch slice, x - flattened plane of (fyx).
                                               ///< \n \image html bs_x_bsv16.jpg
-        winograd_2x3_s1_data,       //< format used for input for winograd convolution, F(2,3) -- filter 3x3 with stride 1
-        winograd_2x3_s1_weights,    //< format used for weights for winograd convolution, F(2,3) -- filter 3x3 with stride 1
+        bf8_xy16 = cldnn_format_bf8_xy16, ///< format used only for convolution 1x1 input, xy aligned to 16, f aligned to 8
+                                          ///< \n \image html bf8_xy16.jpg
+        image_2d_weights_c4_fyx_b = cldnn_format_image_2d_weights_c4_fyx_b, ///< image format for weights, width size is f*y*x/4 (4-channels filled with fyx data), height is b
+                                                                      ///< \n \image html image_2d_weights_c4_fyx_b.jpg
+        image_2d_weights_c1_b_fyx = cldnn_format_image_2d_weights_c1_b_fyx, ///< image format for weights, width size is b, height is f*y*x, single channel
+                                                                            ///< \n \image html image_2d_weights_c1_b_fyx.jpg
+        winograd_2x3_s1_data,       ///< format used for input for winograd convolution, F(2,3) -- filter 3x3 with stride 1
+        winograd_2x3_s1_weights,    ///< format used for weights for winograd non-fused convolution, F(2,3) -- filter 3x3 with stride 1
+        winograd_2x3_s1_fused_weights,    ///< format used for weights for winograd fused convolution, F(2,3) -- filter 3x3 with stride 1
         format_num = cldnn_format_format_num, ///< number of format types
         any = cldnn_format_any,
     };
@@ -107,9 +114,12 @@ struct format
             { bs_xs_xsv8_bsv8, { 1, 1, 1, "bx", "b?x?" } },
             { bs_xs_xsv8_bsv16,{ 1, 1, 1, "bx", "b?x?" } },
             { bs_x_bsv16, { 1, 1, 1, "bx", "b?x?" } },
+            { bf8_xy16, { 1, 1, 2, "bfyx", "bfxy" }},
+            { image_2d_weights_c4_fyx_b, { 1, 1, 2, "bfyx", "bfxy" } },
+            { image_2d_weights_c1_b_fyx, { 1, 1, 2, "bfyx", "bfxy" } },
             { winograd_2x3_s1_data, { 1, 1, 2, "bxyf", "bfxy" } },
-            { winograd_2x3_s1_weights, { 1, 1, 2, "xyfb", "bfxy" } }
-        };
+            { winograd_2x3_s1_weights, { 1, 1, 2, "bfyx", "bfxy" } },
+            { winograd_2x3_s1_fused_weights, { 1, 1, 2, "xyfb", "bfxy" } } };
         return traits.at(fmt);
     }
 
@@ -126,7 +136,11 @@ struct format
     /// @brief Returns number of dimensions contained within a @p format
     static size_t dimension(type fmt) { return order(fmt).size(); }
     /// @brief Checks if @p format is a winograd format
-    static bool is_winograd(type fmt) { return (fmt == winograd_2x3_s1_data || fmt == winograd_2x3_s1_weights); }
+    static bool is_winograd(type fmt) { return (fmt == winograd_2x3_s1_data || fmt == winograd_2x3_s1_weights || fmt == winograd_2x3_s1_fused_weights); }
+    /// @brief Checks if @p format is of image2d type
+    static bool is_image_2d(type fmt) { return (fmt == image_2d_weights_c4_fyx_b || fmt == image_2d_weights_c1_b_fyx); }
+    /// @brief Checks if @p format is of image type
+    static bool is_image(type fmt) { return (is_image_2d(fmt)); }
 
     /// @brief Returns number of batch dimensions.
     size_t batch_num() const { return traits(value).batch_num; }
@@ -142,6 +156,10 @@ struct format
     size_t dimension() const { return order(value).size(); }
     /// @brief Checks if @p format is a winograd format
     bool is_winograd() const { return is_winograd(value); }
+    /// @brief Checks if @p format is of image 2d type
+    bool is_image_2d() const { return is_image_2d(value); }
+    /// @brief Checks if @p format is of image type
+    bool is_image() const { return is_image(value); }
 
     type value;
     /// @brief Implicit conversion from format::type.
@@ -583,7 +601,7 @@ public:
         for(size_t i = 0; i < format.order().size(); i++)
         {
             auto c = val_order[i];
-            //skip f and y for the formats that do not have it
+            //skip f or b and y for the formats that do not have it
             if (((new_fmt == format::bs_xs_xsv8_bsv8) || (new_fmt == format::bs_xs_xsv8_bsv16) || (new_fmt == format::bs_x_bsv16)) && ((c == 'f') || (c == 'y')))
             {
                 if (new_order[i] == '?')
@@ -612,6 +630,7 @@ public:
                 }
             }
         }
+
         return { new_sizes };
     }
 
@@ -644,6 +663,15 @@ public:
         {
             my_sizes[0] = align_to(my_sizes[0], 16);
             adjusted_coords[0] = align_to(adjusted_coords[0], 16);
+        }
+        else if (fmt == cldnn::format::bf8_xy16 && !(is_aligned_to(my_sizes[1], 8) && is_aligned_to(my_sizes[2] * my_sizes[3], 16)))
+        {
+            my_sizes[1] = align_to(my_sizes[1], 8);
+            my_sizes[3] = align_to(my_sizes[2] * my_sizes[3], 16);
+            my_sizes[2] = 1;
+            adjusted_coords[1] = align_to(adjusted_coords[1], 8);
+            adjusted_coords[3] = align_to(adjusted_coords[3], 16);
+            adjusted_coords[2] = 1;
         }
 
         assert(my_sizes.size() == adjusted_coords.size());
