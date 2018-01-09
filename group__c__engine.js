@@ -14,6 +14,8 @@ var group__c__engine =
     [ "cldnn_engine_info", "group__c__engine.html#structcldnn__engine__info", [
       [ "core_frequency", "group__c__engine.html#a441d7014c65f3e8d0cbc77acaf13742d", null ],
       [ "cores_count", "group__c__engine.html#a90de42a257bef82dff740c64e95f492d", null ],
+      [ "max_alloc_mem_size", "group__c__engine.html#a7696c26d52c9b50fcac1bddc027e1408", null ],
+      [ "max_global_mem_size", "group__c__engine.html#a0ffa21e01d32a4230c74ef1bd18afaae", null ],
       [ "max_local_mem_size", "group__c__engine.html#af8fcfa0d0be13c0207425b98e679145d", null ],
       [ "max_work_group_size", "group__c__engine.html#acd8dc2a020db94686b4892049dbdf9a7", null ],
       [ "supports_fp16", "group__c__engine.html#a679dff2f23679ae7f0a8038b226b3740", null ],

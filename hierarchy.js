@@ -38,7 +38,9 @@ var hierarchy =
     [ "cldnn_prior_box_desc", "group__c__primitives.html#structcldnn__prior__box__desc", null ],
     [ "cldnn_profiling_interval", "group__c__network.html#structcldnn__profiling__interval", null ],
     [ "cldnn_proposal_desc", "group__c__primitives.html#structcldnn__proposal__desc", null ],
+    [ "cldnn_region_yolo_desc", "group__c__primitives.html#structcldnn__region__yolo__desc", null ],
     [ "cldnn_reorder_desc", "group__c__primitives.html#structcldnn__reorder__desc", null ],
+    [ "cldnn_reorg_yolo_desc", "group__c__primitives.html#structcldnn__reorg__yolo__desc", null ],
     [ "cldnn_reshape_desc", "group__c__primitives.html#structcldnn__reshape__desc", null ],
     [ "cldnn_roi_pooling_desc", "group__c__primitives.html#structcldnn__roi__pooling__desc", null ],
     [ "cldnn_scale_desc", "group__c__primitives.html#structcldnn__scale__desc", null ],
@@ -135,8 +137,14 @@ var hierarchy =
       [ "cldnn::primitive_base< proposal, cldnn_proposal_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::proposal", "structcldnn_1_1proposal.html", null ]
       ] ],
+      [ "cldnn::primitive_base< region_yolo, cldnn_region_yolo_desc >", "classcldnn_1_1primitive__base.html", [
+        [ "cldnn::region_yolo", "structcldnn_1_1region__yolo.html", null ]
+      ] ],
       [ "cldnn::primitive_base< reorder, cldnn_reorder_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::reorder", "structcldnn_1_1reorder.html", null ]
+      ] ],
+      [ "cldnn::primitive_base< reorg_yolo, cldnn_reorg_yolo_desc >", "classcldnn_1_1primitive__base.html", [
+        [ "cldnn::reorg_yolo", "structcldnn_1_1reorg__yolo.html", null ]
       ] ],
       [ "cldnn::primitive_base< reshape, cldnn_reshape_desc >", "classcldnn_1_1primitive__base.html", [
         [ "cldnn::reshape", "structcldnn_1_1reshape.html", null ]

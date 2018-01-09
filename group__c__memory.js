@@ -28,6 +28,9 @@ var group__c__memory =
       [ "cldnn_format_bs_xs_xsv8_bsv8", "group__c__memory.html#gga5513ccecf02f37962076358d18fad277ae81de0615eaa9bce4a2611f82fc5b117", null ],
       [ "cldnn_format_bs_xs_xsv8_bsv16", "group__c__memory.html#gga5513ccecf02f37962076358d18fad277adc23fee7e8db6730c9e57b6693220f21", null ],
       [ "cldnn_format_bs_x_bsv16", "group__c__memory.html#gga5513ccecf02f37962076358d18fad277afb374cb745c1ea442e90a588777e931a", null ],
+      [ "cldnn_format_bf8_xy16", "group__c__memory.html#gga5513ccecf02f37962076358d18fad277a0c991d004423f726c51f5506c95ffc84", null ],
+      [ "cldnn_format_image_2d_weights_c4_fyx_b", "group__c__memory.html#gga5513ccecf02f37962076358d18fad277a3e32d0cc48259c2abe6baebb1511fd20", null ],
+      [ "cldnn_format_image_2d_weights_c1_b_fyx", "group__c__memory.html#gga5513ccecf02f37962076358d18fad277a67bd130749699f00e3a3112bd5d59b8d", null ],
       [ "cldnn_format_format_num", "group__c__memory.html#gga5513ccecf02f37962076358d18fad277a2dfbc2e088c451486cdfe4839cb8cb88", null ]
     ] ],
     [ "cldnn_allocate_memory", "group__c__memory.html#gad70342ac7adeeb85b0a2c906ffa8bf64", null ],

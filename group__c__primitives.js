@@ -198,6 +198,15 @@ var group__c__primitives =
       [ "scales", "group__c__primitives.html#a522066e34b9986dd52c6d72918d24fdf", null ],
       [ "type", "group__c__primitives.html#a3ba6f38fec92277a0935dfec05f32742", null ]
     ] ],
+    [ "cldnn_region_yolo_desc", "group__c__primitives.html#structcldnn__region__yolo__desc", [
+      [ "classes", "group__c__primitives.html#a242c62173f17c33fac8808421096e266", null ],
+      [ "coords", "group__c__primitives.html#aefb002d203dca062bf1e2f93d4212157", null ],
+      [ "id", "group__c__primitives.html#a90a5fcd7bdca6ff1f56505cd59d05e58", null ],
+      [ "input", "group__c__primitives.html#a8cc503af84f59410cc843bbf781afd04", null ],
+      [ "num", "group__c__primitives.html#a614caf35911f7eb8a7e751165aa5ae16", null ],
+      [ "output_padding", "group__c__primitives.html#aeb94beee2f887bf5861b956757a5da96", null ],
+      [ "type", "group__c__primitives.html#a9e42fa4d499b5c8df31214b4f48a498c", null ]
+    ] ],
     [ "cldnn_reorder_desc", "group__c__primitives.html#structcldnn__reorder__desc", [
       [ "id", "group__c__primitives.html#a345b50f391501a306c0d8fbfa6e7747c", null ],
       [ "input", "group__c__primitives.html#aeaec0a34fa60aa6e8cabfe9715fe9ff5", null ],
@@ -207,6 +216,13 @@ var group__c__primitives =
       [ "output_padding", "group__c__primitives.html#acda4040cb5d4af29e2a3998882d7f2ee", null ],
       [ "subtract_per_feature", "group__c__primitives.html#ab4724d19f6089d8cd9618fdb0de3eebb", null ],
       [ "type", "group__c__primitives.html#a459c2ea9cab837bc2e772f0e8c525ff9", null ]
+    ] ],
+    [ "cldnn_reorg_yolo_desc", "group__c__primitives.html#structcldnn__reorg__yolo__desc", [
+      [ "id", "group__c__primitives.html#a55d06a443b343f66987ec767918a9c2d", null ],
+      [ "input", "group__c__primitives.html#a23afe85448db22a8b8d35215493f03c4", null ],
+      [ "output_padding", "group__c__primitives.html#a3e34b64432130bcc744c4e157c9a7302", null ],
+      [ "stride", "group__c__primitives.html#a7a85685fe4b67256ab6c123c4edc90c3", null ],
+      [ "type", "group__c__primitives.html#aabfe2537904a82e7817ddc991c0f6522", null ]
     ] ],
     [ "cldnn_reshape_desc", "group__c__primitives.html#structcldnn__reshape__desc", [
       [ "id", "group__c__primitives.html#a11d086911314935ca447246b6ff0c66e", null ],

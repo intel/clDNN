@@ -1,5 +1,5 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="5,977,113,1003"/>
+<area shape="rect" id="node1" href="$structcldnn_1_1primitive.html" title="Base class of network primitive description. " alt="" coords="5,1050,113,1077"/>
 <area shape="rect" id="node2" href="$classcldnn_1_1primitive__base.html" title="base class for all primitives implementations. " alt="" coords="208,5,351,47"/>
 <area shape="rect" id="node3" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; activation, cldnn_activation\l_desc \&gt;" alt="" coords="185,71,373,127"/>
 <area shape="rect" id="node5" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; batch_norm, cldnn_batch\l_norm_desc \&gt;" alt="" coords="189,151,369,207"/>
@@ -19,13 +19,15 @@
 <area shape="rect" id="node33" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; pooling, cldnn_pooling\l_desc \&gt;" alt="" coords="198,1231,361,1287"/>
 <area shape="rect" id="node35" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; prior_box, cldnn_prior\l_box_desc \&gt;" alt="" coords="200,1311,359,1367"/>
 <area shape="rect" id="node37" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; proposal, cldnn_proposal\l_desc \&gt;" alt="" coords="190,1391,369,1447"/>
-<area shape="rect" id="node39" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reorder, cldnn_reorder\l_desc \&gt;" alt="" coords="199,1471,359,1527"/>
-<area shape="rect" id="node41" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reshape, cldnn_reshape\l_desc \&gt;" alt="" coords="193,1551,365,1607"/>
-<area shape="rect" id="node43" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; roi_pooling, cldnn\l_roi_pooling_desc \&gt;" alt="" coords="208,1631,351,1687"/>
-<area shape="rect" id="node45" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; scale, cldnn_scale\l_desc \&gt;" alt="" coords="208,1711,351,1767"/>
-<area shape="rect" id="node47" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; softmax, cldnn_softmax\l_desc \&gt;" alt="" coords="193,1791,365,1847"/>
-<area shape="rect" id="node49" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; split, cldnn_split\l_desc \&gt;" alt="" coords="208,1871,351,1927"/>
-<area shape="rect" id="node51" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; upsampling, cldnn_upsampling\l_desc \&gt;" alt="" coords="173,1951,385,2007"/>
+<area shape="rect" id="node39" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; region_yolo, cldnn\l_region_yolo_desc \&gt;" alt="" coords="208,1471,351,1527"/>
+<area shape="rect" id="node41" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reorder, cldnn_reorder\l_desc \&gt;" alt="" coords="199,1551,359,1607"/>
+<area shape="rect" id="node43" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reorg_yolo, cldnn_reorg\l_yolo_desc \&gt;" alt="" coords="195,1631,364,1687"/>
+<area shape="rect" id="node45" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; reshape, cldnn_reshape\l_desc \&gt;" alt="" coords="193,1711,365,1767"/>
+<area shape="rect" id="node47" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; roi_pooling, cldnn\l_roi_pooling_desc \&gt;" alt="" coords="208,1791,351,1847"/>
+<area shape="rect" id="node49" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; scale, cldnn_scale\l_desc \&gt;" alt="" coords="208,1871,351,1927"/>
+<area shape="rect" id="node51" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; softmax, cldnn_softmax\l_desc \&gt;" alt="" coords="193,1951,365,2007"/>
+<area shape="rect" id="node53" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; split, cldnn_split\l_desc \&gt;" alt="" coords="208,2031,351,2087"/>
+<area shape="rect" id="node55" href="$classcldnn_1_1primitive__base.html" title="cldnn::primitive_base\l\&lt; upsampling, cldnn_upsampling\l_desc \&gt;" alt="" coords="173,2111,385,2167"/>
 <area shape="rect" id="node4" href="$structcldnn_1_1activation.html" title="Activation using rectified linear unit or parameterized rectified linear unit. " alt="" coords="481,86,596,113"/>
 <area shape="rect" id="node6" href="$structcldnn_1_1batch__norm.html" title="Batch normalization primitive. " alt="" coords="474,166,603,193"/>
 <area shape="rect" id="node8" href="$structcldnn_1_1concatenation.html" title="cldnn::concatenation" alt="" coords="467,246,610,273"/>
@@ -44,11 +46,13 @@
 <area shape="rect" id="node34" href="$structcldnn_1_1pooling.html" title="Performs &quot;pooling&quot; operation which is a form of non&#45;linear down&#45;sampling. " alt="" coords="487,1246,590,1273"/>
 <area shape="rect" id="node36" href="$structcldnn_1_1prior__box.html" title="Generates a set of default bounding boxes with different sizes and aspect ratios. ..." alt="" coords="481,1326,596,1353"/>
 <area shape="rect" id="node38" href="$structcldnn_1_1proposal.html" title="cldnn::proposal" alt="" coords="483,1406,594,1433"/>
-<area shape="rect" id="node40" href="$structcldnn_1_1reorder.html" title="Changes how data is ordered in memory. Value type is not changed &amp; all information is preserved..." alt="" coords="488,1486,589,1513"/>
-<area shape="rect" id="node42" href="$structcldnn_1_1reshape.html" title="Changes information about inputs&#39;s layout effectively creating new memory which share underlaying buf..." alt="" coords="485,1566,592,1593"/>
-<area shape="rect" id="node44" href="$structcldnn_1_1roi__pooling.html" title="cldnn::roi_pooling" alt="" coords="477,1646,600,1673"/>
-<area shape="rect" id="node46" href="$structcldnn_1_1scale.html" title="Performs elementwise product of input and scale_input. " alt="" coords="493,1726,585,1753"/>
-<area shape="rect" id="node48" href="$structcldnn_1_1softmax.html" title="Normalizes results so they sum to 1. " alt="" coords="485,1806,592,1833"/>
-<area shape="rect" id="node50" href="$structcldnn_1_1split.html" title="Performs split operation on input. " alt="" coords="496,1886,581,1913"/>
-<area shape="rect" id="node52" href="$structcldnn_1_1upsampling.html" title="Performs nearest neighbor/bilinear upsampling Also supports built&#45;in Relu activation available by set..." alt="" coords="475,1966,602,1993"/>
+<area shape="rect" id="node40" href="$structcldnn_1_1region__yolo.html" title="Normalizes results so they sum to 1. " alt="" coords="475,1486,602,1513"/>
+<area shape="rect" id="node42" href="$structcldnn_1_1reorder.html" title="Changes how data is ordered in memory. Value type is not changed &amp; all information is preserved..." alt="" coords="488,1566,589,1593"/>
+<area shape="rect" id="node44" href="$structcldnn_1_1reorg__yolo.html" title="Normalizes results so they sum to 1. " alt="" coords="478,1646,599,1673"/>
+<area shape="rect" id="node46" href="$structcldnn_1_1reshape.html" title="Changes information about inputs&#39;s layout effectively creating new memory which share underlaying buf..." alt="" coords="485,1726,592,1753"/>
+<area shape="rect" id="node48" href="$structcldnn_1_1roi__pooling.html" title="cldnn::roi_pooling" alt="" coords="477,1806,600,1833"/>
+<area shape="rect" id="node50" href="$structcldnn_1_1scale.html" title="Performs elementwise product of input and scale_input. " alt="" coords="493,1886,585,1913"/>
+<area shape="rect" id="node52" href="$structcldnn_1_1softmax.html" title="Normalizes results so they sum to 1. " alt="" coords="485,1966,592,1993"/>
+<area shape="rect" id="node54" href="$structcldnn_1_1split.html" title="Performs split operation on input. " alt="" coords="496,2046,581,2073"/>
+<area shape="rect" id="node56" href="$structcldnn_1_1upsampling.html" title="Performs nearest neighbor/bilinear upsampling Also supports built&#45;in Relu activation available by set..." alt="" coords="475,2126,602,2153"/>
 </map>
