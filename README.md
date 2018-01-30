@@ -167,9 +167,14 @@ clDNN requires CPU with Intel® SSE/Intel® AVX support.
 ---
 
 The software dependencies are:
-- [CMake\*](https://cmake.org/download/) 3.6 or later  
+- [CMake\*](https://cmake.org/download/) 3.9 or later  
 (the project is compatible with CMake 3.1, but, due to issues with boost libraries resolution
-in CMake 3.4.3 and with CheckCXXCompilerFlag module in CMake 3.5.2, we strongly recommend 3.6+)
+in CMake 3.4.3, with CheckCXXCompilerFlag module in CMake 3.5.2 and hard dependency on supported boost version based
+on version of CMake, we strongly recommend 3.9+)
+    > **NOTE:** In rare situation when update of CMake is not possible, you can try to update / override only *FindBoost.cmake*
+    module. You can do that by downloading *FindBoost.cmake* file from newer version of CMake (e.g. from [here](https://gitlab.kitware.com/cmake/cmake/blob/master/Modules/FindBoost.cmake))
+    and putting the file into *common/boost/cmake/modules* directory (create it if necessary). This directory will be attached
+    to the list of modules if your CMake version is lower than 3.9.
 - C++ compiler with partiall or full C++14 standard support compatible with:
     * GNU\* Compiler Collection 5.2 or later
     * clang 3.5 or later
