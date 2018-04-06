@@ -124,15 +124,18 @@ namespace KernelSelector
             case Tensor::bf:
             case Tensor::fb:
                 return *this;
+
             case Tensor::fyxb:
                 targetLayout = Tensor::fb;
 
+                // TODO: [FUTURE] Use C++17 [[fallthrough]] instead of code duplication to get portable warning avoidance.
                 if (f.pitch == y.v*x.v*x.pitch)                                         // no padding in X/Y axis
                 {
                     l = targetLayout;
                     break;
                 }
                 throw std::runtime_error("Unsupported - cannot flatten with padding");
+
             case Tensor::bfyx:
                 if (f.pitch == y.v*x.v*x.pitch)                                         // no padding in X/Y axis
                 {
@@ -140,9 +143,11 @@ namespace KernelSelector
                     break;
                 }
                 throw std::runtime_error("Unsupported - cannot flatten with padding");
+
             case Tensor::yxfb:
                 targetLayout = Tensor::fb;
 
+                // TODO: [FUTURE] Use C++17 [[fallthrough]] instead of code duplication to get portable warning avoidance.
                 if ((x.pitch == f.pitch && y.pitch == x.v*x.pitch) ||                   // YX - no Features (val/pitch)
                     (y.v == 1 && x.v == 1 && x.pitch == f.pitch && y.pitch == f.pitch)) // Feature only
                 {
@@ -150,6 +155,7 @@ namespace KernelSelector
                     break;
                 }
                 throw std::runtime_error("Unsupported - cannot flatten yxf to f if f/yx != 1");
+
             case Tensor::byxf:
                 if ((x.pitch == f.pitch && y.pitch == x.v*x.pitch) ||                   // YX - no Features (val/pitch)
                     (y.v == 1 && x.v == 1 && x.pitch == f.pitch && y.pitch == f.pitch)) // Feature only

@@ -33,25 +33,22 @@ namespace
 bool is_batch_after_spatial(const std::string order)
 {
     bool spatial_found = false;
-    bool batch_found = false;
     for (auto c : order)
     {
         switch (c)
         {
         case 'b':
         case 'n':
-            batch_found = true;
-            if (spatial_found)
-                return true;
+            return spatial_found;
+
         case 'x':
         case 'y':
         case 'z':
         case 'w':
         case 's':
             spatial_found = true;
-            /* fallthru */
-            if (batch_found)
-                return false;
+            break;
+
         default: break;
         }
     }

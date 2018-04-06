@@ -23,6 +23,15 @@
 #include <iomanip>
 #include <ios>
 
+// NOTE: Due to buggy scope transition of warnings we need to disable warning in place of use/instantation
+//       of some types (even though we already disabled them in scope of definition of these types).
+//       Moreover this warning is pretty much now only for annoyance: it is generated due to lack
+//       of proper support for mangling of custom GCC attributes into type name (usually when used
+//       with templates, even from standard library).
+#if defined __GNUC__ && __GNUC__ >= 6
+    #pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
+
 namespace {
     std::string ndrange_to_string(cl::NDRange const& range)
     {
