@@ -28,6 +28,8 @@
 #include "instrumentation.h"
 #include <boost/filesystem.hpp>
 
+#include <cmath>
+
 namespace cldnn
 {
     template<> struct type_to_data_type<FLOAT16> { static const data_types value = data_types::f16; };
@@ -123,7 +125,7 @@ void generic_fully_connected_test(cldnn::format test_input_fmt, cldnn::format te
     VVVVF<T> output_cpu = fully_connected_reference<T>(input_rnd, weights_rnd, bias_rnd_vec, relu, slope);
     VF<T> output_cpu_vec = flatten_4d<T>(layout_4d(output_layout.format), output_cpu);
     for (size_t i = 0; i < output_cpu_vec.size(); ++i) {
-        if (abs(float(output_cpu_vec[i]) - float(output_ptr[i])) > ulp) {
+        if (std::abs(float(output_cpu_vec[i]) - float(output_ptr[i])) > ulp) {
             EXPECT_FLOAT_EQ(output_cpu_vec[i], output_ptr[i]); // to print the problematic values
             test_is_correct = false;
             break;
