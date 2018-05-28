@@ -91,9 +91,22 @@ namespace KernelSelector
         auto jit = MakeEltwiseJitConstants(params);
 
         std::string inputs_decls, vload_decls;
+        auto& updateInputs = params.eltwiseParams.updateInputIds;
+
         for (size_t i = 0; i < params.inputs.size(); i++)
         {
-            inputs_decls += "const __global " + toCLType(params.inputs[i].GetDType()) + "* input" + std::to_string(i) + ", ";
+            //const should be added only to inputs which will not be updated
+            std::string const_str = "const";
+            for (size_t update_input_idx = 0; update_input_idx < updateInputs.size(); update_input_idx++)
+            {
+                if (updateInputs[update_input_idx].inputId == i)
+                {
+                    const_str = "";
+                    break;
+                }
+            }
+
+            inputs_decls += const_str + " __global " + toCLType(params.inputs[i].GetDType()) + "* input" + std::to_string(i) + ", ";
             if (useVload8)
             {
                 vload_decls += "\\\n\tconst " + toCLType(params.inputs[i].GetDType()) + "8 in" + std::to_string(i);
@@ -135,6 +148,9 @@ namespace KernelSelector
                     else
                         jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[GET_INDEX(INPUT, " + std::to_string(input.index) + ")]"));
                     break;
+                case EltwiseInputMode::OUTPUT_BUFFER:
+                    jit.AddConstant(MakeJitConstant(name, "output[GET_INDEX(OUTPUT, )]"));
+                    break;
                 case EltwiseInputMode::UNORDERED_ACCESS_INPUT_BUFFER:
                     jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[(size_t)tmp" + std::to_string(input.tmpIndex) + "]"));
                     break;
@@ -151,12 +167,12 @@ namespace KernelSelector
             if (useVload8)
             {
                 cast_type = "(MAKE_VECTOR_TYPE(UNIT_TYPE, 8))";
-                op = "MAKE_VECTOR_TYPE(UNIT_TYPE, 8) tmp" + op_num_str + " = ";
+                op = "const MAKE_VECTOR_TYPE(UNIT_TYPE, 8) tmp" + op_num_str + " = ";
             }
             else
             {
                 cast_type = "(UNIT_TYPE)";
-                op = "UNIT_TYPE tmp" + op_num_str + " = ";
+                op = "const UNIT_TYPE tmp" + op_num_str + " = ";
             }
 
             input0_str = cast_type + "INPUT_" + op_num_str + "_0";
@@ -176,13 +192,18 @@ namespace KernelSelector
             case EltwiseMode::RSQRT:    op += cast_type + "1/sqrt(" + input0_str + ")"; break;
             case EltwiseMode::ASSIGN:   op += input0_str; break;
             default:
-                break;;
+                break;
             }
 
             std::string opname = "OPERATION" + op_num_str;
             jit.AddConstant(MakeJitConstant(opname, op));
             do_eltwise += "\\\n\t" + opname + ";";
         }
+
+        for (size_t update_input_idx = 0; update_input_idx < updateInputs.size(); update_input_idx++)
+            do_eltwise += "\\\n\tinput" + std::to_string(updateInputs[update_input_idx].inputId) +
+            "[GET_INDEX(INPUT, " + std::to_string(updateInputs[update_input_idx].inputId) +
+            ")] = tmp" + std::to_string(updateInputs[update_input_idx].tmpId) + ";";
 
         do_eltwise += "\\\n\tres = tmp" + std::to_string(operations.size() - 1) + ";";
 

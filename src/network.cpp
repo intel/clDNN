@@ -21,6 +21,7 @@
 #include "program_impl.h"
 
 #include "api/CPP/data.hpp"
+#include "api/CPP/mutable_data.hpp"
 #include "api/CPP/input_layout.hpp"
 
 #include "error_handler.h"
@@ -31,23 +32,27 @@
 
 namespace cldnn
 {
-
-network_impl::network_impl(const program_impl& program)
+/*
+Network_impl will always have net_id = 0 when it will be cldnn internal micronetwork (created i.e by const. propagator).
+*/
+network_impl::network_impl(const program_impl& program, bool is_internal)
     : _program(&program)
+    , _internal(is_internal)
 {
+    static std::atomic<uint32_t> id_gen{ 0 };
+    if (!_internal)
+    {
+        net_id = ++id_gen;
+    }
+    _program->get_nodes().reverse();
     for (auto const& node : _program->get_nodes())
         allocate_primitive_instance(*node);
-
-    //sanity check
-    //TODO: fix run single layer design (in run single layer multiple networks can be run - i.e. weights optimization, we should have better logic to decide whether to filter or not some networks/nodes)
-    /*if (get_engine()->get_context()->enabled_single_kernel()
-        && (_exec_order.size() != 1 || _exec_order.front()->id() != get_engine()->get_context()->single_kernel_name()))
-        throw std::runtime_error("Network allocation: layer specified to be run with 'single_kernel_name' option could not be found (layer id: '"
-            + get_engine()->get_context()->single_kernel_name() + "').");*/
+    _program->get_nodes().reverse();
+    _program->dump_memory_pool();
 }
 
-network_impl::network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options)
-    : network_impl(*engine.build_program(topo, options))
+network_impl::network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options, bool is_internal)
+    : network_impl(*engine.build_program(topo, options), is_internal)
 {
 }
 
@@ -93,7 +98,7 @@ void network_impl::set_input_data(const primitive_id& id, memory_impl& data)
 }
 
 std::string network_impl::get_primitive_info(const primitive_id& id) const
-{    
+{
     const auto& node = _program->get_node(id);
     return node.type()->to_string(node);
 }
@@ -111,8 +116,8 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
     for (auto& prim : _primitives)
         prim.second->reset_output_change();
 
-    // Using output of previouse network as input to another one may cause hazard (in OOOQ mode) if user would not 
-    // provide proper event to execution. Flushing pipeline should prevent this kind of issues. 
+    // Using output of previouse network as input to another one may cause hazard (in OOOQ mode) if user would not
+    // provide proper event to execution. Flushing pipeline should prevent this kind of issues.
     // In scenarios with a big number of very small networks it can provide performance drop.
     get_engine().flush_network();
 }
@@ -204,7 +209,7 @@ void network_impl::allocate_primitive_instance(program_node const& node)
 
     auto inst = node.type()->create_instance(*this, node);
     _primitives[node.id()] = inst;
-    if (!node.is_type<data>())
+    if (!node.is_type<data>() && !(node.is_type<mutable_data>() && node.get_dependencies().empty()))
         _exec_order.push_back(inst);
     if (node.is_input())
         _inputs.push_back(inst);

@@ -376,7 +376,7 @@ TEST(reorder_gpu_f16, basic_subtract_f32_output_f32) {
                          -2.5f,  2.2f,
                          10.0f,  7.0f
     };
-    
+
     auto output_ptr = output.pointer<float>();
     for (int i = 0; i < 16; i++)
     {
@@ -454,13 +454,13 @@ TEST(reorder_gpu_f16, basic_subtract_value) {
 
     half_t answers[16] = { half_t(0x3800), half_t(0x3E00), //  0.5f, 1.5f,
                            half_t(0x4100), half_t(0x4300), //  2.5f, 3.5f,
-                            
+
                            half_t(0x4100), half_t(0x4300), //  2.5f, 3.5f,
                            half_t(0x4480), half_t(0x4580), //  4.5f, 5.5f,
-                            
+
                            half_t(0xB800), half_t(0xB800), // -0.5f, -0.5f,
                            half_t(0x0000), half_t(0xBC00), //  0.0f, -1.0f,
-                            
+
                            half_t(0xBC00), half_t(0x4166), // -1.0f,  2.7f,
                            half_t(0x48C0), half_t(0x4580)  //  9.5f,  5.5f
     };
@@ -559,6 +559,56 @@ TEST(reorder_gpu, basic_convert_f16_f32_f16) {
     }
 }
 
+
+TEST(reorder_gpu, basic_convert_int8) {
+
+    engine engine;
+    layout in_layout = { type_to_data_type<float>::value,format::byxf,{ 1,1,3,3 } };
+    layout byte_layout = { type_to_data_type<int8_t>::value, format::bfyx,{ 1,1,3,3 } };
+    std::initializer_list<float> input_f = { 1.0f, -2.5f, 3.1f, -4.0f, 5.03f, -6.99f, 7.0f, -8.0f, 9.0f };
+    std::list<float> final_results = { 1.0f, -2.0f, 3.0f, -4.0f, 5.0f, -6.0f, 7.0f, -8.0f, 9.0f };
+
+    // Allocate memory for input image.
+    auto input_memory = memory::allocate(engine, in_layout);
+    set_values(input_memory, input_f);
+
+    // Create input_layout description
+    // "input" - is the primitive id inside topology
+    input_layout input("input", in_layout);
+
+    topology topology(
+        // 1. input layout primitive.
+        input,
+        // 2. reorder primitive with id "reorder_input"
+        reorder("reorder_input",
+            // input primitive for reorder (implicitly converted to primitive_id)
+            input,
+            // output layout for reorder
+            byte_layout),
+        reorder("reorder2", "reorder_input", in_layout)
+    );
+
+    network network(
+        engine,
+        topology,
+        {
+            build_option::outputs({ "reorder2"})
+        });
+
+    network.set_input_data("input", input_memory);
+
+    auto outputs = network.execute();
+
+    auto interm = outputs.at("reorder2").get_memory();
+    auto interm_ptr = interm.pointer<float>();
+    auto output_size = outputs.at("reorder2").get_memory().count();
+    unsigned int cntr = 0;
+    for (const auto& exp : final_results)
+    {
+        EXPECT_EQ(exp, interm_ptr[cntr++]);
+    }
+}
+
 TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
 	//  Converts an ARGB(uint8) image to common clDNN input of bfyx FP32
 	//
@@ -566,7 +616,7 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
 	//  Intermediate        : 1x4x5x5 (FP32) {different mem format and ordering}
 	//  Output              : 1x3x5x5 (FP32) {using crop layer to reduce feature dimention and drop A from RGBA}
 	//
-	//  Output is expected to contain the same value as input 
+	//  Output is expected to contain the same value as input
 	//
 	const int kernel_size = 5;
 	const int feature_size = 4;
@@ -593,10 +643,7 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
 	auto input_memory = memory::allocate(engine, in_layout);
 	set_values(input_memory, input_i8);
 
-
-
-
-	// Create input_layout description
+    // Create input_layout description
 	// "input" - is the primitive id inside topology
 	input_layout input("input", in_layout);
 
@@ -651,7 +698,7 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
     std::vector<uint8_t> testinput;// This will be used to direct access elements of test input in the next test
     for (auto it = input_i8.begin(); it < input_i8.end(); it++)
     {
-        
+
         uint8_t val = *it;
         testinput.push_back(val); // This will be used to direct access elements of test input in the next test
         size_t current_feature = source_index % feature_size;
@@ -679,9 +726,6 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
     }
 
 }
-
-
-
 
 TEST(reorder_gpu_f32, basic_yxfb_to_bfyx_input_padding)
 {
@@ -728,7 +772,7 @@ TEST(reorder_gpu_f32, basic_yxfb_to_bfyx_input_padding)
 
     topology topology(
         input_layout("input", input.get_layout()),
-        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, "", { { 0, 0, 1, 2 }, 0 }),
+        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, "", cldnn_reorder_mean_mode::mean_subtract, { { 0, 0, 1, 2 }, 0 }),
         reorder("reorder2", "reorder", output_layout));
 
     network network(engine, topology);
@@ -807,7 +851,7 @@ TEST(reorder_gpu_f32, basic_bfyx_to_yxfb_input_padding)
 
     topology topology(
         input_layout("input", input.get_layout()),
-        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, "", { { 0, 0, 2, 1 }, 0 }),
+        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, "", cldnn_reorder_mean_mode::mean_subtract, { { 0, 0, 2, 1 }, 0 }),
         reorder("reorder2", "reorder", output_layout));
 
     network network(engine, topology);
@@ -948,6 +992,140 @@ TEST(reorder_gpu_opt, non_trivial_remove_redundant)
     EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
 }
 
+
+TEST(reorder_gpu_opt, mean_mul)
+{
+    engine eng;
+
+    memory in  = memory::allocate(eng, { data_types::i8, format::bfyx, tensor{ 1, 3, 1, 2 } });
+    memory mul = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{1, 3, 1, 2 } });
+
+    set_values<char>(in,
+    { 1, 2,
+      3, 4,
+      5, 6 });
+    set_values<float>(mul,
+    { 0.5f, 2.5f, -5.0f, 4.3f, 1.2f, -3.5f });
+
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        data("mul",mul),
+        reorder("r1", "in", format::bfyx, data_types::f32,"mul", cldnn_reorder_mean_mode::mean_mul)
+    };
+
+    float answers[] = { 0.5f, 5.0f, -15.0f, 17.2f, 6.0f, -21.0f };
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+
+    auto outputs = net.execute();
+    auto output = outputs.begin()->second.get_memory();
+    auto ptr = output.pointer<float>();
+    float* a_ptr = answers;
+    for (auto& val : ptr)
+        EXPECT_FLOAT_EQ(*(a_ptr++), val);;
+
+}
+
+
+TEST(reorder_gpu_opt, mean_div)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::i8, format::bfyx, tensor{ 1, 3, 1, 2 } });
+    memory mul = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{ 1, 3, 1, 2 } });
+
+    set_values<char>(in,
+    { 1, 2,
+      3, 4,
+      5, 6 });
+    set_values<float>(mul,
+    { 0.5f, 2.0f, -3.0f, 8.0f, 1.25f, -3.0f });
+
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        data("mul",mul),
+        reorder("r1", "in", format::bfyx, data_types::f32,"mul", cldnn_reorder_mean_mode::mean_div)
+    };
+
+    float answers[] = { 2.0f, 1.0f, -1.0f, 0.5f, 4.0f, -2.0f };
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+
+    auto outputs = net.execute();
+    auto output = outputs.begin()->second.get_memory();
+    auto ptr = output.pointer<float>();
+    float* a_ptr = answers;
+    for (auto& val : ptr)
+        EXPECT_FLOAT_EQ(*(a_ptr++), val);;
+
+}
+
+
+TEST(reorder_gpu_opt, mean_mul_val)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::i8, format::bfyx, tensor{ 1, 3, 1, 2 } });
+
+    set_values<char>(in,
+    { 1, 2,
+      3, 4,
+      5, 60 });
+    std::vector<float> mul_val = { 2.0f, 0.5f, 10.0f };
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        reorder("r1", "in", format::bfyx, data_types::f32, mul_val, cldnn_reorder_mean_mode::mean_mul)
+    };
+
+    float answers[] = { 2.0f, 4.0f, 1.5f, 2.0f, 50.0f, 600.0f };
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+
+    auto outputs = net.execute();
+    auto output = outputs.begin()->second.get_memory();
+    auto ptr = output.pointer<float>();
+    float* a_ptr = answers;
+    for (auto& val : ptr)
+        EXPECT_FLOAT_EQ(*(a_ptr++), val);;
+}
+
+
+TEST(reorder_gpu_opt, mean_mul_val_float_to_int)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{ 1, 3, 1, 2 } });
+
+    set_values<float>(in,
+    { 0.6f, 1.5f,
+      3.0f, 4.2f,
+      5.0f, 60.0f });
+    std::vector<float> mul_val = { 1.4f, 0.5f, 5.0f };
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        reorder("r1", "in", format::bfyx, data_types::i8, mul_val, cldnn_reorder_mean_mode::mean_mul)
+    };
+
+    char answers[] = { 0, 2, 1, 2, 25, 127 };
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+
+    auto outputs = net.execute();
+    auto output = outputs.begin()->second.get_memory();
+    auto ptr = output.pointer<char>();
+    char* a_ptr = answers;
+    for (auto& val : ptr)
+        EXPECT_EQ(*(a_ptr++), val);
+}
+
 using namespace cldnn;
 
 class reorder_test : public tests::generic_test
@@ -972,7 +1150,7 @@ public:
     static std::vector<std::tuple<test_params*, cldnn::primitive*>> generate_specific_test_params()
     {
         generic_test::generate_generic_test_params(all_generic_params);
-        
+
         for (const auto& test_param : all_generic_params)
         {
             cldnn::tensor input_tensor = test_param->input_layouts[0].size;
@@ -995,7 +1173,7 @@ public:
             {
                 //TODO: check input + output padding.
                 all_test_params.push_back(std::make_tuple(test_param, new reorder("reorder", "input0", output_layout, subtract)));
-                
+
             }
         }
 
@@ -1019,7 +1197,7 @@ public:
         std::vector<float> subtract_per_feature = reorder->subtract_per_feature;
         assert(mean == "");
         assert(subtract_per_feature.size() == 0);
-        
+
         auto output = memory::allocate(engine, cldnn::layout(reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
 
         cldnn::pointer<InputType> input_mem = inputs[0].pointer<InputType>();

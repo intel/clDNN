@@ -19,13 +19,11 @@
 #define IC INPUT0_SIZES[2]
 #define IB INPUT0_SIZES[3]
 
-#define INPUTS_COUNT (IH * IW * NUM * (CLASSES + COORDS + 1))
-
-inline UNIT_TYPE logistic_activate(UNIT_TYPE x) {
+inline UNIT_TYPE FUNC(logistic_activate)(UNIT_TYPE x) {
     return 1. / (1. + exp(-x));
 }
 
-inline int entry_index(int width, int height, int coords, int classes,
+inline int FUNC(entry_index)(int width, int height, int coords, int classes,
                        int outputs, int batch, int location,
                        int entry) {
     int n = location / (width * height);
@@ -34,11 +32,10 @@ inline int entry_index(int width, int height, int coords, int classes,
         entry * width * height + loc;
 }
 
-static
-void softmax_generic(const __global UNIT_TYPE* src_data, __global UNIT_TYPE* dst_data,
-                     int B, int C, int W, int H, int h, int w)
+#if DO_SOFTMAX
+inline void FUNC(softmax_generic)(const __global UNIT_TYPE* src_data, __global UNIT_TYPE* dst_data,
+                            int B, int C, int W, int H, int i)
 {
-    int i = h * W + w;
     for (int b = 0; b < B; b++) {
         UNIT_TYPE max = src_data[b*C*H*W + i];
         for (int c = 0; c < C; c++) {
@@ -57,37 +54,51 @@ void softmax_generic(const __global UNIT_TYPE* src_data, __global UNIT_TYPE* dst
         }
     }
 }
+#endif
 
 KERNEL (region_yolo_ref)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
 {
-    int w = get_global_id(0);
-    int h = get_global_id(1);
+    int x = get_global_id(0);
+
+#if DO_SOFTMAX
+    #define ACTUAL_NUM (NUM)
+    #define CONF_CLASSES (1)
+#else
+    #define ACTUAL_NUM (MASK_SIZE)
+    #define CONF_CLASSES (CLASSES+1)
+#endif
+    #define INPUTS_COUNT (IH * IW * ACTUAL_NUM * (CLASSES + COORDS + 1))
 
     for (int b = 0; b < IB; b++) {
-        for (int n = 0; n < NUM; n++) {
+        for (int n = 0; n < ACTUAL_NUM; n++) {
             // coords: x/y
-            int index = entry_index(IW, IH, COORDS, CLASSES, INPUTS_COUNT, b, n * IW * IH, 0);
-            int i = index + 2 * IW * h + 2 * w;
-            output[i] = logistic_activate(input[i]);
-            output[i+1] = logistic_activate(input[i+1]);
+            int index = FUNC_CALL(entry_index)(IW, IH, COORDS, CLASSES, INPUTS_COUNT, b, n * IW * IH, 0);
+            int i = index + 2 * x;
+            output[i] = FUNC_CALL(logistic_activate)(input[i]);
+            output[i+1] = FUNC_CALL(logistic_activate)(input[i+1]);
 
             // coords: w/h: directly copy?
-            index = entry_index(IW, IH, COORDS, CLASSES, INPUTS_COUNT, b, n * IW * IH, 2);
-            i = index + 2 * IW * h + 2 * w;
+            index = FUNC_CALL(entry_index)(IW, IH, COORDS, CLASSES, INPUTS_COUNT, b, n * IW * IH, 2);
+            i = index + 2 * x;
             output[i] = input[i];
             output[i+1] = input[i+1];
 
             // confidence
-            index = entry_index(IW, IH, COORDS, CLASSES, INPUTS_COUNT, b, n * IW * IH, COORDS);
-            i = index + IW * h + w;
-            output[i] = logistic_activate(input[i]);
+            index = FUNC_CALL(entry_index)(IW, IH, COORDS, CLASSES, INPUTS_COUNT, b, n * IW * IH, COORDS);
+            for (int j = 0; j < CONF_CLASSES; j++)
+            {
+                i = index + x + j*IH*IW;
+                output[i] = FUNC_CALL(logistic_activate)(input[i]);
+            }
         }
     }
 
-    // the probability of classes (20)
-    int index = entry_index(IW, IH, COORDS, CLASSES, INPUTS_COUNT, 0, 0, COORDS + 1);
+#if DO_SOFTMAX
+    // the probability of classes
+    int index = FUNC_CALL(entry_index)(IW, IH, COORDS, CLASSES, INPUTS_COUNT, 0, 0, COORDS + 1);
     int batch_offset = INPUTS_COUNT / NUM;
     for (int b = 0; b < IB * NUM; b++)
-        softmax_generic(input + index + b * batch_offset, output + index + b * batch_offset,
-                        1, CLASSES, IH, IW, h, w);
+        FUNC_CALL(softmax_generic)(input + index + b * batch_offset, output + index + b * batch_offset,
+                                   1, CLASSES, IH, IW, x);
+#endif
 }

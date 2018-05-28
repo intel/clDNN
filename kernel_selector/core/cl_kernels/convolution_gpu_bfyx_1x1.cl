@@ -78,7 +78,7 @@ KERNEL(convolution_bfyx_1x1)(
     const uint b = get_global_id(2);
     const uint group_f = get_group_id(1) * 16;
 
-    MAKE_VECTOR_TYPE(UNIT_TYPE, 16) blockC00;
+    MAKE_VECTOR_TYPE(UNIT_TYPE, 16) blockC00 = UNIT_VAL_ZERO;
 
 #if BIAS_TERM
     #if   BIAS_PER_OUTPUT
@@ -123,7 +123,11 @@ KERNEL(convolution_bfyx_1x1)(
 
     for(uint i = 0; i < 16; i++)
     {
+    #if OUTPUT_LAYOUT_BF8_XY16
+        const uint dst_index = GET_DATA_BF8_XY16_INDEX(OUTPUT, b, group_f+i, y, x) + out_split_offset;
+    #else
         const uint dst_index = GET_DATA_INDEX(OUTPUT, b, group_f+i, y, x) + out_split_offset;
+    #endif
     #if LEFTOVERS
         if(group_f+i < OUTPUT_FEATURE_NUM)
     #endif

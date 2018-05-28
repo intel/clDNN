@@ -19,11 +19,133 @@
 #include "program_dump_graph.h"
 #include "to_string_utils.h"
 #include <algorithm>
+#include <vector>
 
 namespace cldnn
 {
-namespace
-{
+    namespace
+    {
+        static const std::vector<std::string> colors =
+        {
+            "chartreuse",
+            "aquamarine",
+            "gold",
+            "green",
+            "blue",
+            "cyan",
+            "azure",
+            "beige",
+            "bisque",
+            "blanchedalmond",
+            "blueviolet",
+            "brown",
+            "burlywood",
+            "cadetblue",
+            "chocolate",
+            "coral",
+            "cornflowerblue",
+            "cornsilk",
+            "crimson",
+            "aliceblue",
+            "antiquewhite",
+            "deeppink",
+            "deepskyblue",
+            "dimgray",
+            "dodgerblue",
+            "firebrick",
+            "floralwhite",
+            "forestgreen",
+            "gainsboro",
+            "ghostwhite",
+            "goldenrod",
+            "greenyellow",
+            "honeydew",
+            "hotpink",
+            "indianred",
+            "indigo",
+            "ivory",
+            "khaki",
+            "lavender",
+            "lavenderblush",
+            "lawngreen",
+            "lemonchiffon",
+            "lightblue",
+            "lightcoral",
+            "lightcyan",
+            "lightgoldenrodyellow",
+            "lightgray",
+            "lightgrey",
+            "lightpink",
+            "lightsalmon",
+            "lightseagreen",
+            "lightskyblue",
+            "lightsteelblue",
+            "lightyellow",
+            "lime",
+            "limegreen",
+            "linen",
+            "magenta",
+            "maroon",
+            "mediumaquamarine",
+            "mediumblue",
+            "mediumorchid",
+            "mediumpurple",
+            "mediumseagreen",
+            "mediumslateblue",
+            "mediumspringgreen",
+            "mediumturquoise",
+            "mediumvioletred",
+            "midnightblue",
+            "mintcream",
+            "mistyrose",
+            "moccasin",
+            "navajowhite",
+            "navy",
+            "oldlace",
+            "olive",
+            "olivedrab",
+            "orange",
+            "orangered",
+            "orchid",
+            "palegoldenrod",
+            "palegreen",
+            "paleturquoise",
+            "palevioletred",
+            "papayawhip",
+            "peachpuff",
+            "peru",
+            "pink",
+            "plum",
+            "powderblue",
+            "purple",
+            "red",
+            "rosybrown",
+            "royalblue",
+            "saddlebrown",
+            "salmon",
+            "sandybrown",
+            "seagreen",
+            "seashell",
+            "sienna",
+            "silver",
+            "skyblue",
+            "slateblue",
+            "snow",
+            "springgreen",
+            "steelblue",
+            "tan",
+            "teal",
+            "thistle",
+            "tomato",
+            "turquoise",
+            "violet",
+            "wheat",
+            "white",
+            "yellow",
+            "yellowgreen",
+        };
+
+
     void close_stream(std::ofstream& graph)
     {
         graph.close();
@@ -73,6 +195,8 @@ namespace
             case format::bf8_xy16: out = "bf8_xy16"; break;
             case format::image_2d_weights_c1_b_fyx: out = "image_2d_weights_c1_b_fyx"; break;
             case format::image_2d_weights_c4_fyx_b: out = "image_2d_weights_c4_fyx_b"; break;
+            case format::image_2d_weights_winograd_6x3_s1_fbxyb: out = "image_2d_weights_winograd_6x3_s1_fbxyb"; break;
+            case format::image_2d_weights_winograd_6x3_s1_xfbyb: out = "image_2d_weights_winograd_6x3_s1_xfbyb"; break;
             case format::any: out = "any"; break;
             default:
                 out = "unk format";
@@ -82,6 +206,22 @@ namespace
             if (!ptr->is_valid_output_layout())
                 out += " (invalid)";
 
+            return out;
+        };
+
+        const auto extr_data_type = [](program_node* ptr)
+        {
+            std::string out = "";
+            switch (ptr->get_output_layout().data_type)
+            {
+            case data_types::i8: out = "i8"; break;
+            case data_types::u8: out = "u8"; break;
+            case data_types::f16: out = "f16"; break;
+            case data_types::f32: out = "f32"; break;
+            default:
+                out = "unknown data_type";
+                break;
+            }
             return out;
         };
 
@@ -96,7 +236,14 @@ namespace
                 #pragma clang diagnostic push
                 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
             #endif
-            graph << "    " << get_node_id(node.get()) << "[label=\"" << node->id() << ":\\n" << get_extr_type(typeid(*node).name()) << "\n out format: " + extr_oformat(node.get()) << (node->can_be_optimized() ? "\\n optimized out" : "") << "\"";
+			std::string node_type = get_extr_type(typeid(*node).name());
+			graph << "    " << get_node_id(node.get()) << "[label=\"" << node->id() << ":\n" << node_type << "\n out format: " + extr_oformat(node.get())
+                << "\n out data_type: " + extr_data_type(node.get())
+				<< "\\nprocessing number: " << node->get_processing_num() << "\\n color:" << (node->is_reusing_memory() ? std::to_string(node->get_reused_memory_color()) : "none")
+				<< (node->can_be_optimized() ? "\\n optimized out" : "");
+			if (node_type != "struct cldnn::data" && node_type != "struct cldnn::input_layout" && !node->can_be_optimized())
+				graph << "\\n Selected kernel: " << (node->get_selected_impl() == nullptr ? "none" : node->get_selected_impl().get()->get_kernel_name());
+			graph << "\"";
             #ifdef __clang__
                 #pragma clang diagnostic pop
             #endif
@@ -107,6 +254,11 @@ namespace
                 graph << ", color=blue";
             if (node->is_in_data_flow())
                 graph << ", group=data_flow";
+            if (node->is_reusing_memory())
+            {
+                graph << ", fillcolor=\"" << colors[node->get_reused_memory_color() % colors.size()] << "\" ";
+                graph << " style=filled ";
+            }
             graph << "];\n";
 
             for (auto& user : node->get_users())

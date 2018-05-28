@@ -37,8 +37,8 @@ class primitive_inst;
 struct network_impl : public refcounted_obj<network_impl>
 {
 public:
-    network_impl(const program_impl& program);
-    network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options = build_options());
+    network_impl(const program_impl& program, bool is_internal = false);
+    network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options = build_options(), bool is_internal = false);
 
     const program_impl& get_program() const { return *_program; }
     engine_impl& get_engine() const { return _program->get_engine(); }
@@ -66,9 +66,13 @@ public:
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<primitive_id>& ids);
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<program_node*>& nodes);
     event_impl::ptr execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<event_impl::ptr>& events);
+    auto get_id() const { return net_id; }
+    bool is_internal() const { return _internal; }
 
 private:
+    uint32_t net_id = 0;
     const program_impl::cptr _program;
+    bool _internal;
 
     std::map<primitive_id, std::shared_ptr<primitive_inst>> _primitives;
     std::vector<std::shared_ptr<primitive_inst>> _inputs;

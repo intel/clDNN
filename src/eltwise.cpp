@@ -38,8 +38,6 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
     auto node_info  = node.desc_to_json();
     auto desc       = node.get_primitive();
     auto activation = desc->with_activation ? " true" : "false";
-    auto& input_1   = node.input();
-    auto& input_2   = node.input2();
 
     std::stringstream primitive_description;
     std::string       str_mode;
@@ -64,8 +62,10 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
     }
 
     json_composite eltwise_info;
-    eltwise_info.add("input_1", input_1.id());
-    eltwise_info.add("input_2", input_2.id());
+    for (size_t i = 0; i < node.inputs_count(); i++)
+    {
+        eltwise_info.add("input_"+std::to_string(i), node.input(i).id());
+    }
     eltwise_info.add("mode", str_mode);
     if (desc->with_activation)
     {

@@ -44,6 +44,8 @@ struct program_impl : public refcounted_obj<program_impl>
 public:
     program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options);
 
+    void dump_memory_pool() const;
+
     auto& get_engine() const { return *engine; }
     auto get_options() const { return options; }
     bool is_debug_build() const { return options.get<build_option_type::debug>()->enabled(); }
@@ -51,9 +53,9 @@ public:
     std::list<std::shared_ptr<program_node>> get_nodes() const;
     auto get_processing_order() const { return processing_order; }
     auto get_optimized_out() const { return optimized_out; }
-    auto& get_node(primitive_id const& id) 
+    auto& get_node(primitive_id const& id)
     {
-        try 
+        try
         {
             return *nodes_map.at(id);
         }
@@ -62,6 +64,12 @@ public:
             throw std::runtime_error("Program doesn't contain primtive node: " + id);
         }
     }
+
+    bool has_node(const primitive_id& prim) const
+    {
+        return nodes_map.count(prim) > 0;
+    }
+
     auto const& get_node(primitive_id const& id) const
     {
         try
@@ -117,6 +125,7 @@ private:
     void analyze_output_size_handling_need();
     void replace_nodes_pre();
     void replace_nodes_post();
+    void handle_reshape();
 
     /*
     ** Optimization functions
@@ -133,6 +142,16 @@ private:
     void prepare_buffer_fusing();
     void prepare_primitive_fusing();
     void prepare_depthwise_sep_opt();
+    void update_processing_order();
+
+    /*
+    ** Memory pool functions
+    */
+    void prepare_memory_dependencies();
+    void basic_memory_dependencies();
+    void skipped_branch_memory_dependencies();
+    void oooq_memory_dependencies();
+    std::string get_memory_dependencies_string() const;
 
     /*
     ** Utilities

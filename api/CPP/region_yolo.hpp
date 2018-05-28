@@ -34,7 +34,7 @@ namespace cldnn
     /// @par Where:
     struct region_yolo : public primitive_base<region_yolo, CLDNN_PRIMITIVE_DESC(region_yolo)>
     {
-        CLDNN_DECLATE_PRIMITIVE(region_yolo)
+        CLDNN_DECLARE_PRIMITIVE(region_yolo)
 
         /// @brief Constructs region_yolo primitive.
         /// @param id This primitive id.
@@ -46,12 +46,16 @@ namespace cldnn
             const uint32_t coords,
             const uint32_t classes,
             const uint32_t num,
+            const uint32_t mask_size = 0,
+            const bool do_softmax = true,
             const padding& output_padding = padding()
         )
             :primitive_base(id, { input }, output_padding)
             , coords(coords)
             , classes(classes)
             , num(num)
+            , mask_size(mask_size)
+            , do_softmax(do_softmax)
         {}
 
         /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{region_yolo}
@@ -60,6 +64,8 @@ namespace cldnn
             , coords(dto->coords)
             , classes(dto->classes)
             , num(dto->num)
+            , mask_size(dto->mask_size)
+            , do_softmax(dto->do_softmax != 0)
         {}
 
         /// @brief Defines a scope of a region yolo normalization
@@ -68,6 +74,8 @@ namespace cldnn
         uint32_t coords;
         uint32_t classes;
         uint32_t num;
+        uint32_t mask_size;
+        bool do_softmax;
 
 
     private:
@@ -76,6 +84,8 @@ namespace cldnn
             dto.coords = coords;
             dto.classes = classes;
             dto.num = num;
+            dto.mask_size = mask_size;
+            dto.do_softmax = do_softmax;
         }
     };
     /// @}

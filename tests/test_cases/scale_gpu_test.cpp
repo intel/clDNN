@@ -37,14 +37,14 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_same_size) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
     //  f0: b0:  0.1    0.2  0.25   b1:   0.3   0.4   0.5
-    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1  
-    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5     
+    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1
+    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5
     //  f1: b0:  1.6    1.7  1.75   b1:   1.8   1.9   2
 
     engine engine;
@@ -97,14 +97,14 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_same_size_bfyx) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
     //  f0: b0:  0.1    0.2  0.25   b1:   0.3   0.4   0.5
-    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1  
-    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5     
+    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1
+    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5
     //  f1: b0:  1.6    1.7  1.75   b1:   1.8   1.9   2
 
     engine engine;
@@ -155,14 +155,14 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_same_size_scale_bfyx) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
     //  f0: b0:  0.1    0.2  0.25   b1:   0.3   0.4   0.5
-    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1  
-    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5     
+    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1
+    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5
     //  f1: b0:  1.6    1.7  1.75   b1:   1.8   1.9   2
 
     engine engine;
@@ -227,20 +227,20 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_same_size_bias_term) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
     //  f0: b0:  0.1    0.2  0.25   b1:   0.3   0.4   0.5
-    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1  
-    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5     
+    //  f0: b0:  0.6    0.7  0.75   b1:   0.8   0.9   1
+    //  f1: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5
     //  f1: b0:  1.6    1.7  1.75   b1:   1.8   1.9   2
     //
     //  Bias:
     //  f0: b0:  1.1    1.2  1.25   b1:   1.3   1.4   1.5
-    //  f0: b0:  2.6    2.7  2.75   b1:   2.8   2.9   2  
-    //  f1: b0:  3.1    3.2  3.25   b1:   3.3   3.4   3.5     
+    //  f0: b0:  2.6    2.7  2.75   b1:   2.8   2.9   2
+    //  f1: b0:  3.1    3.2  3.25   b1:   3.3   3.4   3.5
     //  f1: b0:  4.6    4.7  4.75   b1:   4.8   4.9   4
 
     engine engine;
@@ -306,8 +306,8 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_scalar) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
@@ -371,8 +371,8 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_y) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
@@ -437,8 +437,8 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_fb) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale: per feature per batch
@@ -504,8 +504,8 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_f) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale: per feature
@@ -571,8 +571,8 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_x) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
@@ -638,8 +638,8 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_xy) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
@@ -709,14 +709,14 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_batch1) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
     //
     //  Scale:
     //  f0: b0:  0.1    0.2  0.25
     //  f0: b0:  0.6    0.7  0.75
-    //  f1: b0:  1.1    1.2  1.25    
+    //  f1: b0:  1.1    1.2  1.25
     //  f1: b0:  1.6    1.7  1.75
 
     engine engine;
@@ -1138,7 +1138,7 @@ TEST(scale_gpu, basic_in2x3x2x2_scale_yxfb_bfyx_same_size_padding) {
     //  Scale:
     //  0.1    0.2
     //  0.6    0.5
-     
+
     engine engine;
     std::vector<format> formats_to_test = { format::yxfb , format::bfyx };
 
@@ -1264,7 +1264,7 @@ TEST(NegativeScaleTest, TestAll) {
         ASSERT_ANY_THROW(setup_scale_network(d, tensor(good), tensor(t), tensor(t), f, of, true));
     }
 
-    // sizes must either be equal to input or at most have 
+    // sizes must either be equal to input or at most have
     for (const auto & bad : bad_ts)
     {
         ASSERT_ANY_THROW(setup_scale_network(d, tensor(t), tensor(bad), tensor(t), f, of, true));
@@ -1372,7 +1372,7 @@ public:
 
         for (int variant = 0; variant <= 1; ++variant)
         {
-            auto tpv = generate_generic_test_params(variant); 
+            auto tpv = generate_generic_test_params(variant);
             auto pv = generate_specific_test_params(variant);
 
             for (auto & tp : tpv)

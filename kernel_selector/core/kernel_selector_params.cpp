@@ -86,4 +86,26 @@ namespace KernelSelector {
 
         return s.str();
     }
+
+    std::string ConvolutionGradWeightsParams::to_string() const
+    {
+        std::stringstream s;
+
+        s << BaseParams::to_string() << "_";
+        if (bias.empty())
+        {
+            s << "no_bias" << "_";
+        }
+        else
+        {
+            s << "bias_" << bias[0].PhysicalSize() << "_";
+        }
+        s << convGradWeightsParams.filterSize.x << "_" << convGradWeightsParams.filterSize.y << "_";
+        s << convGradWeightsParams.stride.x << "_" << convGradWeightsParams.stride.y << "_";
+        s << convGradWeightsParams.dilation.x << "_" << convGradWeightsParams.dilation.y << "_";
+        s << convGradWeightsParams.padding.x << "_" << convGradWeightsParams.padding.y << "_";
+        s << convGradWeightsParams.split;
+
+        return s.str();
+    }
 }

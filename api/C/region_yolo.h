@@ -41,8 +41,12 @@ extern "C" {
         uint32_t coords;
     /// @brief paramter classes
         uint32_t classes;
-    /// @brief paramter num
+    /// @brief Number of anchors
         uint32_t num;
+    /// @brief Apply softmax after logistic
+        uint32_t do_softmax;
+    /// @brief Number of really used anchors
+        uint32_t mask_size;
     CLDNN_END_PRIMITIVE_DESC(region_yolo)
 
         CLDNN_DECLARE_PRIMITIVE_TYPE_ID(region_yolo);

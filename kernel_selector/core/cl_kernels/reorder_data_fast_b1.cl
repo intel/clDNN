@@ -60,9 +60,10 @@ KERNEL (reorder_data_fast_b1)(
     uint data_idx = get_global_id(0);
     if(data_idx >= ELEMENTS_COUNT)
         return;
- 
+
+#if !CHANGE_DATA_TYPE_ONLY
  // We're checking output layout instead of input layout intentionally for performance reason
- #if defined OUTPUT_LAYOUT_BFYX
+#if defined OUTPUT_LAYOUT_BFYX
     uint tmp_data_idx = data_idx / INPUT0_BATCH_NUM;
     const uint b = data_idx - tmp_data_idx * INPUT0_BATCH_NUM;
     data_idx = tmp_data_idx;
@@ -112,10 +113,16 @@ KERNEL (reorder_data_fast_b1)(
     tmp_data_idx  = data_idx / INPUT0_FEATURE_NUM;
     const uint f = data_idx - tmp_data_idx * INPUT0_FEATURE_NUM;
 #endif
+#endif
 
+#if CHANGE_DATA_TYPE_ONLY
+    const uint input_idx  = data_idx;
+    const uint output_idx = data_idx;
+#else
     uint4 ov = FUNC_CALL(reshape_dims)(b,f,y,x, INPUT0_SIZE_Y, INPUT0_SIZE_X, OUTPUT_SIZE_Y, OUTPUT_SIZE_X, INPUT0_DIMS, OUTPUT_DIMS);
     const uint input_idx  = FUNC_CALL(get_input_index)(b, f, y, x);
     const uint output_idx = FUNC_CALL(get_output_index)(ov[0],ov[1],ov[2],ov[3]);
+#endif
     
 #if   defined MEAN_SUBTRACT_INSIDE_PARAMS
     float res = TO_MEAN_TYPE(input[input_idx]);

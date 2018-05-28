@@ -53,7 +53,7 @@ std::string batch_norm_inst::to_string(batch_norm_node const& node)
 }
 
 batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node const& node)
-    :parent(network, node) 
+    :parent(network, node)
 {
     auto mean_format = mean_memory().get_layout().format;
     auto variance_format = variance_memory().get_layout().format;

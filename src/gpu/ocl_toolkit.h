@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,12 @@
 
 namespace cldnn { namespace gpu {
 
+typedef  CL_API_ENTRY cl_command_queue(CL_API_CALL *pfn_clCreateCommandQueueWithPropertiesINTEL)(
+    cl_context context,
+    cl_device_id device,
+    const cl_queue_properties *properties,
+    cl_int *errcodeRet);
+
 class ocl_error : public error
 {
 public:
@@ -58,6 +64,8 @@ struct configuration
     bool host_out_of_order;
     std::string log;
     std::string ocl_sources_dumps_dir;
+    cldnn_priority_mode_type priority_mode;
+    cldnn_throttle_mode_type throttle_mode;
 };
 
 class gpu_toolkit;
@@ -111,11 +119,11 @@ public:
     const cl::Context& context() const { return _context; }
     const cl::Device& device() const { return _device; }
     const cl::CommandQueue& queue() const { return _command_queue; }
-    
+
     const configuration& get_configuration() const { return _configuration; }
     engine_info_internal get_engine_info() const { return _engine_info; }
     kernels_cache& get_kernels_cache() { return _kernels_cache; }
-    
+
     inline bool extension_supported(const std::string ext) { return _extensions.find(ext) != std::string::npos; }
 
     gpu_toolkit(const gpu_toolkit& other) = delete;
@@ -124,20 +132,26 @@ public:
     gpu_toolkit& operator=(gpu_toolkit&& other) = delete;
     std::string single_kernel_name() const { return _configuration.single_kernel_name; }
     bool enabled_single_kernel() const { return single_kernel_name() == "" ? false : true; }
+    void set_output_event(bool out_event) { _output_event = out_event; }
 
     event_impl::ptr enqueue_kernel(cl::Kernel const& kern, cl::NDRange const& global, cl::NDRange const& local, std::vector<event_impl::ptr> const& deps);
     event_impl::ptr enqueue_marker(std::vector<event_impl::ptr> const& deps);
     void flush();
+    void release_pending_memory();
     void wait_for_events(std::vector<event_impl::ptr> const& events);
 
     void log(uint64_t id, std::string const& msg);
     bool logging_enabled() const { return !_configuration.log.empty(); }
 
+    bool is_neo_driver() { return _neo_driver; }
+
 private:
     configuration _configuration;
     cl::Device _device;
+    bool _neo_driver = false;
     cl::Context _context;
     cl::CommandQueue _command_queue;
+    cl_platform_id _platform_id;
     engine_info_internal _engine_info;
     kernels_cache _kernels_cache;
 
@@ -151,8 +165,10 @@ private:
 
     //returns whether a barrier has been added
     void sync_events(std::vector<event_impl::ptr> const& deps);
-
+    bool _output_event = false;
     std::ofstream& open_log();
+
+    std::string get_device_version() { return _device.getInfo<CL_DEVICE_VERSION>(); }
 };
 
 }}

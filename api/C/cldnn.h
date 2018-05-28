@@ -127,18 +127,38 @@ typedef enum /*:int32_t*/
     cldnn_engine_ocl ///< OpenCL engine
 } cldnn_engine_type;
 
+/// @brief Priority modes.
+typedef enum /*:int16_t*/
+{
+    cldnn_priority_disabled,
+    cldnn_priority_low,
+    cldnn_priority_med,
+    cldnn_priority_high
+} cldnn_priority_mode_type;
+
+/// @brief Throttle modes.
+typedef enum /*:int16_t*/
+{
+    cldnn_throttle_disabled,
+    cldnn_throttle_low,
+    cldnn_throttle_med,
+    cldnn_throttle_high
+} cldnn_throttle_mode_type;
+
 /// @brief Configuration parameters for created engine.
 typedef struct
 {
-    uint32_t enable_profiling;         ///< Enable per-primitive profiling.
-    uint32_t meaningful_kernels_names; ///< Generate meaniful names fo OpenCL kernels.
-    uint32_t dump_custom_program;      ///< dump the custom generated program to files 
-    const char* compiler_options;      ///< OpenCL compiler options string.
-    const char* single_kernel_name;    ///< If provided, runs specific layer.
-    uint32_t enable_parallelisation;   ///< Enables parallel execution of primitives which don't depend on each other. Disabled by default.
-    const char* engine_log;            ///< Specifies a file to which engine log should be dumped. Null/empty values means no logging.
-    const char* sources_dumps_dir;     ///< Specifies a directory where sources of cldnn::program objects should be dumped. Null/empty values means no loggins.
-    uint32_t priority_mode;            ///< Placeholder for priority mode (support of priority hints in command queue). Currently ignored.
+    uint32_t enable_profiling;                          ///< Enable per-primitive profiling.
+    uint32_t meaningful_kernels_names;                  ///< Generate meaniful names fo OpenCL kernels.
+    uint32_t dump_custom_program;                       ///< dump the custom generated program to files
+    const char* compiler_options;                       ///< OpenCL compiler options string.
+    const char* single_kernel_name;                     ///< If provided, runs specific layer.
+    uint32_t enable_parallelisation;                    ///< Enables parallel execution of primitives which don't depend on each other. Disabled by default.
+    const char* engine_log;                             ///< Specifies a file to which engine log should be dumped. Null/empty values means no logging.
+    const char* sources_dumps_dir;                      ///< Specifies a directory where sources of cldnn::program objects should be dumped. Null/empty values means no loggins.
+    /*cldnn_priority_mode_type*/ int16_t priority_mode; ///< Priority mode (support of OpenCL priority hints in command queue).
+    /*cldnn_throttle_mode_type*/ int16_t throttle_mode; ///< Placeholder for throttle mode (support of throttle hints in command queue). It has no effect for now and should be set to cldnn_throttle_disabled.
+    uint32_t enable_memory_pool;                        ///< Enables memory usage optimization. memory objects will be reused when possible.
 }  cldnn_engine_configuration;
 
 /// @brief Information about the engine returned by cldnn_get_engine_info().
@@ -152,10 +172,14 @@ typedef struct
     uint64_t max_global_mem_size;      ///< Maximum size of global device memory in bytes.
     uint64_t max_alloc_mem_size;       ///< Maximum size of memory object allocation in bytes.
 
+    uint64_t max_image2d_width;        ///< Maximum image 2d width supported by the device.
+    uint64_t max_image2d_height;       ///< Maximum image 2d height supported by the device.
+
     // Flags (for layout compatibility fixed size types are used).
     uint8_t supports_fp16;             ///< Does engine support FP16.
     uint8_t supports_fp16_denorms;     ///< Does engine support denormalized FP16.
     uint8_t supports_subgroups_short;  ///< Does engine support cl_intel_subgroups_short.
+    uint8_t supports_image;           ///< Does engine support images (CL_DEVICE_IMAGE_SUPPORT cap).
 }  cldnn_engine_info;
 /// @}
 
@@ -383,13 +407,32 @@ typedef enum cldnn_activation_func_t
     activation_linear,                  // a*val + b                        (a,b are additional params) 
     activation_square,                  // val*val
     activation_sqrt,                    // sqrt(val)
+    activation_elu,                     // max(0, val) + a * (exp(min(0, val) - 1) (a is additional param)
 } cldnn_activation_func;
+
+/// @brief activation gradient functions
+typedef enum cldnn_activation_grad_func_t
+{
+    activation_grad_none,                    // val
+    activation_grad_relu,                    // val * (input > 0)
+    activation_grad_relu_negative_slope,     // val * ((input > 0) + a * (input <= 0)    (a is additional param)
+} cldnn_activation_grad_func;
 
 /// @brief activation additional params
 typedef struct cldnn_activation_additional_params_t
 {
     float a, b;
 } cldnn_activation_additional_params;
+
+
+/// @brief reorder mean operation modes
+typedef enum cldnn_reorder_mean_mode_t
+{
+    mean_none,                    // val
+    mean_subtract,                // val - mean
+    mean_mul,                     // val * mean
+    mean_div,                     // val/mean
+} cldnn_reorder_mean_mode;
 
 /// @brief Begin primitive description definition
 /// @details Defines @p 'cldnn_primitive_type_desc' structure with first 5 fields
@@ -428,6 +471,11 @@ CLDNN_API cldnn_topology cldnn_create_topology(cldnn_status* status);
 /// @param[in] dto The pointer to a structure defined by @ref CLDNN_BEGIN_PRIMITIVE_DESC and @ref CLDNN_END_PRIMITIVE_DESC
 CLDNN_API void cldnn_add_primitive(cldnn_topology topology, const struct CLDNN_PRIMITIVE_DESC(primitive)* dto, cldnn_status* status);
 
+/// @brief Change input layout of the topology.
+/// @param[in] id of the input layout in the topology
+/// @param[in] new_layout of the input layout
+CLDNN_API void cldnn_change_input_layout(cldnn_topology topology, cldnn_primitive_id id, cldnn_layout new_layout, cldnn_status* status);
+
 /// @brief Return all primitives id from topology.
 /// @details Function fills user provided buffer by primitive ids. Each id is followed by '\0'.
 /// @param[in] ids Pointer to user-allocated buffer to store names.
@@ -448,6 +496,12 @@ CLDNN_API void cldnn_release_topology(cldnn_topology topology, cldnn_status* sta
 /// @brief number of available engines of the particular type
 CLDNN_API uint32_t cldnn_get_engine_count(/*cldnn_engine_type*/ int32_t type, cldnn_status* status);
 
+/// @brief Release pending memory allocated in OpenCL context.
+/// @param[in] type Engine type @ref cldnn_engine_type. Only OCL engine is supported.
+/// @details OpenCL does not guarantee that the memory will be released (even with cl:Buffers releaed).
+/// Use this function to force releasing whole pending memory.
+CLDNN_API void cldnn_release_pending_memory(cldnn_engine engine, cldnn_status* status);
+
 /// @brief Create new engine of the specified @p type, @p engine_num, and @p configuration options.
 /// @param[in] type Engine type @ref cldnn_engine_type. Only OCL engine is supported.
 /// @param[in] engine_num Engine index. Should be 0.
@@ -465,7 +519,13 @@ CLDNN_API cldnn_engine_info cldnn_get_engine_info(cldnn_engine engine, cldnn_sta
 
 /// @brief Returns the @ref cldnn_engine_type for the particular engine
 CLDNN_API /*cldnn_engine_type*/ int32_t cldnn_get_engine_type(cldnn_engine engine, cldnn_status* status);
+
+/// @brief Returns total size of all resources allocated using given engine
+CLDNN_API int64_t cldnn_get_temp_used_device_memory_size(cldnn_engine engine, cldnn_status* status);
 /// @}
+
+/// @brief Returns max size of resources allocated using given engine
+CLDNN_API int64_t cldnn_get_max_used_device_memory_size(cldnn_engine engine, cldnn_status* status);
 
 /// @addtogroup c_network
 /// @{

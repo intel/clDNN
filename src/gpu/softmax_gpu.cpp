@@ -27,8 +27,8 @@ struct softmax_gpu : typed_primitive_gpu_impl<softmax>
 {
     using parent = typed_primitive_gpu_impl<softmax>;
     using parent::parent;
-    
-    static primitive_impl* create(const softmax_node& arg) 
+
+    static primitive_impl* create(const softmax_node& arg)
     {
         auto sm_params = get_default_params<kernel_selector::softmax_params>(arg);
         auto sm_optional_params = get_default_optional_params<kernel_selector::softmax_optional_params>(arg.get_program());
@@ -83,6 +83,8 @@ namespace {
             implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw);
             implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
             implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
+            implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), val_fw);
+            implementation_map<softmax>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), val_fw);
         }
         ~attach() {}
     };

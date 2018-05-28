@@ -42,7 +42,7 @@ std::list<std::pair<primitive_id, memory_impl::ptr>> constants_propagator::calcu
     build_options bo;
     bo.set_option(build_option::optimize_data(false));
     bo.set_option(build_option::outputs(const_outputs));
-    network_impl::ptr net = prog->get_engine().build_network(tpl, bo);
+    network_impl::ptr net = prog->get_engine().build_network(tpl, bo, true);
     for (auto& cin : const_inputs)
         net->set_input_data(cin->id(), cin->get_attached_memory());
 
@@ -89,4 +89,3 @@ void constants_propagator::add_constant(program_node& node)
         }
     }
 }
-

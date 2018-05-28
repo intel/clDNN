@@ -19,7 +19,7 @@ PREDEFINED             = DOXYGEN_SHOULD_SKIP_THIS \
 EXPAND_AS_DEFINED      = CLDNN_BEGIN_PRIMITIVE_DESC \
                          CLDNN_END_PRIMITIVE_DESC \
                          CLDNN_PRIMITIVE_DESC \
-                         CLDNN_DECLATE_PRIMITIVE \
+                         CLDNN_DECLARE_PRIMITIVE \
                          CLDNN_DEFINE_TYPE_ID \
                          CLDNN_DECLARE_PRIMITIVE_TYPE_ID
 ALIASES                = CLDNN_PRIMITIVE_DESC{1}="@ref cldnn_\1_desc"

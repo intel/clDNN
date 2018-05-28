@@ -43,14 +43,14 @@ protected:
 
 public:
 
-    static primitive_impl* create(const normalize_node& arg) 
-    { 
+    static primitive_impl* create(const normalize_node& arg)
+    {
         auto norm_params = get_default_params<kernel_selector::normalize_params>(arg);
         auto norm_optional_params = get_default_optional_params<kernel_selector::normalize_optional_params>(arg.get_program());
 
         const auto& scale_layout  = arg.scale().get_output_layout();
 
-        norm_params.normParams.normMode = 
+        norm_params.normParams.normMode =
             arg.get_primitive()->across_spatial ?
             kernel_selector::normalize_mode::ACROSS_SPATIAL :
             kernel_selector::normalize_mode::WITHIN_SPATIAL;
@@ -71,12 +71,14 @@ public:
 
 namespace {
     struct attach {
-        attach() 
+        attach()
         {
             implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), normalize_gpu::create);
             implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), normalize_gpu::create);
             implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), normalize_gpu::create);
             implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), normalize_gpu::create);
+            implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), normalize_gpu::create);
+            implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), normalize_gpu::create);
         }
         ~attach() {}
     };

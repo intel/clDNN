@@ -23,10 +23,13 @@ namespace KernelSelector
     {
         ParamsKey k;
         k.EnableInputDataType(Datatype::UINT8);
+        k.EnableInputDataType(Datatype::INT8);
         k.EnableInputDataType(Datatype::F16);
         k.EnableInputDataType(Datatype::F32);
         k.EnableOutputDataType(Datatype::F16);
         k.EnableOutputDataType(Datatype::F32);
+        k.EnableOutputDataType(Datatype::INT8);
+        k.EnableOutputDataType(Datatype::UINT8);
         k.EnableDifferentTypes();
         k.EnableAllInputLayout();
         k.EnableAllOutputLayout();

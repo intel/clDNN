@@ -17,12 +17,12 @@
 #pragma once
 
 #include "common_types.h"
-#include <map>
 #include <vector>
 #include <assert.h>
 #include <numeric>
-#include <algorithm>
 #include <cstddef>
+#include <algorithm>
+#include <array>
 
 namespace KernelSelector
 {
@@ -35,7 +35,7 @@ namespace KernelSelector
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         enum DataLayout
         {
-            bf,                 // 1D+batch
+            bf = 0,             // 1D+batch
             fb,                 // 1D+batch
             bfyx,               // 3D+batch
             yxfb,               // 3D+batch
@@ -47,6 +47,7 @@ namespace KernelSelector
             // TODO: most of the kernel doesn't support ROI. we need to handle it correctly.
             brfyx,              // 4D+batch
             winograd_2x3_s1_data, //winograd convolution input, F(2,3) -- filter 3x3 with stride 1
+            DataLayoutCount // NMBER OF ELEMENTS IN ENUM
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,13 +55,14 @@ namespace KernelSelector
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         enum WeightsLayout
         {
-            oi,
+            oi = 0,
             io,
             oiyx,
             oyxi,
             iyxo,
             yxio,
             os_iyx_osv16,
+            os_iyx_osv16_rotate_180,
             os_i_osv16,
             os_i_osv8__ai8,         // TODO can we drop the alignment form layout name?
             os_i_osv16__ai8,
@@ -71,6 +73,10 @@ namespace KernelSelector
             image_2d_weights_c1_b_fyx,     // image type 2d b_fyx single channel
             winograd_2x3_s1_weights, //winograd convolution weights, F(2, 3) --filter 3x3 with stride 1
             winograd_2x3_s1_fused_weights, //winograd convolution weights for fused kernel, F(2, 3) --filter 3x3 with stride 1
+            winograd_6x3_s1_fused_weights, //winograd convolution weights for fused kernel, F(6, 3) --filter 3x3 with stride 1
+            image_2d_weights_winograd_6x3_s1_fbxyb, // image 2d winograd convolution weights for fused kernel, F(2, 3) --filter 3x3 with stride 1
+            image_2d_weights_winograd_6x3_s1_xfbyb, // image 2d winograd convolution weights for fused kernel, F(2, 3) --filter 3x3 with stride 1
+            WeightsLayoutCount // NMBER OF ELEMENTS IN ENUM
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,98 +126,6 @@ namespace KernelSelector
                 OFM = 3,
             };
 
-            using ChannelLocation = std::vector<int>;
-
-            std::map<DataLayout, ChannelLocation> dataChannelMap
-            {
-                { DataLayout::bf,               { -1,-1, 0,-1, 1 } },
-                { DataLayout::fb,               { -1,-1, 1,-1, 0 } },
-                { DataLayout::bfyx,             {  0, 1, 2,-1, 3 } },
-                { DataLayout::yxfb,             {  2, 3, 1,-1, 0 } },
-                { DataLayout::byxf,             {  1, 2, 0,-1, 3 } },
-                { DataLayout::fyxb,             {  1, 2, 3,-1, 0 } },
-                { DataLayout::bs_f_bsv8__af8,   { -1,-1, 0,-1, 1 } },
-                { DataLayout::bs_f_bsv16__af8,  { -1,-1, 0,-1, 1 } },
-                { DataLayout::bf8_xy16,         {  0, 1, 2,-1, 3 } },
-                { DataLayout::brfyx,            {  0, 1, 2, 3, 4 } },
-                { DataLayout::winograd_2x3_s1_data, {  2, 1, 0,-1, 3 } },
-            };
-
-            std::map<WeightsLayout, ChannelLocation> weightsChannelMap
-            {
-                { WeightsLayout::oi,                            { -1,-1, 0, 1 } },
-                { WeightsLayout::io,                            { -1,-1, 1, 0 } },
-                { WeightsLayout::oiyx,                          {  0, 1, 2, 3 } },
-                { WeightsLayout::oyxi,                          {  1, 2, 0, 3 } },
-                { WeightsLayout::iyxo,                          {  1, 2, 3, 0 } },
-                { WeightsLayout::yxio,                          {  2, 3, 1, 0 } },
-                { WeightsLayout::os_iyx_osv16,                  {  0, 1, 2, 3 } },
-                { WeightsLayout::os_i_osv8__ai8,                { -1,-1, 0, 1 } },
-                { WeightsLayout::os_i_osv16__ai8,               { -1,-1, 0, 1 } },
-                { WeightsLayout::os_i_osv16,                    { -1,-1, 0, 1 } },
-                { WeightsLayout::i_yxs_os_yxsv2_osv16,          {  1, 2, 3, 0 } },
-                { WeightsLayout::iy_xs_os_xsv2_osv16__ao32,     {  1, 2, 3, 0 } },
-                { WeightsLayout::iy_xs_os_xsv2_osv8__ao32,      {  1, 2, 3, 0 } },
-                { WeightsLayout::image_2d_weights_c4_fyx_b,     {  0, 1, 2, 3 } },
-                { WeightsLayout::image_2d_weights_c1_b_fyx,     {  0, 1, 2, 3 } },
-                { WeightsLayout::winograd_2x3_s1_weights,       {  3, 2, 1, 0 } },
-                { WeightsLayout::winograd_2x3_s1_fused_weights, {  0, 1, 2, 3 } },
-            };
-
-            template <typename MapT, typename Layout, typename ChannelName>
-            inline int Channelndex(MapT channelMap, Layout l, ChannelName channelName)
-            {
-                size_t channel = static_cast<size_t>(channelName);
-                assert(channelMap.find(l) != channelMap.end());
-                assert(channel < channelMap[l].size());
-
-                return channelMap[l][channel];
-            }
-
-            template <typename MapT, typename Layout, typename ChannelName>
-            inline Dim Extract(MapT channelMap, Layout l, ChannelName channelName, const NDims& dims)
-            {
-                const int i = Channelndex(channelMap, l, channelName);
-                return ((i < 0) || (i >= (int)dims.size())) ? Dim{ 1, 1, {0,0} } : dims[i];
-            }
-
-            template <typename MapT, typename Layout>
-            inline uint32_t ChannelsCount(MapT channelMap, Layout l)
-            {
-                const auto& entry = channelMap[l];
-                return std::accumulate(entry.begin(), entry.end(), 0U, [](uint32_t count, int v) {return count + ((v != -1) ? 1 : 0); });
-            }
-
-            inline Dim Extract(DataLayout l, DataChannelName channel, const NDims& d)
-            {
-                return Extract(dataChannelMap, l, channel, d);
-            }
-
-            inline Dim Extract(WeightsLayout l, WeightsChannelName channel, const NDims& d)
-            {
-                return Extract(weightsChannelMap, l, channel, d);
-            }
-
-            inline int Channelndex(DataLayout l, DataChannelName channel)
-            {
-                return Channelndex(dataChannelMap, l, channel);
-            }
-
-            inline int Channelndex(WeightsLayout l, WeightsChannelName channel)
-            {
-                return Channelndex(weightsChannelMap, l, channel);
-            }
-
-            inline uint32_t ChannelsCount(DataLayout l)
-            {
-                return ChannelsCount(dataChannelMap, l);
-            }
-
-            inline uint32_t ChannelsCount(WeightsLayout l)
-            {
-                return ChannelsCount(weightsChannelMap, l);
-            }
-
             inline bool SimpleLayout(WeightsLayout l)
             {
                 switch (l)
@@ -238,6 +152,20 @@ namespace KernelSelector
                 case DataLayout::yxfb:
                 case DataLayout::byxf:
                 case DataLayout::fyxb:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+
+            inline bool IsImageType(WeightsLayout l)
+            {
+                switch (l)
+                {
+                case WeightsLayout::image_2d_weights_c4_fyx_b:
+                case WeightsLayout::image_2d_weights_c1_b_fyx:
+                case WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb:
+                case WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb:
                     return true;
                 default:
                     return false;
@@ -408,6 +336,29 @@ namespace KernelSelector
             DType     dtype;
             Layout    layout;
 
+            template <typename ArrayT, typename ChannelName>
+            static inline int Channelndex(const ArrayT& channelArr, Layout l, ChannelName channelName)
+            {
+                size_t channel = static_cast<size_t>(channelName);
+                assert(channel < channelArr[l].size());
+
+                return channelArr[l][channel];
+            }
+
+            template <typename ArrayT, typename ChannelName>
+            static inline Dim Extract(const ArrayT& channelArr, Layout l, ChannelName channelName, const NDims& dims)
+            {
+                const int i = Channelndex(channelArr, l, channelName);
+                return ((i < 0) || (i >= (int)dims.size())) ? Dim{ 1, 1,{ 0,0 } } : dims[i];
+            }
+
+            template <typename ArrayT>
+            static inline uint32_t ChannelsCount(const ArrayT& channelArr, Layout l)
+            {
+                const auto& entry = channelArr[l];
+                return std::accumulate(entry.begin(), entry.end(), 0U, [](uint32_t count, int v) {return count + ((v != -1) ? 1 : 0); });
+            }
+
         public:
             TensorBaseT() = default;
             TensorBaseT(const TensorBaseT&) = default;
@@ -461,6 +412,21 @@ namespace KernelSelector
 
                 return same;
             }
+
+            bool SameDimsSizes(const TensorBaseT& t) const
+            {
+                bool same =
+                    dims.size() == t.dims.size();
+                if (same)
+                {
+                    for (size_t i = 0; i < dims.size(); i++)
+                    {
+                        same &= dims[i].v == t.dims[i].v;
+                    }
+                }
+
+                return same;
+            }
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -486,8 +452,23 @@ namespace KernelSelector
 
             DataTensor  TransformIgnorePadding(DataLayout l) const;
             DataTensor  FlattenFeatureAndSpatials() const;
-        
+
+            static inline Dim Extract(DataLayout l, DataChannelName channel, const NDims& d)
+            {
+                return TensorBaseT::Extract(dataChannelArray, l, channel, d);
+            }
+
+            static inline int Channelndex(DataLayout l, DataChannelName channel)
+            {
+                return TensorBaseT::Channelndex(dataChannelArray, l, channel);
+            }
+
+            static inline uint32_t ChannelsCount(DataLayout l)
+            {
+                return TensorBaseT::ChannelsCount(dataChannelArray, l);
+            }
         private:
+            static std::array<std::array<int, 5>, DataLayout::DataLayoutCount> dataChannelArray;
             static NDims GetSimpleDims(const std::vector<size_t>& d, DataLayout l);
         };
 
@@ -514,8 +495,23 @@ namespace KernelSelector
             Dim IFM() const { return Extract(layout, WeightsChannelName::IFM, dims); }
             Dim OFM() const { return Extract(layout, WeightsChannelName::OFM, dims); }
 
+            static inline Dim Extract(WeightsLayout l, WeightsChannelName channel, const NDims& d)
+            {
+                return TensorBaseT::Extract(weightsChannelArray, l, channel, d);
+            }
+
+            static inline int Channelndex(WeightsLayout l, WeightsChannelName channel)
+            {
+                return TensorBaseT::Channelndex(weightsChannelArray, l, channel);
+            }
+
+            static inline uint32_t ChannelsCount(WeightsLayout l)
+            {
+                return TensorBaseT::ChannelsCount(weightsChannelArray, l);
+            }
         private:
             static NDims GetSimpleDims(const std::vector<size_t>& d, WeightsLayout l);
+            static std::array<std::array<int, 4>, WeightsLayout::WeightsLayoutCount> weightsChannelArray;
         };
     }
 }

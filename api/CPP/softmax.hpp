@@ -38,7 +38,7 @@ namespace cldnn
 ///   @li a : value before normalization
 struct softmax : public primitive_base<softmax, CLDNN_PRIMITIVE_DESC(softmax)>
 {
-    CLDNN_DECLATE_PRIMITIVE(softmax)
+    CLDNN_DECLARE_PRIMITIVE(softmax)
 
     /// @brief Enum type to specify softmax's normalization scope (see #dimension).
     enum dimension_t

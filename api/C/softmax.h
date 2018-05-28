@@ -69,4 +69,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(softmax);
 /// @}
 /// @}
 #endif /* SOFTMAX_H */
-

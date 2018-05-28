@@ -69,8 +69,43 @@ namespace KernelSelector
         return kd;
     }
 
+    bool KernelSelector::SoftmaxKernel_fb::Validate(const Params& params, const OptionalParams& o) const
+    {
+        if (!SoftmaxKernelBase::Validate(params, o))
+        {
+            return false;
+        }
+
+        const auto& softmax_params = static_cast<const SoftmaxParams&>(params);
+
+        auto kd = Parent::SetDefault(softmax_params, o);
+        auto local_mem_per_wi = 2 * (kd.fp16UnitUsed ? sizeof(short) : sizeof(float));
+        auto max_lws = static_cast<std::size_t>(std::min(params.engineInfo.maxWorkGroupSize, params.engineInfo.maxLocalMemSize / local_mem_per_wi));
+
+
+        size_t data_sets_count = softmax_params.inputs[0].Batch().v;
+        if (data_sets_count > max_lws)
+        {
+            return false;
+        }
+
+        const auto& input = softmax_params.inputs[0];
+        switch (softmax_params.smParams.dim)
+        {
+            case SoftmaxDim::X:         return input.Y().v == 1 && input.Feature().v == 1;
+            case SoftmaxDim::Y:         return input.X().v == 1 && input.Feature().v == 1;
+            case SoftmaxDim::FEATURE:   return input.X().v == 1 && input.Y().v == 1;
+            default:                    return false;
+        }
+    }
+
+
     KernelsData SoftmaxKernel_fb::GetKernelsData(const Params& params, const OptionalParams& optParams) const
     {
+        if (!Validate(params, optParams))
+        {
+            return{};
+        }
         return GetCommonKernelsData(params, optParams);
     }
 }

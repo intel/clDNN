@@ -35,7 +35,7 @@ namespace cldnn
 /// @note Passing data at topology may improve network performance if data optimization is enabled.
 struct data : public primitive_base<data, CLDNN_PRIMITIVE_DESC(data)>
 {
-    CLDNN_DECLATE_PRIMITIVE(data)
+    CLDNN_DECLARE_PRIMITIVE(data)
 
     /// @brief Constructs data primitive.
     /// @param id This primitive id.

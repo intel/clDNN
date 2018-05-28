@@ -67,4 +67,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(custom_gpu_primitive);
 /// @}
 /// @}
 #endif /* CUSTOM_GPU_PRIMITIVE_H */
-

@@ -37,16 +37,9 @@ namespace KernelSelector
 
     JitConstants RegionYoloKernelRef::GetJitConstants(const RegionYoloParams& params) const
     {
-        const auto& ry = params.ryParams;
-        JitConstants jit = MakeRegionYoloJitConstants(params);
-        jit.AddConstants({
-            MakeJitConstant("COORDS",         ry.coords),
-            MakeJitConstant("CLASSES",        ry.classes),
-            MakeJitConstant("NUM",            ry.num),
-        });
-
-        return jit;
+        return MakeRegionYoloJitConstants(params);
     }
+
     RegionYoloKernelRef::DispatchData SetDefault(const RegionYoloParams& params)
     {
         RegionYoloKernelRef::DispatchData kd;
@@ -57,7 +50,7 @@ namespace KernelSelector
         std::vector<size_t> global;
         if (input.GetLayout() == DataLayout::bfyx)
         {
-            global = { input.X().v, input.Y().v, 1 };
+            global = { input.X().v*input.Y().v, 1, 1 };
         }
         else
         {

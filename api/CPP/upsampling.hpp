@@ -41,7 +41,7 @@ enum class upsampling_sample_type : int32_t
 /// Also supports built-in Relu @ref activation available by setting it in arguments.
 struct upsampling : public primitive_base<upsampling, CLDNN_PRIMITIVE_DESC(upsampling)>
 {
-    CLDNN_DECLATE_PRIMITIVE(upsampling)
+    CLDNN_DECLARE_PRIMITIVE(upsampling)
 
     /// @brief Constructs upsampling primitive.
     /// @param id This primitive id.

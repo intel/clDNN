@@ -27,7 +27,7 @@ KERNEL (reshape_ref)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output
     const uint od2 = linear % OUTPUT_SIZES[1]; linear /= OUTPUT_SIZES[1];
     const uint od3 = linear % OUTPUT_SIZES[2]; linear /= OUTPUT_SIZES[2];
     const uint od4 = linear;
-    
+
     uint input_offset =  INPUT0_OFFSET +
                          d1*INPUT0_PITCHES[0] +
                          d2*INPUT0_PITCHES[1] +
@@ -38,6 +38,6 @@ KERNEL (reshape_ref)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output
                          od2*OUTPUT_PITCHES[1] +
                          od3*OUTPUT_PITCHES[2] +
                          od4*OUTPUT_PITCHES[3];
-    
+
     output[output_offset] = ACTIVATION(input[input_offset], NL_M ,NL_N);
 }

@@ -111,6 +111,14 @@ struct topology
         return result;
     }
 
+    void change_input_layout(primitive_id id, layout new_layout)
+    {
+        check_status<void>("Change input layout failed.", [&](status_t* status)
+        {
+            cldnn_change_input_layout(_impl, id.c_str(), new_layout, status);
+        });
+    }
+
 private:
     friend struct engine;
     friend struct network;

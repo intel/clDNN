@@ -16,12 +16,14 @@
 
 #include "deconvolution_kernel_selector.h"
 #include "deconvolution_kernel_ref.h"
+#include "deconvolution_kernel_bfyx_opt.h"
  
 namespace KernelSelector 
 {
     DeconvolutionKernelSelctor::DeconvolutionKernelSelctor()
     {
         Attach<DeconvolutionKernelRef>();
+        Attach<DeconvolutionKernel_bfyx_opt>();
     }
 
     KernelsData DeconvolutionKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const

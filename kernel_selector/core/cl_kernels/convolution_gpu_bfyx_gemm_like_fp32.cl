@@ -57,11 +57,11 @@ KERNEL(convolution_f32)(
     // Src0 (patch input) is directly used as atile.
     // Each work item points to the start of a different patch.
     // atile is M rows x K columns.
-    int src0_read_offset0 = INPUT0_OFFSET_WITH_PADDING + in_split_offset
+    const uint src0_read_offset0_const = INPUT0_OFFSET_WITH_PADDING + in_split_offset
      + INPUT0_BATCH_PITCH * global_z                                                         // batch offset
      + ( ( ( global_y * TILE_M + 0 ) / OUTPUT_SIZE_X ) * STRIDE_SIZE_Y * INPUT0_Y_PITCH )    // y offset
      + ( ( ( global_y * TILE_M + 0 ) % OUTPUT_SIZE_X ) * STRIDE_SIZE_X );                    // x offset
-    int src0_read_offset1 = INPUT0_OFFSET_WITH_PADDING + in_split_offset
+    const uint src0_read_offset1_const = INPUT0_OFFSET_WITH_PADDING + in_split_offset
      + INPUT0_BATCH_PITCH * global_z                                                 // batch offset
      + ( ( ( global_y * TILE_M + 1 ) / OUTPUT_SIZE_X ) * STRIDE_SIZE_Y * INPUT0_Y_PITCH )    // y offset
      + ( ( ( global_y * TILE_M + 1 ) % OUTPUT_SIZE_X ) * STRIDE_SIZE_X );                    // x offset
@@ -69,7 +69,9 @@ KERNEL(convolution_f32)(
     // Src1 (filter) is directly used as btile.
     // It starts at the top of src1 and walks down.
     // btile is K rows x N columns.
-    const __global float *src1_read = src1 + ( global_x * TILE_N * 2);
+    uint src0_read_offset0 = src0_read_offset0_const;
+    uint src0_read_offset1 = src0_read_offset1_const;
+    uint src1_read_offset = ( global_x * TILE_N * 2);
 
 #define DOT_PRODUCT_8( _result, _rowA, colB )    \
     {   \
@@ -105,9 +107,6 @@ KERNEL(convolution_f32)(
             // ...
             const bool kernel_width_is_odd = FILTER_SIZE_X % 2 == 1;
 
-            const __global float *src0_read0 = src0 + src0_read_offset0;
-            const __global float *src0_read1 = src0 + src0_read_offset1;
-            
             float blockA00[FILTER_SIZE_X];
             float blockA01[FILTER_SIZE_X];
             
@@ -116,8 +115,25 @@ KERNEL(convolution_f32)(
                 unsigned i = 0;
                 LOOP(FILTER_SIZE_X, i, 
                 {
-                    blockA00[i] = src0_read0[i];
-                    blockA01[i] = src0_read1[i];
+#if LEFTOVERS == 1
+                    if(src0_read_offset0_const + (FILTER_SIZE_Y - 1) * INPUT0_Y_PITCH + (INPUT0_FEATURE_NUM - 1) * (INPUT0_FEATURE_PITCH - ( FILTER_SIZE_Y * INPUT0_Y_PITCH )) >= INPUT0_BATCH_NUM * INPUT0_BATCH_PITCH)
+                    {
+                        if(src0_read_offset0 + i < INPUT0_BATCH_NUM * INPUT0_BATCH_PITCH)
+                            blockA00[i] = src0[src0_read_offset0 + i];
+                    }
+                    else
+#endif
+                        blockA00[i] = src0[src0_read_offset0 + i];
+
+#if LEFTOVERS == 1
+                    if(src0_read_offset1_const + (FILTER_SIZE_Y - 1) * INPUT0_Y_PITCH + (INPUT0_FEATURE_NUM - 1) * (INPUT0_FEATURE_PITCH - ( FILTER_SIZE_Y * INPUT0_Y_PITCH )) >= INPUT0_BATCH_NUM * INPUT0_BATCH_PITCH)
+                    {
+                        if(src0_read_offset1 + i < INPUT0_BATCH_NUM * INPUT0_BATCH_PITCH)
+                            blockA01[i] = src0[src0_read_offset1 + i];
+                    }
+                    else
+#endif
+                        blockA01[i] = src0[src0_read_offset1 + i];
                 } )
             }
 
@@ -136,13 +152,13 @@ KERNEL(convolution_f32)(
             interleaved_y = 0;
             LOOP(FILTER_SIZE_X_DIV2, interleaved_y,
             {
-                p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1_read ) );
-                src1_read += ALIGNED_OFM * 2;
+                p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1 + src1_read_offset ) );
+                src1_read_offset += ALIGNED_OFM * 2;
             } )
             if ( kernel_width_is_odd )
             {
-                p4BlockB00[FILTER_SIZE_X - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );
-                src1_read += ALIGNED_OFM * 2;
+                p4BlockB00[FILTER_SIZE_X - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1 + src1_read_offset ) );
+                src1_read_offset += ALIGNED_OFM * 2;
             }
 
             // Perform MADs

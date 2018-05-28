@@ -60,7 +60,7 @@ typedef struct _neural_vector_tag {
 // neural_memory accessors
 __attribute__((overloadable)) __global uint* get_raw(__global neural_memory* mem) { return &(mem->data[0]); }
 __attribute__((overloadable)) const __global uint* get_raw(const __global neural_memory* mem) { return &(mem->data[0]); }
-__attribute__((overloadable)) uint get_raw_size(const __global neural_memory* mem) { return mem->vector_size; } 
+__attribute__((overloadable)) uint get_raw_size(const __global neural_memory* mem) { return mem->vector_size; }
 
 __attribute__((overloadable)) __global uint* get_batch(__global neural_memory* mem) { return get_raw(mem); }
 __attribute__((overloadable)) const __global uint* get_batch(const __global neural_memory* mem) { return get_raw(mem); }
@@ -72,7 +72,7 @@ __attribute__((overloadable)) uint get_feature_size(const __global neural_memory
 
 __attribute__((overloadable)) __global uint* get_spatial(__global neural_memory* mem) { return &(mem->data[mem->spatial_offset]); }
 __attribute__((overloadable)) const __global uint* get_spatial(const __global neural_memory* mem) { return &(mem->data[mem->spatial_offset]); }
-__attribute__((overloadable)) uint get_spatial_size(const __global neural_memory* mem) { return get_raw_size(mem) - mem->spatial_offset; } 
+__attribute__((overloadable)) uint get_spatial_size(const __global neural_memory* mem) { return get_raw_size(mem) - mem->spatial_offset; }
 
 __attribute__((overloadable)) __global void* get_data(__global neural_memory* mem) { return &(mem->data[mem->data_offset]); }
 __attribute__((overloadable)) const __global void* get_data(const __global neural_memory* mem) { return &(mem->data[mem->data_offset]); }
@@ -95,7 +95,7 @@ __attribute__((overloadable)) size_t get_data_size(const __global neural_memory*
 
 //__attribute__((overloadable)) __global uint* get_raw(__global neural_vector* v) { return &(v->data[0]); }
 __attribute__((overloadable)) const __global uint* get_raw(const __global neural_vector* v) { return &(v->data[0]); }
-__attribute__((overloadable)) uint get_raw_size(const __global neural_vector* v) { return v->raw_size; } 
+__attribute__((overloadable)) uint get_raw_size(const __global neural_vector* v) { return v->raw_size; }
 
 //__attribute__((overloadable)) __global uint* get_batch(__global neural_vector* v) { return get_raw(v); }
 __attribute__((overloadable)) const __global uint* get_batch(const __global neural_vector* v) { return get_raw(v); }
@@ -107,7 +107,7 @@ __attribute__((overloadable)) uint get_feature_size(const __global neural_vector
 
 //__attribute__((overloadable)) __global uint* get_spatial(__global neural_vector* v) { return &(v->data[v->spatial_offset]); }
 __attribute__((overloadable)) const __global uint* get_spatial(const __global neural_vector* v) { return &(v->data[v->spatial_offset]); }
-__attribute__((overloadable)) uint get_spatial_size(const __global neural_vector* v) { return get_raw_size(v) - v->spatial_offset; } 
+__attribute__((overloadable)) uint get_spatial_size(const __global neural_vector* v) { return get_raw_size(v) - v->spatial_offset; }
 
 CODE_END
 

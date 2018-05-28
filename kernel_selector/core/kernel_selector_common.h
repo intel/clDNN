@@ -70,6 +70,11 @@ namespace KernelSelector {
             options(""), entry_point(""),
             batch_compilation(false)
         {};
+
+        std::string get_hash()
+        {
+            return str + jit + options + entry_point;
+        }
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,12 +136,13 @@ namespace KernelSelector {
             OUTPUT,
             WEIGHTS,
             BIAS,
-            LOOKUP_TABLE,
             SCALE_TABLE,
             SLOPE,
             SPLIT,
             INTERNAL_BUFFER,
             SCALAR,
+            WEIGHTS_QUANTIZATION_FACTORS,
+            OUTPUT_CALIBRATION_FACTORS
         };
 
         enum class ScalarTypes
@@ -261,7 +267,11 @@ namespace KernelSelector {
         case ActivationFunction::SQUARE:                method = "SQUARE"; break;
         case ActivationFunction::SQRT:                  method = "SQRT"; break;
         case ActivationFunction::LINEAR:                method = "LINEAR"; break;
+        case ActivationFunction::ELU:                   method = "ELU"; break;
+        case ActivationFunction::RELU_GRAD:             method = "RELU_GRAD"; break;
+        case ActivationFunction::RELU_NEGATIVE_SLOPE_GRAD: method = "RELU_NEGATIVE_SLOPE_GRAD"; break;
         case ActivationFunction::NONE:                  method = "NONE"; break;
+        case ActivationFunction::NONE_GRAD:             method = "NONE_GRAD"; break;
         default: break;
         }
         return method;
@@ -380,12 +390,49 @@ namespace KernelSelector {
         }
     }
 
+    inline std::string toString(ArgMaxMinOut mode)
+    {
+        switch (mode)
+        {
+        case ArgMaxMinOut::MAX: return "MAX";
+        case ArgMaxMinOut::MIN: return "MIN";
+        default: return "";
+        }
+    }
+
+	inline std::string toString(ArgMaxMinAxis mode)
+	{
+		switch (mode)
+		{
+		case ArgMaxMinAxis::BATCH: return "BATCH";
+		case ArgMaxMinAxis::FEATURE: return "FEATURE";
+		case ArgMaxMinAxis::X: return "X";
+		case ArgMaxMinAxis::Y: return "Y";
+		case ArgMaxMinAxis::XYF: return "XYF";
+		default: return "";
+		}
+	}
+
+    inline std::string toString(LookUpTableAxis mode)
+    {
+        switch (mode)
+        {
+        case LookUpTableAxis::BATCH: return "BATCH";
+        case LookUpTableAxis::FEATURE: return "FEATURE";
+        case LookUpTableAxis::X: return "X";
+        case LookUpTableAxis::Y: return "Y";
+        case LookUpTableAxis::XYF: return "XYF";
+        default: return "";
+        }
+    }
+
     inline std::string toString(PoolType mode)
     {
         switch (mode)
         {
         case PoolType::MAX: return "MAX";
         case PoolType::AVG: return "AVG";
+        case PoolType::MAX_WITH_ARGMAX: return "MAX_WITH_ARGMAX";
         default: return "";
         }
     }
@@ -433,6 +480,16 @@ namespace KernelSelector {
         }
     }
 
+    inline std::string toString(MVNMode mode)
+    {
+        switch (mode)
+        {
+        case MVNMode::ACROSS_CHANNELS:         return "ACROSS_CHANNELS";
+        case MVNMode::WITHIN_CHANNELS:         return "WITHIN_CHANNELS";
+        default: return "";
+        }
+    }
+
     inline std::string toString(WeightsLayout layout)
     {
         switch (layout)
@@ -444,6 +501,7 @@ namespace KernelSelector {
         case WeightsLayout::iyxo:                       return "IYXO";
         case WeightsLayout::yxio:                       return "YXIO";
         case WeightsLayout::os_iyx_osv16:               return "OS_IYX_OSV16";
+        case WeightsLayout::os_iyx_osv16_rotate_180:    return "OS_IYX_OSV16_ROTATE_180";
         case WeightsLayout::os_i_osv16:                 return "OS_I_OSV16";
         case WeightsLayout::os_i_osv8__ai8:             return "OS_I_OSV8__AI8";
         case WeightsLayout::os_i_osv16__ai8:            return "OS_I_OSV16__AI8";
@@ -454,6 +512,9 @@ namespace KernelSelector {
         case WeightsLayout::image_2d_weights_c1_b_fyx:  return "IMAGE_2D_WEIGHTS_C1_B_FYX";
         case WeightsLayout::winograd_2x3_s1_weights:    return "WINOGRAD_2x3_S1_WEIGHTS";
         case WeightsLayout::winograd_2x3_s1_fused_weights:    return "WINOGRAD_2x3_S1_FUSED_WEIGHTS";
+        case WeightsLayout::winograd_6x3_s1_fused_weights:    return "WINOGRAD_6x3_S1_FUSED_WEIGHTS";
+        case WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb: return "IMAGE_2D_WEIGHTS_WINOGRAD_6x3_S1_FBXYB";
+        case WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb: return "IMAGE_2D_WEIGHTS_WINOGRAD_6x3_S1_XFBYB";
         default:
             return "";
             break;

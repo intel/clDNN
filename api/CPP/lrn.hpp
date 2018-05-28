@@ -41,7 +41,7 @@ namespace cldnn
 ///   @li k, alpha, beta : hyper parameters (equal to 2, 10e-4, 0.75 in paper).
 struct lrn :public primitive_base<lrn, CLDNN_PRIMITIVE_DESC(lrn)>
 {
-    CLDNN_DECLATE_PRIMITIVE(lrn)
+    CLDNN_DECLARE_PRIMITIVE(lrn)
 
     /// @brief Constructs LRN primitive.
     /// @param id This primitive id.

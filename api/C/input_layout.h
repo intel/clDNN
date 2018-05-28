@@ -51,4 +51,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(input_layout);
 /// @}
 /// @}
 #endif /* INPUT_LAYOUT_H */
-

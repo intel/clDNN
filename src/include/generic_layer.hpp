@@ -37,7 +37,7 @@ namespace cldnn
 /// NOTE THAT THIS WILL SUBTRACT THE SAME VALUES FROM EACH BATCH.
 struct generic_layer : public primitive_base<generic_layer, CLDNN_PRIMITIVE_DESC(generic_layer)>
 {
-    CLDNN_DECLATE_PRIMITIVE(generic_layer)
+    CLDNN_DECLARE_PRIMITIVE(generic_layer)
 
         /// @brief Constructs generic_layer primitive which takes mean subtract values from another primitive.
         /// @param id This primitive id.

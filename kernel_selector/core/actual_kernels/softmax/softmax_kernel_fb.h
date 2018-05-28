@@ -31,6 +31,7 @@ namespace KernelSelector
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
+        virtual bool Validate(const Params& p, const OptionalParams& o) const override;
         DispatchData SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const override;
     };
 }

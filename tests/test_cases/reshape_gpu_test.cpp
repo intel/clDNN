@@ -306,3 +306,66 @@ TEST(reshape_gpu_f16, basic_4dim_input_output_padd)
         padding({ 0,29,29,0 }, { 0,0,0,0 })
         );
 }
+
+TEST(reshape_gpu_f32, multiple_users_with_reorder) {
+    // Tests split with crop implementation
+    //                                                   _ REORDER(yxfb) --> RELU(yxfb)
+    //                                                  |
+    //  INPUT(bfyx,2x2x1x1)--RELU(bfyx)--RESHAPE(4x1x1x1)
+    //                                                  |_
+    //                                                     RELU(bfyx)
+
+    //  Input:
+    //  b0f0: -1.0
+    //  b0f1:  2.0
+    //  b1f0: -3.0
+    //  b1f1:  4.0
+
+    //  Out1:
+    //  b0f0:  0.0
+    //  b0f1:  0.0
+    //  b1f0:  2.0
+    //  b1f1:  4.0
+
+    //  Out2:
+    //  b0f0:  0.0
+    //  b0f1:  2.0
+    //  b1f0:  0.0
+    //  b1f1:  4.0
+
+    engine engine;
+    auto batch_num = 2;
+    auto feature_num = 2;
+    auto x_size = 1;
+    auto y_size = 1;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(activation("relu", "input", activation_relu));
+    topology.add(reshape("reshape", "relu", tensor(batch(4))));
+    topology.add(reorder("reorder1", "reshape", format::yxfb, data_types::f32));
+    topology.add(activation("relu1", "reorder1", activation_relu));
+    topology.add(activation("relu2", "reshape", activation_relu));
+
+    std::vector<float> input_vec = { -1.f, 2.f, -3.f, 4.f };
+    std::vector<float> out1 = { 0.f, 0.f, 2.f, 4.0f };
+    std::vector<float> out2 = { 0.f, 2.f, 0.f, 4.0f };
+    set_values(input, input_vec);
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("relu1").get_memory();
+    auto output_ptr = output.pointer<float>();
+
+    for (size_t i = 0; i < out1.size(); i++)
+        EXPECT_EQ(output_ptr[i], out1[i]);
+
+    auto output_2 = outputs.at("relu2").get_memory();
+    auto output_ptr_2 = output_2.pointer<float>();
+
+    for (size_t i = 0; i < out2.size(); i++)
+        EXPECT_EQ(output_ptr_2[i], out2[i]);
+}

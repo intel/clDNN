@@ -69,6 +69,9 @@ namespace KernelSelector
             MakeJitConstant("INPUT_BUFFER_HEIGHT_PADDED",   ""),
         });
 
+        if (CeilDiv(RoundUp(params.output.X().v * params.output.Y().v, runInfo.gemmStyle.subBlockDimM), runInfo.gemmStyle.globalWorkSizeDY) % runInfo.lws1 != 0)
+            jit.AddConstant(MakeJitConstant("LEFTOVERS", 1));
+
         return jit;
     }
 

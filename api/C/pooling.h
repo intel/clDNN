@@ -38,12 +38,16 @@ typedef enum /*:int32_t*/
     /// @brief Average-pooling method.
     cldnn_pooling_average,
     /// @brief Average-pooling method without values which are outside of the input.
-    cldnn_pooling_average_no_padding
+    cldnn_pooling_average_no_padding,
+    /// @brief Maximum-pooling method with additional buffer to store argmax indices.
+    cldnn_pooling_max_with_argmax
 } cldnn_pooling_mode;
 
 /// @brief Performs "pooling" operation which is a form of non-linear down-sampling.
 /// @details Pools the input image by taking the max, average, etc. within regions.
 CLDNN_BEGIN_PRIMITIVE_DESC(pooling)
+/// @brief Primitive id which contains indices of each max pooling region. Indices must be in flattened bfyx format with no padding. Needs to be fp32 data type.
+cldnn_primitive_id argmax;
 /// @brief Pooling method. See #cldnn_pooling_mode.
 int32_t mode;
 /// @brief Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the pooling window should start calculations.
@@ -68,4 +72,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(pooling);
 /// @}
 /// @}
 #endif /* POOLING_H */
-

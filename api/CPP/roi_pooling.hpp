@@ -32,7 +32,7 @@ namespace cldnn
 
 struct roi_pooling : public primitive_base<roi_pooling, CLDNN_PRIMITIVE_DESC(roi_pooling)>
 {
-    CLDNN_DECLATE_PRIMITIVE(roi_pooling)
+    CLDNN_DECLARE_PRIMITIVE(roi_pooling)
 
     roi_pooling(
         const primitive_id& id,

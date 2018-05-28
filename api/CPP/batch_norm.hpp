@@ -32,14 +32,14 @@ namespace cldnn
 /// @details Performs batch normalization as discribed in
 /// "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift" by Ioffe, Szegedy
 /// @n See: http://arxiv.org/abs/1502.03167
-/// 
+///
 /// <b>Algorithm:</b>
 /// @n global stats can be computed as:
 /// @n out[i] = in[i] - mean[b] / sqrt(variance[b] + epsilon)
 
 struct batch_norm : public primitive_base<batch_norm, CLDNN_PRIMITIVE_DESC(batch_norm)>
 {
-    CLDNN_DECLATE_PRIMITIVE(batch_norm)
+    CLDNN_DECLARE_PRIMITIVE(batch_norm)
 
     /// @brief Constructs batch normalization primitive.
     /// @param id This primitive id.

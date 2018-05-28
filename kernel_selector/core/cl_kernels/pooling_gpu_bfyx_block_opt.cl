@@ -15,9 +15,9 @@
 
 #include "include/include_all.cl"
 
-#if   defined MAX_POOLING
+#if MAX_POOLING || MAX_WITH_ARGMAX_POOLING
     #define UNIT_INIT_VAL UNIT_VAL_MIN
-#elif defined AVG_POOLING
+#elif AVG_POOLING
     #define UNIT_INIT_VAL UNIT_VAL_ZERO
 #else
 #error
@@ -26,14 +26,18 @@
 
 inline UNIT_TYPE FUNC(apply_pooling)(UNIT_TYPE tmp, UNIT_TYPE in)
 {
-#if   defined MAX_POOLING
+#if MAX_POOLING || MAX_WITH_ARGMAX_POOLING
     return max(tmp, in);
-#elif defined AVG_POOLING
+#elif AVG_POOLING
     return tmp + in;
 #endif
 }
 
-KERNEL(pooling_gpu_bfyx_block_opt)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
+KERNEL(pooling_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output
+#if MAX_WITH_ARGMAX_POOLING
+, __global float* arg_max
+#endif
+)
 {
 
     const uint x    = (uint)get_global_id(0);
@@ -51,9 +55,14 @@ KERNEL(pooling_gpu_bfyx_block_opt)(const __global UNIT_TYPE* input, __global UNI
     UNIT_TYPE result = UNIT_INIT_VAL;
     
     uint input_idx = GET_DATA_INDEX(INPUT0, b, f, offset_y, offset_x);
-
     UNIT_TYPE max_x[BLOCK_SIZE_Y];
     UNIT_TYPE out[POOL_SIZE_Y];
+
+#if MAX_WITH_ARGMAX_POOLING
+    uint arg_max_x[BLOCK_SIZE_Y] = { 0 };
+    uint arg_max_out[POOL_SIZE_Y] = { 0 };
+    uint input_idx_bfyx_no_padding = offset_x + INPUT0_SIZE_X * (offset_y + INPUT0_SIZE_Y * (f + INPUT0_FEATURE_NUM * b));
+#endif
 
     for(uint i = 0; i < BLOCK_SIZE_Y; i++)
     {
@@ -65,15 +74,33 @@ KERNEL(pooling_gpu_bfyx_block_opt)(const __global UNIT_TYPE* input, __global UNI
     {
         for(uint i = 0; i < POOL_SIZE_X; i++)
         {
+
+#if MAX_WITH_ARGMAX_POOLING
+            if(input[input_idx] > max_x[j])
+                arg_max_x[j] = input_idx_bfyx_no_padding;
+#endif
             max_x[j] = FUNC_CALL(apply_pooling)(max_x[j], input[input_idx]);
             input_idx += INPUT0_X_PITCH;
+
+#if MAX_WITH_ARGMAX_POOLING
+            input_idx_bfyx_no_padding++;
+#endif
+
         }
         input_idx += (INPUT0_Y_PITCH - POOL_SIZE_X*INPUT0_X_PITCH);
+
+#if MAX_WITH_ARGMAX_POOLING
+        input_idx_bfyx_no_padding += (INPUT0_SIZE_X - POOL_SIZE_X);
+#endif
     }
 
     for(uint i = 0; i < POOL_SIZE_Y; i++)
     {
         out[i] = max_x[i * STRIDE_SIZE_Y];
+
+#if MAX_WITH_ARGMAX_POOLING
+        arg_max_out[i] = arg_max_x[i * STRIDE_SIZE_Y];
+#endif
     }
 
     // now we do max in "y" dimension
@@ -81,11 +108,21 @@ KERNEL(pooling_gpu_bfyx_block_opt)(const __global UNIT_TYPE* input, __global UNI
     {
         for(uint j = 1; j < POOL_SIZE_Y; j++)
         {
+
+#if MAX_WITH_ARGMAX_POOLING
+            if(max_x[j + i * STRIDE_SIZE_Y] > out[i])
+                arg_max_out[i] = arg_max_x[j + i * STRIDE_SIZE_Y];
+#endif
+
             out[i] = FUNC_CALL(apply_pooling)(out[i], max_x[j + i * STRIDE_SIZE_Y]);
         }
     }
 
     uint output_pos = GET_DATA_INDEX(OUTPUT, b, f, y, x);
+
+#if MAX_WITH_ARGMAX_POOLING
+    uint arg_max_pos = GET_DATA_INDEX(INPUT1, b, f, y, x);
+#endif
 
     for(uint i = 0; i < POOL_SIZE_Y; i++)
     {
@@ -96,6 +133,11 @@ KERNEL(pooling_gpu_bfyx_block_opt)(const __global UNIT_TYPE* input, __global UNI
 #endif
             output[output_pos] = ACTIVATION(out[i], NL_M ,NL_N);
             output_pos += OUTPUT_Y_PITCH;
+
+#if MAX_WITH_ARGMAX_POOLING
+            arg_max[arg_max_pos] = arg_max_out[i];
+            arg_max_pos += INPUT1_Y_PITCH;
+#endif
         }
     }
 }

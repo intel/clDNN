@@ -216,12 +216,12 @@ std::string prior_box_inst::to_string(prior_box_node const& node)
     auto flip      = desc->flip ? "true" : "false";
     auto clip      = desc->clip ? "true" : "false";
     auto node_info = node.desc_to_json();
-    
+
     std::string str_min_sizes    = vector_to_string(desc->min_sizes);
     std::string str_max_sizes    = vector_to_string(desc->max_sizes);
     std::string str_variance     = vector_to_string(desc->variance);
     std::string str_aspect_ratio = vector_to_string(desc->aspect_ratios);
-    
+
     std::stringstream primitive_description;
 
     json_composite prior_info;
@@ -237,7 +237,7 @@ std::string prior_box_inst::to_string(prior_box_node const& node)
     prior_info.add("aspect_ratio", str_aspect_ratio);
     prior_info.add("flip", flip);
     prior_info.add("clip", clip);
-    
+
     json_composite step_info;
     step_info.add("step width", desc->step_width);
     step_info.add("step height", desc->step_height);
@@ -246,7 +246,7 @@ std::string prior_box_inst::to_string(prior_box_node const& node)
 
     node_info.add("prior box info", prior_info);
     node_info.dump(primitive_description);
-    
+
     return primitive_description.str();
 }
 

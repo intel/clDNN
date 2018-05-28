@@ -72,7 +72,7 @@ namespace KernelSelector
 
         kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
-        if (output.GetLayout() == DataLayout::bfyx)
+        if (output.GetLayout() == DataLayout::bfyx || output.GetLayout() == DataLayout::byxf)
         {
             // Determine global work sizes.
             kd.gws2 = output.Batch().v * output.Feature().v;    // B, F
@@ -124,6 +124,8 @@ namespace KernelSelector
 
         auto& kernel = kd.kernels[0];
         FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
+        if(orgParams.poolParams.poolType == PoolType::MAX_WITH_ARGMAX)
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
 
         kd.estimatedTime = estimatedTime;
 

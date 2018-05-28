@@ -63,7 +63,9 @@ namespace KernelSelector
 
         auto loopCount = *std::max_element(unrollLoopParams.begin(), unrollLoopParams.end());
 
-        JitConstants mem_consts = MakeLoopUnrollParamsJitConstants(params, loopCount);
+        JitConstants mem_consts = MakeConvolutionParamsJitConstants(params);
+        JitConstants mem_consts_loop = MakeLoopUnrollParamsJitConstants(loopCount);
+        mem_consts.Merge(mem_consts_loop);
 
         if (params.inputs[0].GetLayout() == DataLayout::yxfb &&
             params.weights.GetLayout() == WeightsLayout::yxio)
@@ -112,8 +114,8 @@ namespace KernelSelector
             if (t.PitchesDifferFromLogicalDims())
             {
                 auto feature = t.Feature();
-                auto featureIndex = Tensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::FEATURE);
-                if (featureIndex >= 0 && featureIndex+1 < (int)Tensor::ChannelsCount(t.GetLayout()))
+                auto featureIndex = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::FEATURE);
+                if (featureIndex >= 0 && featureIndex+1 < (int)DataTensor::ChannelsCount(t.GetLayout()))
                 {
                     if (feature.v*split <= t.GetDims()[featureIndex+1].pitch)
                     {
@@ -149,7 +151,7 @@ namespace KernelSelector
         const auto& out = params.output;
         kd.fp16UnitUsed = out.GetDType() == Datatype::F16;
         std::vector<size_t> global;
-        if (params.output.GetLayout() == DataLayout::bfyx)
+        if (params.output.GetLayout() == DataLayout::bfyx || params.output.GetLayout() == DataLayout::byxf)
         {
             global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
         }
@@ -220,7 +222,7 @@ namespace KernelSelector
         auto jit = CreateJit(finalKernelName, cldnnJit, entryPoint);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, finalKernelName, jit, entryPoint, exeMode, true, !newParams.bias.empty());
+        FillCLKernelData(kernel, runInfo, finalKernelName, jit, entryPoint, exeMode, true, !newParams.bias.empty(), 1, newParams.convParams.int8_quantization, newParams.convParams.output_calibration);
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
 
         kd.estimatedTime = runInfo.effiency;

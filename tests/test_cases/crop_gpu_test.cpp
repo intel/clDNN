@@ -307,8 +307,9 @@ TEST(crop_gpu, basic_in1x4x1x1_split_w_relu) {
 
     //  Out2:
     //  f0: 4.0
-
-    engine engine;
+    // disable memory pool when we want to check optimized out internal results
+    engine_configuration cfg{ false, false, false, std::string(), std::string(), true /*oooq*/, std::string(),std::string(), priority_mode_types::disabled,  throttle_mode_types::disabled, false /*mem_pool*/ };
+    engine engine{ cfg };
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 1;

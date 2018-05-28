@@ -38,7 +38,7 @@ namespace cldnn
 /// When permute_order is { 0, 1, 2, 3 } then input_dimensions = output_dimensions
 struct permute : public primitive_base<permute, CLDNN_PRIMITIVE_DESC(permute)>
 {
-    CLDNN_DECLATE_PRIMITIVE(permute)
+    CLDNN_DECLARE_PRIMITIVE(permute)
 
     /// @brief Constructs permute primitive.
     /// @param id This primitive id.

@@ -53,4 +53,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(fully_connected);
 /// @}
 /// @}
 #endif /* FULLY_CONNECTED_H */
-

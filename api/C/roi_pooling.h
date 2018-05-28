@@ -56,4 +56,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(roi_pooling);
 /// @}
 /// @}
 #endif /* ROI_POOLING_H */
-

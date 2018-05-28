@@ -57,13 +57,13 @@ protected:
 
     virtual bool optimized_out(concatenation_inst& instance) const override
     {
-        return 
+        return
             parent::optimized_out(instance) || _outer.can_be_optimized();
     }
 
 public:
 
-    static primitive_impl* create(const concatenation_node& arg) 
+    static primitive_impl* create(const concatenation_node& arg)
     {
         if (arg.can_be_optimized())
         {
@@ -100,8 +100,13 @@ namespace {
             implementation_map<concatenation>::add({
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::yxfb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), concatenation_gpu::create },
-                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), concatenation_gpu::create }
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::bfyx), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf), concatenation_gpu::create }
             });
         }
         ~attach() {}

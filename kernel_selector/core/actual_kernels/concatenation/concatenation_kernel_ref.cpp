@@ -17,7 +17,7 @@
 #include "concatenation_kernel_ref.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace KernelSelector
 {
 
     ParamsKey ConcatenationKernelRef::GetSupportedKey() const
@@ -25,8 +25,10 @@ namespace KernelSelector
         ParamsKey k;
         k.EnableInputDataType(Datatype::F16);
         k.EnableInputDataType(Datatype::F32);
+        k.EnableInputDataType(Datatype::INT8);
         k.EnableOutputDataType(Datatype::F16);
         k.EnableOutputDataType(Datatype::F32);
+        k.EnableOutputDataType(Datatype::INT8);
         k.EnableAllInputLayout();
         k.EnableAllOutputLayout();
         k.EnableTensorOffset();

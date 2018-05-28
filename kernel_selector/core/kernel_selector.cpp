@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -151,7 +151,7 @@ namespace KernelSelector {
             options.GetType() == kType)
         {
             std::string hash = std::to_string(std::hash<std::string>{}(params.to_string()));
-            const ParamsKey requireKey = params.GetParamsKey().Merge(options.GetSupportedKey());
+            ParamsKey requireKey = params.GetParamsKey().Merge(options.GetSupportedKey());
             
             std::tuple<std::string, int> cachedKernelConfig;
             if (options.tuningParams.mode == TuningMode::TUNING_DISABLED) // Try to load kernel/config from offline cache
@@ -208,8 +208,9 @@ namespace KernelSelector {
 
             for (const auto& implementation : implementations)
             {
+
                 const ParamsKey implKey = implementation->GetSupportedKey();
-                if (implKey.Support(requireKey))
+                if (implKey.Support(requireKey) && implKey.TuningSupport())
                 {
                     try
                     {
@@ -231,6 +232,7 @@ namespace KernelSelector {
                         // we have to handle it in order to avoid exception in KernelSelector as much we can
                     }
                 }
+
             }
 
             if (kernelsData.size())

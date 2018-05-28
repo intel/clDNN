@@ -33,7 +33,7 @@ namespace cldnn
 
 struct proposal : public primitive_base<proposal, CLDNN_PRIMITIVE_DESC(proposal)>
 {
-    CLDNN_DECLATE_PRIMITIVE(proposal)
+    CLDNN_DECLARE_PRIMITIVE(proposal)
  
     proposal(
         const primitive_id& id,        

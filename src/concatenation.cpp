@@ -52,7 +52,7 @@ std::string concatenation_inst::to_string(concatenation_node const& node)
 {
     auto node_info = node.desc_to_json();
     auto desc      = node.get_primitive();
-     
+
     std::stringstream ss_inputs;
     std::stringstream primitive_description;
 
@@ -120,7 +120,7 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
         {
             auto nodes_list = stack.front();
             stack.pop_front();
-        
+
             for (auto processed_node : *nodes_list)
             {
                 processed_node->_output = _output;

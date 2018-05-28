@@ -15,7 +15,6 @@
 */
 
 #include "deconvolution_kernel_ref.h"
-#include "kernel_selector_utils.h"
 
 namespace KernelSelector 
 {
@@ -31,8 +30,10 @@ namespace KernelSelector
         k.EnableOutputDataType(Datatype::F32);
         k.EnableInputLayout(DataLayout::yxfb);
         k.EnableInputLayout(DataLayout::bfyx);
+        k.EnableInputLayout(DataLayout::byxf);
         k.EnableOutputLayout(DataLayout::yxfb);
         k.EnableOutputLayout(DataLayout::bfyx);
+        k.EnableOutputLayout(DataLayout::byxf);
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBiasPerFeature();
@@ -40,46 +41,36 @@ namespace KernelSelector
         k.EnableBatching();
         k.EnableSplitSupport();
         k.EnableDepthwiseSeparableOpt();
+        k.EnableGradient();
         return k;
     }
 
-    KernelsData DeconvolutionKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    CommonDispatchData DeconvolutionKernelRef::SetDefault(const DeconvolutionParams& params) const
     {
-        assert(params.GetType() == KernelType::DECONVOLUTION);
+        CommonDispatchData runInfo = DeconvolutionKernelBase::SetDefault(params);
 
-        const DeconvolutionParams& orgParams = static_cast<const DeconvolutionParams&>(params);
-
-        const std::vector<WeightsLayout> weightsLayouts = {
-            WeightsLayout::yxio,
-            WeightsLayout::iyxo,
-            WeightsLayout::oyxi,
-            WeightsLayout::oiyx };
-
-        DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<DeconvolutionParams>(params);
-        DeconvolutionParams& newParams = *static_cast<DeconvolutionParams*>(kd.params.get());
-
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            weightsLayouts,
-            kd.weightsReorderParams);
-
-        if (!succeed)
+        if (params.output.Feature().v * params.output.Batch().v <= 16)
         {
-            return{};
+            const auto& out = params.output;
+            runInfo.gws0 = Align(out.X().v, 32);
+            runInfo.gws1 = out.Y().v;
+            runInfo.gws2 = out.Feature().v * out.Batch().v;
+
+            runInfo.lws0 = 32;
+            runInfo.lws1 = 1;
+            runInfo.lws2 = 1;
         }
 
-        auto cldnn_jit = GetJitConstants(orgParams);
-        auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
-        auto jit = CreateJit(kernelName, cldnn_jit, entry_point);
+        return runInfo;
+    }
 
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
-        kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
+    JitConstants DeconvolutionKernelRef::GetJitConstants(const DeconvolutionParams& params) const
+    {
+        auto jit = DeconvolutionKernelBase::GetJitConstants(params);
 
-        kd.estimatedTime = runInfo.effiency;
+        if (params.output.Feature().v * params.output.Batch().v <= 16)
+            jit.AddConstant(MakeJitConstant("DIM_ORDER_XYBF", 1));
 
-        return{ kd };
+        return jit;
     }
 }

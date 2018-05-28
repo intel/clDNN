@@ -55,7 +55,7 @@ namespace KernelSelector
     {
         bool b16_layout = false;
         b16_layout |= t.GetLayout() == DataLayout::bs_f_bsv8__af8;
-        b16_layout |= Tensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::BATCH) == 0 && (t.Batch().v == 8); // TODO - check f alignment to 8
+        b16_layout |= DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::BATCH) == 0 && (t.Batch().v == 8); // TODO - check f alignment to 8
         return b16_layout;
     }
 

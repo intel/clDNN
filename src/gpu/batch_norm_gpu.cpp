@@ -91,6 +91,8 @@ namespace {
             implementation_map<batch_norm>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw);
             implementation_map<batch_norm>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
             implementation_map<batch_norm>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
+            implementation_map<batch_norm>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), val_fw);
+            implementation_map<batch_norm>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), val_fw);
         }
         ~attach() {}
     };

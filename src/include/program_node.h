@@ -15,6 +15,8 @@
 */
 #pragma once
 
+#include <set>
+
 #include "api/CPP/primitive.hpp"
 #include "internal_primitive.h"
 
@@ -77,13 +79,17 @@ public:
 
     //replaces idx-th dependency of 'this' with 'new_dep', calls program::remove_if_dangling(old_dep, detach_whole_branch)
     void replace_dependency(size_t idx, program_node& new_dep, bool detach_whole_branch = false);
-    //searches for 'old_dep' in dependecies list of 'this' and replaces it with 'new_dep', calls program::remove_if_dangling(old_dep, detach_whole_branch)
+    //searches for 'old_dep' in dependencies list of 'this' and replaces it with 'new_dep', calls program::remove_if_dangling(old_dep, detach_whole_branch)
     void replace_dependency(program_node const& old_dep, program_node& new_dep, bool detach_whole_branch = false);
 
     std::vector<primitive_id> get_dependencies_ids() const;
 
     void remove_dependency(size_t idx);
     void remove_dependency(program_node& node);
+
+    std::set<primitive_id> get_memory_dependencies() const;
+    void add_memory_dependency(primitive_id);
+    void add_memory_dependency(std::vector<primitive_id>);
 
     bool is_detached(bool whole_branch = false);
 
@@ -98,7 +104,6 @@ public:
     json_composite desc_to_json() const;
     //do not modify primitive directly to keep synchronisation wit graph
     std::shared_ptr<const primitive> get_primitive() const { return desc; }
-
     //primitive modification functions
     void set_output_padding(padding const& padd)
     {
@@ -148,7 +153,7 @@ public:
     void unmark() { user_mark = 0; }
     auto is_marked() const { return user_mark != 0; }
     auto is_marked(uint8_t val) const { return user_mark == val; }
-    uint8_t ged_user_mark() const { return user_mark; }
+    uint8_t get_user_mark() const { return user_mark; }
 
     void set_fused_activation(cldnn_activation_func activation_func, cldnn_activation_additional_params additional_params)
     {
@@ -227,6 +232,15 @@ public:
         return as<To>();
     }
 
+    void set_reused_memory_color(uint32_t color) const
+    {
+        has_reused_memory = true;
+        reused_memory_color = color;
+    }
+
+    bool is_reusing_memory() { return has_reused_memory; };
+    uint32_t get_reused_memory_color() { return reused_memory_color; ; }
+
 protected:
     std::shared_ptr<primitive> desc;
     program_impl& myprog;
@@ -242,6 +256,9 @@ protected:
     std::list<program_node*>::const_iterator processing_itr;
     uint32_t processing_num = 0;
 
+    // list of primitives that can reuse same memory buffers due to execution order conflicts
+    std::set<primitive_id> memory_dependencies;
+
     program_node* dominator = nullptr;
     program_node* joint = nullptr;
     bool constant = false;
@@ -254,6 +271,9 @@ protected:
     uint8_t user_mark = 0;
 
     bool optimized = false;
+
+    mutable bool has_reused_memory = false;
+    mutable uint32_t reused_memory_color = 0;
 
     primitive_id org_id = "";
 

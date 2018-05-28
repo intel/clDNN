@@ -17,7 +17,7 @@
 #include "tensor_type.h"
 #include "concatenation_kernel_base.h"
 
-namespace KernelSelector 
+namespace KernelSelector
 {
     static int32_t GetConcatChannelIndex(const ConcatenationParams& params)
     {
@@ -31,7 +31,7 @@ namespace KernelSelector
         default: break;
         }
 
-        return Tensor::Channelndex(params.output.GetLayout(), name);
+        return DataTensor::Channelndex(params.output.GetLayout(), name);
     }
 
     bool ConcatenationKernelBase::Validate(const Params& p, const OptionalParams&) const
@@ -48,7 +48,7 @@ namespace KernelSelector
             return false;
         }
 
-        return true; 
+        return true;
     }
 
     JitConstants ConcatenationKernelBase::GetJitConstants(const ConcatenationParams& params) const
@@ -68,7 +68,7 @@ namespace KernelSelector
         {
             kd.gws0 = dims.size() < 2 ? 1 : dims[2].v;
             kd.gws1 = dims.size() < 3 ? 1 : dims[1].v;
-            kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;                         
+            kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;
         }
         else
         {

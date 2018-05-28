@@ -39,6 +39,7 @@ struct custom_gpu_primitive;
 struct generic_layer;
 struct reshape;
 struct data;
+struct mutable_data;
 struct input_layout;
 struct prior_box;
 
@@ -48,7 +49,7 @@ template <class PType>
 struct typed_program_node;
 
 template<typename primitive_kind>
-struct implementation_key 
+struct implementation_key
 {
     typedef std::tuple<engine_types, data_types, format::type> type;
     type operator()(engine_types engine_type, const typed_program_node<primitive_kind>& primitive)
@@ -118,6 +119,16 @@ struct implementation_key<data>
 };
 
 template<>
+struct implementation_key<mutable_data>
+{
+    typedef cldnn::engine_types type;
+    type operator()(engine_types engine_type, const typed_program_node<mutable_data>&)
+    {
+        return engine_type;
+    }
+};
+
+template<>
 struct implementation_key<input_layout>
 {
     typedef cldnn::engine_types type;
@@ -146,13 +157,13 @@ public:
     using map_type = singleton_map<key_type, factory_type>;
 
     static factory_type get(engine_types engine_type, const typed_program_node<primitive_kind>& primitive) {
-        // lookup in database; throw if not found 
+        // lookup in database; throw if not found
         auto key = key_builder()(engine_type, primitive);
         auto it = map_type::instance().find(key);
-        if (it == std::end(map_type::instance())) 
+        if (it == std::end(map_type::instance()))
             throw std::runtime_error("not yet implemented");
 
-        // create implementation & attach it to result 
+        // create implementation & attach it to result
         return it->second;
     }
 

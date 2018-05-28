@@ -43,7 +43,7 @@ namespace cldnn
 /// Optionally it can also add provided biases by providing bias data.<br>
 struct scale : public primitive_base<scale, CLDNN_PRIMITIVE_DESC(scale)>
 {
-    CLDNN_DECLATE_PRIMITIVE(scale)
+    CLDNN_DECLARE_PRIMITIVE(scale)
 
     /// @brief Constructs scale primitive without adding bias.
     /// @param id This primitive id.

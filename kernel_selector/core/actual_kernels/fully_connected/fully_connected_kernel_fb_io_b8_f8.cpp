@@ -42,7 +42,7 @@ namespace KernelSelector
         auto kd = FullyConnectedBlockKernelBase::SetDefault(arg);
 
         const auto& output = arg.output;
-        
+
         size_t groups_per_batches = GetLocalGroupsSize(arg);
         kd->gws0 = output.LogicalSize() / (GetNeuronsPerWorkItem(arg) * GetBatchesPerWorkItem(arg) * groups_per_batches);
         kd->gws1 = groups_per_batches;

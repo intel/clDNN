@@ -35,50 +35,30 @@ gpu_toolkit_config convert_configuration(const engine_configuration conf)
     result.meaningful_kernels_names = conf.meaningful_kernels_names != 0;
     result.dump_custom_program = conf.dump_custom_program != 0;
     result.single_kernel_name = conf.single_kernel_name;
-    result.host_out_of_order = conf.enable_parallelisation != 0; //TODO: enable when barriers in driver will be fixed
+    result.host_out_of_order = true; //TODO: enable when barriers in driver will be fixed
     result.log = conf.engine_log;
     result.ocl_sources_dumps_dir = conf.sources_dumps_dir;
+    result.priority_mode = static_cast<cldnn_priority_mode_type>(conf.priority_mode);
+    result.throttle_mode = static_cast<cldnn_throttle_mode_type>(conf.throttle_mode);
     return result;
 }
 
 engine_impl::engine_impl(const engine_configuration& conf)
     : _configuration(conf)
     , _context(gpu_toolkit::create(convert_configuration(conf)))
-    ,_global_memory_used(0)
-{}
+    , _memory_pool(*this)
+{ }
 
 memory_impl::ptr engine_impl::allocate_memory(layout layout)
 {
-    if (layout.bytes_count() > _context->get_engine_info().max_alloc_mem_size)
-    {
-        throw error("exceeded max size of memory object allocation", CLDNN_ALLOC_SIZE_EXCEEDED);
-    }
+    return _memory_pool.get_memory(layout);
+}
 
-    _global_memory_used += layout.bytes_count();
-    if (_global_memory_used > _context->get_engine_info().max_global_mem_size)
-    {
-        throw error("exceeded global device memory", CLDNN_GLOBAL_SIZE_EXCEEDED);
-    }
-
-    try {
-        if(layout.format.is_image_2d())
-            return{ new gpu::gpu_image2d(this, layout), false };
-        else
-            return{ new gpu::gpu_buffer(this, layout), false };
-    }
-    catch (const cl::Error& clErr)
-    {
-        switch (clErr.err())
-        {
-        case CL_MEM_OBJECT_ALLOCATION_FAILURE:
-        case CL_OUT_OF_RESOURCES:
-        case CL_OUT_OF_HOST_MEMORY:
-        case CL_INVALID_BUFFER_SIZE:
-            throw error("out of GPU resources", CLDNN_OUT_OF_RESOURCES);
-        default:
-            throw error("GPU buffer allocation failed", CLDNN_ERROR);
-        }
-    }
+memory_impl::ptr engine_impl::allocate_memory(layout layout, primitive_id id, uint32_t network_id, std::set<primitive_id> dependencies, bool reusable)
+{
+    if (use_memory_pool())
+        return _memory_pool.get_memory(layout, id, network_id, dependencies, reusable);
+    return _memory_pool.get_memory(layout);
 }
 
 memory_impl::ptr engine_impl::reinterpret_buffer(const memory_impl& memory, layout new_layout)
@@ -124,8 +104,13 @@ event_impl::ptr engine_impl::create_user_event(bool set)
 }
 
 void engine_impl::flush_network()
-{ 
+{
     get_context()->flush();
+}
+
+void engine_impl::release_pending_memory()
+{
+    get_context()->release_pending_memory();
 }
 
 program_impl::ptr engine_impl::build_program(const topology_impl& topology, const build_options& options)
@@ -133,9 +118,9 @@ program_impl::ptr engine_impl::build_program(const topology_impl& topology, cons
     return{ new program_impl(*this, topology, options), false };
 }
 
-network_impl::ptr engine_impl::build_network(const topology_impl& topology, const build_options& options)
+network_impl::ptr engine_impl::build_network(const topology_impl& topology, const build_options& options, bool internal_network)
 {
-    return{ new network_impl(*this, topology, options), false };
+    return{ new network_impl(*this, topology, options, internal_network), false };
 }
 
 network_impl::ptr engine_impl::allocate_network(const program_impl& program)
@@ -158,6 +143,15 @@ void engine_impl::compile_program(program_impl&)
 {
     //TODO: better compilation logic instead of a simple 'compile all'?
     _context->get_kernels_cache().build_all();
+}
+
+bool engine_impl::use_memory_pool() const
+{
+    if (configuration().enable_memory_pool && get_context()->is_neo_driver())
+    {
+        return true;
+    }
+    return false;
 }
 
 }

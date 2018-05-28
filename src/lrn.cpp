@@ -55,7 +55,7 @@ std::string lrn_inst::to_string(lrn_node const& node)
 
     node_info.add("lrn info", lrn_info);
     node_info.dump(primitive_description);
-   
+
     return primitive_description.str();
 }
 

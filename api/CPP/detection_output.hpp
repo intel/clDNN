@@ -39,12 +39,12 @@ enum class prior_box_code_type : int32_t
 
 /// @brief Generates a list of detections based on location and confidence predictions by doing non maximum suppression.
 /// @details Each row is a 7 dimension vector, which stores: [image_id, label, confidence, xmin, ymin, xmax, ymax].
-/// If number of detections per image is lower than keep_top_k, will write dummy results at the end with image_id=-1. 
+/// If number of detections per image is lower than keep_top_k, will write dummy results at the end with image_id=-1.
 struct detection_output : public primitive_base<detection_output, CLDNN_PRIMITIVE_DESC(detection_output)>
 {
-    CLDNN_DECLATE_PRIMITIVE(detection_output)
+    CLDNN_DECLARE_PRIMITIVE(detection_output)
 
-    /// @brief Constructs pooling primitive.
+    /// @brief Constructs detection output primitive.
     /// @param id This primitive id.
     /// @param input_location Input location primitive id.
     /// @param input_confidence Input confidence primitive id.
@@ -74,6 +74,11 @@ struct detection_output : public primitive_base<detection_output, CLDNN_PRIMITIV
         const prior_box_code_type code_type = prior_box_code_type::corner,
         const bool variance_encoded_in_target = false,
         const float confidence_threshold = -std::numeric_limits<float>::max(),
+        const int32_t prior_info_size = 4,
+        const int32_t prior_coordinates_offset = 0,
+        const bool prior_is_normalized = true,
+        const int32_t input_width = -1,
+        const int32_t input_height = -1,
         const padding& output_padding = padding()
         )
         : primitive_base(id, { input_location, input_confidence, input_prior_box }, output_padding)
@@ -87,6 +92,11 @@ struct detection_output : public primitive_base<detection_output, CLDNN_PRIMITIV
         , code_type(code_type)
         , variance_encoded_in_target(variance_encoded_in_target)
         , confidence_threshold(confidence_threshold)
+        , prior_info_size(prior_info_size)
+        , prior_coordinates_offset(prior_coordinates_offset)
+        , prior_is_normalized(prior_is_normalized)
+        , input_width(input_width)
+        , input_height(input_height)
     {}
 
     /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{detection_output}
@@ -102,6 +112,11 @@ struct detection_output : public primitive_base<detection_output, CLDNN_PRIMITIV
         , code_type(static_cast<prior_box_code_type>(dto->code_type))
         , variance_encoded_in_target(dto->variance_encoded_in_target != 0)
         , confidence_threshold(dto->confidence_threshold)
+        , prior_info_size(dto->prior_info_size)
+        , prior_coordinates_offset(dto->prior_coordinates_offset)
+        , prior_is_normalized(dto->prior_is_normalized != 0)
+        , input_width(dto->input_width)
+        , input_height(dto->input_height)
     {}
 
     /// @brief Number of classes to be predicted.
@@ -124,6 +139,16 @@ struct detection_output : public primitive_base<detection_output, CLDNN_PRIMITIV
     const bool variance_encoded_in_target;
     /// @brief Only keep detections with confidences larger than this threshold.
     const float confidence_threshold;
+    /// @brief Number of elements in a single prior description (4 if priors calculated using PriorBox layer, 5 - if Proposal)
+    const int32_t prior_info_size;
+    /// @brief Offset of the box coordinates w.r.t. the beginning of a prior info record
+    const int32_t prior_coordinates_offset;
+    /// @brief If true, priors are normalized to [0; 1] range.
+    const bool prior_is_normalized;
+    /// @brief Width of input image.
+    const int32_t input_width;
+    /// @brief Height of input image.
+    const int32_t input_height;
 
 protected:
     void update_dto(dto& dto) const override
@@ -138,6 +163,11 @@ protected:
         dto.variance_encoded_in_target = variance_encoded_in_target;
         dto.keep_top_k = keep_top_k;
         dto.confidence_threshold = confidence_threshold;
+        dto.prior_info_size = prior_info_size;
+        dto.prior_coordinates_offset = prior_coordinates_offset;
+        dto.prior_is_normalized = prior_is_normalized;
+        dto.input_width = input_width;
+        dto.input_height = input_height;
     }
 };
 /// @}

@@ -170,7 +170,7 @@ TEST(custom_gpu_primitive_f32, eltwise_add_basic_in2x2x2x2) {
     topology topology;
     topology.add(input_layout("input", input.get_layout()));
     topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(eltwise("eltwise", "input", "input2", eltwise_mode::sum));
+    topology.add(eltwise("eltwise", {"input", "input2"}, eltwise_mode::sum));
     topology.add(custom_gpu_primitive(
         "user_kernel",
         { "eltwise" },
@@ -272,7 +272,7 @@ TEST(custom_gpu_primitive_f32, add_eltwise_basic_in2x2x2x2) {
         "-cl-mad-enable -DSCALAR=1",
         output_layout,
         gws));
-    topology.add(eltwise("eltwise", "user_kernel", "input2", eltwise_mode::sum));
+    topology.add(eltwise("eltwise", {"user_kernel", "input2"}, eltwise_mode::sum));
 
     set_values(input, {
         1.f,   0.f, 5.f, 1.5f,

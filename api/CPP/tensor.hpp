@@ -97,8 +97,11 @@ struct format
         winograd_2x3_s1_data,       ///< format used for input for winograd convolution, F(2,3) -- filter 3x3 with stride 1
         winograd_2x3_s1_weights,    ///< format used for weights for winograd non-fused convolution, F(2,3) -- filter 3x3 with stride 1
         winograd_2x3_s1_fused_weights,    ///< format used for weights for winograd fused convolution, F(2,3) -- filter 3x3 with stride 1
+        winograd_6x3_s1_fused_weights,    ///< format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
+        image_2d_weights_winograd_6x3_s1_fbxyb,      ///< image format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
+        image_2d_weights_winograd_6x3_s1_xfbyb,      ///< image format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
         format_num = cldnn_format_format_num, ///< number of format types
-        any = cldnn_format_any,
+        any = cldnn_format_any
     };
 
     /// @brief Get format traits for particular @p format::type
@@ -119,7 +122,10 @@ struct format
             { image_2d_weights_c1_b_fyx, { 1, 1, 2, "bfyx", "bfxy" } },
             { winograd_2x3_s1_data, { 1, 1, 2, "bxyf", "bfxy" } },
             { winograd_2x3_s1_weights, { 1, 1, 2, "bfyx", "bfxy" } },
-            { winograd_2x3_s1_fused_weights, { 1, 1, 2, "xyfb", "bfxy" } } };
+            { winograd_2x3_s1_fused_weights, { 1, 1, 2, "xyfb", "bfxy" } },
+            { winograd_6x3_s1_fused_weights,{ 1, 1, 2, "xyfb", "bfxy" } },
+            { image_2d_weights_winograd_6x3_s1_fbxyb,{ 1, 1, 2, "xyfb", "bfxy" } },
+            { image_2d_weights_winograd_6x3_s1_xfbyb,{ 1, 1, 2, "xyfb", "bfxy" } } };
         return traits.at(fmt);
     }
 
@@ -136,9 +142,9 @@ struct format
     /// @brief Returns number of dimensions contained within a @p format
     static size_t dimension(type fmt) { return order(fmt).size(); }
     /// @brief Checks if @p format is a winograd format
-    static bool is_winograd(type fmt) { return (fmt == winograd_2x3_s1_data || fmt == winograd_2x3_s1_weights || fmt == winograd_2x3_s1_fused_weights); }
+    static bool is_winograd(type fmt) { return (fmt == winograd_2x3_s1_data || fmt == winograd_2x3_s1_weights || fmt == winograd_2x3_s1_fused_weights || fmt == winograd_6x3_s1_fused_weights || fmt == image_2d_weights_winograd_6x3_s1_fbxyb || fmt == image_2d_weights_winograd_6x3_s1_xfbyb); }
     /// @brief Checks if @p format is of image2d type
-    static bool is_image_2d(type fmt) { return (fmt == image_2d_weights_c4_fyx_b || fmt == image_2d_weights_c1_b_fyx); }
+    static bool is_image_2d(type fmt) { return (fmt == image_2d_weights_c4_fyx_b || fmt == image_2d_weights_c1_b_fyx || fmt == image_2d_weights_winograd_6x3_s1_fbxyb || fmt == image_2d_weights_winograd_6x3_s1_xfbyb); }
     /// @brief Checks if @p format is of image type
     static bool is_image(type fmt) { return (is_image_2d(fmt)); }
 
@@ -312,7 +318,7 @@ public:
     /// @brief Constructs @p tensor.
     /// @details Example:
     /*! @code
-     * 
+     *
        tensor my_tensor( 2, 3, 4, 5 );   // b=2, f=3, x=4, y=5
        cout << my_tensor.batch[0] << endl;           // 2
        cout << my_tensor.feature[0] << endl;         // 3
@@ -320,7 +326,7 @@ public:
        cout << "y=" << my_tensor.spatial[1] << endl; // y=5
      *
      * @endcode
-     */ 
+     */
     tensor(value_type batch_num, value_type feature_num, value_type width, value_type height)
         : tensor(1)
     {
@@ -335,7 +341,7 @@ public:
     /// @param[in] default_size default_size for tensor dimensions.
     /// @details Example:
     /*! @code
-     * 
+     *
        tensor my_tensor = { 2, 3, 4, 5 };   // b=2, f=3, x=4, y=5
        cout << my_tensor.batch[0] << endl;           // 2
        cout << my_tensor.feature[0] << endl;         // 3
@@ -343,7 +349,7 @@ public:
        cout << "y=" << my_tensor.spatial[1] << endl; // y=5
      *
      * @endcode
-     */ 
+     */
     tensor(const std::vector<value_type>& sizes, value_type default_size = 1)
         : tensor(default_size)
     {
@@ -366,7 +372,7 @@ public:
             auto channel = out_order[out_idx];
             if (channel == '?')
                 continue;
-            
+
             auto in_idx = in_order.find(channel);
             if (in_idx == in_order.npos)
                 throw std::runtime_error("Internal order of a format contains channel which does not appear in external order.");
@@ -425,8 +431,12 @@ public:
         if (lhs.raw.size() != rhs.raw.size())
             return lhs.raw.size() < rhs.raw.size();
         for (size_t i = 0; i < lhs.raw.size(); ++i)
+        {
             if (lhs.raw[i] < rhs.raw[i])
                 return true;
+            if (rhs.raw[i] < lhs.raw[i])
+                return false;
+        }
 
         return false;
     }
@@ -545,7 +555,7 @@ public:
             auto pos = internal_order.find(c);
             if (pos == internal_order.npos)
                 throw std::domain_error(std::string("Unknown coord type: ") + c);
-            
+
             sizes[i] = _sizes[pos];
         }
 
@@ -561,10 +571,10 @@ public:
     }
 
     /// @brief Returns tensor elements count calculated as multiplication of all elements.
-    size_t count() const { 
+    size_t count() const {
         return std::accumulate(
             raw.begin(),
-            raw.end(), 
+            raw.end(),
             static_cast<size_t>(1),
             std::multiplies<size_t>()
         );
@@ -616,7 +626,7 @@ public:
                 throw std::invalid_argument("cannot convert to new format");
             new_sizes[new_pos] = old_sizes[i];
         }
-        
+
         //in case of formats with smaller number of dimensions than input, flatten is performed below
         if (tmp != 1)
         {

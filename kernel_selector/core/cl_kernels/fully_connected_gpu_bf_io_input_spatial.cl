@@ -66,7 +66,7 @@ KERNEL (fully_connected_gpu_bf_io_input_spatial)(
         s_w_idx += MULTIPLY_OFFSET(UNIT_TYPE, FILTER_OFM_NUM * 16);
     }
     input_idx -=  MULTIPLY_OFFSET(UNIT_TYPE, get_sub_group_local_id());
-    weight_idx += MULTIPLY_OFFSET(UNIT_TYPE, input_slices * FILTER_OFM_NUM); 
+    weight_idx += MULTIPLY_OFFSET(UNIT_TYPE, input_slices * FILTER_OFM_NUM);
     for (uint i = 0; i < INPUT0_ELEMENTS_COUNT % 16; i++)
     {
         UNIT_TYPE _in = *OFFSET_GLOBAL_PTR(UNIT_TYPE, input, input_idx);
@@ -84,4 +84,3 @@ KERNEL (fully_connected_gpu_bf_io_input_spatial)(
         output[x] = ACTIVATION(result, NL_M, NL_N);
     }
 }
-

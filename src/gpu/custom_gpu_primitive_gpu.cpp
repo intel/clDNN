@@ -51,7 +51,7 @@ struct custom_gpu_primitive_gpu : typed_primitive_impl<custom_gpu_primitive>
             args.inputs.push_back(&(dep->output_memory()));
         }
         args.output = &instance.output_memory();
-        
+        _kernel.set_output_event(instance.node.is_output());
         return _kernel.run(*cl_kernel.get(), events, args);
     }
 };
@@ -84,21 +84,21 @@ std::string value_macro(const std::string& name, const std::string& value)
     return oss.str();
 }
 
-static void add_layout_to_jit(kernel_selector::jit_constants& mem_consts, const std::string& name, layout l) 
+static void add_layout_to_jit(kernel_selector::jit_constants& mem_consts, const std::string& name, layout l)
 {
     // Size (in elements)
     // #define INPUT0_DIMS (uint[]) { b, f, y, x, }
     mem_consts.AddConstant(KernelSelector::MakeJitConstant(name + "_DIMS", l.size.sizes(format::bfyx)));
 
     // Data type
-    // #define INPUT0_TYPE float 
+    // #define INPUT0_TYPE float
     static const std::map<data_types, std::string> dataTypeToIndex{
         { data_types::i8    ,"char" },
         { data_types::f16   ,"half" },
         { data_types::f32   ,"float" },
     };
 
-    if (dataTypeToIndex.find(l.data_type) == dataTypeToIndex.end()) 
+    if (dataTypeToIndex.find(l.data_type) == dataTypeToIndex.end())
     {
         CLDNN_ERROR_MESSAGE("add layout to jit", "Unhandled data type in layout");
     }
@@ -118,7 +118,7 @@ static void add_layout_to_jit(kernel_selector::jit_constants& mem_consts, const 
     // Pitches (in elements)
     // #define INPUT0_PITCHES (uint[]) { b, f, h, w, }
     auto padded_sizes = l.get_buffer_size().sizes(format::bfyx);
-    
+
     std::vector<tensor::value_type> pitches(4);
     switch (l.format)
     {
@@ -149,7 +149,7 @@ static void add_layout_to_jit(kernel_selector::jit_constants& mem_consts, const 
     default:
         throw std::runtime_error("Unhandled format in pitch calculation");
     }
-    
+
     mem_consts.AddConstant(KernelSelector::MakeJitConstant(name + "_PITCHES", pitches));
 
     // Offset (in elements)
@@ -172,7 +172,7 @@ static std::string get_jit_constant(const custom_gpu_primitive_node& outer)
         KernelSelector::MakeJitConstant("LOCAL_WORKSIZE", primitive->lws),
     });
 
-    for (size_t i = 0; i < outer.get_dependencies().size(); i++) 
+    for (size_t i = 0; i < outer.get_dependencies().size(); i++)
     {
         add_layout_to_jit(mem_consts, "INPUT" + std::to_string(i), outer.input(i).get_output_layout());
     }
@@ -192,7 +192,7 @@ static std::string get_jit_constant(const custom_gpu_primitive_node& outer)
 static primitive_impl* create(const custom_gpu_primitive_node& arg)
 {
     const auto primitive = arg.get_primitive().get();
-    
+
     auto cl_kernel = std::make_shared<kernel_selector::cl_kernel_data>();
     cl_kernel->kernelString = std::make_shared<kernel_selector::kernel_string>();
     cl_kernel->kernelString->entry_point = primitive->kernel_entry_point;

@@ -110,11 +110,11 @@ public:
     virtual const CLDNN_PRIMITIVE_DESC(primitive)* get_dto() const = 0;
 
     /// @brief Returns references to all primitive ids on which this primitive depends - inputs, weights, biases, etc.
-    std::vector<std::reference_wrapper<primitive_id>> dependecies()
+    std::vector<std::reference_wrapper<primitive_id>> dependencies()
     {
         std::vector<std::reference_wrapper<primitive_id>> result;
         auto&& deps = get_dependencies();
-        
+
         result.reserve(_input.size() + deps.size());
         for (auto& pid : _input.cpp_ids)
             result.push_back(std::ref(pid));
@@ -125,7 +125,7 @@ public:
     }
 
     /// @brief Returns copy of all primitive ids on which this primitive depends - inputs, weights, biases, etc.
-    std::vector<primitive_id> dependecies() const
+    std::vector<primitive_id> dependencies() const
     {
         auto result = input.ref();
         auto deps = get_dependencies();
@@ -215,7 +215,7 @@ protected:
     primitive_base(const DTO* dto)
         : primitive(reinterpret_cast<const CLDNN_PRIMITIVE_DESC(primitive)*>(dto))
     {
-        if (dto->type != PType::type_id()) 
+        if (dto->type != PType::type_id())
             throw std::invalid_argument("DTO type mismatch");
     }
 
@@ -233,7 +233,7 @@ private:
         });\
     }
 
-#define CLDNN_DECLATE_PRIMITIVE(PType) typedef CLDNN_PRIMITIVE_DESC(PType) dto;\
+#define CLDNN_DECLARE_PRIMITIVE(PType) typedef CLDNN_PRIMITIVE_DESC(PType) dto;\
     CLDNN_DEFINE_TYPE_ID(PType)
 /// @}
 /// @}

@@ -34,7 +34,7 @@ namespace cldnn
     /// @par Where:
     struct reorg_yolo : public primitive_base<reorg_yolo, CLDNN_PRIMITIVE_DESC(reorg_yolo)>
     {
-        CLDNN_DECLATE_PRIMITIVE(reorg_yolo)
+        CLDNN_DECLARE_PRIMITIVE(reorg_yolo)
 
         /// @brief Constructs region_yolo primitive.
         /// @param id This primitive id.

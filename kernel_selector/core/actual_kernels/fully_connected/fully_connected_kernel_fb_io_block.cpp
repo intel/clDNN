@@ -39,7 +39,7 @@ namespace KernelSelector
     {
         auto kd = std::make_unique<DispatchData>(*FullyConnectedKernelBase::SetDefault(arg).get());
         const auto& output = arg.output;
-        
+
         auto batch_size = output.Batch().v;
         auto response_size = output.Feature().v;
 
@@ -50,7 +50,7 @@ namespace KernelSelector
         constexpr uint32_t units_per_chunk = chunk_byte_size / unit_byte_size;
         constexpr uint32_t units_per_sg_read = sub_group_size * units_per_chunk;
 
-        
+
         // Number of response groups. Each group (except last) writes units_per_sg_read responses
         // for at least one input data set from batch.
         auto rg_count = CeilDiv(response_size, units_per_sg_read);

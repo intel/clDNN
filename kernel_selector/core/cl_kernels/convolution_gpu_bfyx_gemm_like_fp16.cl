@@ -53,7 +53,7 @@ KERNEL(convolution_f16)(
     // Each work item points to the start of a different patch.
     // atile is M rows x K columns.
 #if defined(INPUT_BUFFER_WIDTH_PADDED) && defined(INPUT_BUFFER_HEIGHT_PADDED)
-    uint src0_read_offset = INPUT0_OFFSET_WITH_PADDING + in_split_offset
+    const uint src0_read_offset_const = INPUT0_OFFSET_WITH_PADDING + in_split_offset
      + INPUT0_BATCH_PITCH * global_z                                                         // batch offset
      + ( ( global_y / OUTPUT_SIZE_X ) * STRIDE_SIZE_Y * INPUT0_Y_PITCH )                     // y offset
      + ( ( global_y % OUTPUT_SIZE_X ) * STRIDE_SIZE_X );                                     // x offset
@@ -89,12 +89,11 @@ KERNEL(convolution_f16)(
      + ( ( global_y % OUTPUT_SIZE_X ) * STRIDE_SIZE_X );                // x offset
 #endif
 
-    const __global half *src0_read = src0 + src0_read_offset;
-
     // Src1 (filter) is directly used as btile.
     // It starts at the top of src1 and walks down.
     // btile is K rows x N columns.
-    const __global half *src1_read = src1 + ( global_x * TILE_N * 2 );
+    uint src0_read_offset = src0_read_offset_const;
+    uint src1_read_offset = ( global_x * TILE_N * 2);
 
 #define DOT_PRODUCT_16( _result, _rowA, colB )    \
     {   \
@@ -146,7 +145,15 @@ KERNEL(convolution_f16)(
                 unsigned i = 0;
                 LOOP(FILTER_SIZE_X, i, 
                 {
-                    blockA00[i] = src0_read[i];
+#if LEFTOVERS == 1
+                    if(src0_read_offset_const + (FILTER_SIZE_Y - 1) * INPUT0_Y_PITCH + (INPUT0_FEATURE_NUM - 1) * (INPUT0_FEATURE_PITCH - ( FILTER_SIZE_Y * INPUT0_Y_PITCH )) >= INPUT0_BATCH_NUM * INPUT0_BATCH_PITCH)
+                    {
+                        if(src0_read_offset + i < INPUT0_BATCH_NUM * INPUT0_BATCH_PITCH)
+                            blockA00[i] = src0[src0_read_offset + i];
+                    }
+                    else
+#endif
+                        blockA00[i] = src0[src0_read_offset + i];
                 } )
             }
             
@@ -164,7 +171,7 @@ KERNEL(convolution_f16)(
             }
             else
             {
-                 blockA00 = ( (const __global half_t*)(src0_read - partial_left) )[0];
+                 blockA00 = src0[src0_read_offset - partial_left];
                  if (partial_left) pblockA00[0] = 0;
                  if (partial_right != FILTER_SIZE_X) pblockA00[FILTER_SIZE_X - 1] = 0;
             }
@@ -175,7 +182,7 @@ KERNEL(convolution_f16)(
             }
             else
             {
-                 blockA00 = ( (const __global half_t*)(src0_read - partial_left) )[0];
+                 blockA00 = src0[src0_read_offset - partial_left];
                  for (unsigned i = 0; i < partial_left; ++i) pblockA00[i] = 0;
                  for (unsigned i = partial_right; i < FILTER_SIZE_X; ++i) pblockA00[i] = 0;
 
@@ -190,10 +197,10 @@ KERNEL(convolution_f16)(
             }
             else
             {
-                blockA00 = ( (const __global half_t*)(src0_read) )[0];
+                blockA00 = src0[src0_read_offset];
             }
             #endif
-            src0_read += INPUT0_Y_PITCH;
+            src0_read_offset += INPUT0_Y_PITCH;
 
             ushort blockB00[FILTER_SIZE_X * 2];
             ushort4* p4BlockB00 = (ushort4*)blockB00;
@@ -203,13 +210,13 @@ KERNEL(convolution_f16)(
             interleaved_y = 0;
             LOOP(FILTER_SIZE_X_DIV2, interleaved_y,
             {
-                p4BlockB00[interleaved_y] = intel_sub_group_block_read_us4( (const __global ushort*)src1_read );
-                src1_read += ALIGNED_OFM * 2;
+                p4BlockB00[interleaved_y] = intel_sub_group_block_read_us4( (const __global ushort*)src1 + src1_read_offset );
+                src1_read_offset += ALIGNED_OFM * 2;
             } )
             if ( kernel_width_is_odd )
             {
-                p2BlockB00[FILTER_SIZE_X - 1] = intel_sub_group_block_read_us2( (const __global ushort*)src1_read );
-                src1_read += ALIGNED_OFM * 2;
+                p2BlockB00[FILTER_SIZE_X - 1] = intel_sub_group_block_read_us2( (const __global ushort*)src1 + src1_read_offset );
+                src1_read_offset += ALIGNED_OFM * 2;
             }
 
             // Perform MADs
@@ -232,7 +239,7 @@ KERNEL(convolution_f16)(
         }
         while( ++patch_row < FILTER_SIZE_Y );
 
-        src0_read += INPUT0_FEATURE_PITCH - ( FILTER_SIZE_Y * INPUT0_Y_PITCH ); // reset to start of next slice of patch
+        src0_read_offset += INPUT0_FEATURE_PITCH - ( FILTER_SIZE_Y * INPUT0_Y_PITCH ); // reset to start of next slice of patch
     }
     while ( ++patch_depth < INPUT0_FEATURE_NUM );
 

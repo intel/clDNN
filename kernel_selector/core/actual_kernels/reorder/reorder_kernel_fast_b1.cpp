@@ -46,6 +46,15 @@ namespace KernelSelector
         const auto& input = newParams.inputs[0];
         jit.AddConstant(MakeJitConstant("ELEMENTS_COUNT", input.LogicalSize()));
 
+        const auto& output = newParams.output;
+        if (input.GetLayout() == output.GetLayout() && input.SameDimsSizes(output) &&
+            !input.PitchesDifferFromLogicalDims() && !output.PitchesDifferFromLogicalDims() &&
+            input.GetDType() != output.GetDType() &&
+            params.reorderParams.mode == MeanSubtractMode::NONE)
+        {
+            jit.AddConstant(MakeJitConstant("CHANGE_DATA_TYPE_ONLY", 1));
+        }
+
         return jit;
     }
 

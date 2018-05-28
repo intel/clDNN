@@ -30,6 +30,7 @@ namespace KernelSelector {
         k.EnableAllOutputLayout();
         k.EnableTensorOffset();
         k.EnableBatching();
+        k.EnableGradient();
         return k;
     }
 
@@ -71,6 +72,12 @@ namespace KernelSelector {
             (params.output.GetFirstElementOffset() % NUM_COLS_WI) != 0)
         {
             return false;
+        }
+
+        if (params.gradient)
+        {
+            if (params.inputs[0].GetLayout() != params.inputs[1].GetLayout())
+                return false;
         }
 
         return true;

@@ -139,8 +139,53 @@ namespace KernelSelector { namespace
         return bProperWeightsLayout;
     }
 
+    inline std::vector<size_t> GetImageSizes(const KernelSelector::WeightsTensor& dimensions, const WeightsLayout layout)
+    {
+        auto ofm = dimensions.OFM().v;
+        auto ifm = dimensions.IFM().v;
+        auto x = dimensions.X().v;
+        auto y = dimensions.Y().v;
+
+        switch (layout)
+        {
+        case WeightsLayout::image_2d_weights_c1_b_fyx:
+        case WeightsLayout::image_2d_weights_c4_fyx_b:
+            return { ofm, ifm * x * y };
+        case WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb:
+            return { ofm * x * y * 8 / 3, ifm };
+        case WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb:
+            return { ofm * y, ifm * x * 8 / 3 };
+        default:
+            return { 0, 0 };
+        }
+    }
+
+    inline bool CheckImageSize(const WeightBiasParams& newParams, const WeightsLayout layout)
+    {
+        if (!newParams.engineInfo.bImageSupport)
+            return false;
+
+        auto image_sizes = GetImageSizes(newParams.weights, layout);
+        if (image_sizes[0] == 0 ||
+            image_sizes[1] == 0 ||
+            image_sizes[0] > newParams.engineInfo.maxImage2dWidth ||
+            image_sizes[1] > newParams.engineInfo.maxImage2dHeight)
+            return false;
+
+        return true;
+    }
+
     inline bool UpdateWeightsParams(WeightBiasParams& newParams, const OptionalParams& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams)
     {
+        //validate if weights type is image and if device supports requested sizes
+        for (auto& requested_layout : layouts)
+        {
+            if (Tensor::IsImageType(requested_layout))
+            {
+                if (!CheckImageSize(newParams, requested_layout))
+                    return false;
+            }
+        }
         const WeightsBiasOptionalParams& optParams = static_cast<const WeightsBiasOptionalParams&>(options);
 
         const auto dtype = DataTypeToWeightsType(newParams.inputs[0].GetDType());
@@ -173,8 +218,7 @@ namespace KernelSelector { namespace
             weightsReorderParams.newBufferSize = r_params.reorderParams.output.PhysicalSizeInBytes();
             weightsReorderParams.dtype = dtype;
             weightsReorderParams.destLayout = r_params.reorderParams.output.GetLayout();
-            weightsReorderParams.toImageType = r_params.reorderParams.output.GetLayout() == WeightsLayout::image_2d_weights_c4_fyx_b ||
-                r_params.reorderParams.output.GetLayout() == WeightsLayout::image_2d_weights_c1_b_fyx;
+            weightsReorderParams.toImageType = Tensor::IsImageType(r_params.reorderParams.output.GetLayout());
             
             newParams.weights = r_params.reorderParams.output;
         }
@@ -184,9 +228,9 @@ namespace KernelSelector { namespace
 
     inline JitConstants GetTensorFriendlyWorkGroupsJit(const DataTensor& t)
     {
-        auto b = Tensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::BATCH);
-        auto f = Tensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::FEATURE);
-        auto x = Tensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::X);
+        auto b = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::BATCH);
+        auto f = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::FEATURE);
+        auto x = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::X);
 
         if (x == -1)
         {
@@ -210,7 +254,7 @@ namespace KernelSelector { namespace
     inline std::vector<size_t> GetTensorFriendlyWorkGroups(const DataTensor& t)
     {
         std::vector<size_t> sizes;
-        auto y = Tensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::Y);
+        auto y = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::Y);
         for (size_t i = 0; i < t.GetDims().size(); i++)
         {
             const auto& o = t.GetDims()[i];

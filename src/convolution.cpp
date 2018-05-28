@@ -41,8 +41,8 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
     auto dilation = desc->dilation;
     auto split = desc->weights.size();
 
-    // compute how many outputs in rows and columns will be generate by filter. 
-    // outp <= (input_size - (2*input_offset) - kernel_size)/ stride 
+    // compute how many outputs in rows and columns will be generate by filter.
+    // outp <= (input_size - (2*input_offset) - kernel_size)/ stride
     auto filter_size = weights_layout.size;
 
     // TODO: Consider moving general parameter verification to arguments constructor.
@@ -59,7 +59,8 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 //     CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial X", -input_offset.spatial[0], "input window size spatial X", filter_size.spatial[0], "First convolution is outside of image. please reduce input offset X");
 //     CLDNN_ERROR_GREATER_THAN(node.id(), "Negate input offset spatial Y", -input_offset.spatial[1], "input window size spatial Y", filter_size.spatial[1], "First convolution is outside of image. please reduce input offset Y");
 
-    if (input_layout.format == format::winograd_2x3_s1_weights || input_layout.format == format::winograd_2x3_s1_fused_weights)
+    if (input_layout.format == format::winograd_2x3_s1_weights || input_layout.format == format::winograd_2x3_s1_fused_weights ||
+        input_layout.format == format::winograd_6x3_s1_fused_weights || input_layout.format == format::image_2d_weights_winograd_6x3_s1_fbxyb || input_layout.format == format::image_2d_weights_winograd_6x3_s1_xfbyb)
         CLDNN_ERROR_MESSAGE(node.id(), "Input for convolution should not be in windograd weights format - it is reserved for weights only");
 
     if (input_layout.format == format::winograd_2x3_s1_data)
@@ -108,7 +109,7 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 }
 
 std::string convolution_inst::to_string(convolution_node const& node)
-{    
+{
     auto desc       = node.get_primitive();
     auto strd       = desc->stride;
     auto split      = node.get_split();
@@ -161,7 +162,7 @@ convolution_inst::typed_primitive_inst(network_impl& network, convolution_node c
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias batch[0]", bias_inst.size.batch[0], "expected size of batch", 1, "Biases isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias feature[0]", bias_inst.size.feature[0], "expected size of feature", 1, "Biases isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[1]", bias_inst.size.spatial[1], "expected size of spatial[1]", 1, "Biases isn't 1D vector.");
-          
+
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[0]", bias_inst.size.spatial[0], "expected feature map number", output_size.feature[0] / split, "Bias/fm mismtach");
         }
 

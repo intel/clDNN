@@ -21,6 +21,7 @@
 #include "lrn_kernel_across_channel_ref.h"
 #include "lrn_kernel_across_channel_opt_b8.h"
 #include "lrn_kernel_across_channel_multiple_features.h"
+#include "lrn_kernel_within_channel_byxf_opt.h"
 
 namespace KernelSelector 
 {
@@ -31,6 +32,7 @@ namespace KernelSelector
         Attach<LRNKernelWithinChannelOpt>();
         Attach<LRNKernelAcrossChannelRef>();
         Attach<LRNKernelAcrossChannel_b8>();
+        Attach<LRNKernelWithinChannelByxfOpt>();
         Attach<LRNKernelAcrossChannelMultipleFeatures>();
     }
 

@@ -72,7 +72,9 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), upsampling_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), upsampling_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), upsampling_gpu::create },
-                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), upsampling_gpu::create }
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), upsampling_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), upsampling_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), upsampling_gpu::create }
             });
         }
         ~attach() {}

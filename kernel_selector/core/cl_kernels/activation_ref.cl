@@ -18,8 +18,14 @@
 
 // TODO: move it from layout based to memory based
 KERNEL(activation)(
+#if GRADIENT
+    __global UNIT_TYPE* input_grad,
+    __global UNIT_TYPE* output_grad,
+    __global UNIT_TYPE* input
+#else
     __global UNIT_TYPE* input, 
     __global UNIT_TYPE* output
+#endif
 #ifdef PARAMETERIZED 
     , __global ADDITIONAL_PARAMS_TYPE* params
 #endif
@@ -47,7 +53,12 @@ KERNEL(activation)(
 #endif
 #endif
 
+#if GRADIENT
+    const unsigned src_grad_index = batch*INPUT0_BATCH_PITCH + feature*INPUT0_FEATURE_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH + INPUT0_OFFSET;
+    const unsigned src_index = batch*INPUT1_BATCH_PITCH + feature*INPUT1_FEATURE_PITCH + y*INPUT1_Y_PITCH + x*INPUT1_X_PITCH + INPUT1_OFFSET;
+#else
     const unsigned src_index = batch*INPUT0_BATCH_PITCH + feature*INPUT0_FEATURE_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH + INPUT0_OFFSET;
+#endif
     const unsigned dst_index = batch*OUTPUT_BATCH_PITCH + feature*OUTPUT_FEATURE_PITCH + y*OUTPUT_Y_PITCH + x*OUTPUT_X_PITCH + OUTPUT_OFFSET;
 
 #if defined PARAMETERIZED
@@ -65,5 +76,10 @@ KERNEL(activation)(
     const float nl_m = (float)NL_M;
     const float nl_n = (float)NL_N;
 #endif
+
+#if GRADIENT
+    output_grad[dst_index] = ACTIVATION(input_grad[src_grad_index], input[src_index], nl_m, nl_n);
+#else
     output[dst_index] = ACTIVATION(input[src_index], nl_m, nl_n);
+#endif
 }

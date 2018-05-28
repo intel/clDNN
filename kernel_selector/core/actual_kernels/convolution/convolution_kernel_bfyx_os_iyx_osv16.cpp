@@ -68,6 +68,7 @@ namespace KernelSelector
         k.EnableBatching();
         k.EnableSplitSupport();
         k.EnableDilation();
+        k.EnableTranspose();
         return k;
     }
 
@@ -258,6 +259,18 @@ namespace KernelSelector
     KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, const int autoTuneIndex) const
     {
         return GetCommonKernelsData(params, options, GetAutoTuneOptions(params, autoTuneIndex).exeMode, autoTuneIndex);
+    }
+
+    std::vector<WeightsLayout> ConvolutionKernel_bfyx_os_iyx_osv16::GetSupportedWeightLayouts(const ConvolutionParams& params) const
+    {
+        if (!params.convParams.transposed)
+        {
+            return{ WeightsLayout::os_iyx_osv16 };
+        }
+        else
+        {
+            return{ WeightsLayout::os_iyx_osv16_rotate_180 };
+        }
     }
 
     KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelsData(const Params& params, const OptionalParams& options) const

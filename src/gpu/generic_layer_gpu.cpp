@@ -48,7 +48,7 @@ struct generic_layer_gpu : typed_primitive_impl<generic_layer>
             args.inputs.push_back(&instance.input_memory(i));
         }
         args.output = &instance.output_memory();
-        
+        _kernel.set_output_event(instance.node.is_output());
         return _kernel.run(_cl_kernel_data, events, args);
     }
 };

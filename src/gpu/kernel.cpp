@@ -93,10 +93,16 @@ namespace {
                     status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.bias).get_buffer());
                 }
                 break;
-            case kernel_selector::kernel_argument_types::LOOKUP_TABLE:
-                if (data.lookup_table)
+            case kernel_selector::kernel_argument_types::WEIGHTS_QUANTIZATION_FACTORS:
+                if (data.weights_quantization_factors)
                 {
-                    status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.lookup_table).get_buffer());
+                    status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.weights_quantization_factors).get_buffer());
+                }
+                break;
+            case kernel_selector::kernel_argument_types::OUTPUT_CALIBRATION_FACTORS:
+                if (data.output_calibration_factors)
+                {
+                    status = kernel.setArg(i, dynamic_cast<const gpu::gpu_buffer&>(*data.output_calibration_factors).get_buffer());
                 }
                 break;
             case kernel_selector::kernel_argument_types::SCALE_TABLE:
@@ -172,7 +178,6 @@ event_impl::ptr kernel::run(
     const kernel_arguments_data& args) const
 {
     auto clkernel = context()->get_kernels_cache().get_kernel(_kernel_id, _one_time_kernel);
-
     try {
         set_arguments(clkernel, kernel_data.arguments, args);
     }

@@ -122,6 +122,8 @@ public:
             (uint32_t)dilation.spatial[1]
         };
 
+        deconv_params.gradient = primitive->gradient();
+
         auto& kernel_selector = kernel_selector::deconvolution_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(deconv_params, deconv_optional_params);
 
@@ -140,6 +142,8 @@ namespace{
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), deconvolution_gpu::create);
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), deconvolution_gpu::create);
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), deconvolution_gpu::create);
         }
         ~attach() {}
     };

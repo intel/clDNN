@@ -32,7 +32,7 @@ namespace cldnn
         auto desc = node.get_primitive();
         auto stride = desc->stride;
 
-        cldnn::layout layoutTemp = cldnn::layout(input_layout.data_type, format::bfyx, tensor(input_layout.size.batch[0],
+        cldnn::layout layoutTemp = cldnn::layout(input_layout.data_type, input_layout.format, tensor(input_layout.size.batch[0],
             input_layout.size.feature[0] * stride * stride, input_layout.size.spatial[0] / stride,
             input_layout.size.spatial[1] / stride));
         return layoutTemp;

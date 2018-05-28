@@ -15,6 +15,7 @@
 */
 
 #include "auto_tuner.h"
+#include "auto_tuner_offline.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -80,7 +81,7 @@ namespace KernelSelector
                     }
 
                     // Update tuning cache 
-                    onlineCache[tuningFilePath].hashToKernelConfig[cachedhash] = std::make_tuple(cachedkernelName, cachedIndex);
+                    onlineCache[tuningFilePath].td[cachedhash] = std::make_tuple(cachedkernelName, cachedIndex);
                 }
 
                 tuningFile.close();
@@ -103,8 +104,8 @@ namespace KernelSelector
 
         // Tuning file is loaded
         auto const& tuningFileData = onlineCache[tuningFilePath];
-        auto const& hashData = tuningFileData.hashToKernelConfig.find(hash);
-        if (hashData != tuningFileData.hashToKernelConfig.end())
+        auto const& hashData = tuningFileData.td.find(hash);
+        if (hashData != tuningFileData.td.end())
         {
             // Tuning data exists for this hash.
             return hashData->second;
@@ -114,8 +115,6 @@ namespace KernelSelector
             // Tuning data doesn't exists for this hash - on-line tuning is needed.
             return std::make_pair("", 0);
         }
-
-        
     }
 
     void AutoTuner::StoreKernel(const std::string& tuningFilePath, const std::string& hash, const std::string& implementationName, const int tuneIndex)
@@ -123,7 +122,7 @@ namespace KernelSelector
         std::lock_guard<std::mutex> lock(mutex);
 
         // Add the new tuning data to cache
-        onlineCache[tuningFilePath].hashToKernelConfig[hash] = std::make_tuple(implementationName, tuneIndex);
+        onlineCache[tuningFilePath].td[hash] = std::make_tuple(implementationName, tuneIndex);
 
         // Add the new tuning data to tuning file
         std::ofstream cachedKernelsFile(tuningFilePath, std::ofstream::out | std::ofstream::app);
@@ -139,12 +138,12 @@ namespace KernelSelector
 
     std::tuple<std::string, int> AutoTuner::LoadKernelOffline(const std::string& deviceID, const std::string& hash)
     {
-        auto const& deviceCache = offlineCache.find(deviceID);
-        if (deviceCache == offlineCache.end())
+        auto const& deviceCache = auto_tuner_offline::get_instance(deviceID)->get_tuning_data();
+        if (deviceCache.td.empty())
         {
             return std::make_pair("", 0);
         }
-        auto const& deviceCacheData = deviceCache->second.hashToKernelConfig;
+        auto const& deviceCacheData = deviceCache.td;
         auto const& hashData = deviceCacheData.find(hash);
         if (hashData == deviceCacheData.end())
         {

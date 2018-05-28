@@ -52,6 +52,8 @@ cldnn_tensor output_size;
 cldnn_primitive_id_arr weights;
 /// @brief Array of primitive ids containing bias data. Size of array should be equivalent to @p split or should be empty (if not using bias).
 cldnn_primitive_id_arr bias;
+/// @brief Indicates that deconvolution is used for convolution backward computation (convolution_grad_input)
+uint32_t gradient;
 CLDNN_END_PRIMITIVE_DESC(deconvolution)
 
 CLDNN_DECLARE_PRIMITIVE_TYPE_ID(deconvolution);

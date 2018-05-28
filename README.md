@@ -36,6 +36,30 @@ Accelerate Deep Learning Inference with Intel® Processor Graphics whitepaper [l
 
 ## Changelog
 
+### Drop 7.0
+    New features:
+    - support for img_info=4 in proposal_gpu
+    - support images format in winograd
+    - support for 2 or more inputs in eltwise
+    - priority and throttle hints
+    - deconvolution_grad_input primitive
+    - fc_grad_input and fc_grad_weights primitives
+    Bug fixes:
+    - tensor fixes (i.e. less operator fix)
+    - cascade concat fixes
+    - winograd fixes for bfyx format
+    - auto-tuning fixes for weights calculation
+    UX:
+    - memory pool (reusing memory buffers)
+    - added choosen kernel name in graph dump
+    - flush memory functionality
+    Performance:
+    - graph optimizations
+    - depth-concatenation with fused relu optimization
+    - winograd optimizations
+    - deconvolution optimizations (i.e bfyx opt)
+
+
 ### Drop 6.0
 	New features:
 	- fused winograd

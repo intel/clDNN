@@ -30,7 +30,7 @@ namespace cldnn
 
 /// @brief Performs forward fully connected layer (inner product).
 /// Also supports built-in Relu @CLDNN_PRIMITIVE_DESC{activation} available by setting it in arguments.
-/// @notes 
+/// @notes
 /// - Equation: Input[F x Y x F] x Output(X) == Weights(B x F x X x F) has to be fulfilled
 /// - Bias has to be linear data [1,1,1,X], where X is equal to number of outputs.
 
@@ -52,7 +52,7 @@ namespace cldnn
 
 struct fully_connected : public primitive_base<fully_connected, CLDNN_PRIMITIVE_DESC(fully_connected)>
 {
-    CLDNN_DECLATE_PRIMITIVE(fully_connected)
+    CLDNN_DECLARE_PRIMITIVE(fully_connected)
 
     /// @brief Constructs fully connected layer.
     /// @param id This primitive id.
@@ -98,12 +98,12 @@ struct fully_connected : public primitive_base<fully_connected, CLDNN_PRIMITIVE_
     float activation_negative_slope;
 
 protected:
-    std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override 
+    std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override
     {
         if (bias.empty())
             return{ weights };
         else
-            return{ weights, bias }; 
+            return{ weights, bias };
     }
 
     void update_dto(dto& dto) const override

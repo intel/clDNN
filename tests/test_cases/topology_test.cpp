@@ -294,7 +294,7 @@ protected:
                 input_layouts.push_back({ input_id, output_layout });
                 cldnn::primitive_id eltwise_params_id = id + "_eltwise_params";
                 AddRandomMemory(topology, eltwise_params_id, output_layout);
-                topology.add(cldnn::eltwise(id, input_id, eltwise_params_id, cldnn::eltwise_mode::max));
+                topology.add(cldnn::eltwise(id, {input_id, eltwise_params_id}, cldnn::eltwise_mode::max));
                 return true;
             }
         };

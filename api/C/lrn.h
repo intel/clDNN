@@ -43,7 +43,7 @@ typedef enum /*:int32_t*/
 ///   b(i,x,y) = a(i,x,y) / (k+alpha*sum(min(N-1, i+n/2); j=max(0,i-n/2); a(j,x,y)^2))
 /// @par Where:
 ///   @li b(i,x,y) : value at x, y from i-th feature map after normalization
-///   @li b(i,x,y) : value at x, y from i-th feature map before normalization
+///   @li a(i,x,y) : value at x, y from i-th feature map before normalization
 ///   @li N : number of feature maps
 ///   @li n : size of normalization
 ///   @li k, alpha, beta : hyper parameters (equal to 2, 10e-4, 0.75 in paper).
@@ -70,4 +70,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(lrn);
 /// @}
 /// @}
 #endif /* LRN_H */
-

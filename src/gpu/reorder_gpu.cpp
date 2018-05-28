@@ -73,6 +73,27 @@ public:
             reorder_params.reorderParams.mode = kernel_selector::mean_subtruct_mode::NONE;
         }
 
+        if (reorder_params.reorderParams.mode != kernel_selector::mean_subtruct_mode::NONE)
+        {
+            switch (arg.get_primitive()->mean_mode)
+            {
+            case cldnn_reorder_mean_mode::mean_none:
+                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::NONE;
+                break;
+            case cldnn_reorder_mean_mode::mean_mul:
+                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::MUL;
+                break;
+            case cldnn_reorder_mean_mode::mean_subtract:
+                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::SUB;
+                break;
+            case cldnn_reorder_mean_mode::mean_div:
+                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::DIV;
+                break;
+            default:
+                throw std::out_of_range(arg.id() + ": unsupported mean_mode value.");
+            }
+        }
+
         if (output_layout.format == format::winograd_2x3_s1_data)
         {
             reorder_params.reorderParams.winograd_input_offset_x = arg.get_input_offset().spatial[0];

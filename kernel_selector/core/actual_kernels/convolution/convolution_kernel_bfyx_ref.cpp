@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,12 +24,17 @@ namespace KernelSelector {
         ParamsKey k;
         k.EnableInputDataType(Datatype::F16);
         k.EnableInputDataType(Datatype::F32);
+        k.EnableInputDataType(Datatype::INT8);
         k.EnableOutputDataType(Datatype::F16);
         k.EnableOutputDataType(Datatype::F32);
+        k.EnableOutputDataType(Datatype::INT8);
         k.EnableInputWeightsType(WeightsType::F16);
         k.EnableInputWeightsType(WeightsType::F32);
+        k.EnableInputWeightsType(WeightsType::INT8);
         k.EnableInputLayout(DataLayout::bfyx);
         k.EnableOutputLayout(DataLayout::bfyx);
+        k.EnableInputLayout(DataLayout::byxf);
+        k.EnableOutputLayout(DataLayout::byxf);
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableDilation();
@@ -39,6 +44,9 @@ namespace KernelSelector {
         k.EnableBatching();
         k.EnableSplitSupport();
         k.EnableDepthwiseSeparableOpt();
+        k.EnableInt8Quantization();
+        k.EnableOutputCalibration();
+        k.DisableTuning();
         return k;
     }
 

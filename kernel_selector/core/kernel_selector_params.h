@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,6 +39,7 @@ namespace KernelSelector
         ParamsKey()
         {
             key.restrict.raw = 0;
+            key.enableTuning = 1;
             key.machineInfo.raw = 0;
             key.inputType.raw = 0;
             key.outputType.raw = 0;
@@ -65,9 +66,28 @@ namespace KernelSelector
                     uint32_t nonBias : 1;
                     uint32_t activationAdditionalParamsAsInput : 1;
                     uint32_t FP16Emulation : 1;
+                    uint32_t gradient : 1;
 
                     union dedicated_t
                     {
+                        struct lookt_t
+                        {
+                            uint32_t axisX : 1;
+                            uint32_t axisY : 1;
+                            uint32_t axisFeature : 1;
+                            uint32_t axisBatch : 1;
+                            uint32_t axisXYF : 1;
+                            uint32_t indicesF32 : 1;
+                            uint32_t indicesOther : 1;
+                        } lookt;
+						struct argm_t
+						{
+							uint32_t axisX : 1;
+							uint32_t axisY : 1;
+							uint32_t axisFeature : 1;
+							uint32_t axisBatch : 1;
+							uint32_t axisXYF : 1;
+						} argm;
                         struct norm_t
                         {
                             uint32_t across : 1;
@@ -75,11 +95,18 @@ namespace KernelSelector
                             uint32_t fixedKenrelDivider : 1;
                             uint32_t dynamicKenrelDivider : 1;
                         } norm;
+                        struct mvn_t
+                        {
+                            uint32_t across : 1;
+                            uint32_t within : 1;
+                            uint32_t normalize_variance : 1;
+                        } mvn;
                         struct pooling_t
                         {
                             uint32_t max : 1;
                             uint32_t avg : 1;
                             uint32_t floor : 1;
+                            uint32_t max_with_argmax : 1;
                             uint32_t ceil : 1;
                             uint32_t fixedKenrelDivider : 1;
                             uint32_t dynamicKenrelDivider : 1;
@@ -90,6 +117,9 @@ namespace KernelSelector
                             uint32_t split : 1;
                             uint32_t dilation : 1;
                             uint32_t depthwiseSeparableOpt : 1;
+                            uint32_t transposed : 1;
+                            uint32_t quantization : 1;
+                            uint32_t calibration : 1;
                         } conv;
                         struct fc_t {} fc;
                         struct softmax_t 
@@ -165,7 +195,7 @@ namespace KernelSelector
                 uint32_t raw;
             } DataTypesKey;
 
-
+            uint32_t enableTuning;
             DataTypesKey inputType;
             DataTypesKey outputType;
             DataTypesKey inputWeightsType;
@@ -363,6 +393,11 @@ namespace KernelSelector
             key.restrict.val.batching = 1;
         }
 
+        void EnableGradient()
+        {
+            key.restrict.val.gradient = 1;
+        }
+
         void EnableSubGroup()
         {
             key.machineInfo.val.subgroup = 1;
@@ -408,6 +443,30 @@ namespace KernelSelector
             }
         }
 
+        void EnableLookUpTableAxis(LookUpTableAxis m)
+        {
+            switch (m)
+            {
+            case KernelSelector::LookUpTableAxis::BATCH:
+                key.restrict.val.dedicated.lookt.axisBatch = 1;
+                break;
+            case KernelSelector::LookUpTableAxis::FEATURE:
+                key.restrict.val.dedicated.lookt.axisFeature = 1;
+                break;
+            case KernelSelector::LookUpTableAxis::X:
+                key.restrict.val.dedicated.lookt.axisX = 1;
+                break;
+            case KernelSelector::LookUpTableAxis::Y:
+                key.restrict.val.dedicated.lookt.axisY = 1;
+                break;
+            case KernelSelector::LookUpTableAxis::XYF:
+                key.restrict.val.dedicated.lookt.axisXYF = 1;
+                break;
+            default:
+                break;
+            }
+        }
+
         void EnableNormalizeMode(NormalizeMode m)
         {
             switch (m)
@@ -421,6 +480,26 @@ namespace KernelSelector
             default:
                 break;
             }
+        }
+
+        void EnableMVNMode(MVNMode m)
+        {
+            switch (m)
+            {
+            case MVNMode::ACROSS_CHANNELS:
+                key.restrict.val.dedicated.mvn.across = 1;
+                break;
+            case MVNMode::WITHIN_CHANNELS:
+                key.restrict.val.dedicated.mvn.within = 1;
+                break;
+            default:
+                break;
+            }
+        }
+
+        void EnableMVNNormalizeVariance()
+        {
+            key.restrict.val.dedicated.mvn.normalize_variance = 1;
         }
 
         void EnableLRNKernelDividerMode(KernelDividerMode m)
@@ -466,6 +545,9 @@ namespace KernelSelector
             case PoolType::AVG:
                 key.restrict.val.dedicated.pooling.avg = 1;
                 break;
+            case PoolType::MAX_WITH_ARGMAX:
+                key.restrict.val.dedicated.pooling.max_with_argmax = 1;
+                break;
             default:
                 break;
             }
@@ -499,6 +581,21 @@ namespace KernelSelector
         void EnableDepthwiseSeparableOpt()
         {
             key.restrict.val.dedicated.conv.depthwiseSeparableOpt = 1;
+        }
+
+        void EnableTranspose()
+        {
+            key.restrict.val.dedicated.conv.transposed = 1;
+        }
+
+        void EnableInt8Quantization()
+        {
+            key.restrict.val.dedicated.conv.quantization = 1;
+        }
+
+        void EnableOutputCalibration()
+        {
+            key.restrict.val.dedicated.conv.calibration = 1;
         }
 
         void EnableWinogradReorder()
@@ -565,9 +662,46 @@ namespace KernelSelector
             key.restrict.val.dedicated.concat.kernelPerInput = 1;
         }
 
+        void DisableTuning()
+        {
+            key.enableTuning = 0;
+        }
+
         void EnableConcatOneKernel()
         {
             key.restrict.val.dedicated.concat.oneKernel = 1;
+        }
+
+		void EnableArgMaxMinAxis(ArgMaxMinAxis a)
+        {
+			switch (a)
+			{
+			case ArgMaxMinAxis::X:
+				key.restrict.val.dedicated.argm.axisX = 1;
+				break;
+			case ArgMaxMinAxis::Y:
+				key.restrict.val.dedicated.argm.axisY = 1;
+				break;
+			case ArgMaxMinAxis::FEATURE:
+				key.restrict.val.dedicated.argm.axisFeature = 1;
+				break;
+			case ArgMaxMinAxis::BATCH:
+				key.restrict.val.dedicated.argm.axisBatch = 1;
+				break;
+			case ArgMaxMinAxis::XYF:
+				key.restrict.val.dedicated.argm.axisXYF = 1;
+				break;
+			default:
+				break;
+			}
+		}
+
+        void EnableLookUpTableIndicesFormat(Datatype a)
+        {
+            if (a == Datatype::F32)
+                key.restrict.val.dedicated.lookt.indicesF32 = 1;
+            else
+                key.restrict.val.dedicated.lookt.indicesOther = 1;
         }
 
         bool Support(const ParamsKey& k) const
@@ -583,6 +717,13 @@ namespace KernelSelector
                 ((key.outputLayout & k.key.outputLayout) != 0 || key.outputLayout == k.key.outputLayout) &&
                 ((key.weightsInputLayout & k.key.weightsInputLayout) != 0 || key.weightsInputLayout == k.key.weightsInputLayout) &&
                 ((key.weightsOutputLayout & k.key.weightsOutputLayout) != 0 || key.weightsOutputLayout == k.key.weightsOutputLayout);
+        }
+
+        bool TuningSupport() const
+        {
+            if (key.enableTuning == 1)
+                return true;
+            return false;
         }
 
         ParamsKey Merge(const ParamsKey& k) const
@@ -614,8 +755,11 @@ namespace KernelSelector
         bool bSubGroupShortSupport = false;
         bool bFP16Support = false;
         bool bFP64Support = false;
+        bool bImageSupport = false;
         uint64_t maxWorkGroupSize = 0;
         uint64_t maxLocalMemSize = 0;
+        uint64_t maxImage2dWidth = 0;
+        uint64_t maxImage2dHeight = 0;
         std::string deviceId = "";
         std::string driverVersion = "";
         std::string hostVersion = "";
@@ -667,7 +811,8 @@ namespace KernelSelector
         ActivationFunction  activationFunc = ActivationFunction::NONE;
         NonLinearParams     activationParams;
         MultiDataTensor     inputs;
-        DataTensor          output;        
+        DataTensor          output;
+        bool                gradient = false;
 
         virtual std::string to_string() const;
 
@@ -723,6 +868,11 @@ namespace KernelSelector
             {
                 // I'm not sure it's the best idea, but we can live with it right now
                 k.EnableFP16Emulation();
+            }
+
+            if (gradient)
+            {
+                k.EnableGradient();
             }
 
             return k;
@@ -791,10 +941,16 @@ namespace KernelSelector
             uint32_t winograd_input_tile_height;
             uint32_t split = 1;
             bool     depthwiseSeparableOpt = false;
+            bool     transposed = false;
+            bool     int8_quantization = false;
+            bool     output_calibration = false;
+            float    input_quantization_factor = 1.0f;
+            float    output_quantization_factor = 1.0f;
         };
 
         DedicatedParams convParams;
-
+        MultiDataTensor weights_quantization_factors;
+        MultiDataTensor output_calibration_factors;
         virtual std::string to_string() const override;
 
         virtual ParamsKey GetParamsKey() const override
@@ -815,6 +971,21 @@ namespace KernelSelector
             if (convParams.depthwiseSeparableOpt)
             {
                 k.EnableDepthwiseSeparableOpt();
+            }
+
+            if (convParams.transposed)
+            {
+                k.EnableTranspose();
+            }
+
+            if (convParams.int8_quantization)
+            {
+                k.EnableInt8Quantization();
+            }
+
+            if (convParams.output_calibration)
+            {
+                k.EnableOutputCalibration();
             }
 
             return k;
@@ -918,6 +1089,85 @@ namespace KernelSelector
 
             k.EnableNormalizeMode(normParams.normMode);
 
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MVNParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MVNParams : public BaseParams
+    {
+        MVNParams() : BaseParams(KernelType::MVN), mvnParams() {}
+
+        struct DedicatedParams
+        {
+            MVNMode mvnMode = MVNMode::WITHIN_CHANNELS;
+            bool mvnNormalizeVariance = true;
+            float         epsilon = 1e-10f;
+        };
+
+        DedicatedParams mvnParams;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k = BaseParams::GetParamsKey();
+
+            k.EnableMVNMode(mvnParams.mvnMode);
+
+            if (mvnParams.mvnNormalizeVariance)
+                k.EnableMVNNormalizeVariance();
+
+            return k;
+        }
+    };
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ArgMaxMinParams
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	struct ArgMaxMinParams : public BaseParams
+	{
+		ArgMaxMinParams() : BaseParams(KernelType::ARG_MAX_MIN), argMaxParams() {}
+
+		struct DedicatedParams
+		{
+			ArgMaxMinAxis	argMaxMinAxis	= ArgMaxMinAxis::XYF;
+			ArgMaxMinOut	argMaxMinOut	= ArgMaxMinOut::MAX;
+			uint32_t		topK			= 1;
+		};
+
+		DedicatedParams argMaxParams;
+
+		virtual ParamsKey GetParamsKey() const
+		{
+			ParamsKey k = BaseParams::GetParamsKey();
+			k.EnableArgMaxMinAxis(argMaxParams.argMaxMinAxis);
+
+			return k;
+		}
+	};
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // LookUpTableParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct LookUpTableParams : public BaseParams
+    {
+        LookUpTableParams() : BaseParams(KernelType::LOOKUP_TABLE), lookUpTableParams() {}
+
+        struct DedicatedParams
+        {
+            LookUpTableAxis	lookUpTableAxis = LookUpTableAxis::XYF;
+            uint32_t		numberOfValues;
+            DataTensor      inputIndices;
+        };
+
+        DedicatedParams lookUpTableParams;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k = BaseParams::GetParamsKey();
+            k.EnableLookUpTableAxis(lookUpTableParams.lookUpTableAxis);
+            k.EnableLookUpTableIndicesFormat(lookUpTableParams.inputIndices.GetDType());
             return k;
         }
     };
@@ -1049,6 +1299,8 @@ namespace KernelSelector
             uint32_t coords;
             uint32_t classes;
             uint32_t num;
+            uint32_t mask_size;
+            bool do_softmax;
         };
 
         struct DedicatedParams ryParams;
@@ -1126,6 +1378,13 @@ namespace KernelSelector
                 input.scalar = s;
                 return input;
             }
+
+            static InputType OutBuffer()
+            {
+                EltwiseParams::InputType output;
+                output.mode = EltwiseInputMode::OUTPUT_BUFFER;
+                return output;
+            }
         };
 
         struct Node
@@ -1134,9 +1393,16 @@ namespace KernelSelector
             EltwiseMode mode;
         };
 
+        struct UpdateInputData
+        {
+            uint32_t inputId;
+            uint32_t tmpId;
+        };
+
         struct DedicatedParams
         {
             std::vector<EltwiseParams::Node> operations;
+            std::vector<UpdateInputData> updateInputIds;
             bool layoutBased = false;
         };
 
@@ -1191,6 +1457,7 @@ namespace KernelSelector
         struct DedicatedParams
         {
             MeanSubtractMode    mode = MeanSubtractMode::NONE;
+            MeanOp              mean_op = MeanOp::SUB;
             std::vector<float>  meanValues;
             DataTensor          mean;
             uint32_t            winograd_input_offset_x;
@@ -1305,6 +1572,90 @@ namespace KernelSelector
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MaxUnpoolingParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MaxUnpoolingParams : public BaseParams
+    {
+        MaxUnpoolingParams() : BaseParams(KernelType::MAX_UNPOOLING) {}
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            return BaseParams::GetParamsKey();
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConvolutionGradWeightsParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct ConvolutionGradWeightsParams : public WeightBiasParams
+    {
+        ConvolutionGradWeightsParams() : WeightBiasParams(KernelType::CONVOLUTION_GRAD_WEIGHTS), convGradWeightsParams() {}
+
+        struct DedicatedParams
+        {
+            uSize    filterSize;
+            uSize    stride;
+            uSize    dilation;
+            uSize    padding;
+            uint32_t split = 1;
+            bool     depthwiseSeparableOpt = false;
+        };
+
+        DedicatedParams convGradWeightsParams;
+
+        virtual std::string to_string() const override;
+
+        virtual ParamsKey GetParamsKey() const override
+        {
+            ParamsKey k = WeightBiasParams::GetParamsKey();
+
+            if (convGradWeightsParams.split > 1)
+            {
+                k.EnableSplitSupport();
+            }
+
+            if (convGradWeightsParams.dilation.x != 1 ||
+                convGradWeightsParams.dilation.y != 1)
+            {
+                k.EnableDilation();
+            }
+
+            if (convGradWeightsParams.depthwiseSeparableOpt)
+            {
+                k.EnableDepthwiseSeparableOpt();
+            }
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FullyConnectedGradInputParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct FullyConnectedGradInputParams : public WeightBiasParams
+    {
+        FullyConnectedGradInputParams() : WeightBiasParams(KernelType::FULLY_CONNECTED_GRAD_INPUT) {}
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            return WeightBiasParams::GetParamsKey();
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FullyConnectedGradWeightsParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct FullyConnectedGradWeightsParams : public WeightBiasParams
+    {
+        FullyConnectedGradWeightsParams() : WeightBiasParams(KernelType::FULLY_CONNECTED_GRAD_WEIGHTS) {}
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            return WeightBiasParams::GetParamsKey();
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Auto tuner parameters
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     class KernelRunnerInterface;
@@ -1397,6 +1748,30 @@ namespace KernelSelector
     struct NormalizeOptionalParams : OptionalParams
     {
         NormalizeOptionalParams() : OptionalParams(KernelType::NORMALIZE) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MVNOptionalParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MVNOptionalParams : OptionalParams
+    {
+        MVNOptionalParams() : OptionalParams(KernelType::MVN) {}
+    };
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ArgMaxMinOptionalParams
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	struct ArgMaxMinOptionalParams : OptionalParams
+	{
+		ArgMaxMinOptionalParams() : OptionalParams(KernelType::ARG_MAX_MIN) {}
+	};
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // LookUpTableOptionalParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct LookUpTableOptionalParams : OptionalParams
+    {
+        LookUpTableOptionalParams() : OptionalParams(KernelType::LOOKUP_TABLE) {}
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1510,5 +1885,37 @@ namespace KernelSelector
     struct UpSamplingOptionalParams : OptionalParams
     {
         UpSamplingOptionalParams() : OptionalParams(KernelType::UPSAMPLING) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MaxUnpoolingOptionalParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MaxUnpoolingOptionalParams : OptionalParams
+    {
+        MaxUnpoolingOptionalParams() : OptionalParams(KernelType::MAX_UNPOOLING) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConvolutiongradWeightsOptionalParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct ConvolutiongradWeightsOptionalParams : WeightsBiasOptionalParams
+    {
+        ConvolutiongradWeightsOptionalParams() : WeightsBiasOptionalParams(KernelType::CONVOLUTION_GRAD_WEIGHTS) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConvolutiongradWeightsOptionalParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct FullyConnectedGradInputOptionalParams : WeightsBiasOptionalParams
+    {
+        FullyConnectedGradInputOptionalParams() : WeightsBiasOptionalParams(KernelType::FULLY_CONNECTED_GRAD_INPUT) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConvolutiongradWeightsOptionalParams
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct FullyConnectedGradWeightsOptionalParams : WeightsBiasOptionalParams
+    {
+        FullyConnectedGradWeightsOptionalParams() : WeightsBiasOptionalParams(KernelType::FULLY_CONNECTED_GRAD_WEIGHTS) {}
     };
 }

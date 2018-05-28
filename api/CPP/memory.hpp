@@ -42,6 +42,7 @@ namespace details { struct memory_c_to_cpp_converter; }
 struct memory
 {
     friend struct data;
+    friend struct mutable_data;
     friend struct network;
     friend struct network_output;
     friend struct details::memory_c_to_cpp_converter;
@@ -70,7 +71,7 @@ struct memory
             std::string err_str("buffer size mismatch - input size " + std::to_string(data_size) + " layout size " + std::to_string(layout.bytes_count()));
             throw std::invalid_argument(err_str);
         }
-        
+
         return check_status<cldnn_memory>("memory attach failed", [&](status_t* status)
         {
             return cldnn_attach_memory(layout, ptr, data_size, status);

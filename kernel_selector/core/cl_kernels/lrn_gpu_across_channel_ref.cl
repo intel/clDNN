@@ -33,7 +33,7 @@ KERNEL (lrn_gpu_across_channel_ref)(const __global UNIT_TYPE* input, __global UN
     
     if (x >= INPUT0_SIZE_X)
         return;
-#elif defined OUTPUT_LAYOUT_YXFB
+#else
     const uint b_f          = get_global_id(0);
     const uint x            = (uint)get_global_id(1);
     const uint y            = (uint)get_global_id(2);

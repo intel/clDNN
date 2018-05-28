@@ -60,7 +60,7 @@ std::string data_inst::to_string(data_node const& node)
     auto node_info = node.desc_to_json();
 
     std::stringstream primitive_description;
-    
+
     node_info.dump(primitive_description);
     return primitive_description.str();
 }

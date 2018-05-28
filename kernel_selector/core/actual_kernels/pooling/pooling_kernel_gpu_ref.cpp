@@ -23,22 +23,28 @@ namespace KernelSelector
         ParamsKey k;
         k.EnableInputDataType(Datatype::F16);
         k.EnableInputDataType(Datatype::F32);
+        k.EnableInputDataType(Datatype::INT8);
         k.EnableOutputDataType(Datatype::F16);
         k.EnableOutputDataType(Datatype::F32);
+        k.EnableOutputDataType(Datatype::INT8);
         k.EnableInputLayout(DataLayout::bfyx);
         k.EnableInputLayout(DataLayout::yxfb);
+        k.EnableInputLayout(DataLayout::byxf);
         k.EnableOutputLayout(DataLayout::bfyx);
         k.EnableOutputLayout(DataLayout::yxfb);
+        k.EnableOutputLayout(DataLayout::byxf);
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBatching();
         k.EnablePoolType(PoolType::MAX);
         k.EnablePoolType(PoolType::AVG);
+        k.EnablePoolType(PoolType::MAX_WITH_ARGMAX);
         k.EnablePoolRemainder(PoolRemainder::FLOOR);
         k.EnablePoolRemainder(PoolRemainder::CEIL);
         k.EnablePoolKernelDividerMode(KernelDividerMode::FIXED);
         k.EnablePoolKernelDividerMode(KernelDividerMode::DYNAMIC);
         k.EnablePoolKernelDividerMode(KernelDividerMode::DYNAMIC_WITH_PADDING);
+        k.EnableDifferentTypes();
         return k;
     }
 

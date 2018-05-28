@@ -25,9 +25,13 @@
 #include "deconvolution/deconvolution_kernel_selector.h"
 #include "lrn/lrn_kernel_selector.h"
 #include "normalize/normalize_kernel_selector.h"
+#include "mvn/mvn_kernel_selector.h"
 #include "pooling/pooling_kernel_selector.h"
+#include "max_unpooling/max_unpooling_kernel_selector.h"
+#include "arg_max_min/arg_max_min_kernel_selector.h"
 #include "roi_pooling/roi_pooling_kernel_selector.h"
 #include "fully_connected/fully_connected_kernel_selector.h"
+#include "lookup_table/lookup_table_kernel_selector.h"
 #include "activation/activation_kernel_selector.h"
 #include "softmax/softmax_kernel_selector.h"
 #include "region_yolo/region_yolo_kernel_selector.h"
@@ -38,6 +42,9 @@
 #include "reshape/reshape_kernel_selector.h"
 #include "concatenation/concatenation_kernel_selector.h"
 #include "upsampling/upsampling_kernel_selector.h"
+#include "convolution_grad_weights/convolution_grad_weights_kernel_selector.h"
+#include "fully_connected_grad_input/fully_connected_grad_input_kernel_selector.h"
+#include "fully_connected_grad_weights/fully_connected_grad_weights_kernel_selector.h"
 #include "jitter.h"
 
 using namespace cldnn;
@@ -61,13 +68,18 @@ namespace kernel_selector
     using activation_function               = KernelSelector::ActivationFunction;
     using pool_type                         = KernelSelector::PoolType;
     using pool_remainder                    = KernelSelector::PoolRemainder;
+	using argm_axis							= KernelSelector::ArgMaxMinAxis;
+	using argm_output						= KernelSelector::ArgMaxMinOut;
+    using lookt_axis                        = KernelSelector::LookUpTableAxis;
     using lrn_mode                          = KernelSelector::LRNMode;
     using normalize_mode                    = KernelSelector::NormalizeMode;
+    using mvn_mode                          = KernelSelector::MVNMode;
     using kernel_divider_mode               = KernelSelector::KernelDividerMode;
     using eltwise_mode                      = KernelSelector::EltwiseMode;
     using eltwise_input_mode                = KernelSelector::EltwiseInputMode;
     using softmax_dim                       = KernelSelector::SoftmaxDim;
     using mean_subtruct_mode                = KernelSelector::MeanSubtractMode;
+    using mean_op                           = KernelSelector::MeanOp;
     using concat_axis                       = KernelSelector::ConcatAxis;
     using tuning_mode                       = KernelSelector::TuningMode;
     using sample_type                       = KernelSelector::SampleType;
@@ -81,13 +93,19 @@ namespace kernel_selector
     using params                            = KernelSelector::Params;
     using base_params                       = KernelSelector::BaseParams;
     using weight_bias_params                = KernelSelector::WeightBiasParams;
+	using arg_max_min_params				= KernelSelector::ArgMaxMinParams;
+    using lookup_table_params               = KernelSelector::LookUpTableParams;
     using convolution_params                = KernelSelector::ConvolutionParams;
     using deconvolution_params              = KernelSelector::DeconvolutionParams;
     using lrn_params                        = KernelSelector::LRNParams;
     using normalize_params                  = KernelSelector::NormalizeParams;
+    using mvn_params                        = KernelSelector::MVNParams;
     using pooling_params                    = KernelSelector::PoolingParams;
+    using max_unpooling_params              = KernelSelector::MaxUnpoolingParams;
     using roi_pooling_v1_params             = KernelSelector::ROIPoolingParams;
     using fully_connected_params            = KernelSelector::FullyConnectedParams;
+    using fully_connected_grad_input_params = KernelSelector::FullyConnectedGradInputParams;
+    using fully_connected_grad_weights_params = KernelSelector::FullyConnectedGradWeightsParams;
     using activation_params                 = KernelSelector::ActivationParams;
     using softmax_params                    = KernelSelector::SoftmaxParams;
     using region_yolo_params                = KernelSelector::RegionYoloParams;
@@ -101,16 +119,23 @@ namespace kernel_selector
     using weights_reorder_params            = KernelSelector::WeightsReorderParams;
     using generic_kernel_params             = KernelSelector::GenericKernelParams;
     using upsampling_params                 = KernelSelector::UpSamplingParams;
+    using convolution_grad_weights_params   = KernelSelector::ConvolutionGradWeightsParams;
 
     using optional_params                   = KernelSelector::OptionalParams;
     using weights_bias_optional_params      = KernelSelector::WeightsBiasOptionalParams;
+	using arg_max_min_optional_params		= KernelSelector::ArgMaxMinOptionalParams;
+    using lookup_table_optional_params      = KernelSelector::LookUpTableOptionalParams;
     using convolution_optional_params       = KernelSelector::ConvolutionOptionalParams;
     using deconvolution_optional_params     = KernelSelector::DeconvolutionOptionalParams;
     using lrn_optional_params               = KernelSelector::LRNOptionalParams;
     using normalize_optional_params         = KernelSelector::NormalizeOptionalParams;
+    using mvn_optional_params               = KernelSelector::MVNOptionalParams;
     using pooling_optional_params           = KernelSelector::PoolingOptionalParams;
+    using max_unpooling_optional_params     = KernelSelector::MaxUnpoolingOptionalParams;
     using roi_pooling_optional_params       = KernelSelector::ROIPoolingOptionalParams;
     using fully_connected_optional_params   = KernelSelector::FullyConnectedOptionalParams;
+    using fully_connected_grad_input_optional_params = KernelSelector::FullyConnectedGradInputOptionalParams;
+    using fully_connected_grad_weights_optional_params = KernelSelector::FullyConnectedGradWeightsOptionalParams;
     using activation_optional_params        = KernelSelector::ActivationOptionalParams;
     using softmax_optional_params           = KernelSelector::SoftmaxOptionalParams;
     using region_yolo_optional_params       = KernelSelector::RegionYoloOptionalParams;
@@ -119,14 +144,21 @@ namespace kernel_selector
     using reorder_optional_params           = KernelSelector::ReorderOptionalParams;
     using concatenation_optional_params     = KernelSelector::ConcatenationOptionalParams;
     using upsampling_optional_params        = KernelSelector::UpSamplingOptionalParams;
+    using convolution_grad_weights_optional_params = KernelSelector::ConvolutiongradWeightsOptionalParams;
 
+	using arg_max_min_kernel_selector		= KernelSelector::ArgMaxMinKernelSelctor;
+    using lookup_table_kernel_selector      = KernelSelector::LookUpTableKernelSelctor;
     using convolution_kernel_selector       = KernelSelector::ConvolutionKernelSelctor;
     using deconvolution_kernel_selector     = KernelSelector::DeconvolutionKernelSelctor;
     using lrn_kernel_selector               = KernelSelector::LRNKernelSelctor;
     using normalize_kernel_selector         = KernelSelector::NormalizeKernelSelctor;
+    using mvn_kernel_selector               = KernelSelector::MVNKernelSelctor;
     using pooling_kernel_selector           = KernelSelector::PoolingKernelSelctor;
+    using max_unpooling_kernel_selector     = KernelSelector::MaxUnpoolingKernelSelctor;
     using roi_pooling_v1_kernel_selector    = KernelSelector::ROIPoolingKernelSelctor;
     using fully_connected_kernel_selector   = KernelSelector::FullyConnectedKernelSelctor;
+    using fully_connected_grad_input_kernel_selector = KernelSelector::FullyConnectedGradInputKernelSelctor;
+    using fully_connected_grad_weights_kernel_selector = KernelSelector::FullyConnectedGradWeightsKernelSelctor;
     using activation_kernel_selector        = KernelSelector::ActivationKernelSelctor;
     using softmax_kernel_selector           = KernelSelector::SoftmaxKernelSelctor;
     using region_yolo_kernel_selector       = KernelSelector::RegionYoloKernelSelctor;
@@ -137,6 +169,7 @@ namespace kernel_selector
     using permute_kernel_selector           = KernelSelector::PermuteKernelSelctor;
     using concatenation_kernel_selector     = KernelSelector::ConcatenationKernelSelctor;
     using upsampling_kernel_selector        = KernelSelector::UpSamplingKernelSelector;
+    using convolution_grad_weights_kernel_selector = KernelSelector::ConvolutionGradWeightsKernelSelctor;
 }
 
 inline kernel_selector::data_type to_data_type(data_types dt)
@@ -249,6 +282,9 @@ inline kernel_selector::weights_layout to_weights_layout(format f)
     case format::image_2d_weights_c1_b_fyx:     return kernel_selector::weights_layout::image_2d_weights_c1_b_fyx;
     case format::winograd_2x3_s1_weights:       return kernel_selector::weights_layout::winograd_2x3_s1_weights;
     case format::winograd_2x3_s1_fused_weights: return kernel_selector::weights_layout::winograd_2x3_s1_fused_weights;
+    case format::winograd_6x3_s1_fused_weights: return kernel_selector::weights_layout::winograd_6x3_s1_fused_weights;
+    case format::image_2d_weights_winograd_6x3_s1_fbxyb:     return kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_fbxyb;
+    case format::image_2d_weights_winograd_6x3_s1_xfbyb:     return kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_xfbyb;
     default:
         return kernel_selector::weights_layout::oi;
     }
@@ -272,6 +308,9 @@ static inline cldnn::format::type from_weights_layout(kernel_selector::weights_l
     case kernel_selector::weights_layout::image_2d_weights_c1_b_fyx:        return cldnn::format::image_2d_weights_c1_b_fyx;
     case kernel_selector::weights_layout::winograd_2x3_s1_weights:          return cldnn::format::winograd_2x3_s1_weights;
     case kernel_selector::weights_layout::winograd_2x3_s1_fused_weights:    return cldnn::format::winograd_2x3_s1_fused_weights;
+    case kernel_selector::weights_layout::winograd_6x3_s1_fused_weights:    return cldnn::format::winograd_6x3_s1_fused_weights;
+    case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_fbxyb:        return cldnn::format::image_2d_weights_winograd_6x3_s1_fbxyb;
+    case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_xfbyb:        return cldnn::format::image_2d_weights_winograd_6x3_s1_xfbyb;
     default:
         return cldnn::format::bfyx;
     }
@@ -304,7 +343,7 @@ inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_
     const auto& lower_pad = pad.lower_size().sizes(l.format);
     const auto& upper_pad = pad.upper_size().sizes(l.format);
     const auto ks_layout = to_data_layout(l.format);
-    kernel_selector::n_dims vec(KernelSelector::Tensor::ChannelsCount(ks_layout));
+    kernel_selector::n_dims vec(KernelSelector::DataTensor::ChannelsCount(ks_layout));
 
     size_t pitch = 1;
     size_t offset = 0;
@@ -326,7 +365,7 @@ inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_
         pitch *= (d + lp + up);
     }
 
-    const int feature_index = KernelSelector::Tensor::Channelndex(ks_layout, KernelSelector::Tensor::DataChannelName::FEATURE);
+    const int feature_index = KernelSelector::DataTensor::Channelndex(ks_layout, KernelSelector::Tensor::DataChannelName::FEATURE);
     vec[feature_index].v /= split;
 
     return kernel_selector::data_tensor(
@@ -343,7 +382,7 @@ inline kernel_selector::weights_tensor convert_weights_tensor(const layout& l)
     const auto base_layout = kernel_selector::weights_layout::oiyx;
     const auto ks_type = to_weights_type(l.data_type);
     const auto ks_layout = to_weights_layout(l.format);
-    std::vector<size_t> vec(KernelSelector::Tensor::ChannelsCount(base_layout));
+    std::vector<size_t> vec(KernelSelector::WeightsTensor::ChannelsCount(base_layout));
 
     for (size_t i = 0; i < vec.size(); i++)
     {
@@ -399,8 +438,26 @@ inline kernel_selector::activation_function get_kernel_selector_activation_param
         return kernel_selector::activation_function::SQUARE;
     case activation_sqrt:
         return kernel_selector::activation_function::SQRT;
+    case activation_elu:
+        return kernel_selector::activation_function::ELU;
     default:
         throw std::runtime_error("Unknown activation function");
+        break;
+    }
+}
+
+inline kernel_selector::activation_function get_kernel_selector_activation_grad_param(cldnn_activation_grad_func activation_grad_func)
+{
+    switch (activation_grad_func)
+    {
+    case activation_grad_none:
+        return kernel_selector::activation_function::NONE_GRAD;
+    case activation_grad_relu:
+        return kernel_selector::activation_function::RELU_GRAD;
+    case activation_grad_relu_negative_slope:
+        return kernel_selector::activation_function::RELU_NEGATIVE_SLOPE_GRAD;
+    default:
+        throw std::runtime_error("Unknown activation_grad function");
         break;
     }
 }
@@ -415,7 +472,7 @@ inline void convert_fused_activation_func_params(const arg_t& arg, kernel_select
 
 template <typename p_type>
 inline void convert_new_activation_func(const p_type primitive, kernel_selector::base_params& params)
-{        
+{
     params.activationFunc = get_kernel_selector_activation_param(primitive->activation_func);
     params.activationParams.m = primitive->additional_params.a;
     params.activationParams.n = primitive->additional_params.b;
@@ -433,8 +490,11 @@ inline params_t get_default_params(const arg_t& arg, uint32_t split = 1)
     params.engineInfo.bSubGroupShortSupport = context->extension_supported("cl_intel_subgroups_short");
     params.engineInfo.bFP16Support          = context->extension_supported("cl_khr_fp16");
     params.engineInfo.bFP64Support          = context->extension_supported("cl_khr_fp64");
+    params.engineInfo.bImageSupport         = engine_info.supports_image != 0;
     params.engineInfo.maxWorkGroupSize      = engine_info.max_work_group_size;
     params.engineInfo.maxLocalMemSize       = engine_info.max_local_mem_size;
+    params.engineInfo.maxImage2dWidth       = engine_info.max_image2d_width;
+    params.engineInfo.maxImage2dHeight      = engine_info.max_image2d_height;
     params.engineInfo.deviceId              = engine_info.dev_id;
     params.engineInfo.driverVersion         = engine_info.driver_version;
     params.engineInfo.hostVersion           = to_host_version(cldnn::get_version());

@@ -44,7 +44,7 @@ struct engine_info_internal : cldnn::engine_info
         #undef GPU_ARCHITECTURE
     };
 
-    
+
 
     enum models
     {
@@ -57,7 +57,7 @@ struct engine_info_internal : cldnn::engine_info
         #undef GPU_ARCHITECTURE
     };
 
-    
+
 
     enum architectures
     {

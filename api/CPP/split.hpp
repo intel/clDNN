@@ -50,7 +50,7 @@ namespace cldnn
 /// @n After split there would be 2 primitives: "split:out0" and "split:out1" which contain 2 feature maps (lower and upper)
 struct split : public primitive_base<split, CLDNN_PRIMITIVE_DESC(split)>
 {
-    CLDNN_DECLATE_PRIMITIVE(split)
+    CLDNN_DECLARE_PRIMITIVE(split)
 
     /// @brief Constructs split primitive.
     /// @param id This primitive id.

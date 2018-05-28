@@ -61,4 +61,3 @@ private:
 using reshape_inst = typed_primitive_inst<reshape>;
 
 }
-

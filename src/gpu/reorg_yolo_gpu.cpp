@@ -55,6 +55,10 @@ namespace cldnn {
                     auto val_fw = reorg_yolo_gpu::create;
                     implementation_map<reorg_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
                     implementation_map<reorg_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
+                    implementation_map<reorg_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), val_fw);
+                    implementation_map<reorg_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw);
+                    implementation_map<reorg_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), val_fw);
+                    implementation_map<reorg_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), val_fw);
                 }
                 ~attach() {}
             };

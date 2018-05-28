@@ -22,6 +22,9 @@
 #include "events_waiter.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "detection_output_inst.h"
+#include "proposal_inst.h"
+#include "prior_box_inst.h"
 
 namespace cldnn { namespace gpu
 {
@@ -40,7 +43,7 @@ struct typed_primitive_gpu_impl : public typed_primitive_impl<PType>
     std::vector<memory_impl::ptr> _intermediates_memory;
 
     typed_primitive_gpu_impl(const typed_program_node<PType>& arg, const kernel_selector::kernel_data& kd)
-        : typed_primitive_impl<PType>(kd.weightsReorderParams)
+        : typed_primitive_impl<PType>(kd.weightsReorderParams, kd.kernelName)
         , _outer(arg)
         , _engine_info(arg.get_program().get_engine().get_context()->get_engine_info())
         , _kernel_data(kd)
@@ -92,8 +95,8 @@ protected:
     }
 
     virtual int32_t get_split() const
-    { 
-        return 1; 
+    {
+        return 1;
     }
 
     event_impl::ptr aggregate_events(const std::vector<event_impl::ptr>& events) const
@@ -132,6 +135,28 @@ protected:
                 for (const auto& m : _intermediates_memory)
                 {
                     args.intermediates.push_back(m);
+                }
+
+                //is any user of the prim's users is an detecion output, set prim as a output event (event won't be nullptr)
+                auto users = instance.node.get_users();
+                bool next_prim_is_cpu = false;
+                for (const auto& user : users)
+                {
+                    if (user->type() == detection_output::type_id() ||
+                        user->type() == prior_box::type_id() ||
+                        user->type() == proposal::type_id())
+                    {
+                        next_prim_is_cpu = true;
+                        break;
+                    }
+                }
+                if (next_prim_is_cpu)
+                {
+                    _kernels[k].set_output_event(true);
+                }
+                else
+                {
+                    _kernels[k].set_output_event(instance.node.is_output());
                 }
 
                 auto event = _kernels[k].run(_kernel_data.kernels[k], tmp_events, args);

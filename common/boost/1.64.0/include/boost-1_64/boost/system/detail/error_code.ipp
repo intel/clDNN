@@ -382,7 +382,7 @@ namespace
             buf.size(),
             NULL
         );
-        
+
         if (retval > 0)
         {
             buf.resize(retval);
@@ -397,7 +397,7 @@ namespace
             buf.resize(buf.size() + buf.size() / 2);
         }
     }
-    
+
     int num_chars = (buf.size() + 1) * 2;
     LPSTR narrow_buffer = (LPSTR)_alloca( num_chars );
     if (::WideCharToMultiByte(CP_ACP, 0, buf.c_str(), -1, narrow_buffer, num_chars, NULL, NULL) == 0)

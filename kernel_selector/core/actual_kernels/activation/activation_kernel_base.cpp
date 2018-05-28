@@ -81,6 +81,10 @@ namespace KernelSelector
         
         auto& kernel = kd.kernels[0];
         FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
+
+        if (newParams.gradient)
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
+
         if (!newParams.actParams.inputActivationParams.empty())
         {
             kernel.arguments.push_back({ ArgumentDescriptor::Types::SLOPE, 0 });

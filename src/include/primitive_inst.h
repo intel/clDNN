@@ -24,6 +24,7 @@
 #include "memory_impl.h"
 #include "meta_utils.h"
 #include "kernel_selector_helper.h"
+#include "network_impl.h"
 
 #include <memory>
 #include <vector>
@@ -52,13 +53,17 @@ struct primitive_impl
     //   A special member function is user-provided if it is user-declared and not explicitly defaulted or deleted
     //   on its first declaration.
     primitive_impl() : _weights_reorder_params() {}
-    primitive_impl(const kernel_selector::weights_reorder_params& params) : _weights_reorder_params(params) {}
+    primitive_impl(const kernel_selector::weights_reorder_params& params, std::string kernel_name = "") : _weights_reorder_params(params), kernel_name(kernel_name) {}
     virtual ~primitive_impl() = default;
 
     virtual event_impl::ptr execute(const std::vector<event_impl::ptr>& events, primitive_inst& instance) = 0;
 
+	std::string get_kernel_name() { return kernel_name; };
+
     // TODO: added a derived class for weights reordering (maybe for all static data reordering)
     const kernel_selector::weights_reorder_params _weights_reorder_params;
+private:
+	std::string kernel_name;
 };
 
 /*
@@ -76,7 +81,7 @@ public:
     virtual ~primitive_inst() = default;
 
     const std::vector<std::shared_ptr<const primitive_inst>>& dependencies() const
-    { 
+    {
         return reinterpret_cast<std::vector<std::shared_ptr<const primitive_inst>> const&>(_deps);
     }
 
@@ -89,15 +94,16 @@ public:
     bool can_be_optimized() const { return _node.can_be_optimized(); }
     const auto desc() const { return _node.get_primitive(); }
     network_impl& get_network() const { return _network; }
-    
+    uint32_t get_network_id() const { return _network.get_id(); }
+
     //return pointer to const to prevent arbitrary 'execute' call -> use primitive_inst.execute() instead
     const auto get_impl() const { return _impl.get(); }
 
-    memory_impl& input_memory(size_t index = 0)  const 
-    { 
+    memory_impl& input_memory(size_t index = 0)  const
+    {
         if (index >= inputs_memory_count())
             throw std::range_error("input offset too big");
-        return dep_memory(index); 
+        return dep_memory(index);
     }
 
     event_impl::ptr execute(const std::vector<event_impl::ptr>& events);
@@ -255,7 +261,7 @@ using typed_primitive_inst_base = std::conditional_t<meta::is_api_primitive_v<PT
 */
 template <class PType>
 class typed_primitive_inst : public typed_primitive_inst_base<PType>
-{ 
+{
     static_assert(meta::always_false_v<PType>, "Missing typed_primitive_inst specialization");
 };
 

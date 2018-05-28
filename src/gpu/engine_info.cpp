@@ -28,7 +28,7 @@
 #elif defined(__linux__)
 #include <fstream>
 #endif
-
+#include <iostream>
 namespace cldnn { namespace gpu{
 
 namespace {
@@ -134,15 +134,27 @@ struct device_info
 const device_info& get_device_info(int device_id)
 {
 #define GEN_DEVICE(code, dev_id, model, arch, conf) { dev_id, {engine_info_internal::model, engine_info_internal::arch, engine_info_internal::conf, #code} },
-    static const std::unordered_map<int, device_info> device_map{
+    static const std::unordered_map<int, device_info> device_map
+    {
 #include "gpu_devices.inc"
     };
 #undef GEN_DEVICE
 
+    #include "mode.inc"
     auto it = device_map.find(device_id);
     if (it == device_map.end())
-        throw std::runtime_error(std::string(device_info_failed_msg) + " - unsupported device id: " + to_string_hex(device_id) + ". Note: HD5xx+ devices are supported");
-
+    {
+        if (public_caps)
+        {
+            throw std::runtime_error(std::string(device_info_failed_msg) + " - unsupported device id: " + to_string_hex(device_id) + ". Note: HD5xx+ devices are supported");
+        }
+        else
+        {
+            std::cerr << "[WARNING]. Device ID (" << to_string_hex(device_id) << ") not supported. Pretending to behave like SKL GT2." << std::endl;
+            int new_device_id = 6433;
+            return device_map.at(new_device_id);
+        }
+    }
     return device_map.at(device_id);
 }
 
@@ -166,6 +178,10 @@ engine_info_internal::engine_info_internal(const gpu_toolkit& context)
     max_local_mem_size = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_LOCAL_MEM_SIZE>());
     max_global_mem_size = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>());
     max_alloc_mem_size = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>());
+
+    supports_image = static_cast<uint8_t>(context.device().getInfo<CL_DEVICE_IMAGE_SUPPORT>());
+    max_image2d_width = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_IMAGE2D_MAX_WIDTH>());
+    max_image2d_height = static_cast<uint64_t>(context.device().getInfo<CL_DEVICE_IMAGE2D_MAX_HEIGHT>());
 
     // Check for supported features.
     auto extensions = context.device().getInfo<CL_DEVICE_EXTENSIONS>();

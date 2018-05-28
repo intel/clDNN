@@ -32,6 +32,7 @@ namespace KernelSelector {
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBatching();
+        k.EnableGradient();
         return k;
     }
 

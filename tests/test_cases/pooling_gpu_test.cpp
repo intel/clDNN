@@ -19,14 +19,69 @@
 #include "api/CPP/memory.hpp"
 #include <api/CPP/input_layout.hpp>
 #include "api/CPP/pooling.hpp"
+#include "api/CPP/mutable_data.hpp"
 #include <api/CPP/topology.hpp>
 #include <api/CPP/network.hpp>
 #include <api/CPP/engine.hpp>
 #include "test_utils/test_utils.h"
 #include "api/CPP/reorder.hpp"
+#include <api/CPP/data.hpp>
+#include "test_utils/float16.h"
 
 using namespace cldnn;
 using namespace tests;
+
+
+TEST(pooling_forward_gpu, basic_max_byxf_f32_wsiz3x3_wstr1x1_i1x3x3x8_nopad) {
+    //  Brief test description.
+    //
+    //  Pool window: 3x3
+    //  Pool stride: 1x1
+    //  Pool mode: max
+    //  Padding: none
+    //
+    //  Input data:
+    //  [ 0.5, -0.5, -0.5, -0.5, 0.5f, -0.5, -0.5f, -0.5 ]
+    //  [ 1.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 2.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 3.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 4.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 5.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 6.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 7.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 8.0, 0.0, 0.0, 4.0, 0.5, -0.5, -0.5, -0.5 ]
+    //
+    //  Expected output:
+    //  [ 8.0, 0.0, 0.0, 4,0, 0,5, -0.5, -0.5, -0.5 ]
+
+    engine engine;
+
+    auto input_prim = memory::allocate(engine, { data_types::f32,  format::byxf,{ 1, 8, 3, 3 } });
+
+    topology topology;
+    topology.add(input_layout("input_prim", input_prim.get_layout()));
+    topology.add(pooling("pool_prim", "input_prim", pooling_mode::max, { 1,1,3,3 }, { 1,1,1,1 }));
+    network network(engine, topology);
+    set_values(input_prim, { 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f,
+        1.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        2.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        3.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        4.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        5.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        6.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        7.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        8.0f, 0.0f, 0.0f, 4.0f, 0.5f, -0.5f, -0.5f, -0.5f });
+    network.set_input_data("input_prim", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "pool_prim");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<float>();
+    EXPECT_EQ(4.0f, output_ptr[3]);
+}
 
 TEST(pooling_forward_gpu, basic_max_yxfb_f32_wsiz3x3_wstr1x1_i3x3x1x1_nopad) {
     //  Brief test description.
@@ -65,6 +120,102 @@ TEST(pooling_forward_gpu, basic_max_yxfb_f32_wsiz3x3_wstr1x1_i3x3x1x1_nopad) {
     auto output_ptr = output_prim.pointer<float>();
 
     EXPECT_EQ(2.0f, output_ptr[0]);
+}
+
+TEST(pooling_forward_gpu, basic_max_pooling_int8) {
+
+    engine engine;
+    layout in_layout = { type_to_data_type<float>::value,format::byxf,{ 1,1,3,3 } };
+    layout out_layout = { type_to_data_type<float>::value,format::byxf,{ 1,1,1,1 } };
+    layout byte_layout = { type_to_data_type<int8_t>::value, format::bfyx,{ 1,1,3,3 } };
+    std::initializer_list<float> input_f = { 1.0f, -2.5f, 3.1f, -4.0f, 5.03f, -6.99f, 7.0f, -8.0f, 9.5f };
+    std::list<float> final_results = { 9.0f };
+
+    // Allocate memory for input image.
+    auto input_memory = memory::allocate(engine, in_layout);
+    set_values(input_memory, input_f);
+
+    // Create input_layout description
+    // "input" - is the primitive id inside topology
+    input_layout input("input", in_layout);
+
+    topology topology(
+        // 1. input layout primitive.
+        input,
+        // 2. reorder primitive with id "reorder_input"
+        reorder("reorder_input", input, byte_layout),
+        pooling("pool1", "reorder_input", pooling_mode::max, { 1,1,3,3 }, {1,1,1,1}),
+        reorder("reorder2", "pool1", out_layout)
+    );
+
+    network network(
+        engine,
+        topology,
+        {
+            build_option::outputs({ "reorder2" })
+        });
+
+    network.set_input_data("input", input_memory);
+
+    auto outputs = network.execute();
+
+    auto interm = outputs.at("reorder2").get_memory();
+    auto interm_ptr = interm.pointer<float>();
+    auto output_size = outputs.at("reorder2").get_memory().count();
+    unsigned int cntr = 0;
+    for (const auto& exp : final_results)
+    {
+        EXPECT_EQ(exp, interm_ptr[cntr++]);
+    }
+}
+
+TEST(pooling_forward_gpu, basic_avg_pooling_int8) {
+
+    engine engine;
+    layout in_layout = { type_to_data_type<float>::value,format::byxf,{ 1,1,3,3 } };
+    layout out_layout = { type_to_data_type<float>::value,format::byxf,{ 1,1,1,1 } };
+    layout byte_layout = { type_to_data_type<int8_t>::value, format::bfyx,{ 1,1,3,3 } };
+    std::initializer_list<float> input_f = { 2.0f, -2.5f, 5.1f, -4.0f, 8.03f, -6.99f, 17.0f, -8.0f, 19.5f };
+    auto final_result = 0.0f;
+    for (const auto& val : input_f)
+    {
+        final_result += (float)((char)val);
+    }
+    final_result /= input_f.size();
+    final_result = (float)((char)final_result);
+    // Allocate memory for input image.
+    auto input_memory = memory::allocate(engine, in_layout);
+    set_values(input_memory, input_f);
+
+    // Create input_layout description
+    // "input" - is the primitive id inside topology
+    input_layout input("input", in_layout);
+
+    topology topology(
+        // 1. input layout primitive.
+        input,
+        // 2. reorder primitive with id "reorder_input"
+        reorder("reorder_input", input, byte_layout),
+        pooling("pool1", "reorder_input", pooling_mode::average, { 1,1,3,3 }, { 1,1,1,1 }),
+        reorder("reorder2", "pool1", out_layout)
+    );
+
+    network network(
+        engine,
+        topology,
+        {
+            build_option::outputs({ "reorder2" })
+        });
+
+    network.set_input_data("input", input_memory);
+
+    auto outputs = network.execute();
+
+    auto interm = outputs.at("reorder2").get_memory();
+    auto interm_ptr = interm.pointer<float>();
+    auto output_size = outputs.at("reorder2").get_memory().count();
+    unsigned int cntr = 0;
+    EXPECT_EQ(final_result, interm_ptr[0]);
 }
 
 TEST(pooling_forward_gpu, basic_max_yxfb_f32_wsiz2x2_wstr1x1_i3x3x1x1_nopad) {
@@ -287,7 +438,7 @@ TEST(pooling_forward_gpu, offsets_max_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad)
 
     network network(engine, topology);
 
-    set_values(input_prim, { 
+    set_values(input_prim, {
         1.50f, -1.00f, -0.50f,
         1.00f, -1.00f, -1.00f,
        -1.00f, -1.00f, -0.50f
@@ -345,7 +496,7 @@ TEST(pooling_forward_gpu, basic_avg_yxfb_f32_wsiz2x2_wstr1x1_i3x3x1x1_nopad) {
     auto output_prim = outputs.begin()->second.get_memory();
 
     auto output_ptr = output_prim.pointer<float>();
-    
+
     EXPECT_EQ(1.0f,   output_ptr[0]);
     EXPECT_EQ(0.625f, output_ptr[1]);
     EXPECT_EQ(1.625f, output_ptr[2]);
@@ -896,6 +1047,333 @@ TEST(pooling_forward_gpu, max_yxfb_bfyx_f32_wsiz2x2_wstr2x2_i3x3x1x1_inpad2x1_ou
     }
 }
 
+TEST(pooling_forward_gpu, basic_in2x2x3x2_max_with_argmax) {
+    //  Input  : 2x2x3x2
+    //  Argmax : 2x2x2x1
+    //  Output : 2x2x2x2
+
+    //  Forward Max Pooling Input:
+    //  f0: b0:  1    2  -10   b1:   0    0     -11
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5   -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2   -13
+    //  f1: b0:  7    8   16    b1:   12   9     17
+    //
+    //  Output:
+    //  f0: b0:  4    4   b1:   0.5    0
+    //  f1: b0:  8   16   b1:   12    17
+    //
+    //  Argmax:
+    //  f0: b0:  4    4   b1:   15    13
+    //  f1: b0:  10  11   b1:   21    23
+
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
+    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+
+    set_values(input, {
+        1.0f, 2.0f, -10.f,
+        3.0f, 4.0f, -14.f,
+        5.0f, 6.0f, -12.f,
+        7.0f, 8.0f, 16.0f,
+        0.f, 0.f, -11.f,
+        0.5f, -0.5f, -15.f,
+        1.5f, 5.2f, -13.f,
+        12.f, 9.f, 17.f
+    });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(mutable_data("arg_max", arg_max));
+    topology.add(pooling("pooling", "input", "arg_max", pooling_mode::max_with_argmax, { 1, 1, 2, 2 }, { 1, 1, 1, 1 }));
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+
+    auto output = outputs.at("pooling").get_memory();
+    auto output_ptr = output.pointer<float>();
+    auto output_layout = output.get_layout();
+    auto argmax_ptr = arg_max.pointer<float>();
+
+    EXPECT_EQ(output_layout.format, format::bfyx);
+    EXPECT_EQ(output_layout.size.spatial[1], 1);
+    EXPECT_EQ(output_layout.size.spatial[0], 2);
+    EXPECT_EQ(output_layout.size.feature[0], 2);
+    EXPECT_EQ(output_layout.size.batch[0], 2);
+
+    std::vector<float> expected_argmax_vec = {
+        4.0f, 4.0f,
+        10.0f, 11.0f,
+        15.0f, 13.0f,
+        21.0f, 23.0f
+    };
+
+    std::vector<float> expected_output_vec = {
+        4.0f, 4.0f,
+        8.0f, 16.0f,
+        0.5f, 0.0f,
+        12.0f, 17.0f
+    };
+
+    for (size_t i = 0; i < expected_output_vec.size(); ++i) {
+        EXPECT_EQ(expected_output_vec[i], output_ptr[i]);
+        EXPECT_EQ(expected_argmax_vec[i], argmax_ptr[i]);
+    }
+}
+
+TEST(pooling_forward_gpu, basic_in2x2x3x2_max_with_argmax_input_padding) {
+    //  Input  : 2x2x3x2
+    //  Argmax : 2x2x2x1
+    //  Output : 2x2x2x2
+    //  Input Padding : 2x2
+
+    //  Forward Max Pooling Input:
+    //  f0: b0:  1    2  -10   b1:   0    0     -11
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5   -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2   -13
+    //  f1: b0:  7    8   16    b1:   12   9     17
+    //
+    //  Output:
+    //  f0: b0:  4    4   b1:   0.5    0
+    //  f1: b0:  8   16   b1:   12    17
+    //
+    //  Argmax:
+    //  f0: b0:  4    4   b1:   15    13
+    //  f1: b0:  10  11   b1:   21    23
+
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
+    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+
+    set_values(input, {
+        1.0f, 2.0f, -10.f,
+        3.0f, 4.0f, -14.f,
+        5.0f, 6.0f, -12.f,
+        7.0f, 8.0f, 16.0f,
+        0.f, 0.f, -11.f,
+        0.5f, -0.5f, -15.f,
+        1.5f, 5.2f, -13.f,
+        12.f, 9.f, 17.f
+    });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(reorder("reorder", "input", input.get_layout().with_padding({ { 0, 0, 2, 2 }, 0 })));
+    topology.add(mutable_data("arg_max", arg_max));
+    topology.add(pooling("pooling", "reorder", "arg_max", pooling_mode::max_with_argmax, { 1, 1, 2, 2 }, { 1, 1, 1, 1 }));
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+
+    auto output = outputs.at("pooling").get_memory();
+    auto output_ptr = output.pointer<float>();
+    auto output_layout = output.get_layout();
+    auto argmax_ptr = arg_max.pointer<float>();
+
+    EXPECT_EQ(output_layout.format, format::bfyx);
+    EXPECT_EQ(output_layout.size.spatial[1], 1);
+    EXPECT_EQ(output_layout.size.spatial[0], 2);
+    EXPECT_EQ(output_layout.size.feature[0], 2);
+    EXPECT_EQ(output_layout.size.batch[0], 2);
+
+    std::vector<float> expected_argmax_vec = {
+        4.0f, 4.0f,
+        10.0f, 11.0f,
+        15.0f, 13.0f,
+        21.0f, 23.0f
+    };
+
+    std::vector<float> expected_output_vec = {
+        4.0f, 4.0f,
+        8.0f, 16.0f,
+        0.5f, 0.0f,
+        12.0f, 17.0f
+    };
+
+    for (size_t i = 0; i < expected_output_vec.size(); ++i) {
+        EXPECT_EQ(expected_output_vec[i], output_ptr[i]);
+        EXPECT_EQ(expected_argmax_vec[i], argmax_ptr[i]);
+    }
+}
+
+TEST(pooling_forward_gpu, basic_in2x2x3x2_max_with_argmax_output_padding) {
+    //  Input  : 2x2x3x2
+    //  Argmax : 2x2x2x1
+    //  Output : 2x2x2x2
+    //  Output Padding : 2x2
+
+    //  Forward Max Pooling Input:
+    //  f0: b0:  1    2  -10   b1:   0    0     -11
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5   -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2   -13
+    //  f1: b0:  7    8   16    b1:   12   9     17
+    //
+    //  Output:
+    //  f0: b0:  4    4   b1:   0.5    0
+    //  f1: b0:  8   16   b1:   12    17
+    //
+    //  Argmax:
+    //  f0: b0:  4    4   b1:   15    13
+    //  f1: b0:  10  11   b1:   21    23
+
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
+    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+
+    set_values(input, {
+        1.0f, 2.0f, -10.f,
+        3.0f, 4.0f, -14.f,
+        5.0f, 6.0f, -12.f,
+        7.0f, 8.0f, 16.0f,
+        0.f, 0.f, -11.f,
+        0.5f, -0.5f, -15.f,
+        1.5f, 5.2f, -13.f,
+        12.f, 9.f, 17.f
+    });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(reorder("reorder", "input", input.get_layout().with_padding({ { 0, 0, 2, 2 }, 0 })));
+    topology.add(mutable_data("arg_max", arg_max));
+    topology.add(pooling("pooling", "reorder", "arg_max", pooling_mode::max_with_argmax, { 1, 1, 2, 2 }, { 1, 1, 1, 1 }, { 0, 0, 0, 0 }, padding({ 0, 0, 1, 1 }, 0)));
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+
+    auto output = outputs.at("pooling").get_memory();
+    auto output_ptr = output.pointer<float>();
+    auto output_layout = output.get_layout();
+    auto argmax_ptr = arg_max.pointer<float>();
+
+    EXPECT_EQ(output_layout.format, format::bfyx);
+    EXPECT_EQ(output_layout.size.spatial[1], 1);
+    EXPECT_EQ(output_layout.size.spatial[0], 2);
+    EXPECT_EQ(output_layout.size.feature[0], 2);
+    EXPECT_EQ(output_layout.size.batch[0], 2);
+
+    std::vector<float> expected_argmax_vec = {
+        4.0f, 4.0f,
+        10.0f, 11.0f,
+        15.0f, 13.0f,
+        21.0f, 23.0f
+    };
+
+    std::vector<float> expected_output_vec = {
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 4.0f, 4.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 8.0f, 16.0f,0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.5f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 12.0f, 17.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+    };
+
+    for (size_t i = 0; i < expected_output_vec.size(); ++i) {
+        EXPECT_EQ(expected_output_vec[i], output_ptr[i]);
+    }
+
+    for (size_t i = 0; i < expected_argmax_vec.size(); ++i) {
+        EXPECT_EQ(expected_argmax_vec[i], argmax_ptr[i]);
+    }
+}
+
+TEST(pooling_forward_gpu, basic_in2x2x3x2_max_with_argmax_with_output_size) {
+    //  Input  : 2x2x3x2
+    //  Argmax : 2x2x2x1
+    //  Output : 2x2x2x2
+
+    //  Forward Max Pooling Input:
+    //  f0: b0:  1    2  -10   b1:   0    0     -11
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5   -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2   -13
+    //  f1: b0:  7    8   16    b1:   12   9     17
+    //
+    //  Output:
+    //  f0: b0:  4    4   b1:   0.5    0
+    //  f1: b0:  8   16   b1:   12    17
+    //
+    //  Argmax:
+    //  f0: b0:  4    4   b1:   15    13
+    //  f1: b0:  10  11   b1:   21    23
+
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
+    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+
+    set_values(input, {
+        1.0f, 2.0f, -10.f,
+        3.0f, 4.0f, -14.f,
+        5.0f, 6.0f, -12.f,
+        7.0f, 8.0f, 16.0f,
+        0.f, 0.f, -11.f,
+        0.5f, -0.5f, -15.f,
+        1.5f, 5.2f, -13.f,
+        12.f, 9.f, 17.f
+    });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(mutable_data("arg_max", arg_max));
+    topology.add(pooling("pooling", "input", "arg_max", pooling_mode::max_with_argmax, { 1, 1, 2, 2 }, { 1, 1, 1, 1 }, { 0, 0, 0, 0 }, { 2, 2, 2, 1 }));
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+
+    auto output = outputs.at("pooling").get_memory();
+    auto output_ptr = output.pointer<float>();
+    auto output_layout = output.get_layout();
+    auto argmax_ptr = arg_max.pointer<float>();
+
+    EXPECT_EQ(output_layout.format, format::bfyx);
+    EXPECT_EQ(output_layout.size.spatial[1], 1);
+    EXPECT_EQ(output_layout.size.spatial[0], 2);
+    EXPECT_EQ(output_layout.size.feature[0], 2);
+    EXPECT_EQ(output_layout.size.batch[0], 2);
+
+    std::vector<float> expected_argmax_vec = {
+        4.0f, 4.0f,
+        10.0f, 11.0f,
+        15.0f, 13.0f,
+        21.0f, 23.0f
+    };
+
+    std::vector<float> expected_output_vec = {
+        4.0f, 4.0f,
+        8.0f, 16.0f,
+        0.5f, 0.0f,
+        12.0f, 17.0f
+    };
+
+    for (size_t i = 0; i < expected_output_vec.size(); ++i) {
+        EXPECT_EQ(expected_output_vec[i], output_ptr[i]);
+        EXPECT_EQ(expected_argmax_vec[i], argmax_ptr[i]);
+    }
+}
+
 template <class DataType>
 static void generic_average_wo_padding_test(format fmt, tensor output, tensor input, tensor window, tensor stride, tensor offset)
 {
@@ -1089,7 +1567,7 @@ public:
 
     virtual bool is_format_supported(cldnn::format format)
     {
-        if ((format == cldnn_format_type::cldnn_format_yxfb) || (format == cldnn_format_type::cldnn_format_bfyx))
+        if ((format == cldnn_format_type::cldnn_format_yxfb) || (format == cldnn_format_type::cldnn_format_bfyx) || (format == cldnn_format_type::cldnn_format_byxf))
         {
             return true;
         }
@@ -1139,13 +1617,13 @@ public:
 
         int pooled_height = (int)(ceil((float)std::max(height - 2 * input_offset_height - kernel_height, 0) / stride_height)) + 1;
         int pooled_width = (int)(ceil((float)std::max(width - 2 * input_offset_width - kernel_width, 0) / stride_width)) + 1;
-        
+
         // Make sure that the last pooling starts strictly inside the image.
-        while ((pooled_height - 1) * stride_height >= height - input_offset_height) 
+        while ((pooled_height - 1) * stride_height >= height - input_offset_height)
         {
             --pooled_height;
         }
-        while ((pooled_width - 1) * stride_width >= width - input_offset_width) 
+        while ((pooled_width - 1) * stride_width >= width - input_offset_width)
         {
             --pooled_width;
         }
@@ -1169,18 +1647,18 @@ public:
 
         int input_offset_width = pooling->input_offset.spatial[0];
         int input_offset_height = pooling->input_offset.spatial[1];
-        
+
         int kernel_width = pooling->size.spatial[0];
         int kernel_height = pooling->size.spatial[1];
-        
+
         int stride_width = pooling->stride.spatial[0];
         int stride_height = pooling->stride.spatial[1];
-        
+
         auto output_tensor = get_expected_output_tensor();
 
         int pooled_width = output_tensor.spatial[0];
         int pooled_height = output_tensor.spatial[1];
-         
+
         //Output is bfyx
         auto output = memory::allocate(engine, cldnn::layout(inputs[0].get_layout().data_type, cldnn::format::bfyx, output_tensor, pooling->output_padding));
 
@@ -1201,13 +1679,13 @@ public:
                 {
                     output_mem[i] = (generic_params->data_type == data_types::f32) ? -FLT_MAX : -65504;
                 }
-                for (int b = 0; b < batch; b++) 
+                for (int b = 0; b < batch; b++)
                 {
-                    for (int f = 0; f < feature; f++) 
+                    for (int f = 0; f < feature; f++)
                     {
-                        for (int h = 0; h < pooled_height; h++) 
+                        for (int h = 0; h < pooled_height; h++)
                         {
-                            for (int w = 0; w < pooled_width; w++) 
+                            for (int w = 0; w < pooled_width; w++)
                             {
                                 int input_offset_x_start = w * stride_width + input_offset_width;
                                 int input_offset_x_end = std::min(input_offset_x_start + kernel_width, width);
@@ -1219,12 +1697,12 @@ public:
 
                                 const size_t output_index = get_linear_index(output.get_layout(), b, f, h, w, output_desc);
 
-                                for (int y = input_offset_y_start; y < input_offset_y_end; y++) 
+                                for (int y = input_offset_y_start; y < input_offset_y_end; y++)
                                 {
-                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++) 
+                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++)
                                     {
                                         const size_t input_index = get_linear_index(inputs[0].get_layout(), b, f, y, x, input_desc);
-                                        
+
                                         if (input_mem[input_index] > output_mem[output_index])
                                         {
                                             output_mem[output_index] = input_mem[input_index];
@@ -1265,30 +1743,30 @@ public:
                 {
                     output_mem[i] = 0;
                 }
-                for (int b = 0; b < batch; b++) 
+                for (int b = 0; b < batch; b++)
                 {
-                    for (int f = 0; f < feature; f++) 
+                    for (int f = 0; f < feature; f++)
                     {
-                        for (int h = 0; h < pooled_height; h++) 
+                        for (int h = 0; h < pooled_height; h++)
                         {
-                            for (int w = 0; w < pooled_width; w++) 
-                            {	
+                            for (int w = 0; w < pooled_width; w++)
+                            {
                                 int input_offset_x_start = w * stride_width + input_offset_width;
                                 int input_offset_x_end = std::min(input_offset_x_start + kernel_width, width);
                                 input_offset_x_start = std::max(input_offset_x_start, 0);
 
                                 int input_offset_y_start = h * stride_height + input_offset_height;
                                 int input_offset_y_end = std::min(input_offset_y_start + kernel_height, height);
-                                input_offset_y_start = std::max(input_offset_y_start, 0);	
+                                input_offset_y_start = std::max(input_offset_y_start, 0);
 
                                 int output_index = (b * feature + f) * output_height * output_width;
                                 tensor lower_padding = pooling->output_padding.lower_size();
                                 output_index += (lower_padding.spatial[1] + h) * output_width + lower_padding.spatial[0] + w;
 
                                 int num_of_elements = 0;
-                                for (int y = input_offset_y_start; y < input_offset_y_end; y++) 
+                                for (int y = input_offset_y_start; y < input_offset_y_end; y++)
                                 {
-                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++) 
+                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++)
                                     {
                                         const size_t input_index = get_linear_index(inputs[0].get_layout(), b, f, y, x, input_desc);
                                         output_mem[output_index] += input_mem[input_index];
@@ -1308,7 +1786,7 @@ public:
                                     return output;
                                 }
                                 output_mem[output_index] /= (Type)num_of_elements;
- 
+
                             }
                         }
                     }

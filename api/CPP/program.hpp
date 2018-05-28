@@ -51,7 +51,7 @@ enum class build_option_type
     /// @brief Tuning config (default: Tuning is disabled).
     /// @details The tuner will automatically find the optimal kernel/config for each node in the graph,
     /// by running multiple implementations and configurations per node and storing the optimal one in cache.
-    /// Expect long execution time in the first run. 
+    /// Expect long execution time in the first run.
     /// After the first run a cache with the tuning results will be created in the path provided.
     /// This cache will be used in the next runs.
     tuning_config = cldnn_build_option_tuning_config,
@@ -104,7 +104,7 @@ struct build_option
     /// @brief Tuning configuration (default: false).
     /// @details This option will automatically find the optimal kernel/config for each node in the graph,
     /// by running multiple implementations and configurations per node and storing the optimal one in cache.
-    /// Expect long execution time in the first run (unless the cache only mode is enabled). 
+    /// Expect long execution time in the first run (unless the cache only mode is enabled).
     /// After the first run a cache with the tuning results will be created in the path provided.
     /// This cache will be used in the next runs.
     static std::shared_ptr<const build_option> tuning_config(const tuning_config_options& config = tuning_config_options());

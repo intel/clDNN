@@ -229,7 +229,7 @@ TEST(permute_gpu_f32, basic_bfyx_permute_0_1_3_2_input_padding)
 
     topology topology(
         input_layout("input", input.get_layout()),
-        reorder("reorder", "input", input.get_layout().format, input.get_layout().data_type, { { 0, 0, 2, 1 }, 0 }),
+        reorder("reorder", "input", input.get_layout().with_padding(padding{ { 0, 0, 2, 1 }, 0 })),
         permute("permute", "reorder", { 0, 1, 3, 2 }));
 
     network network(engine, topology);

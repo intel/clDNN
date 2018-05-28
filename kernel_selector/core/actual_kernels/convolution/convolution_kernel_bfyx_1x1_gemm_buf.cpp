@@ -25,6 +25,7 @@ namespace KernelSelector {
         k.EnableInputDataType(Datatype::F16);
         k.EnableOutputDataType(Datatype::F16);
         k.EnableInputWeightsType(WeightsType::F16);
+        k.EnableInputWeightsType(WeightsType::F32);
         k.EnableInputLayout(DataLayout::byxf);
         k.EnableOutputLayout(DataLayout::byxf);
         k.EnableBiasPerFeature();

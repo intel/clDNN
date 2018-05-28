@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,7 @@ namespace KernelSelector
         k.EnableSplitSupport();
         k.EnableDilation();
         k.EnableDepthwiseSeparableOpt();
+        k.DisableTuning();
         return k;
     }
 

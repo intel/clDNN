@@ -33,10 +33,10 @@ layout activation_inst::calc_output_layout(activation_node const& node)
 }
 
 std::string activation_inst::to_string(activation_node const& node)
-{   
+{
     auto node_info = node.desc_to_json();
     auto desc      = node.get_primitive();
-       
+
     std::stringstream primitive_description;
 
     json_composite activation_info;
@@ -56,7 +56,7 @@ activation_inst::typed_primitive_inst(network_impl& network, activation_node con
 {
     auto input_arg  = input_memory().get_layout();
     auto output_arg = output_memory().get_layout();
-    
+
     CLDNN_ERROR_NOT_EQUAL(node.id(), "ReLU input number", input_arg.size.raw.size(), "ReLU output number", output_arg.size.raw.size(), "Relu input/output num dismatch");
 
     if (is_parameterized())

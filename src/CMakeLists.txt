@@ -141,7 +141,7 @@ set(__CLDNN_Directory__ks_main           "${CLDNN__KERNEL_SELECTOR_DIR}")
 set(__CLDNN_Directory__ks_core           "${CLDNN__KERNEL_SELECTOR_DIR}/core")
 set(__CLDNN_Directory__ks_common         "${CLDNN__KERNEL_SELECTOR_DIR}/common")
 set(__CLDNN_Directory__ks_core_common    "${__CLDNN_Directory__ks_core}/common")
-set(__CLDNN_Directory__ks_actual_kernels "${__CLDNN_Directory__ks_core}/actual_kernels")  
+set(__CLDNN_Directory__ks_actual_kernels "${__CLDNN_Directory__ks_core}/actual_kernels")
 set(__CLDNN_Directory__ks_cache          "${__CLDNN_Directory__ks_core}/cache")
 
 set(__CLDNN_AllSources

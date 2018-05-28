@@ -22,6 +22,7 @@
 #include "kernel_selector_helper.h"
 #include "network_impl.h"
 #include "error_handler.h"
+#include "kernel_runner.h"
 
 #include "api/CPP/reorder.hpp"
 #include "api/CPP/input_layout.hpp"
@@ -92,20 +93,22 @@ public:
 
         const auto primitive = arg.get_primitive();
 
+        fc_optional_params.tuningParams.runner = std::make_shared<gpu::kernel_runner>(arg.get_program().get_engine(), true);
+
         auto& kernel_selector = kernel_selector::fully_connected_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(fc_params, fc_optional_params);
 
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         const auto& new_fc_params = *static_cast<kernel_selector::fully_connected_params*>(best_kernels[0].params.get());
-        std::vector<network_impl::ptr> reorders; 
+        std::vector<network_impl::ptr> reorders;
         if (fc_params.inputs[0].GetLayout() != new_fc_params.inputs[0].GetLayout())
         {
             const auto& input_layout = arg.input().get_output_layout();
             topology_impl tpl;
             tpl.add(std::make_shared<cldnn::input_layout>("input", input_layout));
             tpl.add(std::make_shared<cldnn::reorder>("reorder", "input", from_data_layout(new_fc_params.inputs[0].GetLayout()), input_layout.data_type));
-            reorders.push_back(arg.get_program().get_engine().build_network(tpl, cldnn::build_options()));
+            reorders.push_back(arg.get_program().get_engine().build_network(tpl, cldnn::build_options(), true));
         }
 
         auto fc = new fully_connected_gpu(arg, best_kernels[0], reorders);
@@ -125,6 +128,9 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::bfyx), val_fw },
             });
         }
         ~attach() {}

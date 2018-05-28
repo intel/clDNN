@@ -27,7 +27,7 @@ KERNEL (lrn_gpu_across_channel_multiple_features)(const __global INPUT0_TYPE* in
     const uint b_f          = get_group_id(2);
     const uint batch_id     = (b_f * OFM_PER_SIMD) / INPUT0_FEATURE_NUM;
     const uint feature_id   = (b_f % (INPUT0_FEATURE_NUM / OFM_PER_SIMD)) * OFM_PER_SIMD;
-    
+
     if (x >= INPUT0_SIZE_X)
         return;
 #elif defined OUTPUT_LAYOUT_YXFB
@@ -36,7 +36,7 @@ KERNEL (lrn_gpu_across_channel_multiple_features)(const __global INPUT0_TYPE* in
     const uint y            = get_group_id(2);
     const uint feature_id   = (b_f / INPUT0_BATCH_NUM) * OFM_PER_SIMD;
     const uint batch_id     = b_f % INPUT0_BATCH_NUM;
-#endif    
+#endif
 
     uint input_id = INPUT0_OFFSET + batch_id*INPUT0_BATCH_PITCH + feature_id*INPUT0_FEATURE_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH;
 

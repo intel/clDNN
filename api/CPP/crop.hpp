@@ -46,7 +46,7 @@ namespace cldnn
 /// @n Breaking any of this conditions will cause exeption throw.
 struct crop : public primitive_base<crop, CLDNN_PRIMITIVE_DESC(crop)>
 {
-    CLDNN_DECLATE_PRIMITIVE(crop)
+    CLDNN_DECLARE_PRIMITIVE(crop)
 
     /// @brief Constructs crop primitive.
     /// @param id This primitive id.

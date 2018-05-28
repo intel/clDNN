@@ -30,7 +30,8 @@ namespace KernelSelector
         using DispatchData = CommonDispatchData;
     
     protected:
-        JitConstants GetJitConstants(const DeconvolutionParams& params) const;
+        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const;
+        virtual JitConstants GetJitConstants(const DeconvolutionParams& params) const;
         virtual DispatchData SetDefault(const DeconvolutionParams& params) const;
     };
 }

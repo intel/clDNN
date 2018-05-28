@@ -34,7 +34,7 @@ extern "C" {
 /// @details Performs batch normalization as described in
 /// "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift" by Ioffe, Szegedy
 /// @n See: http://arxiv.org/abs/1502.03167
-/// 
+///
 /// <b>Algorithm:</b>
 /// @n global stats can be computed as:
 /// @n out[i] = in[i] - mean[b] / sqrt(variance[b] + epsilon)
@@ -58,4 +58,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(batch_norm);
 /// @}
 /// @}
 #endif /* BATCH_NORM_H */
-

@@ -32,9 +32,10 @@ namespace cldnn
 /// but is interpreted in a different way (different shape).
 /// @note reshape primitive is supposed only to reinterpret shape of the memory therefore it's not possible to change
 /// neither data type nor format of the input buffer and total number of elements in input and output (excluding paddings) must match.
+/// Please note that there is no guarantee that underlying data will be in proper format if primitive was explicitly added to output list.
 struct reshape : public primitive_base<reshape, CLDNN_PRIMITIVE_DESC(reshape)>
 {
-    CLDNN_DECLATE_PRIMITIVE(reshape)
+    CLDNN_DECLARE_PRIMITIVE(reshape)
 
     /// @brief Constructs reshape primitive.
     /// @param id This primitive id.

@@ -100,7 +100,7 @@ namespace {
         {
             options += o + " ";
         }
-        
+
         return options;
     }
 
@@ -112,7 +112,7 @@ namespace {
     }
 }
 
-kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code& kernels_source_code) const 
+kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code& kernels_source_code) const
 {
     sorted_code scode;
 
@@ -149,7 +149,7 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
         {
             key += " __ONE_TIME__";
         }
-		
+
         auto& current_bucket = scode[key];
         current_bucket.dump_custom_program = dump_custom_program;
 		current_bucket.one_time = one_time_kernel;
@@ -189,9 +189,9 @@ kernels_cache::kernels_cache(gpu_toolkit& context): _context(context) {}
 kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program, bool one_time_kernel)
 {
     kernels_cache::kernel_id id;
-    
+
     // same kernel_string == same kernel
-    const auto key = kernel_string.get();
+    const auto key = kernel_string.get()->get_hash();
 
     std::lock_guard<std::mutex> lock(_mutex);
 
@@ -200,7 +200,7 @@ kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<
     if (it == _kernels_code.end())
     {
         // we need unique id in order to avoid conflict across topologies.
-        const auto kernel_num = _kernels.size() + _kernels_code.size(); 
+        const auto kernel_num = _kernels.size() + _kernels_code.size();
         id = kernel_string->entry_point + "_" + std::to_string(kernel_num);
         _kernels_code[key] = { kernel_string, id, dump_custom_program, one_time_kernel };
     }
@@ -280,14 +280,14 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
                 {
                     if (dump_sources)
                         dump_file.get() << p.second << "\n";
-                
+
                     err_log += p.second + '\n';
                 }
 
                 if (dump_sources)
                     dump_file.get() << "*/\n";
             }
-            
+
         }
 
         if (!err_log.empty())
@@ -301,7 +301,7 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
     }
 }
 
-kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id, bool one_time_kernel) 
+kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id, bool one_time_kernel)
 {
     build_all();
     if (one_time_kernel)

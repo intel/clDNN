@@ -86,6 +86,15 @@ inline uint FUNC(get_bf8_xy16_index)(uint b, uint f, uint y, uint x, uint x_size
         ((o) / (sub_group_size))*CAT(prefix, _OFM_PITCH)                    \
     )
 
+#define GET_FILTER_OS_IYX_OSV8_ROTATE_180_INDEX(prefix, o, i, y, x, sub_group_size)    \
+    CAT(prefix, _OFFSET) +                                                  \
+    ((o) % (sub_group_size)) +                                              \
+    (sub_group_size)*(                                                      \
+        (CAT(prefix, _SIZE_X ) - x - 1)*CAT(prefix, _X_PITCH) +             \
+        (CAT(prefix, _SIZE_Y ) - y - 1)*CAT(prefix, _Y_PITCH) +             \
+        (i)*CAT(prefix, _IFM_PITCH) +                                       \
+        ((o) / (sub_group_size))*CAT(prefix, _OFM_PITCH)                    \
+    )
 
 inline uint FUNC(get_i_yxs_os_yxsv2_osv_index)(uint o, uint i, uint y, uint x, uint x_size, uint i_pitch, uint y_pitch, uint x_pitch, uint offset, uint sub_group_size)
 {

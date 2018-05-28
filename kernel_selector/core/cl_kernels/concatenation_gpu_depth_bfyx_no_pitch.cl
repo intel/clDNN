@@ -63,7 +63,7 @@ KERNEL (concatenation_gpu_depth_bfyx_no_padding)(__global UNIT_TYPE* input, __gl
     if(element_group_offset + align_offset + WORK_GROUP_SIZE * ELEMENTS_PER_WORK_ITEM < INPUT0_ELEMENTS_COUNT)
     {
         MAKE_VECTOR_TYPE(UNIT_TYPE, 8) in = ALIGNED_BLOCK_READ8(input, input_offset + align_offset);
-        ALIGNED_BLOCK_WRITE8(output, output_offset + align_offset, in);
+        ALIGNED_BLOCK_WRITE8(output, output_offset + align_offset, ACTIVATION(in, NL_M, NL_N));
 
         //Fill the values that were missed upon adding align_offset
         if((align_offset != 0) && (element_offset + output_batch_offset < group_start_pos + align_offset))

@@ -42,7 +42,7 @@ namespace KernelSelector
             return std::max(static_cast<size_t>(1U), batchSize / GetBatchesPerWorkItem(params));
         }
 
-        // how many neurons for a single batch will a single work item produce 
+        // how many neurons for a single batch will a single work item produce
         static size_t GetNeuronsPerWorkItem(const FullyConnectedParams& params)
         {
             auto batchSize = params.output.Batch().v;

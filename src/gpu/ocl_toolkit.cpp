@@ -1,4 +1,4 @@
-﻿/*
+/*
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,20 +115,36 @@ namespace {
     }
 }
 
-cl::Device get_gpu_device(const configuration& config)
+cl::Device get_gpu_device(const configuration& config, cl_platform_id& platform_id)
 {
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
     std::list<std::string> reasons;
+    cl_uint n = 0;
 
-    for (auto& p : platforms)
+    // Get number of platforms availible
+    cl_int err = clGetPlatformIDs(0, NULL, &n);
+    if (err != CL_SUCCESS) {
+        throw std::runtime_error("clGetPlatformIDs error " + std::to_string(err));
+    }
+
+    // Get platform list
+    std::vector<cl_platform_id> platform_ids(n);
+    err = clGetPlatformIDs(n, platform_ids.data(), NULL);
+    if (err != CL_SUCCESS) {
+        throw std::runtime_error("clGetPlatformIDs error " + std::to_string(err));
+    }
+
+    for (auto& id : platform_ids)
     {
+        cl::Platform platform = cl::Platform(id);
         std::vector<cl::Device> devices;
-        p.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
         for (auto& d : devices)
         {
             if (does_device_match_config(d, config, reasons))
+            {
+                platform_id = id;
                 return d;
+            }
         }
     }
 
@@ -153,22 +169,108 @@ std::shared_ptr<gpu_toolkit> gpu_toolkit::create(const configuration & cfg)
     }
 }
 
-gpu_toolkit::gpu_toolkit(const configuration& config) 
+gpu_toolkit::gpu_toolkit(const configuration& config)
     : _configuration(config)
-    , _device(get_gpu_device(config))
+    , _device(get_gpu_device(config, _platform_id))
+    , _neo_driver(strstr(get_device_version().c_str(), "NEO") ? true : false)
     , _context(_device)
     , _command_queue(_context,
                      _device,
                      (config.enable_profiling
                         ? cl::QueueProperties::Profiling
-                        : cl::QueueProperties::None) | 
-                     (config.host_out_of_order
+                        : cl::QueueProperties::None) |
+                     (config.host_out_of_order && _neo_driver
                         ? cl::QueueProperties::OutOfOrder
                         : cl::QueueProperties::None))
     , _engine_info(*this)
     , _kernels_cache(*this)
 {
     _device.getInfo(CL_DEVICE_EXTENSIONS, &_extensions);
+
+    cl_command_queue_properties queue_properties =
+        ((config.enable_profiling) ?
+            CL_QUEUE_PROFILING_ENABLE :
+            0) |
+            ((config.host_out_of_order &&
+                _neo_driver) ?
+                CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE :
+                0);
+
+    if (_configuration.priority_mode != cldnn_priority_disabled)
+    {
+        if (extension_supported("cl_khr_priority_hints") &&
+            extension_supported("cl_intelx_create_command_queue"))
+            // TODO add check when caps will be availible (instead of cl_intelx_create_command_queue)
+            //&& extension_supported("cl_khr_create_command_queue"))
+        {
+            // TODO: When cl_khr_create_command_queue will be availible the
+            // function name will change to clCreateCommandQueueWithPropertiesKHR
+            // in place of clCreateCommandQueueWithPropertiesINTEL.
+            pfn_clCreateCommandQueueWithPropertiesINTEL clCreateCommandQueueWithPropertiesINTEL =
+                (pfn_clCreateCommandQueueWithPropertiesINTEL)clGetExtensionFunctionAddressForPlatform(
+                    _platform_id,
+                    "clCreateCommandQueueWithPropertiesINTEL");
+
+            unsigned cl_queue_priority_value = CL_QUEUE_PRIORITY_MED_KHR;
+
+            switch (_configuration.priority_mode)
+            {
+            case cldnn_priority_high:
+                cl_queue_priority_value = CL_QUEUE_PRIORITY_HIGH_KHR;
+                break;
+            case cldnn_priority_low:
+                cl_queue_priority_value = CL_QUEUE_PRIORITY_LOW_KHR;
+                break;
+            default:
+                break;
+            }
+
+            cl_int error_code = CL_SUCCESS;
+            cl_queue_properties properties_low[] = {
+                CL_QUEUE_PRIORITY_KHR, cl_queue_priority_value,
+                CL_QUEUE_PROPERTIES, queue_properties,
+                0 };
+
+            _command_queue = clCreateCommandQueueWithPropertiesINTEL(
+                _context.get(),
+                _device.get(),
+                properties_low,
+                &error_code);
+
+            if (error_code != CL_SUCCESS) {
+                throw std::runtime_error("clCreateCommandQueueWithPropertiesINTEL error " + std::to_string(error_code));
+            }
+        }
+        else
+        {
+            throw std::invalid_argument(
+                "The param priority_mode is set in engine_configuration,\
+                 but cl_khr_priority_hints or cl_khr_create_command_queue\
+                 is not supported by current OpenCL implementation.");
+        }
+    }
+    else
+    {
+        _command_queue = cl::CommandQueue(_context, _device, queue_properties);
+    }
+
+    if (_configuration.throttle_mode != cldnn_throttle_disabled)
+    {
+        if (extension_supported("cl_khr_throttle_hints"))
+        {
+            throw std::invalid_argument(
+                "The param throttle_mode is set in engine_configuration,\
+                 but it is placeholder for future use. It has no effect for now\
+                 and should be set to cldnn_throttle_disabled");
+        }
+        else
+        {
+            throw std::invalid_argument(
+                "The param throttle_mode is set in engine_configuration,\
+                 but cl_khr_throttle_hints is not supported by current OpenCL implementation.");
+        }
+    }
+
     if (logging_enabled())
     {
         open_log()
@@ -218,7 +320,14 @@ event_impl::ptr gpu_toolkit::enqueue_kernel(cl::Kernel const& kern, cl::NDRange 
 
     cl::Event ret_ev;
     try {
-        _command_queue.enqueueNDRangeKernel(kern, cl::NullRange, global, local, dep_events_ptr, &ret_ev);
+        if (!_configuration.host_out_of_order || _output_event || _configuration.enable_profiling)
+        {
+            _command_queue.enqueueNDRangeKernel(kern, cl::NullRange, global, local, dep_events_ptr, &ret_ev);
+        }
+        else
+        {
+            _command_queue.enqueueNDRangeKernel(kern, cl::NullRange, global, local, dep_events_ptr, nullptr);
+        }
     }
     catch (cl::Error const& err) {
         throw ocl_error(err);
@@ -255,7 +364,7 @@ event_impl::ptr gpu_toolkit::enqueue_marker(std::vector<event_impl::ptr> const& 
 
             try {
                 _command_queue.enqueueMarkerWithWaitList(&dep_events, &ret_ev);
-            } 
+            }
             catch (cl::Error const& err) {
                 throw ocl_error(err);
             }
@@ -278,7 +387,6 @@ event_impl::ptr gpu_toolkit::enqueue_marker(std::vector<event_impl::ptr> const& 
     else
     {
         sync_events(deps);
-        assert(_last_barrier_ev() != nullptr);
         return{ new base_event(shared_from_this(), _last_barrier_ev, _last_barrier), false };
     }
 }
@@ -288,6 +396,26 @@ void gpu_toolkit::flush()
     if (logging_enabled())
         log(0, "Flush");
     queue().flush();
+}
+void gpu_toolkit::release_pending_memory()
+{
+    /*
+    TODO: Temp. solution, untill proper API calls from OpenCL are released.
+    */
+    void* ptr = nullptr;
+    ptr = _mm_malloc(4096, 4096);
+    queue().finish();
+    try
+    {
+        cl::Buffer flusher(_context, CL_MEM_USE_HOST_PTR, (size_t)4096, ptr);
+        flusher = (cl_mem)nullptr; //clear buffer
+    }
+    catch (...)
+    {
+        _mm_free(ptr);
+        throw;
+    }
+    _mm_free(ptr);
 }
 
 void gpu_toolkit::wait_for_events(std::vector<event_impl::ptr> const & events)
@@ -326,13 +454,23 @@ void gpu_toolkit::sync_events(std::vector<event_impl::ptr> const & deps)
     {
         auto* ocl_ev = dynamic_cast<base_event*>(dep.get());
         if (ocl_ev->get_queue_stamp() > _last_barrier)
+        {
             needs_barrier = true;
+        }
     }
 
     if (needs_barrier)
     {
         try {
-            _command_queue.enqueueBarrierWithWaitList(nullptr, &_last_barrier_ev);
+            if (_output_event)
+            {
+                _command_queue.enqueueBarrierWithWaitList(nullptr, &_last_barrier_ev);
+            }
+            else
+            {
+                _command_queue.enqueueBarrierWithWaitList(nullptr, nullptr);
+            }
+
         }
         catch (cl::Error const& err) {
             throw ocl_error(err);

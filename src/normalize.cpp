@@ -40,7 +40,7 @@ std::string normalize_inst::to_string(normalize_node const& node)
     auto norm_region  = desc->across_spatial ? "across spatial" : "within spatial";
     auto& input       = node.input();
     auto& scale_input = node.scale();
-    
+
     std::stringstream primitive_description;
 
     json_composite normalize_info;

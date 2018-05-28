@@ -33,14 +33,14 @@ namespace cldnn
 /// @details Deconvolution is similar to convolution layer with the weights flipped on the axis and stride and input padding parameters used in opposite sense as in convolution.
 struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC(deconvolution)>
 {
-    CLDNN_DECLATE_PRIMITIVE(deconvolution)
+    CLDNN_DECLARE_PRIMITIVE(deconvolution)
 
     /// @brief Constructs deconvolution primitive.
     /// @param id This primitive id.
     /// @param input Input primitive id.
     /// @param weights List of primitive ids containing weights data.
     /// @param bias List of primitive ids containing bias data. Provide empty vector if using next parameters without bias.
-    /// @param input_offset Input padding/offset.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param with_activation Enables Relu activation.
     /// @param activation_slp Relu activation slope.
@@ -65,6 +65,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         , with_output_size(false)
         , _weights(weights)
         , _bias(bias)
+        , _gradient(false)
     {
     }
 
@@ -72,7 +73,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
     /// @param id This primitive id.
     /// @param input Input primitive id.
     /// @param weights List of primitive ids containing weights data.
-    /// @param input_offset Input padding/offset.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param with_activation Enables Relu activation.
     /// @param activation_slp Relu activation slope.
@@ -84,7 +85,8 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         tensor input_offset = { 0,0,0,0 },
         bool with_activation = false,
         float activation_slp = 0.0f,
-        const padding& output_padding = padding()
+        const padding& output_padding = padding(),
+        bool gradient = false
     )
         :primitive_base(id, { input }, output_padding)
         , weights(_weights.cpp_ids)
@@ -96,6 +98,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         , with_output_size(false)
         , _weights(weights)
         , _bias(std::vector<primitive_id>(0))
+        , _gradient(gradient)
     {
     }
 
@@ -104,7 +107,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
     /// @param input Input primitive id.
     /// @param weights List of primitive ids containing weights data.
     /// @param bias List of primitive ids containing bias data. Provide empty vector if using next parameters without bias.
-    /// @param input_offset Input padding/offset.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param with_activation Enables Relu activation.
     /// @param activation_slp Relu activation slope.
@@ -132,6 +135,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         , output_size(output_size)
         , _weights(weights)
         , _bias(bias)
+        , _gradient(false)
     {
     }
 
@@ -139,7 +143,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
     /// @param id This primitive id.
     /// @param input Input primitive id.
     /// @param weights List of primitive ids containing weights data.
-    /// @param input_offset Input padding/offset.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param with_activation Enables Relu activation.
     /// @param activation_slp Relu activation slope.
@@ -153,7 +157,8 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         bool with_activation,
         float activation_slp,
         tensor output_size,
-        const padding& output_padding = padding()
+        const padding& output_padding = padding(),
+        bool gradient = false
     )
         :primitive_base(id, { input }, output_padding)
         , weights(_weights.cpp_ids)
@@ -166,6 +171,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         , output_size(output_size)
         , _weights(weights)
         , _bias(std::vector<primitive_id>(0))
+        , _gradient(gradient)
     {
     }
 
@@ -182,6 +188,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
         , output_size(dto->output_size)
         , _weights(dto->weights)
         , _bias(dto->bias)
+        , _gradient(dto->gradient != 0)
     {
         if (!dto->split || (weights.size() != bias.size() && bias.size() != 0) || dto->split != weights.size())
             throw std::invalid_argument("Invalid deconvolution dto: bad split value");
@@ -192,7 +199,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
     /// @param input Input primitive id.
     /// @param weights List of primitive ids containing weights data.
     /// @param bias List of primitive ids containing bias data. Provide empty vector if using next parameters without bias.
-    /// @param input_offset Input padding/offset.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param with_activation Enables Relu activation.
     /// @param activation_slp Relu activation slope.
@@ -219,7 +226,7 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
     /// @param id This primitive id.
     /// @param input Input primitive id.
     /// @param weights List of primitive ids containing weights data.
-    /// @param input_offset Input padding/offset.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param with_activation Enables Relu activation.
     /// @param activation_slp Relu activation slope.
@@ -260,10 +267,13 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
 
     /// @brief On how many cards split the computation to.
     int32_t split() const { return static_cast<int32_t>(weights.size()); }
+    /// @brief Indicates that deconvolution is used for convolution backward computation (convolution_grad_input)
+    bool gradient() const { return _gradient; }
 
 protected:
     primitive_id_arr _weights;
     primitive_id_arr _bias;
+    bool _gradient;
 
     std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override
     {
@@ -288,6 +298,7 @@ protected:
         dto.activation_negative_slope = activation_negative_slope;
         dto.with_output_size = with_output_size;
         dto.output_size = output_size;
+        dto.gradient = _gradient;
     }
 };
 /// @}

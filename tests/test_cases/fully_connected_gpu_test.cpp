@@ -177,7 +177,7 @@ TEST(DISABLED_fully_connected_gpu, generic_random_short) {
                 }
             }
         }
-    }  
+    }
 }
 
 TEST(fully_connected_gpu, no_biases) {
@@ -236,6 +236,68 @@ TEST(fully_connected_gpu, no_biases) {
     EXPECT_EQ(-2.25f, output_ptr[2]);
     EXPECT_EQ(3.0f, output_ptr[3]);
 }
+
+
+TEST(fully_connected_gpu, no_biases_int8) {
+    //  Input  : 3x1
+    //  Output : 4x1
+    //  Weights: 4x3
+    //
+    //  Input:
+    //  8.0f, 2.0f, -4.0f
+    //
+    //  Weights:
+    //   2.0f    1.0f  0.0f
+    //  -3.0f   -2.0f  1.0f
+    //   0.0f   -2.0f -4.0f
+    //  -5.0f   10.0f  8.0f
+    //
+    //
+    //  Biases:
+    //   no biases
+    //
+    //  Output:
+    //  18    -32    12   -52
+
+    const int32_t input_x = 3, input_b = 1,  // size of whole input buffer
+        weight_b = 4, weight_x = 3;  // size of whole weights buffer
+
+    engine engine;
+
+    auto input_prim = memory::allocate(engine, { data_types::f32,format::bfyx,{ input_b, 1, input_x, 1 } });
+    auto weights_prim = memory::allocate(engine, { data_types::i8,format::bfyx,{ weight_b, 1, weight_x, 1 } });
+
+    set_values(input_prim, { 8.4f, 2.3f, -4.99f });
+    set_values<char>(weights_prim, { 2, 1, 0, -3, -2, 1, 0, -2, -4, -5, 10, 8 });
+
+    auto input = input_layout("input", input_prim.get_layout());
+    auto w_data = data("weights", weights_prim);
+    auto ri = reorder("reorder_to_int", "input", { data_types::i8,format::bfyx,{ input_b, 1, input_x, 1 } });
+    auto fc = fully_connected("full_con_prim", "reorder_to_int", "weights");
+    auto rf = reorder("reorder_to_float", "full_con_prim", { data_types::f32,format::bfyx,{ input_b, 1, 4, 1 } });
+    topology topology;
+    topology.add(input);
+    topology.add(w_data);
+    topology.add(fc);
+    topology.add(ri);
+    topology.add(rf);
+    network network(engine, topology);
+    network.set_input_data("input", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder_to_float");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<float>();
+
+    EXPECT_EQ(18.0f, output_ptr[0]);
+    EXPECT_EQ(-32.0f, output_ptr[1]);
+    EXPECT_EQ(12.0f, output_ptr[2]);
+    EXPECT_EQ(-52.0f, output_ptr[3]);
+}
+
 
 TEST(fully_connected_gpu, xb_f32_batch_1) {
     //  Input  : 3x1
@@ -431,7 +493,7 @@ TEST(fully_connected_gpu, yxfn_f32) {
     //   3  -4      f1: b0
 
     //  Weights:
-    //   1  -1      n0: fm0  
+    //   1  -1      n0: fm0
     //   2   0      n0: fm1
     //   3   4      n1: fm0
     //   0.5 5      n1: fm1

@@ -15,10 +15,8 @@
 
 #include "include/include_all.cl"
 
-#if FP16_UNIT_USED
-    #define ALIGNED_BLOCK_READ(ptr, byte_offset) as_half(intel_sub_group_block_read_us((const __global ushort*)((const __global char*)(ptr) + (byte_offset))))
-#else
-    #define ALIGNED_BLOCK_READ(ptr, byte_offset) as_float(intel_sub_group_block_read((const __global uint*)((const __global char*)(ptr) + (byte_offset))))
+#if FP16_UNIT_USED == 0
+    #define ALIGNED_BLOCK_READ(ptr, offset) as_float(intel_sub_group_block_read((const __global uint*)(ptr) + (offset)))
 #endif
 
 __attribute__((intel_reqd_sub_group_size(SUB_GROUP_SIZE)))
@@ -56,26 +54,42 @@ KERNEL(convolution_gpu_bfyx_3x3_dw_opt)(
     // 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
     // In the diagram above X represents the current work item.
 
-    const __global UNIT_TYPE* base_addr = INPUT0_OFFSET + input + offset + (start_y * INPUT0_Y_PITCH + start_x) - 1;
+    const int input_offset_const = INPUT0_OFFSET + offset + (start_y * INPUT0_Y_PITCH + start_x) - 1;
 
     const uint base_addr_offset = INPUT0_Y_PITCH;
 
-    UNIT_TYPE input_buffer[3];
-    input_buffer[0] = ALIGNED_BLOCK_READ(base_addr, -base_addr_offset * UNIT_BYTE_SIZE);
-    input_buffer[1] = ALIGNED_BLOCK_READ(base_addr, 0);
+    UNIT_TYPE input_buffer[3] = { UNIT_VAL_ZERO };
+    const int base_offset = -base_addr_offset * UNIT_BYTE_SIZE;
+
+#if FP16_UNIT_USED
+    const uint lid = get_sub_group_local_id();
+    if(input_offset_const - base_addr_offset >= 0)
+        input_buffer[0] = input[input_offset_const - base_addr_offset + lid];
+    if(input_offset_const >= 0)
+        input_buffer[1] = input[input_offset_const + lid];
+#else
+    input_buffer[0] = ALIGNED_BLOCK_READ(input, input_offset_const - base_addr_offset);
+    input_buffer[1] = ALIGNED_BLOCK_READ(input, input_offset_const);
+#endif
 
     UNIT_TYPE w = weights[weight_offset];
 
     int first = 0;
     int second = 1;
     int third = 2;
+    int input_offset = input_offset_const;
 
     for (int y = start_y; y <= end_y; y++)
     {
         UNIT_TYPE res = UNIT_VAL_ZERO;
-        base_addr += base_addr_offset;
+        input_offset += base_addr_offset;
 
-        input_buffer[third] = ALIGNED_BLOCK_READ(base_addr, 0);
+#if FP16_UNIT_USED
+        if(input_offset >= 0)
+            input_buffer[third] = input[input_offset + lid];
+#else
+        input_buffer[third] = ALIGNED_BLOCK_READ(input, input_offset);
+#endif
 
         uint kc = 0;
         LOOP(FILTER_SIZE_X, kc,

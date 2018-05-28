@@ -52,6 +52,11 @@ public:
         if ((--_ref_count) == 0) delete static_cast<const T*>(this);
     }
 
+    int get_ref_count() const
+    {
+        return _ref_count;
+    }
+
 private:
     mutable std::atomic_int _ref_count;
 };

@@ -31,21 +31,32 @@ void base_event::set_ocl_callback()
     if (_callback_set)
         return;
 
-    _event.setCallback(CL_COMPLETE, ocl_event_completion_callback, this);
-    _callback_set = true;
+    if (_event.get() != nullptr)
+    {
+        _event.setCallback(CL_COMPLETE, ocl_event_completion_callback, this);
+        _callback_set = true;
+    }
 }
 
 void base_event::wait_impl()
 {
-    if (get_context()->logging_enabled())
-        get_context()->log(0, "Wait for event: " + std::to_string(_queue_stamp));
-
-    _event.wait();
+    if (_event.get() != nullptr)
+    {
+        _event.wait();
+        if (get_context()->logging_enabled())
+        {
+            get_context()->log(0, "Wait for event: " + std::to_string(_queue_stamp));
+        }
+    }
 }
 
 bool base_event::is_set_impl()
 {
-    return _event.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>() == CL_COMPLETE;
+    if (_event.get() != nullptr)
+    {
+        return _event.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>() == CL_COMPLETE;
+    }
+    return true;
 }
 
 bool base_event::add_event_handler_impl(cldnn_event_handler, void*)

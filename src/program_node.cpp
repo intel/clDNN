@@ -40,8 +40,6 @@ void program_node::replace_dependency(size_t idx, program_node& new_dep, bool de
     myprog.remove_if_dangling(*dependencies[idx], detach_whole_branch);
 
     dependencies[idx] = &new_dep;
-    if (!is_type<internal_primitive>())
-        desc->dependecies()[idx].get() = new_dep.id();
     new_dep.users.push_back(this);
 }
 
@@ -70,6 +68,21 @@ void program_node::remove_dependency(size_t idx)
     dependencies.erase(dependencies.begin() + idx);
 }
 
+std::set<primitive_id> program_node::get_memory_dependencies() const
+{
+    return memory_dependencies;
+}
+
+void program_node::add_memory_dependency(primitive_id prim)
+{
+    memory_dependencies.insert(prim);
+}
+
+void program_node::add_memory_dependency(std::vector<primitive_id> prim_list)
+{
+    memory_dependencies.insert(prim_list.begin(),prim_list.end());
+}
+
 json_composite program_node::desc_to_json() const
 {
     json_composite node_info;
@@ -78,7 +91,7 @@ json_composite program_node::desc_to_json() const
     node_info.add("type", get_extr_type(typeid(*this).name()));
     node_info.add("internal", bool_to_str(this->is_type<internal_primitive>()));
     node_info.add("valid output layout", bool_to_str(valid_output_layout));
-    
+
     json_composite output_layout_info;
     output_layout_info.add("data_type", dt_to_str(output_layout.data_type));
     output_layout_info.add("format", fmt_to_str(output_layout.format));
@@ -100,7 +113,7 @@ json_composite program_node::desc_to_json() const
     node_info.add("output", bool_to_str(output));
 
     std::vector<std::string> deps_ptrs;
-    {     
+    {
         bool empty = true;
         auto itr = dependencies.begin();
         while (itr != dependencies.end())

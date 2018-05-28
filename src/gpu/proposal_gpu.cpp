@@ -54,22 +54,22 @@ namespace {
     {
         float x0, y0, x1, y1;
 
-        inline float area() const 
-        { 
-            return std::max(0.f, y1 - y0 + 1.f) * std::max(0.f, x1 - x0 + 1.f); 
+        inline float area() const
+        {
+            return std::max(0.f, y1 - y0 + 1.f) * std::max(0.f, x1 - x0 + 1.f);
         }
     };
 
     struct delta_t { float shift_x, shift_y, log_w, log_h; };
 
-    struct proposal_t 
-    { 
+    struct proposal_t
+    {
         proposal_t() = default;
         proposal_t(const roi_t& r, const float c, const size_t& o) : roi(r), confidence(c), ord(o) {}
 
-        roi_t roi; 
-        float confidence; 
-        size_t ord; 
+        roi_t roi;
+        float confidence;
+        size_t ord;
     };
 
     inline float float_read_helper(const float* mem)
@@ -113,7 +113,7 @@ namespace {
         else
         {
             std::sort(proposals.begin(), proposals.end(), cmp_fn);
-        }        
+        }
     }
 
     roi_t gen_bbox(
@@ -140,7 +140,7 @@ namespace {
             clamp(pred_center_x + half_pred_w, 0.f, img_w - 1.f), clamp(pred_center_y + half_pred_h, 0.f, img_h - 1.f)
         };
     }
-        
+
     std::vector<roi_t> perform_nms(
             const std::vector<proposal_t>& proposals,
             float iou_threshold,
@@ -193,14 +193,14 @@ struct proposal_gpu : typed_primitive_impl<proposal>
     proposal_gpu(const proposal_node& arg)
         : outer(arg)
     {}
-    
+
     template<typename dtype>
     void execute(proposal_inst& instance)
     {
         const std::vector<proposal_inst::anchor>& anchors = instance.get_anchors();
 
         size_t anchors_num = anchors.size();
-      
+
         auto& cls_scores = instance.dep_memory(proposal_inst::cls_scores_index);
         auto& bbox_pred  = instance.dep_memory(proposal_inst::bbox_pred_index);
         auto& image_info = instance.dep_memory(proposal_inst::image_info_index);
@@ -209,29 +209,46 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         const auto& score_size = cls_scores.get_layout().size;
         int fm_h = score_size.spatial[1];
         int fm_w = score_size.spatial[0];
-        
+
         int fm_sz = fm_w * fm_h;
 
         // original input image to the graph (after possible scaling etc.) so that coordinates are valid for it
         mem_lock<dtype> image_info_ptr{ image_info };
         const dtype* image_info_mem = image_info_ptr.data();
 
-        int img_w = (int)(float_read_helper(image_info_mem + proposal_inst::image_info_width_index) + EPSILON);
-        int img_h = (int)(float_read_helper(image_info_mem + proposal_inst::image_info_height_index) + EPSILON);
-        int img_z = (int)(float_read_helper(image_info_mem + proposal_inst::image_info_depth_index) + EPSILON);
+        int img_w = 1;
+        int img_h = 1;
+        int img_z = 1;
+        int min_bbox_x = 1;
+        int min_bbox_y = 1;
+        int scaled_min_bbox_size = instance.argument.min_bbox_size;
 
-        int scaled_min_bbox_size = instance.argument.min_bbox_size * img_z;
-
-        int min_bbox_x = scaled_min_bbox_size;
-        if (image_info.get_layout().count() > proposal_inst::image_info_scale_min_bbox_x)
+        if (image_info.get_layout().count() == 4)
         {
-            min_bbox_x = static_cast<int>(min_bbox_x * float_read_helper(image_info_mem + proposal_inst::image_info_scale_min_bbox_x));
+            img_w = static_cast<int>(float_read_helper(image_info_mem + proposal_inst::image_info_width_index) + EPSILON);
+            img_h = static_cast<int>(float_read_helper(image_info_mem + proposal_inst::image_info_height_index) + EPSILON);
+            min_bbox_x = static_cast<int>(scaled_min_bbox_size * float_read_helper(image_info_mem + 3));
+            min_bbox_y = static_cast<int>(scaled_min_bbox_size * float_read_helper(image_info_mem + 2));
         }
-
-        int min_bbox_y = scaled_min_bbox_size;
-        if (image_info.get_layout().count() > proposal_inst::image_info_scale_min_bbox_y)
+        else
         {
-            min_bbox_y = static_cast<int>(min_bbox_y * float_read_helper(image_info_mem + proposal_inst::image_info_scale_min_bbox_y));
+            img_w = static_cast<int>(float_read_helper(image_info_mem + proposal_inst::image_info_width_index) + EPSILON);
+            img_h = static_cast<int>(float_read_helper(image_info_mem + proposal_inst::image_info_height_index) + EPSILON);
+            img_z = static_cast<int>(float_read_helper(image_info_mem + proposal_inst::image_info_depth_index) + EPSILON);
+
+            scaled_min_bbox_size *= img_z;
+
+            min_bbox_x = scaled_min_bbox_size;
+            if (image_info.get_layout().count() > proposal_inst::image_info_scale_min_bbox_x)
+            {
+                min_bbox_x = static_cast<int>(min_bbox_x * float_read_helper(image_info_mem + proposal_inst::image_info_scale_min_bbox_x));
+            }
+
+            min_bbox_y = scaled_min_bbox_size;
+            if (image_info.get_layout().count() > proposal_inst::image_info_scale_min_bbox_y)
+            {
+                min_bbox_y = static_cast<int>(min_bbox_y * float_read_helper(image_info_mem + proposal_inst::image_info_scale_min_bbox_y));
+            }
         }
 
         mem_lock<dtype> cls_scores_ptr{ cls_scores };
@@ -280,12 +297,12 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         const std::vector<roi_t>& res = perform_nms(sorted_proposals_confidence, instance.argument.iou_threshold, instance.argument.post_nms_topn);
 
         auto& output = instance.output_memory();
-        
+
         mem_lock<dtype> output_ptr{ output };
-        dtype* top_data = output_ptr.data();        
+        dtype* top_data = output_ptr.data();
 
         size_t res_num_rois = res.size();
-        
+
         for (size_t i = 0; i < res_num_rois; ++i)
         {
             float_write_helper(top_data + 5 * i    , 0.0f);
@@ -298,7 +315,7 @@ struct proposal_gpu : typed_primitive_impl<proposal>
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, proposal_inst& instance) override
     {
-        for (auto& a : events) 
+        for (auto& a : events)
         {
             a->wait();
         }
@@ -318,13 +335,17 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         return ev;
     }
 
-    static primitive_impl* create(const proposal_node& arg) 
+    static primitive_impl* create(const proposal_node& arg)
     {
         const layout & l = arg.image_info().get_output_layout();
         const size_t count = l.size.count();
 
-        if ((size_t)l.size.spatial[0] != count || (count != 3 && count != 6)) {
-            CLDNN_ERROR_MESSAGE(arg.id(), "image_info must have either 3 or 6 items");
+        //Supported image_info sizes and components meaning:
+        // - image_info[3] = { img_height, img_width, img_depth }
+        // - image_info[4] = { img_height, img_width, scale_min_bbox_y, scale_min_bbox_x }
+        // - image_info[6] = { img_height, img_width, img_depth, scale_min_bbox_y, scale_min_bbox_x, scale_depth_index }
+        if ((size_t)l.size.spatial[0] != count || (count != 3 && count != 4 && count != 6)) {
+            CLDNN_ERROR_MESSAGE(arg.id(), "image_info must have either 3, 4 or 6 items");
         }
         CLDNN_ERROR_BOOL(arg.id(), "Batching", !hasSingleBatchOutput(arg.bbox_pred()), "Proposal doesn't support batching.");
         CLDNN_ERROR_BOOL(arg.id(), "Batching", !hasSingleBatchOutput(arg.cls_score()), "Proposal doesn't support batching.");

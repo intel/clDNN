@@ -45,7 +45,7 @@ namespace {
 
         bounding_box() : xmin(0), ymin(0), xmax(0), ymax(0) {}
 
-        bounding_box(const float xmin, const float ymin, const float xmax, const float ymax) : 
+        bounding_box(const float xmin, const float ymin, const float xmax, const float ymax) :
             xmin(xmin), ymin(ymin), xmax(xmax), ymax(ymax) {}
 
         // Computes the area of a bounding box.
@@ -67,8 +67,26 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
     static void decode_bounding_box(
         const bounding_box& prior_bbox, const std::array<float, PRIOR_BOX_SIZE>& prior_variance,
         const prior_box_code_type code_type, const bool variance_encoded_in_target,
-        const bounding_box& bbox, bounding_box* decoded_bbox) 
+        const bounding_box& bbox, bounding_box* decoded_bbox,
+        const bool prior_is_normalized, const size_t image_width, const size_t image_height)
     {
+        float prior_bbox_xmin = prior_bbox.xmin;
+        float prior_bbox_ymin = prior_bbox.ymin;
+        float prior_bbox_xmax = prior_bbox.xmax;
+        float prior_bbox_ymax = prior_bbox.ymax;
+
+        float bbox_xmin = bbox.xmin;
+        float bbox_ymin = bbox.ymin;
+        float bbox_xmax = bbox.xmax;
+        float bbox_ymax = bbox.ymax;
+
+        if (!prior_is_normalized) {
+            prior_bbox_xmin /= image_width;
+            prior_bbox_ymin /= image_height;
+            prior_bbox_xmax /= image_width;
+            prior_bbox_ymax /= image_height;
+        }
+
         switch (code_type)
         {
             case prior_box_code_type::corner:
@@ -76,74 +94,74 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                 if (variance_encoded_in_target)
                 {
                     // variance is encoded in target, we simply need to add the offset predictions.
-                    decoded_bbox->xmin = prior_bbox.xmin + bbox.xmin;
-                    decoded_bbox->ymin = prior_bbox.ymin + bbox.ymin;
-                    decoded_bbox->xmax = prior_bbox.xmax + bbox.xmax;
-                    decoded_bbox->ymax = prior_bbox.ymax + bbox.ymax;
+                    decoded_bbox->xmin = prior_bbox_xmin + bbox_xmin;
+                    decoded_bbox->ymin = prior_bbox_ymin + bbox_ymin;
+                    decoded_bbox->xmax = prior_bbox_xmax + bbox_xmax;
+                    decoded_bbox->ymax = prior_bbox_ymax + bbox_ymax;
                 }
                 else
                 {
                     // variance is encoded in bbox, we need to scale the offset accordingly.
-                    decoded_bbox->xmin = prior_bbox.xmin + prior_variance[0] * bbox.xmin;
-                    decoded_bbox->ymin = prior_bbox.ymin + prior_variance[1] * bbox.ymin;
-                    decoded_bbox->xmax = prior_bbox.xmax + prior_variance[2] * bbox.xmax;
-                    decoded_bbox->ymax = prior_bbox.ymax + prior_variance[3] * bbox.ymax;
+                    decoded_bbox->xmin = prior_bbox_xmin + prior_variance[0] * bbox_xmin;
+                    decoded_bbox->ymin = prior_bbox_ymin + prior_variance[1] * bbox_ymin;
+                    decoded_bbox->xmax = prior_bbox_xmax + prior_variance[2] * bbox_xmax;
+                    decoded_bbox->ymax = prior_bbox_ymax + prior_variance[3] * bbox_ymax;
                 }
                 break;
             }
             case prior_box_code_type::center_size:
             {
-                const float prior_width = prior_bbox.xmax - prior_bbox.xmin;
+                const float prior_width = prior_bbox_xmax - prior_bbox_xmin;
                 assert(prior_width > 0);
-                const float prior_height = prior_bbox.ymax - prior_bbox.ymin;
+                const float prior_height = prior_bbox_ymax - prior_bbox_ymin;
                 assert(prior_height > 0);
-                const float prior_center_x = (prior_bbox.xmin + prior_bbox.xmax) / 2.f;
-                const float prior_center_y = (prior_bbox.ymin + prior_bbox.ymax) / 2.f;
+                const float prior_center_x = (prior_bbox_xmin + prior_bbox_xmax) / 2.f;
+                const float prior_center_y = (prior_bbox_ymin + prior_bbox_ymax) / 2.f;
                 float decode_bbox_center_x, decode_bbox_center_y;
                 float decode_bbox_width, decode_bbox_height;
                 if (variance_encoded_in_target)
                 {
                     // variance is encoded in target, we simply need to restore the offset predictions.
-                    decode_bbox_center_x = bbox.xmin * prior_width + prior_center_x;
-                    decode_bbox_center_y = bbox.ymin * prior_height + prior_center_y;
-                    decode_bbox_width = (exp(bbox.xmax) * prior_width) / 2.f;
-                    decode_bbox_height = (exp(bbox.ymax) * prior_height) / 2.f;
+                    decode_bbox_center_x = bbox_xmin * prior_width + prior_center_x;
+                    decode_bbox_center_y = bbox_ymin * prior_height + prior_center_y;
+                    decode_bbox_width = (exp(bbox_xmax) * prior_width);
+                    decode_bbox_height = (exp(bbox_ymax) * prior_height);
                 }
                 else
                 {
                     // variance is encoded in bbox, we need to scale the offset accordingly.
-                    decode_bbox_center_x = prior_variance[0] * bbox.xmin * prior_width + prior_center_x;
-                    decode_bbox_center_y = prior_variance[1] * bbox.ymin * prior_height + prior_center_y;
-                    decode_bbox_width = (exp(prior_variance[2] * bbox.xmax) * prior_width) / 2.f;
-                    decode_bbox_height = (exp(prior_variance[3] * bbox.ymax) * prior_height) / 2.f;
+                    decode_bbox_center_x = prior_variance[0] * bbox_xmin * prior_width + prior_center_x;
+                    decode_bbox_center_y = prior_variance[1] * bbox_ymin * prior_height + prior_center_y;
+                    decode_bbox_width = (exp(prior_variance[2] * bbox_xmax) * prior_width);
+                    decode_bbox_height = (exp(prior_variance[3] * bbox_ymax) * prior_height);
                 }
-                decoded_bbox->xmin = decode_bbox_center_x - decode_bbox_width;
-                decoded_bbox->ymin = decode_bbox_center_y - decode_bbox_height;
-                decoded_bbox->xmax = decode_bbox_center_x + decode_bbox_width;
-                decoded_bbox->ymax = decode_bbox_center_y + decode_bbox_height;
+                decoded_bbox->xmin = decode_bbox_center_x - decode_bbox_width  / 2.0f;
+                decoded_bbox->ymin = decode_bbox_center_y - decode_bbox_height / 2.0f;
+                decoded_bbox->xmax = decode_bbox_center_x + decode_bbox_width  / 2.0f;
+                decoded_bbox->ymax = decode_bbox_center_y + decode_bbox_height / 2.0f;
                 break;
             }
             case prior_box_code_type::corner_size:
             {
-                const float prior_width = prior_bbox.xmax - prior_bbox.xmin;
+                const float prior_width = prior_bbox_xmax - prior_bbox_xmin;
                 assert(prior_width > 0);
-                const float prior_height = prior_bbox.ymax - prior_bbox.ymin;
+                const float prior_height = prior_bbox_ymax - prior_bbox_ymin;
                 assert(prior_height > 0);
                 if (variance_encoded_in_target)
                 {
                     // variance is encoded in target, we simply need to add the offset predictions.
-                    decoded_bbox->xmin = prior_bbox.xmin + bbox.xmin * prior_width;
-                    decoded_bbox->ymin = prior_bbox.ymin + bbox.ymin * prior_height;
-                    decoded_bbox->xmax = prior_bbox.xmax + bbox.xmax * prior_width;
-                    decoded_bbox->ymax = prior_bbox.ymax + bbox.ymax * prior_height;
+                    decoded_bbox->xmin = prior_bbox_xmin + bbox_xmin * prior_width;
+                    decoded_bbox->ymin = prior_bbox_ymin + bbox_ymin * prior_height;
+                    decoded_bbox->xmax = prior_bbox_xmax + bbox_xmax * prior_width;
+                    decoded_bbox->ymax = prior_bbox_ymax + bbox_ymax * prior_height;
                 }
                 else
                 {
                     // variance is encoded in bbox, we need to scale the offset accordingly.
-                    decoded_bbox->xmin = prior_bbox.xmin + prior_variance[0] * bbox.xmin * prior_width;
-                    decoded_bbox->ymin = prior_bbox.ymin + prior_variance[1] * bbox.ymin * prior_height;
-                    decoded_bbox->xmax = prior_bbox.xmax + prior_variance[2] * bbox.xmax * prior_width;
-                    decoded_bbox->ymax = prior_bbox.ymax + prior_variance[3] * bbox.ymax * prior_height;
+                    decoded_bbox->xmin = prior_bbox_xmin + prior_variance[0] * bbox_xmin * prior_width;
+                    decoded_bbox->ymin = prior_bbox_ymin + prior_variance[1] * bbox_ymin * prior_height;
+                    decoded_bbox->xmax = prior_bbox_xmax + prior_variance[2] * bbox_xmax * prior_width;
+                    decoded_bbox->ymax = prior_bbox_ymax + prior_variance[3] * bbox_ymax * prior_height;
                 }
                 break;
             }
@@ -156,7 +174,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
 
     static void apply_nms(const std::vector<bounding_box>& bboxes,
         std::vector<std::pair<float,int>>& scores,
-        const float nms_threshold, const float eta, const int top_k) 
+        const float nms_threshold, const float eta, const int top_k)
     {
         // Sort the scores in descending order and keep top_k scores if needed.
         if ((top_k != -1) && ((int)scores.size() > top_k))
@@ -286,7 +304,6 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
         int count = 0;
         for (int image = 0; image < num_of_images; ++image)
         {
-            int saved_detections_per_image = 0;
             const std::vector<std::vector<bounding_box> >& bboxes_per_image = all_bboxes[image];
             auto& final_detections_per_image = final_detections[image];
             for (int label = 0; label < (int)final_detections_per_image.size(); ++label)
@@ -305,26 +322,26 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                     out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 5] = (dtype)bbox.xmax;
                     out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 6] = (dtype)bbox.ymax;
                     ++count;
-                    ++saved_detections_per_image;
                 }
             }
-            //In case number of detections is smaller than keep_top_k fill the rest of the buffer with invalid image id (-1).
-            for (auto j = saved_detections_per_image; j < args.keep_top_k; ++j)
-            {
-                out_ptr[count * DETECTION_OUTPUT_ROW_SIZE] = (dtype)-1.f;
-                out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 1] = (dtype)0.f;
-                out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 2] = (dtype)0.f;
-                out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 3] = (dtype)0.f;
-                out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 4] = (dtype)0.f;
-                out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 5] = (dtype)0.f;
-                out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 6] = (dtype)0.f;
-                ++count;
-            }
+        }
+
+        //In case number of detections is smaller than keep_top_k fill the rest of the buffer with invalid image id (-1).
+        while (count < num_of_images*args.keep_top_k)
+        {
+            out_ptr[count * DETECTION_OUTPUT_ROW_SIZE] = (dtype)-1.f;
+            out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 1] = (dtype)0.f;
+            out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 2] = (dtype)0.f;
+            out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 3] = (dtype)0.f;
+            out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 4] = (dtype)0.f;
+            out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 5] = (dtype)0.f;
+            out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 6] = (dtype)0.f;
+            ++count;
         }
     }
 
     // Compute the linear index taking the padding into account.
-    static inline int get_linear_feature_index(const int batch_id, const int feature_id, const int input_buffer_size_f, const int input_buffer_size_y, 
+    static inline int get_linear_feature_index(const int batch_id, const int feature_id, const int input_buffer_size_f, const int input_buffer_size_y,
         const int input_buffer_size_x, const int input_padding_lower_y, const int input_padding_lower_x)
     {
         // This helper function assumes input layout with x_size = 1 and y_size = 1;
@@ -378,13 +395,15 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                                                                                         input_buffer_size_x, input_padding_lower_y, input_padding_lower_x)]);
                     bboxes[prior].ymax = (float)(location_data[get_linear_feature_index(image, idx + cls * PRIOR_BOX_SIZE + 3, input_buffer_size_f, input_buffer_size_y,
                                                                                         input_buffer_size_x, input_padding_lower_y, input_padding_lower_x)]);
-                }   
+                }
             }
         }
     }
 
     template<typename dtype>
-    void extract_prior_boxes_and_variances(const detection_output_inst& instance, std::vector<bounding_box>& prior_bboxes, std::vector<std::array<float, PRIOR_BOX_SIZE>>& prior_variances)
+    void extract_prior_boxes_and_variances(const detection_output_inst& instance, const bool variance_encoded_in_target,
+                                           const int32_t prior_info_size, const int32_t prior_coordinates_offset,
+                                           std::vector<bounding_box>& prior_bboxes,  std::vector<std::array<float, PRIOR_BOX_SIZE>>& prior_variances)
     {
         auto& input_prior_box = instance.prior_box_memory();
         const int num_of_priors = (int)prior_bboxes.size();
@@ -394,12 +413,12 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
 
         for (int prior = 0; prior < num_of_priors; ++prior)
         {
-            int idx = prior * PRIOR_BOX_SIZE;
+            int idx = prior * prior_info_size + prior_coordinates_offset;
             prior_bboxes[prior] = bounding_box((float)(prior_box_data[idx]), (float)(prior_box_data[idx + 1]), (float)(prior_box_data[idx + 2]), (float)(prior_box_data[idx + 3]));
-            idx += num_of_priors * PRIOR_BOX_SIZE;
+            idx += num_of_priors * prior_info_size;
             for (int j = 0; j < PRIOR_BOX_SIZE; ++j)
             {
-                prior_variances[prior][j] = (float)(prior_box_data[idx + j]);
+                prior_variances[prior][j] = variance_encoded_in_target ? 0.0f : (float)(prior_box_data[idx + j]);
             }
         }
     }
@@ -433,7 +452,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
             label_to_scores.resize(num_classes);
             int idx = get_linear_feature_index(image, 0, input_buffer_size_f, input_buffer_size_y,
                 input_buffer_size_x, input_padding_lower_y, input_padding_lower_x);
-            
+
             if (stride == 1 && std::is_same<dtype, float>::value)
             {
                 float const* confidence_ptr_float = (float const*)(&(*confidence_data));
@@ -512,7 +531,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
         const auto& args = instance.argument;
 
         const int num_of_images = (int)bboxes.size();
-        const int num_of_priors = instance.prior_box_memory().get_layout().size.spatial[1] / PRIOR_BOX_SIZE;
+        const int num_of_priors = instance.prior_box_memory().get_layout().size.spatial[1] / args.prior_info_size;
         const int num_loc_classes = args.share_location ? 1 : args.num_classes;
 
         // Extract locations per image.
@@ -522,9 +541,11 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
         // Extract prior boxes - same within a batch.
         std::vector<bounding_box> prior_bboxes(num_of_priors); // Prior-Boxes (identical for all images since we assume all images in a batch are of same dimension).
         std::vector<std::array<float, PRIOR_BOX_SIZE>> prior_variances(num_of_priors); // Variances per prior-box (identical for all images since we assume all images in a batch are of same dimension).
-        extract_prior_boxes_and_variances<dtype>(instance, prior_bboxes, prior_variances);
+        extract_prior_boxes_and_variances<dtype>(instance, args.variance_encoded_in_target,
+                                                 args.prior_info_size, args.prior_coordinates_offset,
+                                                 prior_bboxes, prior_variances);
 
-        // Create the decoded bounding boxes according to locations predictions and prior-boxes. 
+        // Create the decoded bounding boxes according to locations predictions and prior-boxes.
         for (int image = 0; image < num_of_images; ++image)
         {
             std::vector<std::vector<bounding_box>>& bboxes_per_image = bboxes[image];
@@ -540,13 +561,14 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                 const std::vector<bounding_box>& label_loc_preds = locations[image][label];
                 int label_loc_preds_size = (int)label_loc_preds.size();
                 assert((int)prior_bboxes.size() == label_loc_preds_size);
-                
+
                 bboxes_per_image[label].clear();
 
                 for (int i = 0; i < label_loc_preds_size; ++i)
                 {
                     bounding_box decoded_bbox;
-                    decode_bounding_box(prior_bboxes[i], prior_variances[i], args.code_type, args.variance_encoded_in_target, label_loc_preds[i], &decoded_bbox);
+                    decode_bounding_box(prior_bboxes[i], prior_variances[i], args.code_type, args.variance_encoded_in_target, label_loc_preds[i], &decoded_bbox,
+                                        args.prior_is_normalized, args.input_width, args.input_height);
                     bboxes_per_image[label].emplace_back(decoded_bbox);
                 }
             }
@@ -558,7 +580,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, detection_output_inst& instance) override
     {
-        for (auto& a : events) 
+        for (auto& a : events)
         {
             a->wait();
         }

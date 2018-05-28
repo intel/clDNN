@@ -43,20 +43,30 @@ struct eltwise_gpu : typed_primitive_gpu_impl<eltwise>
     using parent = typed_primitive_gpu_impl<eltwise>;
     using parent::parent;
 
-    static primitive_impl* create(const eltwise_node& arg) 
-    { 
+    static primitive_impl* create(const eltwise_node& arg)
+    {
         auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
         auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
 
-        ew_params.inputs.push_back(convert_data_tensor(arg.input2().get_output_layout()));
-        
+        for (size_t i = 1; i < arg.inputs_count(); i++)
+        {
+            ew_params.inputs.push_back(convert_data_tensor(arg.input(i).get_output_layout()));
+        }
+
         const auto& primitive = arg.get_primitive();
         if(primitive->with_activation)
             convert_activation_func_params(primitive, ew_params);
 
-        ew_params.eltwiseParams.operations.push_back({ 
+        ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
             convect_to_eltwise_mode(primitive->mode) });
+
+        for (uint32_t i = 2; i < static_cast<uint32_t>(arg.inputs_count()); i++)
+        {
+            ew_params.eltwiseParams.operations.push_back({{ kernel_selector::eltwise_params::InputType::Intermediate(i-2),
+                                                            kernel_selector::eltwise_params::InputType::Buffer(i) },
+                                                            convect_to_eltwise_mode(primitive->mode) });
+        }
 
         for (size_t i = 0; i < ew_params.inputs.size(); i++)
         {
@@ -82,7 +92,9 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), eltwise_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), eltwise_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), eltwise_gpu::create },
-                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), eltwise_gpu::create }
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), eltwise_gpu::create }
             });
         }
         ~attach() {}

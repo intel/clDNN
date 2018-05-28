@@ -68,7 +68,7 @@ public:
     typedef cl::Kernel kernel_type;
     using sorted_code = std::map<std::string, program_code>;
     using kernels_map = std::map<std::string, kernel_type>;
-    using kernels_code = std::map<void*, kernel_code>;
+    using kernels_code = std::map<std::string, kernel_code>;
 
 private:
     gpu_toolkit& _context;

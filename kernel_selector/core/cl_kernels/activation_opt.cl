@@ -16,7 +16,16 @@
 
 #include "include/include_all.cl"
 
-KERNEL(activation)(__global INPUT0_TYPE* input, __global OUTPUT_TYPE* output)
+KERNEL(activation)(
+#if GRADIENT
+    __global UNIT_TYPE* input_grad,
+    __global UNIT_TYPE* output,
+    __global UNIT_TYPE* input
+#else
+    __global UNIT_TYPE* input,
+    __global UNIT_TYPE* output
+#endif
+    )
 {
     const unsigned int x = get_global_id(0) * NUM_COLS_WI;
 
@@ -24,9 +33,16 @@ KERNEL(activation)(__global INPUT0_TYPE* input, __global OUTPUT_TYPE* output)
     unsigned int output_offset = x + OUTPUT_OFFSET; 
 
     typedef CAT(UNIT_TYPE, 4) type_t;
+#if GRADIENT
+    type_t g = ((__global type_t*) (input_grad + input_offset))[0];
+#endif
     type_t v = ((__global type_t*) (input + input_offset))[0];
 
+#if GRADIENT
+    v = ACTIVATION(g, v, NL_M, NL_N);
+#else
     v = ACTIVATION(v, NL_M, NL_N);
+#endif
 
     *((__global type_t*)(output + output_offset)) = v;
 }

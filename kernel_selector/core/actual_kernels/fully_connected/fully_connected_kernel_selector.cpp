@@ -47,11 +47,10 @@ namespace KernelSelector {
         Attach<FullyConnected_fb_io_block>();
         Attach<FullyConnected_fb_io_b8_f8>();
         Attach<FullyConnected_bf_io_input_spatial>();
-        Attach<FullyConnected_image_tutorial>();
     }
 
     KernelsData FullyConnectedKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
     {
-        return GetNaiveBestKernel(params, options, KernelType::FULLY_CONNECTED);
+        return GetAutoTuneBestKernel(params, options, KernelType::FULLY_CONNECTED);
     }
 }

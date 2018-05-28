@@ -22,13 +22,13 @@
 
 namespace KernelSelector 
 {
+    struct tuning_data // this could be replaced with
+    {
+        std::map<std::string, std::tuple<std::string, int>> td;
+    };
+
     class AutoTuner
     {
-        struct TuningData
-        {
-            std::map<std::string, std::tuple<std::string, int>> hashToKernelConfig;
-        };
-
     public:
         AutoTuner() = default;
         std::tuple<std::string, int> LoadKernelOnline(const TuningMode tuningMode, const std::string& tuningFilePath, const std::string& deviceID, const std::string& driverVersion, const std::string& hostVersion, const std::string& hash);
@@ -36,7 +36,7 @@ namespace KernelSelector
         std::tuple<std::string, int> LoadKernelOffline(const std::string& deviceID, const std::string& hash);
 
     private:    
-        std::map<std::string, TuningData> onlineCache; // Tuning file name -> kernel/config per hash (hash -> [implementation name, tuning index])
+        std::map<std::string, tuning_data> onlineCache; // Tuning file name -> kernel/config per hash (hash -> [implementation name, tuning index])
         std::mutex mutex; // Mutex to synchronize cache updates
         
         /*
@@ -59,6 +59,5 @@ namespace KernelSelector
                For example, for the convolution_gpu_bfyx_os_iyx_osv16 kernel you need to take a look in the constructor (ConvolutionKernel_bfyx_os_iyx_osv16::ConvolutionKernel_bfyx_os_iyx_osv16) – 
                this is the index in the autoTuneOptions array.
         */
-        static const std::map<std::string, TuningData> offlineCache; // Device ID -> kernel/config per hash (hash -> [implementation name, tuning index])
     };
 }

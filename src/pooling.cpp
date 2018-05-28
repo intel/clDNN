@@ -38,9 +38,21 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
     auto stride = desc->stride;
     auto window_size = desc->size;
 
+    if (!desc->argmax.empty())
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Pooling mode", static_cast<size_t>(desc->mode), "should be max_with_argmax", static_cast<size_t>(pooling_mode::max_with_argmax), "Pooling mode should be set to max_with_argmax when argmax primitive is present.");
+
+    if (desc->mode == pooling_mode::max_with_argmax)
+    {
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Argmax primitive", static_cast<size_t>(desc->argmax.empty()), "should not be empty", static_cast<size_t>(0), "Argmax primitive not present despite max_with_argmax mode.");
+
+        auto argmax_layout = node.argmax().get_output_layout();
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Argmax data type", static_cast<size_t>(argmax_layout.data_type), "expected to be fp32", static_cast<size_t>(data_types::f32), "Argmax data type is not fp32.");
+        CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input_layout.format", input_layout.format.value, "argmax_layout.format", argmax_layout.format);
+    }
+
     // TODO: Consider moving general parameter verification to arguments constructor.
-    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial X", stride.spatial[0], "", 0, "Stride spatial X must be positive (>= 1)");
-    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial Y", stride.spatial[1], "", 0, "Stride spatial Y must be positive (>= 1)");
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "stride spatial X", stride.spatial[0], "", 0, "Stride spatial X must be positive (>= 1)");
+    CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "stride spatial Y", stride.spatial[1], "", 0, "Stride spatial Y must be positive (>= 1)");
     CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "window size spatial X", window_size.spatial[0], "", 0, "Size X (of pooling window) must be positive (>= 1)");
     CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "window size spatial Y", window_size.spatial[1], "", 0, "Size Y (of pooling window) must be positive (>= 1)");
     CLDNN_ERROR_GREATER_THAN(node.id(), "Input offset spatial X", 2 * input_offset.spatial[0], "input layout size spatial X", input_layout.size.spatial[0], "Input offset is greater than input data range. There is no input data to process");
@@ -52,8 +64,8 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
 
     if (desc->with_output_size)
     {
-        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial X", desc->output_size.spatial[0], "", 0, "User-defined size of output layout (spatial X) must be positive (>= 1)");
-        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "striade spatial Y", desc->output_size.spatial[1], "", 0, "User-defined size of output layout (spatial Y) must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined size of output X", desc->output_size.spatial[0], "", 0, "User-defined size of output layout (spatial X) must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined size of output Y", desc->output_size.spatial[1], "", 0, "User-defined size of output layout (spatial Y) must be positive (>= 1)");
 
         tensor output_size(input_layout.size.batch[0], input_layout.size.feature[0],
                            desc->output_size.spatial[0], desc->output_size.spatial[1]);

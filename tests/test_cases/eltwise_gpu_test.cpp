@@ -100,7 +100,7 @@ void generic_eltwise_test(cldnn::format test_input_fmt, int input_b, int input_f
     topology.add(input_layout("input1", input1.get_layout()));
     topology.add(input_layout("input2", input2.get_layout()));
     topology.add(reorder("reorder1", "input1", input1.get_layout().with_padding({{ 0, 0, input_padding_x, input_padding_y }, 0 })));
-    topology.add(eltwise("eltwise", "reorder1", "input2", mode, relu, slope, { { 0, 0, output_padding_x, output_padding_y }, 0 }));
+    topology.add(eltwise("eltwise", {"reorder1", "input2"}, mode, relu, slope, { { 0, 0, output_padding_x, output_padding_y }, 0 }));
 
     network network(engine, topology);
     network.set_input_data("input1", input1);
@@ -181,7 +181,7 @@ TEST(eltwise_gpu_f32, add_basic_in4x4x2x2) {
     topology topology;
     topology.add(input_layout("input", input.get_layout()));
     topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(eltwise("eltwise", "input", "input2", eltwise_mode::sum));
+    topology.add(eltwise("eltwise", {"input", "input2"}, eltwise_mode::sum));
 
     set_values(input, {
         1.f,   0.f, 5.f, 1.5f,
@@ -251,7 +251,7 @@ TEST(eltwise_gpu_f32, max_basic_in4x4x4x4) {
     topology topology;
     topology.add(input_layout("input", input.get_layout()));
     topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(eltwise("eltwise", "input", "input2", eltwise_mode::max));
+    topology.add(eltwise("eltwise", {"input", "input2"}, eltwise_mode::max));
 
     set_values(input, {
         1.f,   0.f,  5.f,  1.5f,
@@ -322,7 +322,7 @@ TEST(eltwise_gpu_f32, sub_basic_in4x4x4x4) {
     topology topology;
     topology.add(input_layout("input", input.get_layout()));
     topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(eltwise("eltwise", "input", "input2", eltwise_mode::sub));
+    topology.add(eltwise("eltwise", {"input", "input2"}, eltwise_mode::sub));
 
     set_values(input, {
         1.f,   0.f,  5.f,  1.5f,
@@ -393,7 +393,7 @@ TEST(eltwise_gpu_f32, prod_basic_in4x4x4x4) {
     topology topology;
     topology.add(input_layout("input", input.get_layout()));
     topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(eltwise("eltwise", "input", "input2", eltwise_mode::prod));
+    topology.add(eltwise("eltwise", {"input", "input2"}, eltwise_mode::prod));
     
     set_values(input, {
         1.f,   0.f,  5.f,  1.f,
@@ -467,7 +467,7 @@ TEST(eltwise_gpu_f32, max_basic_in4x4x4x4_input_padding) {
     topology.add(input_layout("input2", input2.get_layout()));
     topology.add(reorder("reorder", "input", input.get_layout().with_padding({ { 0, 0, 2, 1 }, 0 })));
     topology.add(reorder("reorder2", "input2", input.get_layout().with_padding({ { 0, 0, 2, 1 }, 0 })));
-    topology.add(eltwise("eltwise", "reorder", "reorder2", eltwise_mode::max));
+    topology.add(eltwise("eltwise", {"reorder", "reorder2"}, eltwise_mode::max));
 
     set_values(input, {
         1.f,   0.f,  5.f,  1.5f,
@@ -497,6 +497,97 @@ TEST(eltwise_gpu_f32, max_basic_in4x4x4x4_input_padding) {
         1.f,   2.5f,  5.f,   2.5f,
         5.f,   7.f,   6.f,   5.2f,
         15.f,  17.f,   8.f,  12.f,
+        6.f,   8.f,   8.f,   8.f };
+
+    auto output_ptr = output.pointer<float>();
+
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
+}
+
+TEST(eltwise_gpu_f32, max_3inputs_in4x4x4x4_input_padding) {
+    //  Input  : 2x2x2x2
+    //  Input2 : 2x2x2x2
+    //  Input3 : 2x2x2x2
+    //  Output : 2x2x2x2
+    //  Input Padding: 2x1 (with reorder)
+
+    //  Input:
+    //  f0: b0:  1    2  b1:   0    0
+    //  f0: b0:  3    4  b1:   0.5 -0.5
+    //  f1: b0:  5    6  b1:   1.5  5.2
+    //  f1: b0:  7    8  b1:   12   8
+    //
+    //  Input2
+    //  f0: b0: 0.5  5   b1: 2.5  7
+    //  f0: b0: 15   6   b1: 17   8
+    //  f1: b0: 0.5  2   b1: 2.5  4
+    //  f1: b0: 8   -0.5 b1: 10   -2.5
+    //
+    //  Input3
+    //  f0: b0: 1.1  1   b1: 4  0
+    //  f0: b0: 15  -1   b1: 3  6
+    //  f1: b0: 1.5  2   b1: 2  7
+    //  f1: b0: 9   0.5  b1: 1  8
+    //
+    //  Output:
+    //  f0: b0:   1.1  5    b1:  4   7
+    //  f0: b0:   15   6    b1:  17    8
+    //  f1: b0:    5   6    b1:  2.5   7
+    //  f1: b0:    9   8    b1:  12    8
+    //
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("input3", input3.get_layout()));
+    topology.add(reorder("reorder", "input", input.get_layout().with_padding({ { 0, 0, 2, 1 }, 0 })));
+    topology.add(reorder("reorder2", "input2", input.get_layout().with_padding({ { 0, 0, 2, 1 }, 0 })));
+    topology.add(reorder("reorder3", "input3", input.get_layout().with_padding({ { 0, 0, 2, 1 }, 0 })));
+    topology.add(eltwise("eltwise", {"reorder", "reorder2", "reorder3"}, eltwise_mode::max));
+
+    set_values(input, {
+         1.f,  0.f,  5.f,  1.5f,
+         2.f,  0.f,  6.f,  5.2f,
+         3.f,  0.5f, 7.f,  12.f,
+         4.f, -0.5f, 8.f,   8.f
+    });
+
+    set_values(input2, {
+        0.5f, 2.5f,  0.5f,  2.5f,
+         5.f,  7.f,   2.f,   4.f,
+        15.f, 17.f,   8.f,  10.f,
+         6.f,  8.f, -0.5f, -2.5f });
+
+    set_values(input3, {
+        1.1f,  4.f, 1.5f, 2.f,
+         1.f,  0.f,  2.f, 7.f,
+        15.f,  3.f,  9.f, 1.f,
+        -1.f,  6.f, 0.5f, 8.f });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("input3", input3);
+    auto outputs = network.execute();
+
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "eltwise");
+
+    auto output = outputs.at("eltwise").get_memory();
+
+    float answers[16] = {
+        1.1f,   4.f,  5.f,   2.5f,
+        5.f,   7.f,   6.f,   7.f,
+        15.f,  17.f,   9.f,  12.f,
         6.f,   8.f,   8.f,   8.f };
 
     auto output_ptr = output.pointer<float>();

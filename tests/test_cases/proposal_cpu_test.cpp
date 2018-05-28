@@ -77,7 +77,7 @@ class TestRunnerProposal
     public:
         TestRunnerProposal();
 
-        memory Run(std::vector<Dtype>& data, 
+        memory Run(std::vector<Dtype>& data,
                    std::vector<Dtype>& rois);
 
     private:
@@ -95,8 +95,8 @@ TestRunnerProposal<Dtype>::TestRunnerProposal() :
                             _cls_scores_layout(cldnn::type_to_data_type<Dtype>::value, format::bfyx, { 1, 18, 23, 14 } ),
                             _bbox_pred_layout(cldnn::type_to_data_type<Dtype>::value, format::bfyx, { 1, 36, 23, 14 } ),
                             _image_info_layout(cldnn::type_to_data_type<Dtype>::value, format::bfyx, { 1, 1, 3, 1 } ),
-                            _test_layer(layer_name, 
-                                        cls_scores_name, 
+                            _test_layer(layer_name,
+                                        cls_scores_name,
                                         bbox_pred_name,
                                         image_info_name,
                                         max_proposals,
@@ -108,7 +108,7 @@ TestRunnerProposal<Dtype>::TestRunnerProposal() :
                                         ratios,
                                         scales,
                                         padding())
-{    
+{
     _topology.add(input_layout(cls_scores_name, _cls_scores_layout));
     _topology.add(input_layout(bbox_pred_name, _bbox_pred_layout));
     _topology.add(input_layout(image_info_name, _image_info_layout));
@@ -119,24 +119,24 @@ TestRunnerProposal<Dtype>::TestRunnerProposal() :
 }
 
 template <typename Dtype>
-memory TestRunnerProposal<Dtype>::Run(std::vector<Dtype>& cls_scores_vals, 
+memory TestRunnerProposal<Dtype>::Run(std::vector<Dtype>& cls_scores_vals,
                               std::vector<Dtype>& bbox_pred_vals)
 {
     memory cls_scores = memory::attach(_cls_scores_layout, cls_scores_vals.data(), cls_scores_vals.size());
     memory bbox_pred  = memory::attach(_bbox_pred_layout, bbox_pred_vals.data(), bbox_pred_vals.size());
 
     Dtype image_info_vals[] = { (Dtype)((float)image_h - 0.0000001f), // check fp robustness of the layer
-                                (Dtype)((float)image_w + 0.0000001f), // check fp robustness of the layer 
+                                (Dtype)((float)image_w + 0.0000001f), // check fp robustness of the layer
                                 (Dtype)((float)image_z) };
     memory image_info = memory::attach(_image_info_layout, &image_info_vals[0], 3);
-   
+
     _network->set_input_data(cls_scores_name, cls_scores);
     _network->set_input_data(bbox_pred_name, bbox_pred);
     _network->set_input_data(image_info_name, image_info);
 
     std::map<primitive_id, network_output> network_output = _network->execute();
     EXPECT_EQ(network_output.begin()->first, layer_name);
-    return network_output.at(layer_name).get_memory();    
+    return network_output.at(layer_name).get_memory();
 }
 
 TEST(proposal, basic) {
@@ -158,7 +158,7 @@ TEST(proposal, basic) {
 TEST(proposal, fp16) {
     std::vector<FLOAT16> cls_scores(&cls_scores_data[0], &cls_scores_data[cls_scores_data_size]);
     std::vector<FLOAT16> bbox_pred(&bbox_pred_data[0], &bbox_pred_data[bbox_pred_data_size]);
-    
+
     TestRunnerProposal<FLOAT16> t;
 
     const memory& output = t.Run(cls_scores, bbox_pred);
@@ -171,4 +171,3 @@ TEST(proposal, fp16) {
         EXPECT_NEAR((float)d[i], (float)ref, epsilon_fp16);
     }
 }
-

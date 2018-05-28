@@ -26,6 +26,7 @@ namespace KernelSelector
         switch (l)
         {
         case WeightsLayout::os_iyx_osv16:
+        case WeightsLayout::os_iyx_osv16_rotate_180:
         case WeightsLayout::os_i_osv16:
         case WeightsLayout::os_i_osv16__ai8:
         case WeightsLayout::i_yxs_os_yxsv2_osv16:

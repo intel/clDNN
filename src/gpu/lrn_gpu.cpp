@@ -22,13 +22,13 @@
 
 namespace cldnn { namespace gpu {
 
-    
+
 struct lrn_gpu : typed_primitive_gpu_impl<lrn>
 {
     using parent = typed_primitive_gpu_impl<lrn>;
     using parent::parent;
 
-    static primitive_impl* create(const lrn_node& arg) 
+    static primitive_impl* create(const lrn_node& arg)
     {
         auto lrn_params = get_default_params<kernel_selector::lrn_params>(arg);
         auto lrn_optional_params = get_default_optional_params<kernel_selector::lrn_optional_params>(arg.get_program());
@@ -40,11 +40,11 @@ struct lrn_gpu : typed_primitive_gpu_impl<lrn>
         lrn_params.lrnParams.k          = primitive->k;
         lrn_params.lrnParams.localSize  = primitive->size;
         lrn_params.lrnParams.divMode    = kernel_selector::kernel_divider_mode::FIXED;
-        lrn_params.lrnParams.normMode   = 
-            primitive->norm_region == cldnn_lrn_norm_region_within_channel ? 
+        lrn_params.lrnParams.normMode   =
+            primitive->norm_region == cldnn_lrn_norm_region_within_channel ?
             kernel_selector::lrn_mode::WITHIN_CHANNEL :
             kernel_selector::lrn_mode::ACROSS_CHANNEL;
-    
+
 
         auto& kernel_selector = kernel_selector::lrn_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(lrn_params, lrn_optional_params);
@@ -65,6 +65,8 @@ namespace {
             implementation_map<lrn>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), lrn_gpu::create);
             implementation_map<lrn>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), lrn_gpu::create);
             implementation_map<lrn>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), lrn_gpu::create);
+            implementation_map<lrn>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), lrn_gpu::create);
+            implementation_map<lrn>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), lrn_gpu::create);
         }
         ~attach() {}
     };

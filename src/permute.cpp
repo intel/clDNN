@@ -116,7 +116,5 @@ permute_inst::typed_primitive_inst(network_impl& network, permute_node const& no
         if (!(std::find(permute_order.begin(), permute_order.end(), required_order_values[i]) != permute_order.end()))
             CLDNN_ERROR_MESSAGE(node.id(), "Permute order does not contain all of required values.");
     }
-
-    CLDNN_ERROR_BOOL(node.id(), "Padded dependecy", node.has_padded_dependency(), "Permute with input which contains padding is NOT IMPLEMENTED yet!");
 }
 }

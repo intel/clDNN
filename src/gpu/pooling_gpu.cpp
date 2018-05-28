@@ -50,6 +50,8 @@ namespace
             return kernel_selector::pool_type::AVG;
         case pooling_mode::average_no_padding:
             return kernel_selector::pool_type::AVG;
+        case pooling_mode::max_with_argmax:
+            return kernel_selector::pool_type::MAX_WITH_ARGMAX;
         default:
             assert(0);
             return kernel_selector::pool_type::MAX;
@@ -61,6 +63,7 @@ namespace
         switch (mode)
         {
         case pooling_mode::max:
+        case pooling_mode::max_with_argmax:
             return kernel_selector::kernel_divider_mode::DONT_CARE;
         case pooling_mode::average:
             return kernel_selector::kernel_divider_mode::FIXED;
@@ -77,6 +80,18 @@ struct pooling_gpu : typed_primitive_gpu_impl<pooling>
 {
     using parent = typed_primitive_gpu_impl<pooling>;
     using parent::parent;
+
+protected:
+
+    virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<pooling>& instance, int32_t split) const override
+    {
+        kernel::kernel_arguments_data args = parent::get_arguments(instance, split);
+        if(!instance.argument.argmax.empty())
+            args.inputs.push_back(&instance.dep_memory(1));
+        return args;
+    }
+
+public:
 
     static primitive_impl* create(const pooling_node& arg)
     {
@@ -111,7 +126,10 @@ struct pooling_gpu : typed_primitive_gpu_impl<pooling>
             const auto& input_layout = arg.input().get_output_layout();
             pool_params.inputs[0] = convert_data_tensor(input_layout, 1, additional_offset);
         }
-        
+
+        if (primitive->mode == pooling_mode::max_with_argmax)
+            pool_params.inputs.push_back(convert_data_tensor(arg.argmax().get_output_layout()));
+
         pp.poolSize = {
             (uint32_t)primitive->size.spatial[0],
             (uint32_t)primitive->size.spatial[1],
@@ -146,6 +164,11 @@ namespace {
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), pooling_gpu::create);
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), pooling_gpu::create);
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::bfyx), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::yxfb), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf), pooling_gpu::create);
         }
         ~attach() {}
     };

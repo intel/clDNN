@@ -103,7 +103,7 @@ namespace KernelSelector
         FillCLKernelData(kernel, *runInfo.get(), kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
 
         kd.estimatedTime = estimated_time;
-
+        kd.autoTuneIndex = -1;
         return{ kd };
     }
 }

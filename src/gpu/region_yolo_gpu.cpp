@@ -20,48 +20,51 @@
 #include "kernel_selector_helper.h"
 #include "error_handler.h"
 
-namespace cldnn {
-    namespace gpu {
+namespace cldnn { namespace gpu {
 
+struct region_yolo_gpu : typed_primitive_gpu_impl<region_yolo>
+{
+    using parent = typed_primitive_gpu_impl<region_yolo>;
+    using parent::parent;
 
-        struct region_yolo_gpu : typed_primitive_gpu_impl<region_yolo>
-        {
-            using parent = typed_primitive_gpu_impl<region_yolo>;
-            using parent::parent;
+    static primitive_impl* create(const region_yolo_node& arg)
+    {
+        auto ry_params = get_default_params<kernel_selector::region_yolo_params>(arg);
+        auto ry_optional_params = get_default_optional_params<kernel_selector::region_yolo_optional_params>(arg.get_program());
 
-            static primitive_impl* create(const region_yolo_node& arg)
-            {
-                auto ry_params = get_default_params<kernel_selector::region_yolo_params>(arg);
-                auto ry_optional_params = get_default_optional_params<kernel_selector::region_yolo_optional_params>(arg.get_program());
+        const auto& primitive = arg.get_primitive();
+        ry_params.ryParams.coords = primitive->coords;
+        ry_params.ryParams.classes = primitive->classes;
+        ry_params.ryParams.num = primitive->num;
+        ry_params.ryParams.do_softmax = primitive->do_softmax;
+        ry_params.ryParams.mask_size = primitive->mask_size;
 
-                const auto& primitive = arg.get_primitive();
-                ry_params.ryParams.coords = primitive->coords;
-                ry_params.ryParams.classes = primitive->classes;
-                ry_params.ryParams.num = primitive->num;
+        auto& kernel_selector = kernel_selector::region_yolo_kernel_selector::Instance();
+        auto best_kernels = kernel_selector.GetBestKernels(ry_params, ry_optional_params);
 
-                auto& kernel_selector = kernel_selector::region_yolo_kernel_selector::Instance();
-                auto best_kernels = kernel_selector.GetBestKernels(ry_params, ry_optional_params);
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
-                CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
+        auto region_yolo_node = new region_yolo_gpu(arg, best_kernels[0]);
 
-                auto region_yolo_node = new region_yolo_gpu(arg, best_kernels[0]);
+        return region_yolo_node;
+    };
+};
 
-                return region_yolo_node;
-            };
-        };
-
-        namespace {
-            struct attach {
-                attach() {
-                    auto val_fw = region_yolo_gpu::create;
-                    implementation_map<region_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
-                    implementation_map<region_yolo>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
-                }
-                ~attach() {}
-            };
-
-            attach attach_impl;
+namespace {
+    struct attach {
+        attach() {
+            implementation_map<region_yolo>::add({
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), region_yolo_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), region_yolo_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), region_yolo_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), region_yolo_gpu::create }
+             });
         }
+        ~attach() {}
+    };
 
-    }
+    attach attach_impl;
 }
+
+} // namespace gpu
+} // namespace cldnn

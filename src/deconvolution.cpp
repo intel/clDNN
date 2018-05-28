@@ -79,6 +79,8 @@ std::string deconvolution_inst::to_string(deconvolution_node const& node)
         ss_weights << node.weights(i).id();
         ss_weights << ", count: " << node.weights(i).get_output_layout().count();
         i != (desc->weights.size() - 1) ? ss_weights << ", " : ss_weights << "";
+        if (node.get_depthwise_sep_opt())
+            break;
     }
 
     for (size_t i = 0; i < desc->bias.size(); ++i)

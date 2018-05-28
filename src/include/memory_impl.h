@@ -28,7 +28,13 @@ namespace cldnn
 struct memory_impl : refcounted_obj<memory_impl>
 {
     memory_impl(const engine_impl::ptr& engine, layout layout): _engine(engine), _layout(layout){}
-    virtual ~memory_impl() = default;
+    virtual ~memory_impl()
+    {
+        if (_engine != nullptr)
+        {
+            _engine->get_memory_pool().subtract_memory_used(_layout.bytes_count());
+        }
+    }
     virtual void* lock() = 0;
     virtual void unlock() = 0;
     size_t size() const { return _layout.bytes_count(); }

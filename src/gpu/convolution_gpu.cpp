@@ -45,15 +45,16 @@ protected:
     {
         kernel::kernel_arguments_data args = parent::get_arguments(instance, split);
 
-        args.weights    = &instance.weights_memory(split);
-        args.bias       = instance.bias_term() ? &instance.bias_memory(split) : nullptr;
-
+        args.weights              = &instance.weights_memory(split);
+        args.bias                 = instance.bias_term() ? &instance.bias_memory(split) : nullptr;
+        args.weights_quantization_factors = instance.weights_quantization_factors_term() ? &instance.weights_quantization_factors_memory(split) : nullptr;
+        args.output_calibration_factors = instance.output_calibration_factors_term() ? &instance.output_calibration_factors_memory(split) : nullptr;
         return args;
     }
 
     virtual int32_t get_split() const override
-    { 
-        return _outer.get_split(); 
+    {
+        return _outer.get_split();
     }
 
 public:
@@ -74,6 +75,8 @@ public:
 
         const auto depthwise_separable_opt = arg.get_depthwise_sep_opt();
         const auto actual_split = depthwise_separable_opt ? (decltype(split))1 : split;
+
+        const auto transposed = arg.get_transposed();
 
         assert(arg.get_output_layout().size.feature[0] / primitive->split() == weights_layout.size.batch[0]);
 
@@ -98,6 +101,7 @@ public:
         }
 
         conv_params.convParams.depthwiseSeparableOpt = depthwise_separable_opt;
+        conv_params.convParams.transposed = transposed;
 
         conv_params.convParams.split = split;
         conv_params.convParams.filterSize = {
@@ -119,6 +123,21 @@ public:
             (uint32_t)std::min(dilation.spatial[1], input_size.spatial[1])
         };
 
+        if (primitive->weights_quantization_factors.size() > 0)
+        {
+            conv_params.convParams.int8_quantization = true;
+            conv_params.weights_quantization_factors.push_back(convert_data_tensor(arg.weights_quantization_factors().get_output_layout()).FlattenFeatureAndSpatials());
+            conv_params.convParams.input_quantization_factor = arg.get_input_qf();
+
+            if (primitive->output_calibration_factors.size() > 0)
+            {
+                conv_params.convParams.output_calibration = true;
+                conv_params.output_calibration_factors.push_back(convert_data_tensor(arg.output_calibration_factors().get_output_layout()).FlattenFeatureAndSpatials());
+            }
+            else
+                conv_params.convParams.output_quantization_factor = arg.get_output_qf();
+        }
+
         auto& kernel_selector = kernel_selector::convolution_kernel_selector::Instance();
 
         const auto& tuning_config = arg.get_program().get_options().get<build_option_type::tuning_config>();
@@ -129,7 +148,7 @@ public:
         }
 
         KernelSelector::KernelsData best_kernels = kernel_selector.GetBestKernels(conv_params, conv_optional_params);
-		
+
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto conv = new convolution_gpu(arg, best_kernels[0]);
@@ -145,6 +164,7 @@ namespace{
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::bfyx), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::winograd_2x3_s1_data), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::winograd_2x3_s1_data), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bf8_xy16), convolution_gpu::create);

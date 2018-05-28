@@ -29,10 +29,24 @@ namespace cldnn
     layout region_yolo_inst::calc_output_layout(region_yolo_node const& node)
     {
         auto input_layout = node.input().get_output_layout();
+        auto desc = node.get_primitive();
 
-        cldnn::layout layoutTemp = cldnn::layout(input_layout.data_type, format::bfyx, tensor(input_layout.size.batch[0],
-            input_layout.size.feature[0] * input_layout.size.spatial[0] * input_layout.size.spatial[1], 1, 1));
-        return layoutTemp;
+        if (desc->do_softmax)
+        {
+            return cldnn::layout(input_layout.data_type, input_layout.format,
+                                 tensor(input_layout.size.batch[0],
+                                        input_layout.size.feature[0] * input_layout.size.spatial[0] * input_layout.size.spatial[1],
+                                        1, 1));
+        }
+        else
+        {
+            tensor::value_type features = (desc->classes + desc->coords + 1)*desc->mask_size;
+            return cldnn::layout(input_layout.data_type, input_layout.format,
+                                 tensor(input_layout.size.batch[0],
+                                        features,
+                                        input_layout.size.spatial[0], input_layout.size.spatial[1]));
+
+        }
     }
 
     std::string region_yolo_inst::to_string(region_yolo_node const& node)
@@ -42,6 +56,8 @@ namespace cldnn
         auto coords = desc->coords;
         auto classes = desc->classes;
         auto num = desc->num;
+        auto do_softmax = desc->do_softmax;
+        auto mask_size = desc->mask_size;
 
         std::stringstream primitive_description;
 
@@ -49,6 +65,8 @@ namespace cldnn
         region_yolo_info.add("coords", coords);
         region_yolo_info.add("classes", classes);
         region_yolo_info.add("num", num);
+        region_yolo_info.add("do_softmax", do_softmax);
+        region_yolo_info.add("mask_size", mask_size);
 
 
         node_info.add("region yolo info", region_yolo_info);

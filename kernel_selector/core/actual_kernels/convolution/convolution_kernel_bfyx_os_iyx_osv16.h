@@ -33,7 +33,7 @@ namespace KernelSelector {
         virtual ParamsKey GetSupportedKey() const override;
     
     protected:
-        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&)  const override { return{ WeightsLayout::os_iyx_osv16 }; }
+        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&)  const override;
         JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
         bool Validate(const Params& p, const OptionalParams& o) const override;
         bool NeedPaddedInput() const override { return true; }

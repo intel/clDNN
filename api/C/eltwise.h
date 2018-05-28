@@ -67,4 +67,3 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(eltwise);
 /// @}
 /// @}
 #endif /* ELTWISE_H */
-

@@ -68,13 +68,13 @@ KERNEL (reorder_data)(
     const uint input_idx  = FUNC_CALL(get_input_index)(b, f, y, x);
     const uint output_idx = FUNC_CALL(get_output_index)(ov[0],ov[1],ov[2],ov[3]);
     
-#if   defined MEAN_SUBTRACT_INSIDE_PARAMS
+#if defined MEAN_SUBTRACT_INSIDE_PARAMS
     float res = TO_MEAN_TYPE(input[input_idx]);
-    res -= VALUE_TO_SUBTRACT[f % VALUE_TO_SUBTRACT_SIZE];
+    res = MEAN_OP(res, VALUE_TO_SUBTRACT[f % VALUE_TO_SUBTRACT_SIZE]);
 #elif defined MEAN_SUBTRACT_IN_BUFFER
     MEAN_SUBTRACT_TYPE res = TO_MEAN_TYPE(input[input_idx]);
     uint4 msv = FUNC_CALL(reshape_dims)(b,f,y,x, INPUT0_SIZE_Y, INPUT0_SIZE_X, MEAN_SUBTRACT_SIZE_Y, MEAN_SUBTRACT_SIZE_X, INPUT0_DIMS, MEAN_SUBTRACT_DIMS);
-    res -= mean_subtract[GET_DATA_INDEX_SAFE(MEAN_SUBTRACT, msv[0], msv[1], msv[2], msv[3])];
+    res = MEAN_OP(res, mean_subtract[GET_DATA_INDEX_SAFE(MEAN_SUBTRACT, msv[0], msv[1], msv[2], msv[3])]);
 #else
     CALC_TYPE res = TO_CALC_TYPE(input[input_idx]);
 #endif
