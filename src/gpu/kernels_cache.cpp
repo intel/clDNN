@@ -184,7 +184,11 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
     return std::move(scode);
 }
 
-kernels_cache::kernels_cache(gpu_toolkit& context): _context(context) {}
+kernels_cache::kernels_cache(gpu_toolkit& context) : _context(context) 
+{
+	set_exepath();
+	set_cachemode();
+}
 
 kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program, bool one_time_kernel)
 {
@@ -214,7 +218,7 @@ kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<
     return id;
 }
 
-kernels_cache::kernels_map kernels_cache::build_program(const program_code& program_source) const
+kernels_cache::kernels_map kernels_cache::build_program(const program_code& program_source,bool bfause_build) const
 {
     static uint32_t current_file_index = 0;
 
@@ -236,6 +240,15 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
         std::string err_log; //accumulated build log from all program's parts (only contains messages from parts which failed to compile)
 
         uint32_t part_idx = 0;
+		uint32_t totoal_source = 0;
+		uint32_t curid = 0;
+		if (CLCACHE_NOCACHE != _cur_cachemode) {
+			for (const auto& sources : program_source.source) {
+				for (const std::string& s : sources) {
+					totoal_source += uint32_t(s.length());
+				}
+			}
+		}
         for (const auto& sources : program_source.source)
         {
             auto current_dump_file_name = dump_file_name + std::to_string(part_idx++) + ".cl";
@@ -250,27 +263,55 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
 
             try
             {
-                cl::Program program(_context.context(), sources);
-                program.build({ _context.device() }, program_source.options.c_str());
+				cl::vector<cl::Kernel> kernels;
+				std::string binfilename = _fmodule_path + get_clcachename(totoal_source, program_source.kernels_counter, curid++, program_source.options, ".clbin");
+				std::ifstream finbin(binfilename, std::ios::binary);
 
-                if (dump_sources)
-                {
-                    dump_file.get() << "\n/* Build Log:\n";
-                    for (auto& p : program.getBuildInfo<CL_PROGRAM_BUILD_LOG>())
-                        dump_file.get() << p.second << "\n";
+				if (!finbin || CLCACHE_NOCACHE == _cur_cachemode || bfause_build) {
+					cl::Program program(_context.context(), sources);
+					program.build({ _context.device() }, program_source.options.c_str());
 
-                    dump_file.get() << "*/\n";
-                }
+					if (dump_sources)
+					{
+						dump_file.get() << "\n/* Build Log:\n";
+						for (auto& p : program.getBuildInfo<CL_PROGRAM_BUILD_LOG>())
+							dump_file.get() << p.second << "\n";
 
-                cl::vector<cl::Kernel> kernels;
-                program.createKernels(&kernels);
+						dump_file.get() << "*/\n";
+					}
+
+					if (CLCACHE_CACHE == _cur_cachemode) {
+						//--in cache mode, save binary
+						std::vector<std::vector<unsigned char>> binariesVectors;
+						if (CL_SUCCESS == program.getInfo(CL_PROGRAM_BINARIES, &binariesVectors)) {
+							if (binariesVectors.size() != 1)
+								throw std::runtime_error("Program get fail in CL_PROGRAM_BINARIES\n");
+							std::ofstream fout(binfilename, std::ios::binary);
+							fout.write((const char*)binariesVectors[0].data(), binariesVectors[0].size());
+							fout.close();
+						}
+					}
+					program.createKernels(&kernels);
+				}
+				else {
+					cl::Program::Binaries binaries;
+					std::vector<unsigned char> buf;
+					finbin.seekg(0, std::ios::end);
+					buf.resize(finbin.tellg());
+					finbin.seekg(0, std::ios::beg);
+					finbin.read((char*)buf.data(), buf.size());
+					binaries.push_back(buf);
+					cl::Program program(_context.context(), { _context.device() }, binaries);
+					program.build({ _context.device() });
+					program.createKernels(&kernels);
+				}
 
                 for (auto& k : kernels)
                 {
                     auto kernel_name = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
                     kmap.emplace(kernel_name, k);
                 }
-            }
+			}
             catch (const cl::BuildError& err)
             {
                 if (dump_sources)
@@ -280,14 +321,14 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
                 {
                     if (dump_sources)
                         dump_file.get() << p.second << "\n";
-
+                
                     err_log += p.second + '\n';
                 }
 
                 if (dump_sources)
                     dump_file.get() << "*/\n";
             }
-
+            
         }
 
         if (!err_log.empty())
@@ -326,25 +367,82 @@ void kernels_cache::build_all()
 	_one_time_kernels.clear();
     for (auto& program : sorted_program_code)
     {
-        auto kernels = build_program(program.second);
+		bool bfausebuild = false;
+		for (uint32_t i = 0; i < 2; i++) 
+		{
+			kernels_map kernels = build_program(program.second, bfausebuild);
 
-        for (auto& k : kernels)
-        {
-            const auto& entry_point = k.first;
-            const auto& k_id = program.second.entry_point_to_id[entry_point];
-            if (program.second.one_time)
-            {
-				_one_time_kernels[k_id] = k.second;
-			}
-			else
+			for (auto& k : kernels)
 			{
-                _kernels[k_id] = k.second;
+				const auto& entry_point = k.first;
+				const auto& k_id = program.second.entry_point_to_id[entry_point];   //todo: need modify inference_engine to avoid k_id =0...
+				if (k_id.length()==0) {  //if cache name not unique or different sequence, different batch, here will fail and rebuild.
+					bfausebuild = true;
+					break;
+				}
+				if (program.second.one_time)
+				{
+					_one_time_kernels[k_id] = k.second;
+				}
+				else
+				{
+					_kernels[k_id] = k.second;
+				}
 			}
-        }
+			if (!bfausebuild)
+				break;
+		}
     }
 
     _kernels_code.clear();
     _pending_compilation = false;
 }
+
+std::string kernels_cache::get_clcachename(uint32_t total_source, uint32_t kernels_counter, uint32_t curid, const std::string& option, const std::string& extname) const
+{
+	std::string binfilename=std::to_string(total_source)+'_';
+	binfilename += std::to_string(kernels_counter) + '_';
+	binfilename += std::to_string(curid) + '_';
+	binfilename += option;
+	binfilename += extname;
+
+	if (binfilename.length() > 255)
+		binfilename = binfilename.substr(0, 255);
+	return binfilename;
+}
+
+/*----------------------------------------------------------------------------------------
+1. coder can add openvino_clcache\nocache.flag to disable cache,  openvino_clcache will create automaticlly
+2. if not, work in cahce mode, the cl kernel will build fristly in end-user pc and save the binary
+----------------------------------------------------------------------------------------*/
+void kernels_cache::set_cachemode()
+{
+	std::ifstream fin(_fmodule_path + "nocache.flag");
+	if (fin) {
+		_cur_cachemode = CLCACHE_NOCACHE;
+		fin.close();
+	}
+	else 
+		_cur_cachemode = CLCACHE_CACHE;
+}
+
+static int global_cache = 0;
+#ifdef _WIN32
+#include <Windows.h>
+void kernels_cache::set_exepath()
+{
+	char buf[255];
+	GetModuleFileName(GetModuleHandle(NULL), buf, 255);
+	std::string fpath(buf);
+	//std::string::size_type idx = fpath.rfind('\\', fpath.length());
+	std::string::size_type idx = fpath.rfind('.', fpath.length());
+	_fmodule_path = fpath.substr(0, idx) + "_openvino_clcache\\";
+	CreateDirectory(_fmodule_path.c_str(), NULL);
+	_fmodule_path  = _fmodule_path + std::to_string(global_cache++) + "\\";
+	CreateDirectory(_fmodule_path.c_str(), NULL);
+}
+#else
+
+#endif
 
 }}
