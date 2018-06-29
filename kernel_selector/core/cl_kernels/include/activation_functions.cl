@@ -30,6 +30,14 @@
 #define ACTIVATION_LINEAR(input, m, n)                  (m*input + n)
 #define ACTIVATION_SQUARE(input)                        (input*input)
 #define ACTIVATION_SQRT(input)                          (sqrt(input))
+#define ACTIVATION_SIN(input)                           (sin(input))
+#define ACTIVATION_ASIN(input)                          (asin(input))
+#define ACTIVATION_SINH(input)                          (sinh(input))
+#define ACTIVATION_COS(input)                           (cos(input))
+#define ACTIVATION_ACOS(input)                          (acos(input))
+#define ACTIVATION_COSH(input)                          (cosh(input))
+#define ACTIVATION_LOG(input)                           (log(input))
+#define ACTIVATION_EXP(input)                           (exp(input))
 
 #define ACTIVATION_RELU_GRAD(input_grad, input)                          (input_grad * (input > UNIT_VAL_ZERO ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0)))
 #define ACTIVATION_RELU_NEGATIVE_SLOPE_GRAD(input_grad, input, slope)    (input_grad * ((input > UNIT_VAL_ZERO ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0)) + TO_UNIT_TYPE(slope) * (input <= 0 ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0))))
@@ -54,6 +62,22 @@
     #define ACTIVATION(input, m, n) ACTIVATION_SQUARE(input)
 #elif defined ACTIVATION_FUNCTION_SQRT
     #define ACTIVATION(input, m, n) ACTIVATION_SQRT(input)
+#elif defined ACTIVATION_FUNCTION_SIN
+    #define ACTIVATION(input, m, n) ACTIVATION_SIN(input)
+#elif defined ACTIVATION_FUNCTION_ASIN
+    #define ACTIVATION(input, m, n) ACTIVATION_ASIN(input)
+#elif defined ACTIVATION_FUNCTION_SINH
+    #define ACTIVATION(input, m, n) ACTIVATION_SINH(input)
+#elif defined ACTIVATION_FUNCTION_COS
+    #define ACTIVATION(input, m, n) ACTIVATION_COS(input)
+#elif defined ACTIVATION_FUNCTION_ACOS
+    #define ACTIVATION(input, m, n) ACTIVATION_ACOS(input)
+#elif defined ACTIVATION_FUNCTION_COSH
+    #define ACTIVATION(input, m, n) ACTIVATION_COSH(input)
+#elif defined ACTIVATION_FUNCTION_LOG
+    #define ACTIVATION(input, m, n) ACTIVATION_LOG(input)
+#elif defined ACTIVATION_FUNCTION_EXP
+    #define ACTIVATION(input, m, n) ACTIVATION_EXP(input)
 #elif defined ACTIVATION_FUNCTION_ELU
     #define ACTIVATION(input, m, n) ACTIVATION_ELU(input, m)
 #elif defined ACTIVATION_FUNCTION_RELU_GRAD

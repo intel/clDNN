@@ -353,6 +353,22 @@ inline kernel_selector::activation_function get_kernel_selector_activation_param
         return kernel_selector::activation_function::SQRT;
     case activation_elu:
         return kernel_selector::activation_function::ELU;
+    case activation_sin:
+        return kernel_selector::activation_function::SIN;
+    case activation_asin:
+        return kernel_selector::activation_function::ASIN;
+    case activation_sinh:
+        return kernel_selector::activation_function::SINH;
+    case activation_cos:
+        return kernel_selector::activation_function::COS;
+    case activation_acos:
+        return kernel_selector::activation_function::ACOS;
+    case activation_cosh:
+        return kernel_selector::activation_function::COSH;
+    case activation_log:
+        return kernel_selector::activation_function::LOG;
+    case activation_exp:
+        return kernel_selector::activation_function::EXP;
     default:
         throw std::runtime_error("Unknown activation function");
         break;

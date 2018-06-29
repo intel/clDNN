@@ -277,6 +277,14 @@ namespace kernel_selector {
         case ActivationFunction::ELU:                   method = "ELU"; break;
         case ActivationFunction::RELU_GRAD:             method = "RELU_GRAD"; break;
         case ActivationFunction::RELU_NEGATIVE_SLOPE_GRAD: method = "RELU_NEGATIVE_SLOPE_GRAD"; break;
+        case ActivationFunction::SIN:                   method = "SIN"; break;
+        case ActivationFunction::ASIN:                  method = "ASIN"; break;
+        case ActivationFunction::SINH:                  method = "SINH"; break;
+        case ActivationFunction::COS:                   method = "COS"; break;
+        case ActivationFunction::ACOS:                  method = "ACOS"; break;
+        case ActivationFunction::COSH:                  method = "COSH"; break;
+        case ActivationFunction::LOG:                   method = "LOG"; break;
+        case ActivationFunction::EXP:                   method = "EXP"; break;
         case ActivationFunction::NONE:                  method = "NONE"; break;
         case ActivationFunction::NONE_GRAD:             method = "NONE_GRAD"; break;
         default: break;

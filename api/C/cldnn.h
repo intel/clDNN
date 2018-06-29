@@ -420,6 +420,14 @@ typedef enum cldnn_activation_func_t
     activation_square,                  // val*val
     activation_sqrt,                    // sqrt(val)
     activation_elu,                     // max(0, val) + a * (exp(min(0, val) - 1) (a is additional param)
+    activation_sin,                     // sin(val)
+    activation_asin,                    // asin(val)
+    activation_sinh,                    // sinh(val)
+    activation_cos,                     // cos(val)
+    activation_acos,                    // acos(val)
+    activation_cosh,                    // cosh(val)
+    activation_log,                     // log(val)
+    activation_exp                      // exp(val)
 } cldnn_activation_func;
 
 /// @brief activation gradient functions
