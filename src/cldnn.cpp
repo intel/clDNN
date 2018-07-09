@@ -242,7 +242,7 @@ void cldnn_release_engine(cldnn_engine engine, cldnn_status* status)
 
 cldnn_engine_info cldnn_get_engine_info(cldnn_engine engine, cldnn_status* status)
 {
-    return exception_handler<cldnn_engine_info>(CLDNN_ERROR, status, { 0, 0, 0, 0, 0, 0, 0 }, [&]() -> cldnn_engine_info
+    return exception_handler<cldnn_engine_info>(CLDNN_ERROR, status, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, [&]() -> cldnn_engine_info
     {
         SHOULD_NOT_BE_NULL(engine, "Engine");
         auto info = api_cast(engine)->get_engine_info();
@@ -252,9 +252,14 @@ cldnn_engine_info cldnn_get_engine_info(cldnn_engine engine, cldnn_status* statu
             info.core_frequency,
             info.max_work_group_size,
             info.max_local_mem_size,
+            info.max_global_mem_size,
+            info.max_alloc_mem_size,
+            info.max_image2d_width,
+            info.max_image2d_height,
             info.supports_fp16,
             info.supports_fp16_denorms,
-            info.supports_subgroups_short
+            info.supports_subgroups_short,
+            info.supports_image
        };
     });
 }
