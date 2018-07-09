@@ -184,7 +184,7 @@ namespace KernelSelector
             case EltwiseMode::SUB:      op += input0_str + " - " + input1_str; break;
             case EltwiseMode::MUL:      op += input0_str + " * " + input1_str; break;
             case EltwiseMode::DIV:      op += input0_str + " / " + input1_str; break;
-            case EltwiseMode::MODULU:   op += input0_str + " % " + input1_str; break;
+            case EltwiseMode::MODULU:   op += cast_type + "fmod(" + input0_str + ", " + input1_str + ")"; break;
             case EltwiseMode::MIN:      op += cast_type + "fmin(" + input0_str + ", " + input1_str + ")"; break;
             case EltwiseMode::MAX:      op += cast_type + "fmax(" + input0_str + ", " + input1_str + ")"; break;
             case EltwiseMode::POW:      op += cast_type + "pow(" + input0_str + ", " + input1_str + ")"; break;

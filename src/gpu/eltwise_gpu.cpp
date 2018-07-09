@@ -32,6 +32,10 @@ namespace
         case eltwise_mode::sub:  return kernel_selector::eltwise_mode::SUB;
         case eltwise_mode::max:  return kernel_selector::eltwise_mode::MAX;
         case eltwise_mode::prod: return kernel_selector::eltwise_mode::MUL;
+        case eltwise_mode::div: return kernel_selector::eltwise_mode::DIV;
+        case eltwise_mode::min: return kernel_selector::eltwise_mode::MIN;
+        case eltwise_mode::pow: return kernel_selector::eltwise_mode::POW;
+        case eltwise_mode::mod: return kernel_selector::eltwise_mode::MODULU;
         default:
             return kernel_selector::eltwise_mode::ADD;
         }

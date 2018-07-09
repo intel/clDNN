@@ -56,6 +56,18 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
     case eltwise_mode::prod:
             str_mode = "product";
             break;
+    case eltwise_mode::div:
+            str_mode = "div";
+            break;
+    case eltwise_mode::min:
+            str_mode = "min";
+         break;
+    case eltwise_mode::pow:
+            str_mode = "pow";
+            break;
+    case eltwise_mode::mod:
+            str_mode = "mod";
+            break;
     default:
             str_mode = "not supported mode";
             break;

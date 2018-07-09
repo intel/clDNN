@@ -37,8 +37,16 @@ enum class eltwise_mode : int32_t
     sub = cldnn_eltwise_sub,
     /// @brief Eltwise max.
     max = cldnn_eltwise_max,
-    /// @brief Eltwise product (Hamarad).
+    /// @brief Eltwise product (Hadamard).
     prod = cldnn_eltwise_prod,
+    /// @brief Eltwise div.
+    div = cldnn_eltwise_div,
+    /// @brief Eltwise min.
+    min = cldnn_eltwise_min,
+    /// @brief Eltwise pow.
+    pow = cldnn_eltwise_pow,
+    /// @brief Eltwise mod.
+    mod = cldnn_eltwise_mod,
 };
 
 /// @brief Performs elementwise operations (sum, subtract, max or product) on two input primitives

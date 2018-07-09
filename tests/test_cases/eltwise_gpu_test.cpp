@@ -44,6 +44,14 @@ T eltwise_execute(cldnn::eltwise_mode mode, T x, T y) {
         return std::max(x, y);
     case eltwise_mode::prod:
         return x * y;
+    case eltwise_mode::div:
+        return x / y;
+    case eltwise_mode::min:
+        return std::min(x, y);
+    case eltwise_mode::pow:
+        return std::pow((float)x, (float)y);
+    case eltwise_mode::mod:
+        return std::fmod((float)x, (float)y);
     default:
         return (T)0;
     }
@@ -128,7 +136,7 @@ void generic_eltwise_test(cldnn::format test_input_fmt, int input_b, int input_f
     bool test_is_correct = true;
     VF<T> output_cpu_vec = flatten_4d<T>(test_input_fmt, output_cpu);
     for (size_t i = 0; i < output_cpu_vec.size(); ++i) {
-        if (!floating_point_equal(output_cpu_vec[i], output_ptr[i])) {
+        if (!floating_point_equal(output_cpu_vec[i], output_ptr[i]) && !(std::isnan((float)output_cpu_vec[i]) && std::isnan((float)output_ptr[i]))) {
             test_is_correct = false;
             break;
         }
@@ -596,6 +604,38 @@ TEST(eltwise_gpu_f32, max_3inputs_in4x4x4x4_input_padding) {
     {
         EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
     }
+}
+
+void run_eltwise_generic_test(cldnn::eltwise_mode mode)
+{
+    cldnn::format test_inputs_fmt = cldnn::format::bfyx;
+    std::pair<int, int> input_size = { 227, 227 };
+
+    engine engine;
+    bool f16_supported = !!engine.get_info().supports_fp16;
+    if (!f16_supported) {
+        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
+    }
+
+    generic_eltwise_test<float>(test_inputs_fmt, 1, 1, input_size.first, input_size.second, mode, false, 0.f, 0, 0, 0, 0);
+    if (f16_supported)
+        generic_eltwise_test<FLOAT16>(test_inputs_fmt, 1, 1, input_size.first, input_size.second, mode, false, (FLOAT16)0.f, 0, 0, 0, 0);
+}
+
+TEST(eltwise_gpu, eltwise_div) {
+    run_eltwise_generic_test(cldnn::eltwise_mode::div);
+}
+
+TEST(eltwise_gpu, eltwise_min) {
+    run_eltwise_generic_test(cldnn::eltwise_mode::min);
+}
+
+TEST(eltwise_gpu, eltwise_pow) {
+    run_eltwise_generic_test(cldnn::eltwise_mode::pow);
+}
+
+TEST(eltwise_gpu, eltwise_mod) {
+    run_eltwise_generic_test(cldnn::eltwise_mode::mod);
 }
 
 TEST(DISABLED_eltwise_gpu, generic_random) {

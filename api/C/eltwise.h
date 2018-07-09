@@ -39,8 +39,16 @@ typedef enum /*:int32_t*/
     cldnn_eltwise_sub,
     /// @brief Eltwise max.
     cldnn_eltwise_max,
-    /// @brief Eltwise product (Hamarad).
-    cldnn_eltwise_prod
+    /// @brief Eltwise product (Hadamard).
+    cldnn_eltwise_prod,
+    /// @brief Eltwise div.
+    cldnn_eltwise_div,
+    /// @brief Eltwise min.
+    cldnn_eltwise_min,
+    /// @brief Eltwise pow.
+    cldnn_eltwise_pow,
+    /// @brief Eltwise mod.
+    cldnn_eltwise_mod
 } cldnn_eltwise_mode;
 
 /// @brief Performs elementwise operations (sum, subtract, max or product) on two input primitives
