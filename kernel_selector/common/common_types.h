@@ -96,6 +96,14 @@ namespace KernelSelector
         ELU,
         RELU_GRAD,
         RELU_NEGATIVE_SLOPE_GRAD,
+        SIN,
+        ASIN,
+        SINH,
+        COS,
+        ACOS,
+        COSH,
+        LOG,
+        EXP,
         NONE,
         NONE_GRAD
     };
