@@ -1107,6 +1107,7 @@ include_directories(
   )
 link_directories(
     ${CLDNN__IOCL_ICD_LIBDIRS}
+    ${Boost_LIBRARY_DIRS)
   )
 
 # =================================== Link targets and dependencies ====================================
