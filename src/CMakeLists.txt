@@ -197,8 +197,8 @@ set_property(TARGET "${CLDNN_BUILD__PROJ}" PROPERTY OUTPUT_NAME   "${CLDNN_BUILD
 
 target_link_libraries("${CLDNN_BUILD__PROJ}"
     OpenCL
-    Boost::filesystem
-    Boost::system
+    boost_filesystem
+    boost_system
     cldnn_kernel_selector
   )
 
