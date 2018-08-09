@@ -77,7 +77,7 @@ int get_gpu_device_id()
     }
 #elif defined(__linux__)
     {
-        std::string dev_base{ "/sys/class/graphics/fb" };
+        std::string dev_base{ "/sys/class/drm/card" };
         int dev_idx = 0;
         for (; dev_idx < 32; dev_idx++)
         {
