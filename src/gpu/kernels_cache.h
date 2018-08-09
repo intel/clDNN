@@ -81,7 +81,19 @@ private:
     sorted_code get_program_source(const kernels_code& kernels_source_code) const;
     friend class gpu_toolkit;
     explicit kernels_cache(gpu_toolkit& context);
-    kernels_map build_program(const program_code& pcode) const;
+    kernels_map build_program(const program_code& pcode,bool bfause_build) const;
+	//---add for optimize opencl kernel building time-------------------------------------------------------------------------------beg
+	std::string _fmodule_path;
+	void set_exepath();
+	std::string get_clcachename(uint32_t total_source, uint32_t kernels_counter, uint32_t curid, const std::string& option, const std::string& extname) const;
+	typedef enum {
+		CLCACHE_NONE,
+		CLCACHE_NOCACHE,
+		CLCACHE_CACHE,
+	}CLCache_Mode;
+	void set_cachemode();
+	CLCache_Mode _cur_cachemode;
+	//---add for optimiza opencl kernel building time-------------------------------------------------------------------------------end
 
 public:
     kernel_id set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program, bool one_time_kernel);
