@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ layout_optimizer::layout_optimizer(bool output_size_handling_enabled)
 bool layout_optimizer::convolution_bfyx_opt(layout const& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv)
 {
     //A set of rules that define when bfyx mem format has better performance than yxfb
-    if (output_layout.size.batch[0] == 16 || output_layout.size.batch[0] % 16 != 0 ||
+    if (output_layout.size.batch[0] == 16 || output_layout.size.batch[0] % 16 != 0 || 
         output_layout.data_type != data_types::f16 || weights_layout.size.batch[0] % 16 != 0 ||
         !((weights_layout.size.spatial[0] == 1 && weights_layout.size.spatial[1] == 1) ||
         (weights_layout.size.spatial[0] >= 5 && weights_layout.size.spatial[1] >= 5) ||
@@ -201,6 +201,12 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
             expected_tensor = current_layout.size;
             expected_format = cldnn::format::byxf;
         }
+        // MMAD case
+        else if (current_layout.data_type == data_types::i8)
+        {
+            expected_tensor = current_layout.size;
+            expected_format = current_layout.format;//cldnn::format::byxf_af32;
+        }
         else if (layout_optimizer::convolution_bfyx_opt(current_layout, output_or_weights_layout, prim)
             || (_output_size_handling_enabled && prim->with_output_size) ||
             node.get_transposed())
@@ -267,6 +273,32 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
     return layout(expected_data_type, expected_format, expected_tensor);
 }
 
+layout layout_optimizer::get_expected_layout(layout const& current_layout, data_type type, lstm_gemm_node const& node, layout const& output_or_weights_layout)
+{
+    auto prim = node.get_primitive();
+    auto expected_tensor = current_layout.size;
+    auto expected_data_type = current_layout.data_type;
+    auto expected_format = current_layout.format;
+
+    if (type == data_type::weights || type == data_type::bias)
+    {
+        expected_data_type = output_or_weights_layout.data_type;
+    }
+
+    switch (type)
+    {
+    case data_type::bias:
+        expected_tensor = cldnn::tensor(1, 1, static_cast<tensor::value_type>(current_layout.count()), 1);
+        expected_format = cldnn::format::bfyx;
+        break;
+
+    default:
+        throw std::runtime_error("Unsupported data type in layout_optimizer::get_expected_layout for fully-connected primitive");
+    }
+
+    return layout(expected_data_type, expected_format, expected_tensor);
+}
+
 layout layout_optimizer::get_expected_layout(layout const& current_layout, data_type type, deconvolution_node const& node, layout const& output_or_weights_layout)
 {
     auto prim = node.get_primitive();
@@ -302,6 +334,32 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
 
     if (type != data_type::input)
         CLDNN_ERROR_MESSAGE(prim->id, "detection_output only supports optimization of its output (no weights/biases)");
+
+    return layout(expected_data_type, expected_format, expected_tensor);
+}
+
+layout layout_optimizer::get_expected_layout(layout const& current_layout, data_type type, embed_node const& node, layout const& output_or_weights_layout)
+{
+    auto prim = node.get_primitive();
+    auto expected_tensor = current_layout.size;
+    auto expected_data_type = current_layout.data_type;
+    auto expected_format = current_layout.format;
+
+    if (type == data_type::weights || type == data_type::bias)
+    {
+        expected_data_type = output_or_weights_layout.data_type;
+    }
+
+    switch (type)
+    {
+    case data_type::bias:
+        expected_tensor = cldnn::tensor(1, 1, static_cast<tensor::value_type>(current_layout.count()), 1);
+        expected_format = cldnn::format::bfyx;
+        break;
+
+    default:
+        throw std::runtime_error("Unsupported data type in layout_optimizer::get_expected_layout for embed primitive");
+    }
 
     return layout(expected_data_type, expected_format, expected_tensor);
 }
@@ -387,11 +445,10 @@ std::vector<std::pair<std::shared_ptr<primitive>, bool>> layout_optimizer::get_g
         new_dtype, reorder_params.toImageType ? from_weights_layout(reorder_params.destLayout) : format::bfyx, // simple linear format (flatten to x channel)
         expected_size
     };
+
     auto reorder = create_reorder_from_given_source(input_id, expected_layout, reorder_params);
     if (reorder.first)
-    {
         ret.push_back(reorder);
-    }
 
     return ret;
 }

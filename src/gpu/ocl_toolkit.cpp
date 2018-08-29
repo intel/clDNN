@@ -79,7 +79,7 @@ namespace {
                 CL_DEVICE_TYPE_ACCELERATOR };
         return device_types[device_type];
     }
-
+ 
     bool does_device_match_config(cl::Device const& dev, configuration const& config, std::list<std::string>& reasons)
     {
         auto dev_name = dev.getInfo<CL_DEVICE_NAME>();
@@ -169,7 +169,7 @@ std::shared_ptr<gpu_toolkit> gpu_toolkit::create(const configuration & cfg)
     }
 }
 
-gpu_toolkit::gpu_toolkit(const configuration& config)
+gpu_toolkit::gpu_toolkit(const configuration& config) 
     : _configuration(config)
     , _device(get_gpu_device(config, _platform_id))
     , _neo_driver(strstr(get_device_version().c_str(), "NEO") ? true : false)
@@ -178,7 +178,7 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
                      _device,
                      (config.enable_profiling
                         ? cl::QueueProperties::Profiling
-                        : cl::QueueProperties::None) |
+                        : cl::QueueProperties::None) | 
                      (config.host_out_of_order && _neo_driver
                         ? cl::QueueProperties::OutOfOrder
                         : cl::QueueProperties::None))
@@ -364,7 +364,7 @@ event_impl::ptr gpu_toolkit::enqueue_marker(std::vector<event_impl::ptr> const& 
 
             try {
                 _command_queue.enqueueMarkerWithWaitList(&dep_events, &ret_ev);
-            }
+            } 
             catch (cl::Error const& err) {
                 throw ocl_error(err);
             }
@@ -399,7 +399,7 @@ void gpu_toolkit::flush()
 }
 void gpu_toolkit::release_pending_memory()
 {
-    /*
+    /* 
     TODO: Temp. solution, untill proper API calls from OpenCL are released.
     */
     void* ptr = nullptr;
@@ -463,14 +463,14 @@ void gpu_toolkit::sync_events(std::vector<event_impl::ptr> const & deps)
     {
         try {
             if (_output_event)
-            {
+            { 
                 _command_queue.enqueueBarrierWithWaitList(nullptr, &_last_barrier_ev);
             }
             else
             {
                 _command_queue.enqueueBarrierWithWaitList(nullptr, nullptr);
             }
-
+            
         }
         catch (cl::Error const& err) {
             throw ocl_error(err);

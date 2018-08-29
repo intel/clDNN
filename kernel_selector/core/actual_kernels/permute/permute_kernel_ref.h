@@ -18,15 +18,41 @@
 
 #include "common_kernel_base.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
-    class PermuteKernelRef : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // permute_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct permute_params : public base_params
+    {
+        permute_params(): base_params(KernelType::PERMUTE) {}
+
+        std::vector<uint16_t> order;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            return base_params::GetParamsKey();
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // permute_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct permute_optional_params : optional_params
+    {
+        permute_optional_params() : optional_params(KernelType::PERMUTE) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // PermuteKernelRef
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class PermuteKernelRef : public common_kernel_base
     {
     public:
-        PermuteKernelRef() : CommonKernelBase("permute_ref") {}
+        PermuteKernelRef() : common_kernel_base("permute_ref") {}
         virtual ~PermuteKernelRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

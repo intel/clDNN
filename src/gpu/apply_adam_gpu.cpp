@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "eltwise/eltwise_kernel_selector.h"
+#include "eltwise/eltwise_kernel_base.h"
 
 namespace cldnn { namespace gpu {
 
@@ -41,8 +43,8 @@ protected:
 
 public:
 
-    static primitive_impl* create(const apply_adam_node &arg)
-    {
+    static primitive_impl* create(const apply_adam_node &arg) 
+    { 
         auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
         auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
         const float lr = arg.get_primitive()->lr;
@@ -83,43 +85,43 @@ public:
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Scalar(beta1), kernel_selector::eltwise_params::InputType::Buffer(1) },
             kernel_selector::eltwise_mode::MUL });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Scalar(1), kernel_selector::eltwise_params::InputType::Scalar(beta1) },
             kernel_selector::eltwise_mode::SUB });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(6), kernel_selector::eltwise_params::InputType::Buffer(0) },
             kernel_selector::eltwise_mode::MUL });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(5), kernel_selector::eltwise_params::InputType::Intermediate(7) },
             kernel_selector::eltwise_mode::ADD });
 
         //save the result in m mutable_data primitive
         ew_params.eltwiseParams.updateInputIds.push_back({ 1, 8 });
-
+        
         ////v_t = beta2 * v_f + (1 - beta2) * input_grad * input_grad
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Scalar(beta2), kernel_selector::eltwise_params::InputType::Buffer(2) },
             kernel_selector::eltwise_mode::MUL });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Scalar(1), kernel_selector::eltwise_params::InputType::Scalar(beta2) },
             kernel_selector::eltwise_mode::SUB });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(10), kernel_selector::eltwise_params::InputType::Buffer(0) },
             kernel_selector::eltwise_mode::MUL });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(11), kernel_selector::eltwise_params::InputType::Buffer(0) },
             kernel_selector::eltwise_mode::MUL });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(9), kernel_selector::eltwise_params::InputType::Intermediate(12) },
             kernel_selector::eltwise_mode::ADD });
-
+        
         //save the result in v mutable_data primitive
         ew_params.eltwiseParams.updateInputIds.push_back({ 2, 13 });
 
@@ -127,15 +129,15 @@ public:
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(13) },
             kernel_selector::eltwise_mode::SQRT });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(14), kernel_selector::eltwise_params::InputType::Scalar(epsilon) },
             kernel_selector::eltwise_mode::ADD });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(4), kernel_selector::eltwise_params::InputType::Intermediate(8) },
             kernel_selector::eltwise_mode::MUL });
-
+        
         ew_params.eltwiseParams.operations.push_back({
             { kernel_selector::eltwise_params::InputType::Intermediate(16), kernel_selector::eltwise_params::InputType::Intermediate(15) },
             kernel_selector::eltwise_mode::DIV });

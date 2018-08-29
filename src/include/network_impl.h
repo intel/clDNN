@@ -46,6 +46,9 @@ public:
     void reset_execution(bool wait = true);
     void set_input_data(const primitive_id& id, memory_impl& data);
 
+    void set_learning_rate(const float lr);
+    float get_learning_rate();
+
     auto const& get_outputs() { return _outputs; }
 
     const std::vector<std::shared_ptr<const primitive_inst>>& get_outputs() const
@@ -66,13 +69,18 @@ public:
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<primitive_id>& ids);
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<program_node*>& nodes);
     event_impl::ptr execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<event_impl::ptr>& events);
+    void allocate_primitives();
+    void build_exec_order_vist(program_node*);
+    void build_exec_order();
+    void build_insts_deps();
     auto get_id() const { return net_id; }
     bool is_internal() const { return _internal; }
 
 private:
-    uint32_t net_id = 0;
+    uint32_t net_id = 0; 
     const program_impl::cptr _program;
     bool _internal;
+    float _learning_rate = float(0.00001);
 
     std::map<primitive_id, std::shared_ptr<primitive_inst>> _primitives;
     std::vector<std::shared_ptr<primitive_inst>> _inputs;

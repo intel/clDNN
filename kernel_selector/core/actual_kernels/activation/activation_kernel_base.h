@@ -18,20 +18,51 @@
 
 #include "common_kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
-    class ActivationKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // activation_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct activation_params : public base_params
+    {
+        activation_params() : base_params(KernelType::ACTIVATION) {}
+
+        MultiDataTensor inputActivationParams;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            auto k = base_params::GetParamsKey();
+            if (!inputActivationParams.empty())
+            {
+                k.EnableActivationAdditionalParamsAsInput();
+            }
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // activation_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct activation_optional_params : optional_params
+    {
+        activation_optional_params() : optional_params(KernelType::ACTIVATION) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ActivationKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class ActivationKernelBase : public common_kernel_base
     {
     public:
         using DispatchData = CommonDispatchData;
-        using CommonKernelBase::CommonKernelBase;
+        using common_kernel_base::common_kernel_base;
         
         virtual ~ActivationKernelBase() {}
 
     protected:
-        virtual bool Validate(const Params& p, const OptionalParams& o) const override;
-        virtual JitConstants GetJitConstants(const ActivationParams& params, DispatchData kd) const;
-        virtual DispatchData SetDefault(const ActivationParams& arg) const;
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams& options) const;
+        virtual bool Validate(const Params& p, const optional_params& o) const override;
+        virtual JitConstants GetJitConstants(const activation_params& params, DispatchData kd) const;
+        virtual DispatchData SetDefault(const activation_params& arg) const;
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params& options) const;
     };
 }

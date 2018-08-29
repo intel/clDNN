@@ -18,7 +18,7 @@
 
 #include "lrn_kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     class LRNKernelWithinChannelByxfOpt : public LRNKernelBase
     {
@@ -27,12 +27,12 @@ namespace KernelSelector
         LRNKernelWithinChannelByxfOpt() : LRNKernelBase("lrn_within_channel_byxf_opt") {}
         virtual ~LRNKernelWithinChannelByxfOpt() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        bool Validate(const Params&, const OptionalParams&) const override;
-        virtual JitConstants GetJitConstants(const LRNParams& params, DispatchData kd) const override;
-        virtual DispatchData SetDefault(const LRNParams& params) const override;
+        bool Validate(const Params&, const optional_params&) const override;
+        virtual JitConstants GetJitConstants(const lrn_params& params, DispatchData kd) const override;
+        virtual DispatchData SetDefault(const lrn_params& params) const override;
     };
 }

@@ -17,9 +17,9 @@
 #include "upsampling_kernel_base.h"
 #include "kernel_selector_utils.h" 
 
-namespace KernelSelector
+namespace kernel_selector
 {
-    bool UpSamplingKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    bool UpSamplingKernelBase::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::UPSAMPLING ||
             o.GetType() != KernelType::UPSAMPLING)
@@ -27,7 +27,7 @@ namespace KernelSelector
             return false;
         }
 
-        const UpSamplingParams& params = static_cast<const UpSamplingParams&>(p);
+        const upsampling_params& params = static_cast<const upsampling_params&>(p);
 
         if (params.inputs.size() == 0)
         {
@@ -37,20 +37,34 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants UpSamplingKernelBase::GetJitConstants(const UpSamplingParams& params) const
+    JitConstants UpSamplingKernelBase::GetJitConstants(const upsampling_params& params) const
     {
-        return MakeUpSamplingJitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(params);
+
+        const auto& input = params.inputs[0];
+        const auto& output = params.output;
+
+        auto x_ratio = (float)input.X().v / (float)output.X().v;
+        auto y_ratio = (float)input.Y().v / (float)output.Y().v;
+
+        jit.AddConstants({
+            MakeJitConstant(toString(params.sampleType), ""),
+            MakeJitConstant("X_RATIO", x_ratio),
+            MakeJitConstant("Y_RATIO", y_ratio),
+        });
+
+        return jit;
     }
 
-    KernelsData UpSamplingKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData UpSamplingKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
 
-        KernelData kd = KernelData::Default<UpSamplingParams>(params);
-        UpSamplingParams& newParams = *static_cast<UpSamplingParams*>(kd.params.get());
+        KernelData kd = KernelData::Default<upsampling_params>(params);
+        upsampling_params& newParams = *static_cast<upsampling_params*>(kd.params.get());
 
         auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
         auto cldnn_jit = GetJitConstants(newParams);

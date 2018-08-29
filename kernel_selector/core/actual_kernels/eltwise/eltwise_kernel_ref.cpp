@@ -17,7 +17,7 @@
 #include "eltwise_kernel_ref.h"
 #include "kernel_selector_utils.h" 
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     ParamsKey EltwiseKernelRef::GetSupportedKey() const
     {
@@ -30,10 +30,12 @@ namespace KernelSelector {
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBatching();
+        k.EnableInt8Quantization();
+        k.EnableOutputCalibration();
         return k;
     }
 
-    KernelsData EltwiseKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData EltwiseKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

@@ -16,7 +16,7 @@
 
 #include "lrn_kernel_within_channel_ref_opt.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey LRNKernelWithinChannelOpt::GetSupportedKey() const
     {
@@ -37,7 +37,7 @@ namespace KernelSelector
         return k;
     }
 
-    CommonDispatchData LRNKernelWithinChannelOpt::SetDefault(const LRNParams& params) const
+    CommonDispatchData LRNKernelWithinChannelOpt::SetDefault(const lrn_params& params) const
     {
         CommonDispatchData runInfo = LRNKernelBase::SetDefault(params);
         const auto totalSize = params.inputs[0].LogicalSize();
@@ -54,7 +54,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    KernelsData LRNKernelWithinChannelOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData LRNKernelWithinChannelOpt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, FORCE_PRIORITY_8);
     }

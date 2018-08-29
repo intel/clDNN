@@ -19,6 +19,10 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "batch_norm/batch_norm_kernel_base.h"
+#include "batch_norm/batch_norm_kernel_selector.h"
+#include "eltwise/eltwise_kernel_selector.h"
+#include "eltwise/eltwise_kernel_base.h"
 
 namespace cldnn { namespace gpu {
 
@@ -33,7 +37,18 @@ protected:
     {
         kernel::kernel_arguments_data args;
 
-        args.inputs = { &instance.input_memory(), &instance.mean_memory(), &instance.variance_memory() };
+        
+        if (!instance.use_global_stats())
+        {
+            args.inputs = { &instance.input_memory() };
+            if (instance.forwad_pass())
+                args.inputs.push_back(&instance.inv_variance_memory());
+        }
+        else
+        {
+            args.inputs = { &instance.input_memory(), &instance.mean_memory(), &instance.variance_memory() };
+        }
+
         args.output = &instance.output_memory();
 
         return args;
@@ -43,42 +58,62 @@ public:
 
     static primitive_impl* create(const batch_norm_node &arg) 
     { 
-        auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
-        auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
-        const float epsilon =
-            (arg.input().get_output_layout().data_type == data_types::f16) ?
-            std::max(0.00007f, arg.get_primitive()->epsilon) : // prevent underflow if the epsilon is too small for fp16
-            arg.get_primitive()->epsilon;
+        if (!arg.use_global_stats())
+        {
+            auto norm_params = get_default_params<kernel_selector::batch_norm_params>(arg);
+            auto norm_optional_params = get_default_optional_params<kernel_selector::batch_norm_optional_params>(arg.get_program());
 
-        ew_params.inputs.push_back(convert_data_tensor(arg.mean().get_output_layout()));
-        ew_params.inputs.push_back(convert_data_tensor(arg.variance().get_output_layout()));
+            norm_params.batchNormParams.epsilon = arg.get_primitive()->epsilon;
+            norm_params.batchNormParams.with_inv_var = arg.forwad_pass();
 
-        ew_params.eltwiseParams.operations.push_back({
-            { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
-            kernel_selector::eltwise_mode::SUB });
+            auto& kernel_selector = kernel_selector::batch_norm_kernel_selector::Instance();
+            auto best_kernels = kernel_selector.GetBestKernels(norm_params, norm_optional_params);
 
-        ew_params.eltwiseParams.operations.push_back({
-            { kernel_selector::eltwise_params::InputType::Buffer(2), kernel_selector::eltwise_params::InputType::Scalar(epsilon) },
-            kernel_selector::eltwise_mode::ADD });
+            CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
-        ew_params.eltwiseParams.operations.push_back({
-            { kernel_selector::eltwise_params::InputType::Intermediate(1) },
-            kernel_selector::eltwise_mode::RSQRT });
+            auto norm = new batch_norm_gpu(arg, best_kernels[0]);
 
-        ew_params.eltwiseParams.operations.push_back({
-            { kernel_selector::eltwise_params::InputType::Intermediate(0), kernel_selector::eltwise_params::InputType::Intermediate(2) },
-            kernel_selector::eltwise_mode::MUL });
+            return norm;
+        }
+        else
+        {
+            auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
+            auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
+            const float epsilon =
+                (arg.input().get_output_layout().data_type == data_types::f16) ?
+                std::max(0.00007f, arg.get_primitive()->epsilon) : // prevent underflow if the epsilon is too small for fp16
+                arg.get_primitive()->epsilon;
 
-        ew_params.eltwiseParams.layoutBased = true;
+            ew_params.inputs.push_back(convert_data_tensor(arg.mean().get_output_layout()));
+            ew_params.inputs.push_back(convert_data_tensor(arg.variance().get_output_layout()));
 
-        auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
-        auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
+            ew_params.eltwiseParams.operations.push_back({
+                { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
+                kernel_selector::eltwise_mode::SUB });
 
-        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
+            ew_params.eltwiseParams.operations.push_back({
+                { kernel_selector::eltwise_params::InputType::Buffer(2), kernel_selector::eltwise_params::InputType::Scalar(epsilon) },
+                kernel_selector::eltwise_mode::ADD });
 
-        auto norm = new batch_norm_gpu(arg, best_kernels[0]);
+            ew_params.eltwiseParams.operations.push_back({
+                { kernel_selector::eltwise_params::InputType::Intermediate(1) },
+                kernel_selector::eltwise_mode::RSQRT });
 
-        return norm;
+            ew_params.eltwiseParams.operations.push_back({
+                { kernel_selector::eltwise_params::InputType::Intermediate(0), kernel_selector::eltwise_params::InputType::Intermediate(2) },
+                kernel_selector::eltwise_mode::MUL });
+
+            ew_params.eltwiseParams.layoutBased = true;
+
+            auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
+            auto best_kernels = kernel_selector.GetBestKernels(ew_params, ew_optional_params);
+
+            CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
+
+            auto norm = new batch_norm_gpu(arg, best_kernels[0]);
+
+            return norm;
+        }
     };
 };
 

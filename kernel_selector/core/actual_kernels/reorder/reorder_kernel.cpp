@@ -17,7 +17,7 @@
 #include "reorder_kernel.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey ReorderKernelRef::GetSupportedKey() const
     {
@@ -39,16 +39,16 @@ namespace KernelSelector
         return k;
     }
 
-    JitConstants ReorderKernelRef::GetJitConstants(const ReorderParams& params) const
+    JitConstants ReorderKernelRef::GetJitConstants(const reorder_params& params) const
     {
         auto jit = ReorderKernelBase::GetJitConstants(params);
         jit.Merge(GetTensorFriendlyWorkGroupsJit(params.inputs[0]));
         return jit;
     }
 
-    KernelsData ReorderKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ReorderKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        const ReorderParams& orgParams = static_cast<const ReorderParams&>(params);
+        const reorder_params& orgParams = static_cast<const reorder_params&>(params);
         return GetCommonKernelsData(orgParams, options, DONT_USE_IF_HAVE_SOMETHING_ELSE);
     }
 }

@@ -18,6 +18,8 @@
 #include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "region_yolo/region_yolo_kernel_selector.h"
+#include "region_yolo/region_yolo_kernel_ref.h"
 #include "error_handler.h"
 
 namespace cldnn { namespace gpu {
@@ -33,11 +35,11 @@ struct region_yolo_gpu : typed_primitive_gpu_impl<region_yolo>
         auto ry_optional_params = get_default_optional_params<kernel_selector::region_yolo_optional_params>(arg.get_program());
 
         const auto& primitive = arg.get_primitive();
-        ry_params.ryParams.coords = primitive->coords;
-        ry_params.ryParams.classes = primitive->classes;
-        ry_params.ryParams.num = primitive->num;
-        ry_params.ryParams.do_softmax = primitive->do_softmax;
-        ry_params.ryParams.mask_size = primitive->mask_size;
+        ry_params.coords = primitive->coords;
+        ry_params.classes = primitive->classes;
+        ry_params.num = primitive->num;
+        ry_params.do_softmax = primitive->do_softmax;
+        ry_params.mask_size = primitive->mask_size;
 
         auto& kernel_selector = kernel_selector::region_yolo_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(ry_params, ry_optional_params);

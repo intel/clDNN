@@ -44,6 +44,25 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 8.0
+    New features:
+    - lstm primitive
+    - average unpooling primitive
+    - serialization - dump weights, biases and kernels
+    - scale grad for input and weights primitive
+    Bug fixes:
+    - wrong gws in concatenation
+    - int8 layers
+    - convolution depthwise bias concatenation
+    - params in engine_info
+    - mutable_data filler
+    - momentum calculation
+    UX:
+    - kernel selector renaming
+    - bfyx_yxfb batched reorder
+    - code cleanups
+    - primitives allocation order
+
 ### Drop 7.0
     New features:
     - support for img_info=4 in proposal_gpu
@@ -66,7 +85,6 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
     - depth-concatenation with fused relu optimization
     - winograd optimizations
     - deconvolution optimizations (i.e bfyx opt)
-
 
 ### Drop 6.0
 	New features:

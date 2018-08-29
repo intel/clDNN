@@ -66,7 +66,7 @@ TEST(arg_max_gpu, base) {
 	for (uint32_t i = 0; i < batch_num; i++)
 	{
 		out_buffer[i] = get_value<float>(output_ptr, i);
-	}
+	}	
 	int size = x_size * y_size * feature_num;
 	int index;
 	float value;

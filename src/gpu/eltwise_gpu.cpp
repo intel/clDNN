@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "eltwise/eltwise_kernel_selector.h"
+#include "eltwise/eltwise_kernel_base.h"
 
 namespace cldnn { namespace gpu {
 
@@ -46,9 +48,18 @@ struct eltwise_gpu : typed_primitive_gpu_impl<eltwise>
 {
     using parent = typed_primitive_gpu_impl<eltwise>;
     using parent::parent;
-
-    static primitive_impl* create(const eltwise_node& arg)
+protected:
+    virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<eltwise>& instance, int32_t split) const override
     {
+        kernel::kernel_arguments_data args = parent::get_arguments(instance, split);
+
+        args.output_calibration_factors = instance.output_calibration_factors_term() ? &instance.output_calibration_factors_memory() : nullptr;
+        return args;
+    }
+
+public:
+    static primitive_impl* create(const eltwise_node& arg) 
+    { 
         auto ew_params = get_default_params<kernel_selector::eltwise_params>(arg);
         auto ew_optional_params = get_default_optional_params<kernel_selector::eltwise_optional_params>(arg.get_program());
 
@@ -61,7 +72,7 @@ struct eltwise_gpu : typed_primitive_gpu_impl<eltwise>
         if(primitive->with_activation)
             convert_activation_func_params(primitive, ew_params);
 
-        ew_params.eltwiseParams.operations.push_back({
+        ew_params.eltwiseParams.operations.push_back({ 
             { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },
             convect_to_eltwise_mode(primitive->mode) });
 
@@ -72,10 +83,28 @@ struct eltwise_gpu : typed_primitive_gpu_impl<eltwise>
                                                             convect_to_eltwise_mode(primitive->mode) });
         }
 
+        if (primitive->mode == eltwise_mode::sum)
+        {
+            ew_params.eltwiseParams.coefficients = primitive->coefficients;
+        }
+
         for (size_t i = 0; i < ew_params.inputs.size(); i++)
         {
             if (!ew_params.inputs[i].SameDims(ew_params.output))
                 ew_params.eltwiseParams.layoutBased = true;
+        }
+
+        if (primitive->output_calibration_factors.size() > 0 || primitive->output_quantization_factor != 1.0f)
+        {
+            ew_params.eltwiseParams.int8_quantization = true;
+
+            if (primitive->output_calibration_factors.size() > 0)
+            {
+                ew_params.eltwiseParams.output_calibration = true;
+                ew_params.output_calibration_factors.push_back(convert_data_tensor(arg.output_calibration_factors().get_output_layout()).FlattenFeatureAndSpatials());
+            }
+            else
+                ew_params.eltwiseParams.output_quantization_factor = arg.get_output_qf();
         }
 
         auto& kernel_selector = kernel_selector::eltwise_kernel_selector::Instance();
@@ -97,8 +126,11 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), eltwise_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), eltwise_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::bfyx), eltwise_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), eltwise_gpu::create },
-                { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), eltwise_gpu::create }
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), eltwise_gpu::create },
+                // MMAD
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), eltwise_gpu::create }
             });
         }
         ~attach() {}

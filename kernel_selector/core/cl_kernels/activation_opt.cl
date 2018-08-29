@@ -22,7 +22,7 @@ KERNEL(activation)(
     __global UNIT_TYPE* output,
     __global UNIT_TYPE* input
 #else
-    __global UNIT_TYPE* input,
+    __global UNIT_TYPE* input, 
     __global UNIT_TYPE* output
 #endif
     )

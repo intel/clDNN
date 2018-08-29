@@ -74,13 +74,14 @@ std::string scale_inst::to_string(scale_node const& node)
 scale_inst::typed_primitive_inst(network_impl& network, scale_node const& node)
     :parent(network, node)
 {
-    auto scale_format = scale_memory().get_layout().format;
+    auto scale_layout = node.scale_in().get_output_layout();
+    auto scale_format = scale_layout.format;
 
-    auto scale_batch_size = scale_memory().get_layout().size.batch[0];
-    auto scale_feature_size = scale_memory().get_layout().size.feature[0];
+    auto scale_batch_size = scale_layout.size.batch[0];
+    auto scale_feature_size = scale_layout.size.feature[0];
 
-    auto input_batch_size = input_memory().get_layout().size.batch[0];
-    auto input_feature_size = input_memory().get_layout().size.feature[0];
+    auto input_batch_size = node.input().get_output_layout().size.batch[0];
+    auto input_feature_size = node.input().get_output_layout().size.feature[0];
 
     if(scale_batch_size != 1)
     {
@@ -94,14 +95,15 @@ scale_inst::typed_primitive_inst(network_impl& network, scale_node const& node)
 
     if (!argument.bias.empty())
     {
-        auto bias_format = bias_memory().get_layout().format;
-        auto bias_raw_sizes = bias_memory().get_layout().size.raw;
+        auto bias_layout = node.bias().get_output_layout();
+        auto bias_format = bias_layout.format;
+        auto bias_raw_sizes = bias_layout.size.raw;
 
         CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Scale format", scale_format.value, "bias format", bias_format);
 
-        for (size_t i = 0; i < bias_memory().get_layout().size.raw.size(); ++i)
+        for (size_t i = 0; i < bias_layout.size.raw.size(); ++i)
         {
-            if (scale_memory().get_layout().size.raw[i] != bias_raw_sizes[i])
+            if (scale_layout.size.raw[i] != bias_raw_sizes[i])
                 CLDNN_ERROR_MESSAGE(node.id(), "Scale input size do not match bias size! Size index:" + std::to_string(i));
         }
     }

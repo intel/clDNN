@@ -18,7 +18,7 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
 
     ParamsKey ConvolutionKernel_yxfb_yxio_b1_block::GetSupportedKey() const
@@ -41,14 +41,22 @@ namespace KernelSelector
         return k;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b1_block::SetDefault(const ConvolutionParams& arg, int) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b1_block::SetDefault(const convolution_params& arg, int) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
         // TODO: fill the proper data here (I don't know where can I locate it).
         return runInfo;
     }
 
-    KernelsData ConvolutionKernel_yxfb_yxio_b1_block::GetKernelsData(const Params& params, const OptionalParams& options) const
+    JitConstants ConvolutionKernel_yxfb_yxio_b1_block::GetJitConstants(const convolution_params& params, const DispatchData& kd) const
+    {
+        auto cldnn_jit = ConvolutionKernelBase::GetJitConstants(params, kd);
+
+        cldnn_jit.AddConstant(MakeJitConstant("LOCAL_WORK_GROUP_SIZE", kd.lws0));
+        return cldnn_jit;
+    }
+
+    KernelsData ConvolutionKernel_yxfb_yxio_b1_block::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

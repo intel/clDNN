@@ -43,7 +43,7 @@ public:
     static layout calc_output_layout(custom_gpu_primitive_node const& node)
     {
         layout output_layout = node.get_primitive()->output_layout;
-
+        
         // if the output layout format was set to any, it means the layer output format will be the same as the first input
         if (output_layout.format == format::any)
         {

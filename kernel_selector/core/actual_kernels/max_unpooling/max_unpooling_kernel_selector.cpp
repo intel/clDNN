@@ -16,15 +16,15 @@
 
 #include "max_unpooling_kernel_selector.h"
 #include "max_unpooling_kernel_gpu_ref.h"
+ 
+namespace kernel_selector {
 
-namespace KernelSelector {
-
-    MaxUnpoolingKernelSelctor::MaxUnpoolingKernelSelctor()
+    max_unpooling_kernel_selector::max_unpooling_kernel_selector()
     {
         Attach<MaxUnpoolingKernelGPURef>();
     }
 
-    KernelsData MaxUnpoolingKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData max_unpooling_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::MAX_UNPOOLING);
     }

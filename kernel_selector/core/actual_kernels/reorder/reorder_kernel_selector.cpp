@@ -19,18 +19,20 @@
 #include "reorder_kernel_fast_b1.h"
 #include "reorder_from_winograd_2x3_kernel.h"
 #include "reorder_to_winograd_2x3_kernel.h"
- 
-namespace KernelSelector {
+#include "reorder_kernel_to_yxfb_batched.h"
 
-    ReorderKernelSelctor::ReorderKernelSelctor()
+namespace kernel_selector {
+
+    reorder_kernel_selector::reorder_kernel_selector()
     {
         Attach<ReorderKernelRef>();
         Attach<ReorderKernelFastBatch1>();
         Attach<ReorderFromWinograd2x3Kernel>();
         Attach<ReorderToWinograd2x3Kernel>();
+        Attach<ReorderKernel_to_yxfb_batched>();
     }
 
-    KernelsData ReorderKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData reorder_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::REORDER);
     }

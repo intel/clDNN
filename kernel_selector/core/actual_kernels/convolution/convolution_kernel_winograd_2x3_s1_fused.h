@@ -18,7 +18,7 @@
 
 #include "convolution_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class ConvolutionKernel_Winograd_2x3_s1_fused : public ConvolutionKernelBase
     {
@@ -27,14 +27,14 @@ namespace KernelSelector {
         ConvolutionKernel_Winograd_2x3_s1_fused() : ConvolutionKernelBase("convolution_gpu_winograd_2x3_s1_fused") {}
         virtual ~ConvolutionKernel_Winograd_2x3_s1_fused() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override { return{ WeightsLayout::winograd_2x3_s1_fused_weights }; }
+        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override { return{ WeightsLayout::winograd_2x3_s1_fused_weights }; }
 
-        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
-        bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
+        JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
+        bool Validate(const Params& p, const optional_params& o) const override;
+        DispatchData SetDefault(const convolution_params& arg, int autoTuneIndex = -1) const override;
     };
 }

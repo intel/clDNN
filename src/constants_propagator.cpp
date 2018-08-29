@@ -89,3 +89,4 @@ void constants_propagator::add_constant(program_node& node)
         }
     }
 }
+

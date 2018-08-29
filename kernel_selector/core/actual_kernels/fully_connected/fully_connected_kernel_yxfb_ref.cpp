@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_yxfb_ref.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_yxfb_ref::GetSupportedKey() const
     {
@@ -38,7 +38,7 @@ namespace KernelSelector
         return k;
     }
 
-    KernelsData FullyConnected_yxfb_ref::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData FullyConnected_yxfb_ref::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, DataLayout::yxfb,
             { WeightsLayout::io, WeightsLayout::oi, WeightsLayout::oiyx, WeightsLayout::oyxi, WeightsLayout::iyxo, WeightsLayout::yxio }

@@ -16,7 +16,7 @@
 
 #include "lrn_kernel_across_channel_ref.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey LRNKernelAcrossChannelRef::GetSupportedKey() const
     {
@@ -39,7 +39,7 @@ namespace KernelSelector
         return k;
     }
 
-    CommonDispatchData LRNKernelAcrossChannelRef::SetDefault(const LRNParams& params) const
+    CommonDispatchData LRNKernelAcrossChannelRef::SetDefault(const lrn_params& params) const
     {
         CommonDispatchData runInfo = LRNKernelBase::SetDefault(params);
 
@@ -58,7 +58,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    KernelsData LRNKernelAcrossChannelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData LRNKernelAcrossChannelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, FORCE_PRIORITY_9);
     }

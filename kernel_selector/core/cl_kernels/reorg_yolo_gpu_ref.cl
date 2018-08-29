@@ -68,6 +68,6 @@ KERNEL (reorg_yolo_ref)(const __global UNIT_TYPE* input, __global UNIT_TYPE* out
         output[dstIndex] = input[srcIndex];
     }
 #endif
-
+    
 
 }

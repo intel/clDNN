@@ -18,8 +18,10 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
+    // Sub-group size used by "kernel_name_bfyx_os_iyx_osv16" kernel.
+    constexpr size_t sub_group_size = 16;
 
     ConvolutionKernel_bfyx_os_iyx_osv16::ConvolutionKernel_bfyx_os_iyx_osv16() : ConvolutionKernelBase("convolution_gpu_bfyx_os_iyx_osv16")
     {
@@ -78,7 +80,7 @@ namespace KernelSelector
         const uSize& filter_size,
         const uSize& stride,
         const uSize& dilation,
-        size_t sub_group_size = 16,
+        size_t sg_size = 16,
         size_t read_chunk_size = 8,
         size_t min_read_size = 16)
     {
@@ -94,7 +96,7 @@ namespace KernelSelector
         // Required number of elements in X dimension rounded to nearest >= read chunk size.
         size_t input_block_read_width = std::max(RoundUp(input_block_req_width, read_chunk_size), min_read_size);
         // Number of sub-group-sized vectors of unit type needed to store input block.
-        size_t input_block_array_size = CeilDiv(input_block_req_height * input_block_read_width, sub_group_size);
+        size_t input_block_array_size = CeilDiv(input_block_req_height * input_block_read_width, sg_size);
 
         return std::make_pair(input_block_array_size, input_block_read_width);
     }
@@ -122,13 +124,9 @@ namespace KernelSelector
             return autoTuneOptions[autoTuneIndex];
         }
 
-        // Sub-group size used by "kernel_name_bfyx_os_iyx_osv16" kernel.
-        constexpr size_t sub_group_size = 16;
-
         AutoTuneOption option = { 0, 0, 0, ROUND_ROBIN };
 
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
-        const auto cp = params.convParams;
+        const convolution_params& cp = static_cast<const convolution_params&>(p);
 
         if (cp.stride.x == 1 && cp.stride.y == 1)
         {
@@ -140,9 +138,9 @@ namespace KernelSelector
             }
             //if less than 16 values is required to compute one single row of output
             //then each WI shall compute one single row to maximize reuse within SIMD subgroup (this gives very nice performance results)
-            else if (params.output.X().v + (cp.filterSize.x - 1)*cp.dilation.x < sub_group_size)
+            else if (cp.output.X().v + (cp.filterSize.x - 1)*cp.dilation.x < sub_group_size)
             {
-                option.blockWidth = params.output.X().v;
+                option.blockWidth = cp.output.X().v;
                 option.blockHeight = 1;
                 option.prefetch = 4;
             }
@@ -174,31 +172,25 @@ namespace KernelSelector
         }
 
         // if this is not 1x1 batch1 case then shrink filters, other way we're memory bound and it's best to use 16x1 block sizes
-        if (params.convParams.filterSize.x != 1 || params.convParams.filterSize.y != 1 || params.output.Batch().v != 1)
+        if (cp.filterSize.x != 1 || cp.filterSize.y != 1 || cp.output.Batch().v != 1)
         {
-            shrink_blocks_to_output_size(params.output.X().v, params.output.Y().v,
+            shrink_blocks_to_output_size(cp.output.X().v, cp.output.Y().v,
                 option.blockWidth, option.blockHeight);
         }
 
         return option;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_os_iyx_osv16::SetDefault(const ConvolutionParams& arg, int autoTuneIndex) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_os_iyx_osv16::SetDefault(const convolution_params& cp, int autoTuneIndex) const
     {
-        DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
+        DispatchData runInfo = ConvolutionKernelBase::SetDefault(cp);
 
-        // Sub-group size used by "kernel_name_bfyx_os_iyx_osv16" kernel.
-        constexpr size_t sub_group_size = 16;
-
-        const auto of_maps = arg.output.Feature().v;
+        const auto of_maps = cp.output.Feature().v;
         const size_t of_threads_per_batch = RoundUp(of_maps, sub_group_size);
-        runInfo.cldnnStyle.leftovers = of_threads_per_batch - of_maps;
-
-        const auto cp = arg.convParams;
 
         runInfo.effiency = FORCE_PRIORITY_3;
 
-        auto tuneOptions = GetAutoTuneOptions(arg, autoTuneIndex);
+        auto tuneOptions = GetAutoTuneOptions(cp, autoTuneIndex);
         runInfo.cldnnStyle.blockWidth = tuneOptions.blockWidth;
         runInfo.cldnnStyle.blockHeight = tuneOptions.blockHeight;
         runInfo.cldnnStyle.prefetch = tuneOptions.prefetch;
@@ -215,9 +207,9 @@ namespace KernelSelector
         runInfo.cldnnStyle.inputBlockArraySize = input_block_dims.first;
         runInfo.cldnnStyle.inputBlockWidth = input_block_dims.second;
 
-        runInfo.gws0 = CeilDiv(arg.output.X().v, runInfo.cldnnStyle.blockWidth);
-        runInfo.gws1 = CeilDiv(arg.output.Y().v, runInfo.cldnnStyle.blockHeight);
-        runInfo.gws2 = of_threads_per_batch * arg.output.Batch().v;
+        runInfo.gws0 = CeilDiv(cp.output.X().v, runInfo.cldnnStyle.blockWidth);
+        runInfo.gws1 = CeilDiv(cp.output.Y().v, runInfo.cldnnStyle.blockHeight);
+        runInfo.gws2 = of_threads_per_batch * cp.output.Batch().v;
 
         runInfo.lws0 = 1;
         runInfo.lws1 = 1;
@@ -226,7 +218,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    bool ConvolutionKernel_bfyx_os_iyx_osv16::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_bfyx_os_iyx_osv16::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o) ||
             !CovolutionCheckInput(p, o))
@@ -237,8 +229,12 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants ConvolutionKernel_bfyx_os_iyx_osv16::GetJitConstants(const ConvolutionParams& params, DispatchData runInfo) const
+    JitConstants ConvolutionKernel_bfyx_os_iyx_osv16::GetJitConstants(const convolution_params& params, const DispatchData& runInfo) const
     {
+        const auto of_maps = params.output.Feature().v;
+        const size_t of_threads_per_batch = RoundUp(of_maps, sub_group_size);
+        size_t leftovers = of_threads_per_batch - of_maps;
+
         auto jit = Parent::GetJitConstants(params, runInfo);
 
         jit.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", runInfo.lws2));
@@ -248,22 +244,22 @@ namespace KernelSelector
         jit.AddConstant(MakeJitConstant("IN_BLOCK_WIDTH", runInfo.cldnnStyle.inputBlockWidth));
         jit.AddConstant(MakeJitConstant("PREFETCH", runInfo.cldnnStyle.prefetch));
 
-        if (runInfo.cldnnStyle.leftovers)
+        if (leftovers)
         {
-            jit.AddConstant(MakeJitConstant("LEFTOVERS", runInfo.cldnnStyle.leftovers));
+            jit.AddConstant(MakeJitConstant("LEFTOVERS", leftovers));
         }
 
         return jit;
     }
 
-    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, const int autoTuneIndex) const
+    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, const int autoTuneIndex) const
     {
         return GetCommonKernelsData(params, options, GetAutoTuneOptions(params, autoTuneIndex).exeMode, autoTuneIndex);
     }
 
-    std::vector<WeightsLayout> ConvolutionKernel_bfyx_os_iyx_osv16::GetSupportedWeightLayouts(const ConvolutionParams& params) const
+    std::vector<WeightsLayout> ConvolutionKernel_bfyx_os_iyx_osv16::GetSupportedWeightLayouts(const convolution_params& params) const
     {
-        if (!params.convParams.transposed)
+        if (!params.transposed)
         {
             return{ WeightsLayout::os_iyx_osv16 };
         }
@@ -273,12 +269,12 @@ namespace KernelSelector
         }
     }
 
-    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetTunedKernelsDataByIndex(params, options, -1);
     }
 
-    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelsDataForAutoTune(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_os_iyx_osv16::GetKernelsDataForAutoTune(const Params& params, const optional_params& options) const
     {
         if (!Validate(params, options))
         {

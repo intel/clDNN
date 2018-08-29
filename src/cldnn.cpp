@@ -470,6 +470,22 @@ void cldnn_set_network_input(cldnn_network network, cldnn_primitive_id id, cldnn
     });
 }
 
+void cldnn_set_learning_rate(cldnn_network network, float lr, cldnn_status* status)
+{
+    exception_handler(CLDNN_ERROR, status, [&]()
+    {
+        api_cast(network)->set_learning_rate(lr);
+    });
+}
+
+float cldnn_get_learning_rate(cldnn_network network, cldnn_status* status)
+{
+    return exception_handler<float>(CLDNN_ERROR, status, 0, [&]() 
+    {
+        return api_cast(network)->get_learning_rate();
+    });
+}
+
 cldnn_engine cldnn_get_network_engine(cldnn_network network, cldnn_status* status)
 {
     return exception_handler<cldnn_engine>(CLDNN_ERROR, status, nullptr, [&]()
@@ -890,10 +906,13 @@ extern "C" CLDNN_API cldnn_primitive_type_id cldnn_##PType##_type_id(cldnn_statu
 PRIMITIVE_TYPE_ID_CALL_IMPL(activation)
 PRIMITIVE_TYPE_ID_CALL_IMPL(activation_grad)
 PRIMITIVE_TYPE_ID_CALL_IMPL(arg_max_min)
+PRIMITIVE_TYPE_ID_CALL_IMPL(average_unpooling)
 PRIMITIVE_TYPE_ID_CALL_IMPL(batch_norm)
+PRIMITIVE_TYPE_ID_CALL_IMPL(batch_norm_grad)
 PRIMITIVE_TYPE_ID_CALL_IMPL(convolution)
 PRIMITIVE_TYPE_ID_CALL_IMPL(crop)
 PRIMITIVE_TYPE_ID_CALL_IMPL(data)
+PRIMITIVE_TYPE_ID_CALL_IMPL(embed)
 PRIMITIVE_TYPE_ID_CALL_IMPL(mutable_data)
 PRIMITIVE_TYPE_ID_CALL_IMPL(deconvolution)
 PRIMITIVE_TYPE_ID_CALL_IMPL(concatenation)
@@ -908,6 +927,8 @@ PRIMITIVE_TYPE_ID_CALL_IMPL(pooling)
 PRIMITIVE_TYPE_ID_CALL_IMPL(reorder)
 PRIMITIVE_TYPE_ID_CALL_IMPL(reshape)
 PRIMITIVE_TYPE_ID_CALL_IMPL(scale)
+PRIMITIVE_TYPE_ID_CALL_IMPL(scale_grad_input)
+PRIMITIVE_TYPE_ID_CALL_IMPL(scale_grad_weights)
 PRIMITIVE_TYPE_ID_CALL_IMPL(softmax)
 PRIMITIVE_TYPE_ID_CALL_IMPL(region_yolo)
 PRIMITIVE_TYPE_ID_CALL_IMPL(reorg_yolo)
@@ -925,3 +946,7 @@ PRIMITIVE_TYPE_ID_CALL_IMPL(apply_adam)
 PRIMITIVE_TYPE_ID_CALL_IMPL(mvn)
 PRIMITIVE_TYPE_ID_CALL_IMPL(fully_connected_grad_input)
 PRIMITIVE_TYPE_ID_CALL_IMPL(fully_connected_grad_weights)
+PRIMITIVE_TYPE_ID_CALL_IMPL(lstm)
+PRIMITIVE_TYPE_ID_CALL_IMPL(lstm_gemm)
+PRIMITIVE_TYPE_ID_CALL_IMPL(lstm_elt)
+PRIMITIVE_TYPE_ID_CALL_IMPL(softmax_loss_grad)

@@ -18,7 +18,7 @@
 
 #include "arg_max_min_kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
 	class ArgMaxMinKernelGPURef : public ArgMaxMinKernelBase
 	{
@@ -26,7 +26,7 @@ namespace KernelSelector
         ArgMaxMinKernelGPURef() : ArgMaxMinKernelBase("arg_max_min_gpu_ref") {}
 		virtual ~ArgMaxMinKernelGPURef() {}
 
-		virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+		virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
 		virtual ParamsKey GetSupportedKey() const override;
 	};
 }

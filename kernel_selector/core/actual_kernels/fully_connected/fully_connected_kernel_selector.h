@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class FullyConnectedKernelSelctor : public KernelSelctorBase
+    class fully_connected_kernel_selector : public kernel_selector_base
     {
     public:
-        static FullyConnectedKernelSelctor &Instance() {
-            static FullyConnectedKernelSelctor instance_;
+        static fully_connected_kernel_selector &Instance() {
+            static fully_connected_kernel_selector instance_;
             return instance_;
         }
 
-        FullyConnectedKernelSelctor();
+        fully_connected_kernel_selector();
 
-        virtual ~FullyConnectedKernelSelctor() {}
+        virtual ~fully_connected_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

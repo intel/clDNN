@@ -18,7 +18,7 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     ParamsKey ConvolutionKernel_bfyx_Direct_10_10_12::GetSupportedKey() const
     {
@@ -41,17 +41,16 @@ namespace KernelSelector {
         return k;
     }
 
-    JitConstants ConvolutionKernel_bfyx_Direct_10_10_12::GetJitConstants(const ConvolutionParams& params, Parent::DispatchData runInfo) const
+    JitConstants ConvolutionKernel_bfyx_Direct_10_10_12::GetJitConstants(const convolution_params& cp, const DispatchData& runInfo) const
     {
-        JitConstants jit = Parent::GetJitConstants(params, runInfo);
-        const auto& cp = params.convParams;
+        JitConstants jit = Parent::GetJitConstants(cp, runInfo);
 
         jit.AddConstants({
-            MakeJitConstant("ALIGNED_OFM",                  RoundUp(params.output.Feature().v, runInfo.gemmStyle.subBlockDimN)),
+            MakeJitConstant("ALIGNED_OFM",                  RoundUp(cp.output.Feature().v, runInfo.gemmStyle.subBlockDimN)),
             MakeJitConstant("DX",                           runInfo.gemmStyle.globalWorkSizeDX),
             MakeJitConstant("DY",                           runInfo.gemmStyle.globalWorkSizeDY),
             MakeJitConstant("KERNEL_SLICE_DIV2",            (cp.filterSize.x * cp.filterSize.y) / 2),
-            MakeJitConstant("RIGHT_PARTIAL_TILE_K",         params.output.X().v % runInfo.gemmStyle.globalWorkSizeDX),
+            MakeJitConstant("RIGHT_PARTIAL_TILE_K",         cp.output.X().v % runInfo.gemmStyle.globalWorkSizeDX),
             MakeJitConstant("INPUT_BUFFER_WIDTH_PADDED",    ""),    // TODO: enable non padding path again
             MakeJitConstant("INPUT_BUFFER_HEIGHT_PADDED",   ""),
         });
@@ -59,14 +58,13 @@ namespace KernelSelector {
         return jit;
     }
 
-    ConvolutionKernel_bfyx_Direct_10_10_12::Parent::DispatchData ConvolutionKernel_bfyx_Direct_10_10_12::SetDefault(const ConvolutionParams& arg, int) const
+    ConvolutionKernel_bfyx_Direct_10_10_12::Parent::DispatchData ConvolutionKernel_bfyx_Direct_10_10_12::SetDefault(const convolution_params& arg, int) const
     {
         Parent::DispatchData runInfo = Parent::SetDefault(arg);
 
-        const auto& cp = arg.convParams;
         constexpr uint32_t TILE_N = 16;
 
-        if (cp.filterSize.x == 5)
+        if (arg.filterSize.x == 5)
         {
             runInfo.gemmStyle = { 1, 1, TILE_N, /*GWS DX*/ 4, /*GWS DY*/ 4, 1 };
         }
@@ -88,7 +86,7 @@ namespace KernelSelector {
         return runInfo;
     }
 
-    bool ConvolutionKernel_bfyx_Direct_10_10_12::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_bfyx_Direct_10_10_12::Validate(const Params& p, const optional_params& o) const
     {
         if (!Parent::Validate(p, o) || 
             !CovolutionCheckInput(p, o))
@@ -96,9 +94,7 @@ namespace KernelSelector {
             return false;
         }
 
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
-
-        const auto& cp = params.convParams;
+        const convolution_params& cp = static_cast<const convolution_params&>(p);
 
         const bool bStrideOK = (cp.stride.x == 1 && cp.stride.y == 1);
         const bool bFilter3x3 = (cp.filterSize.x == 3 && cp.filterSize.y == 3);
@@ -113,7 +109,7 @@ namespace KernelSelector {
         return true;
     }
 
-    KernelsData ConvolutionKernel_bfyx_Direct_10_10_12::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_Direct_10_10_12::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, AGE_BASED);
     }

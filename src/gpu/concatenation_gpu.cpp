@@ -20,6 +20,8 @@
 #include "events_waiter.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "concatenation/concatenation_kernel_selector.h"
+#include "concatenation/concatenation_kernel_base.h"
 
 #include <initializer_list>
 
@@ -57,13 +59,13 @@ protected:
 
     virtual bool optimized_out(concatenation_inst& instance) const override
     {
-        return
+        return 
             parent::optimized_out(instance) || _outer.can_be_optimized();
     }
 
 public:
 
-    static primitive_impl* create(const concatenation_node& arg)
+    static primitive_impl* create(const concatenation_node& arg) 
     {
         if (arg.can_be_optimized())
         {
@@ -81,7 +83,7 @@ public:
             concat_params.inputs[i] = convert_data_tensor(input_layout);
         }
 
-        concat_params.concatParams.axis = convert_axis(axis);
+        concat_params.axis = convert_axis(axis);
         concat_optional_params.kernelPerInput = true;
 
         auto& kernel_selector = kernel_selector::concatenation_kernel_selector::Instance();
@@ -106,7 +108,10 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::i8,  format::bfyx), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), concatenation_gpu::create },
-                { std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf), concatenation_gpu::create }
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf), concatenation_gpu::create },
+                // MMAD
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf_af32), concatenation_gpu::create },
+
             });
         }
         ~attach() {}

@@ -17,7 +17,7 @@
 #include "convolution_kernel_bfyx_1x1.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
     
     ParamsKey ConvolutionKernel_bfyx_1x1::GetSupportedKey() const
     {
@@ -45,7 +45,7 @@ namespace KernelSelector {
         return k;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_1x1::SetDefault(const ConvolutionParams& params, int) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_1x1::SetDefault(const convolution_params& params, int) const
     {
         DispatchData kd = ConvolutionKernelBase::SetDefault(params);
 
@@ -69,22 +69,22 @@ namespace KernelSelector {
         return kd;
     }
 
-    bool ConvolutionKernel_bfyx_1x1::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_bfyx_1x1::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const auto& params = static_cast<const ConvolutionParams&>(p);
+        const auto& params = static_cast<const convolution_params&>(p);
 
         const auto &input = params.inputs[0];
         const auto &output = params.output;
 
         const bool bOutputSizes = output.X().v != input.X().v || output.Y().v != input.Y().v;
         const bool bPad = input.X().pad.Total() != 0 || input.Y().pad.Total() != 0 || input.Feature().pad.Total() != 0 || input.Batch().pad.Total() != 0;
-        const bool bFilterSize = params.convParams.filterSize.x != 1 || params.convParams.filterSize.y != 1;
-        const bool bStride = params.convParams.stride.x != 1 || params.convParams.stride.y != 1;
+        const bool bFilterSize = params.filterSize.x != 1 || params.filterSize.y != 1;
+        const bool bStride = params.stride.x != 1 || params.stride.y != 1;
         const bool bInputSizes = input.GetLayout() == DataLayout::bfyx && (input.X().v * input.Y().v != 16 || (input.Feature().v % 8) != 0);
 
         if(bOutputSizes || bPad || bFilterSize || bStride || bInputSizes)
@@ -95,7 +95,7 @@ namespace KernelSelector {
         return true;
     }
 
-    JitConstants ConvolutionKernel_bfyx_1x1::GetJitConstants(const ConvolutionParams& params, DispatchData runInfo) const
+    JitConstants ConvolutionKernel_bfyx_1x1::GetJitConstants(const convolution_params& params, const DispatchData& runInfo) const
     {
         auto jit = Parent::GetJitConstants(params, runInfo);
 
@@ -105,7 +105,7 @@ namespace KernelSelector {
         return jit;
     }
 
-    KernelsData ConvolutionKernel_bfyx_1x1::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_1x1::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

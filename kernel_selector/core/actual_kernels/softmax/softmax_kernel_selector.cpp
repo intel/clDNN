@@ -20,9 +20,9 @@
 #include "softmax_kernel_fb.h"
 #include "softmax_kernel_items_class_optimized.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
-    SoftmaxKernelSelctor::SoftmaxKernelSelctor()
+    softmax_kernel_selector::softmax_kernel_selector()
     {
         Attach<SoftmaxKernelRef>();
         Attach<SoftmaxKernel_bf>();
@@ -30,7 +30,7 @@ namespace KernelSelector {
         Attach<SoftmaxKerneItemsClassOptimized>();
     }
 
-    KernelsData SoftmaxKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData softmax_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::SOFT_MAX);
     }

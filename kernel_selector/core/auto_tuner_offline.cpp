@@ -16,7 +16,7 @@
 
 #include "auto_tuner.h"
 #include "auto_tuner_offline.h"
-namespace KernelSelector 
+namespace kernel_selector 
 {
     std::shared_ptr<auto_tuner_offline> auto_tuner_offline::instance = 0;
     std::mutex auto_tuner_offline::mutex;

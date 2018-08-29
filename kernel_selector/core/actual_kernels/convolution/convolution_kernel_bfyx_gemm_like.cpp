@@ -19,7 +19,7 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     
     ParamsKey ConvolutionKernel_bfyx_GEMMLike::GetSupportedKey() const
@@ -44,7 +44,7 @@ namespace KernelSelector
         return k;
     }
 
-    std::string ConvolutionKernel_bfyx_GEMMLike::GetKernelName(const ConvolutionParams& params) const
+    std::string ConvolutionKernel_bfyx_GEMMLike::GetKernelName(const convolution_params& params) const
     {
         if (params.inputs[0].GetDType() == Datatype::F32)
         {
@@ -56,7 +56,7 @@ namespace KernelSelector
         }
     }
 
-    JitConstants ConvolutionKernel_bfyx_GEMMLike::GetJitConstants(const ConvolutionParams& params, Parent::DispatchData runInfo) const
+    JitConstants ConvolutionKernel_bfyx_GEMMLike::GetJitConstants(const convolution_params& params, const DispatchData& runInfo) const
     {
         JitConstants jit = Parent::GetJitConstants(params, runInfo);
         
@@ -64,7 +64,7 @@ namespace KernelSelector
             MakeJitConstant("ALIGNED_OFM",                  RoundUp(params.output.Feature().v, runInfo.gemmStyle.subBlockDimN)),
             MakeJitConstant("DX",                           runInfo.gemmStyle.globalWorkSizeDX),
             MakeJitConstant("DY",                           runInfo.gemmStyle.globalWorkSizeDY),
-            MakeJitConstant("FILTER_SIZE_X_DIV2",           params.convParams.filterSize.x / 2),
+            MakeJitConstant("FILTER_SIZE_X_DIV2",           params.filterSize.x / 2),
             MakeJitConstant("INPUT_BUFFER_WIDTH_PADDED",    ""),    // TODO: enable non padding path again
             MakeJitConstant("INPUT_BUFFER_HEIGHT_PADDED",   ""),
         });
@@ -75,24 +75,22 @@ namespace KernelSelector
         return jit;
     }
 
-    ConvolutionKernel_bfyx_GEMMLike::Parent::DispatchData ConvolutionKernel_bfyx_GEMMLike::SetDefault(const ConvolutionParams& arg, int autoTuneIndex) const
+    ConvolutionKernel_bfyx_GEMMLike::Parent::DispatchData ConvolutionKernel_bfyx_GEMMLike::SetDefault(const convolution_params& arg, int autoTuneIndex) const
     {
         DispatchData runInfo = Parent::SetDefault(arg, autoTuneIndex);
-
-        const auto& cp = arg.convParams;
 
         runInfo.lws0 = 1;
         runInfo.lws2 = 1;
 
         if (arg.inputs[0].GetDType() == Datatype::F16)
         {
-            runInfo.gemmStyle = { 1, cp.filterSize.x, 32, 32, 1, 1 };
+            runInfo.gemmStyle = { 1, arg.filterSize.x, 32, 32, 1, 1 };
             runInfo.lws1 = 16;
             runInfo.effiency = FORCE_PRIORITY_6;
         }
         else
         {
-            runInfo.gemmStyle = { 2, cp.filterSize.x, 32, 32, 2, 1 };
+            runInfo.gemmStyle = { 2, arg.filterSize.x, 32, 32, 2, 1 };
             runInfo.lws1 = 8;
             runInfo.effiency = FORCE_PRIORITY_8;
         }
@@ -107,7 +105,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    bool ConvolutionKernel_bfyx_GEMMLike::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_bfyx_GEMMLike::Validate(const Params& p, const optional_params& o) const
     {
         if (!Parent::Validate(p, o) ||
             !CovolutionCheckInput(p, o))
@@ -115,7 +113,7 @@ namespace KernelSelector
             return false;
         }
 
-        const auto& params = static_cast<const ConvolutionParams&>(p);
+        const auto& params = static_cast<const convolution_params&>(p);
 
         if (!params.engineInfo.bSubGroupShortSupport && params.inputs[0].GetDType() == Datatype::F16)
         {
@@ -125,7 +123,7 @@ namespace KernelSelector
         return true;
     }
 
-    std::vector<WeightsLayout> ConvolutionKernel_bfyx_GEMMLike::GetSupportedWeightLayouts(const ConvolutionParams& params) const
+    std::vector<WeightsLayout> ConvolutionKernel_bfyx_GEMMLike::GetSupportedWeightLayouts(const convolution_params& params) const
     {
         if (params.inputs[0].GetDType() == Datatype::F16)
         {
@@ -137,7 +135,7 @@ namespace KernelSelector
         }
     }
 
-    KernelsData ConvolutionKernel_bfyx_GEMMLike::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_GEMMLike::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, AGE_BASED);
     }

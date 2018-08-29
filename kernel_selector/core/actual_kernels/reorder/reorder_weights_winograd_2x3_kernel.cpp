@@ -17,7 +17,7 @@
 #include "reorder_weights_winograd_2x3_kernel.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey ReorderWeightsWinograd2x3Kernel::GetSupportedKey() const
     {
@@ -36,11 +36,11 @@ namespace KernelSelector
         return k;
     }
 
-    ReorderWeightsWinograd2x3Kernel::DispatchData ReorderWeightsWinograd2x3Kernel::SetDefault(const ReorderWeightsParams& params) const
+    ReorderWeightsWinograd2x3Kernel::DispatchData ReorderWeightsWinograd2x3Kernel::SetDefault(const reorder_weights_params& params) const
     {
         DispatchData kd;
 
-        const auto& input = params.reorderParams.input;
+        const auto& input = params.input;
 
         kd.gws0 = 1;
         kd.gws1 = 3;
@@ -53,9 +53,9 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData ReorderWeightsWinograd2x3Kernel::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ReorderWeightsWinograd2x3Kernel::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        const ReorderWeightsParams& orgParams = static_cast<const ReorderWeightsParams&>(params);
+        const reorder_weights_params& orgParams = static_cast<const reorder_weights_params&>(params);
         return GetCommonKernelsData(orgParams, options, FORCE_PRIORITY_4);
     }
 }

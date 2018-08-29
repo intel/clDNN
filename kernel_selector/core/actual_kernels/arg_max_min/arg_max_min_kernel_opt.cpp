@@ -16,7 +16,7 @@
 
 #include "arg_max_min_kernel_opt.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     ParamsKey ArgMaxMinKernelOpt::GetSupportedKey() const
     {
@@ -28,19 +28,20 @@ namespace KernelSelector
         k.EnableInputLayout(DataLayout::bfyx);
         k.EnableOutputLayout(DataLayout::bfyx);
         k.EnableArgMaxMinAxis(ArgMaxMinAxis::XYF);
+        k.EnableDifferentTypes();
         return k;
     }
 
-    KernelsData ArgMaxMinKernelOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ArgMaxMinKernelOpt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
+      
+        const arg_max_min_params& orgParams = static_cast<const arg_max_min_params&>(params);
 
-        const ArgMaxMinParams& orgParams = static_cast<const ArgMaxMinParams&>(params);
-
-        int topK = orgParams.argMaxParams.topK;
+        int topK = orgParams.topK;
         long size = (long)(orgParams.inputs[0].X().v * orgParams.inputs[0].Y().v * orgParams.inputs[0].Feature().v) / 8;
         long outSize = size/16 * topK;
         int kernelAmount = 1;
@@ -48,7 +49,7 @@ namespace KernelSelector
         {
             kernelAmount++;
         }
-        KernelData kd = KernelData::Default<ArgMaxMinParams>(params, kernelAmount);
+        KernelData kd = KernelData::Default<arg_max_min_params>(params, kernelAmount);
         for (int i = 0; i < kernelAmount; i++)
         {
             DataTensor input;

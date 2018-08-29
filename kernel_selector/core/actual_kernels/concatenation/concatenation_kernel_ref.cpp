@@ -17,7 +17,7 @@
 #include "concatenation_kernel_ref.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
 
     ParamsKey ConcatenationKernelRef::GetSupportedKey() const
@@ -42,10 +42,10 @@ namespace KernelSelector
         return k;
     }
 
-    JitConstants ConcatenationKernelRef::GetJitConstants(const ConcatenationParams& params) const
+    JitConstants ConcatenationKernelRef::GetJitConstants(const concatenation_params& params) const
     {
         auto cldnnJit = ConcatenationKernelBase::GetJitConstants(params);
-        const ConcatenationParams& orgParams = static_cast<const ConcatenationParams&>(params);
+        const concatenation_params& orgParams = static_cast<const concatenation_params&>(params);
         if (orgParams.inputs[0].Feature().v != 1)
         {
             cldnnJit.AddConstant(MakeJitConstant("CHECK_FEATURES", 1));
@@ -74,7 +74,7 @@ namespace KernelSelector
         return cldnnJit;
     }
 
-    KernelsData ConcatenationKernelRef::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData ConcatenationKernelRef::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         KernelsData kd = GetCommonKernelsData(params, optParams);
 

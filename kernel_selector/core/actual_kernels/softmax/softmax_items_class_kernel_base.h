@@ -18,7 +18,7 @@
 
 #include "softmax_kernel_base.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     class SoftmaxItemsClassKernelBase : public SoftmaxKernelBase
     {
@@ -27,7 +27,7 @@ namespace KernelSelector
         virtual ~SoftmaxItemsClassKernelBase() {}
 
     protected:
-        JitConstants GetJitConstants(const SoftmaxParams& params, DispatchData kd) const override;
+        JitConstants GetJitConstants(const softmax_params& params, DispatchData kd) const override;
         static ParamsKey GetDefaultSupportedKey();
         static std::vector<size_t> GetSoftmaxDimGlobalSizes(SoftmaxDim dim, const DataTensor& output);
     };

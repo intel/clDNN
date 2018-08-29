@@ -17,14 +17,52 @@
 #include "deconvolution_kernel_base.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    JitConstants DeconvolutionKernelBase::GetJitConstants(const DeconvolutionParams& params) const
+    std::string deconvolution_params::to_string() const
     {
-        return MakeDeconvolutionJitConstants(params);
+        std::stringstream s;
+
+        s << base_params::to_string() << "_";
+        if (bias.empty())
+        {
+            s << "no_bias" << "_";
+        }
+        else
+        {
+            s << "bias_size:" << bias[0].PhysicalSize() << "_";
+        }
+        s << filterSize.x << "_" << filterSize.y << "_";
+        s << stride.x << "_" << stride.y << "_";
+        s << dilation.x << "_" << dilation.y << "_";
+        s << padding.x << "_" << padding.y << "_";
+        s << split;
+
+        return s.str();
     }
 
-    DeconvolutionKernelBase::DispatchData DeconvolutionKernelBase::SetDefault(const DeconvolutionParams& params) const
+    JitConstants DeconvolutionKernelBase::GetJitConstants(const deconvolution_params& dp) const
+    {
+        JitConstants jit = WeightBiasKernelBase::GetJitConstants(dp);
+        const auto& padding = dp.padding;
+        const auto& input = dp.inputs[0];
+
+        int64_t input_offset_with_padding = (int64_t)input.GetFirstElementOffset() - (dp.filterSize.x - 1 + padding.x)*input.X().pitch - (dp.filterSize.y - 1 + padding.y)*input.Y().pitch;
+        input_offset_with_padding = std::max(input_offset_with_padding, (int64_t)0);
+
+        jit.AddConstants({
+            MakeJitConstant("STRIDE",                       dp.stride),
+            MakeJitConstant("PADDING",                      dp.padding),
+            MakeJitConstant("DILATION",                     dp.dilation),
+            MakeJitConstant("FILTER_ARRAY_NUM",             dp.split),
+            MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
+            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      dp.depthwiseSeparableOpt),
+        });
+
+        return jit;
+    }
+
+    DeconvolutionKernelBase::DispatchData DeconvolutionKernelBase::SetDefault(const deconvolution_params& params) const
     {
         auto batch_size = params.output.Batch().v;
         auto output_features = params.output.Feature().v;
@@ -48,11 +86,11 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData DeconvolutionKernelBase::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData DeconvolutionKernelBase::GetKernelsData(const Params& params, const optional_params& options) const
     {
         assert(params.GetType() == KernelType::DECONVOLUTION);
 
-        const DeconvolutionParams& orgParams = static_cast<const DeconvolutionParams&>(params);
+        const deconvolution_params& orgParams = static_cast<const deconvolution_params&>(params);
 
         const std::vector<WeightsLayout> weightsLayouts = {
             WeightsLayout::oiyx,
@@ -62,8 +100,8 @@ namespace KernelSelector
         };
 
         DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<DeconvolutionParams>(params);
-        DeconvolutionParams& newParams = *static_cast<DeconvolutionParams*>(kd.params.get());
+        KernelData kd = KernelData::Default<deconvolution_params>(params);
+        deconvolution_params& newParams = *static_cast<deconvolution_params*>(kd.params.get());
 
         bool succeed = UpdateWeightsParams(
             newParams,

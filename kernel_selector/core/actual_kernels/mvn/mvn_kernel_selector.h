@@ -17,21 +17,21 @@
 #pragma once
 
 #include "kernel_selector.h"
-
-namespace KernelSelector
+ 
+namespace kernel_selector 
 {
-    class MVNKernelSelctor : public KernelSelctorBase
+    class mvn_kernel_selector : public kernel_selector_base
     {
     public:
-        static MVNKernelSelctor &Instance() {
-            static MVNKernelSelctor instance_;
+        static mvn_kernel_selector &Instance() {
+            static mvn_kernel_selector instance_;
             return instance_;
         }
 
-        MVNKernelSelctor();
+        mvn_kernel_selector();
 
-        virtual ~MVNKernelSelctor() {}
+        virtual ~mvn_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

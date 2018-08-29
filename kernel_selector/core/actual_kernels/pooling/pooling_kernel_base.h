@@ -19,12 +19,49 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class PoolingKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // pooling_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct pooling_params : public base_params
+    {
+        pooling_params() : base_params(KernelType::POOLING) {}
+
+        PoolType            poolType = PoolType::MAX;
+        PoolRemainder       remainderAction = PoolRemainder::FLOOR;
+        KernelDividerMode   divMode = KernelDividerMode::DONT_CARE;
+        uSize               poolSize;
+        uSize               poolStride;
+        uSize               poolPad;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k = base_params::GetParamsKey();
+
+            k.EnablePoolType(poolType);
+            k.EnablePoolRemainder(remainderAction);
+            k.EnablePoolKernelDividerMode(divMode);
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // pooling_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct pooling_optional_params : optional_params
+    {
+        pooling_optional_params() : optional_params(KernelType::POOLING) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // PoolingKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class PoolingKernelBase : public common_kernel_base
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using common_kernel_base::common_kernel_base;
         virtual ~PoolingKernelBase() {}
 
         struct DispatchData : public CommonDispatchData
@@ -33,11 +70,11 @@ namespace KernelSelector
         };
 
     protected:
-        virtual bool Validate(const Params&, const OptionalParams&) const override;
-        virtual JitConstants GetJitConstants(const PoolingParams& params, DispatchData kd) const;
-        virtual DispatchData SetDefault(const PoolingParams& params) const;
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&, float estimatedTime) const;
+        virtual bool Validate(const Params&, const optional_params&) const override;
+        virtual JitConstants GetJitConstants(const pooling_params& params, DispatchData kd) const;
+        virtual DispatchData SetDefault(const pooling_params& params) const;
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params&, float estimatedTime) const;
 
-        bool NeedsBoundaryCheck(const PoolingParams& params) const;
+        bool NeedsBoundaryCheck(const pooling_params& params) const;
     };
 }

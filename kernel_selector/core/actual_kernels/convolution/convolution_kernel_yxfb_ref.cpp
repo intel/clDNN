@@ -16,7 +16,7 @@
 
 #include "convolution_kernel_yxfb_ref.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
 
     ParamsKey ConvolutionKernel_yxfb_Ref::GetSupportedKey() const
@@ -42,7 +42,7 @@ namespace KernelSelector
         return k;
     }
 
-    KernelsData ConvolutionKernel_yxfb_Ref::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_yxfb_Ref::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

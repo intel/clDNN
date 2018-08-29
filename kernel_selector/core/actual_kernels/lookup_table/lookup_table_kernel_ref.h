@@ -18,7 +18,7 @@
 
 #include "lookup_table_kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     class LookUpTableKernelRef : public LookUpTableKernelBase
     {
@@ -26,7 +26,7 @@ namespace KernelSelector
         LookUpTableKernelRef() : LookUpTableKernelBase("lookup_table_ref") {}
         virtual ~LookUpTableKernelRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

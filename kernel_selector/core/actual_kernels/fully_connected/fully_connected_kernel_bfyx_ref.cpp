@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_bfyx_ref.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_bfyx_Ref::GetSupportedKey() const
     {
@@ -34,16 +34,19 @@ namespace KernelSelector
         k.EnableAllInputLayout();
         k.EnableInputLayout(DataLayout::bf);
         k.EnableOutputLayout(DataLayout::bf);
+        k.EnableOutputLayout(DataLayout::fb);
         k.EnableBiasPerOutput();
         k.EnableBiasPerFeature();
         k.EnableNonBiasTerm();
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBatching();
+        k.EnableInt8Quantization();
+        k.EnableOutputCalibration();
         return k;
     }
 
-    std::unique_ptr<FullyConnected_bfyx_Ref::Parent::DispatchData> FullyConnected_bfyx_Ref::SetDefault(const FullyConnectedParams& params) const
+    std::unique_ptr<FullyConnected_bfyx_Ref::Parent::DispatchData> FullyConnected_bfyx_Ref::SetDefault(const fully_connected_params& params) const
     {
         auto runInfo = Parent::SetDefault(params);
         
@@ -61,10 +64,9 @@ namespace KernelSelector
         return std::move(runInfo);
     }
 
-    KernelsData FullyConnected_bfyx_Ref::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData FullyConnected_bfyx_Ref::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, DataLayout::bfyx,
-        { WeightsLayout::oiyx, WeightsLayout::oyxi, WeightsLayout::iyxo, WeightsLayout::yxio }
-        );
+        { WeightsLayout::oiyx, WeightsLayout::oyxi, WeightsLayout::iyxo, WeightsLayout::yxio });
     }
 }

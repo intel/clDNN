@@ -33,10 +33,10 @@ public:
 
     void wait();
     bool is_set();
-
+    
     //returns true if handler has been successfully added
     bool add_event_handler(cldnn_event_handler handler, void* data);
-
+    
     const std::list<cldnn_profiling_interval>& get_profiling_info();
 
 private:
@@ -68,7 +68,7 @@ public:
     }
 
     void set()
-    {
+    { 
         if (_set)
             return;
         _set = true;

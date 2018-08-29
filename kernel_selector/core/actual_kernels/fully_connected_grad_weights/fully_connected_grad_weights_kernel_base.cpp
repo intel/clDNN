@@ -17,14 +17,16 @@
 #include "fully_connected_grad_weights_kernel_base.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    JitConstants FullyConnectedGradWeightsKernelBase::GetJitConstants(const FullyConnectedGradWeightsParams& params) const
+    JitConstants FullyConnectedGradWeightsKernelBase::GetJitConstants(const fully_connected_grad_weights_params& params) const
     {
-        return MakeFullyConnectedGradWeightsJitConstants(params);
+        JitConstants jit = training_kernel_base::GetJitConstants(params);
+
+        return jit;
     }
 
-    FullyConnectedGradWeightsKernelBase::DispatchData FullyConnectedGradWeightsKernelBase::SetDefault(const FullyConnectedGradWeightsParams& params) const
+    FullyConnectedGradWeightsKernelBase::DispatchData FullyConnectedGradWeightsKernelBase::SetDefault(const fully_connected_grad_weights_params& params) const
     {
         DispatchData kd;
 
@@ -45,11 +47,11 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData FullyConnectedGradWeightsKernelBase::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData FullyConnectedGradWeightsKernelBase::GetKernelsData(const Params& params, const optional_params& options) const
     {
         assert(params.GetType() == KernelType::FULLY_CONNECTED_GRAD_WEIGHTS);
 
-        const FullyConnectedGradWeightsParams& orgParams = static_cast<const FullyConnectedGradWeightsParams&>(params);
+        const fully_connected_grad_weights_params& orgParams = static_cast<const fully_connected_grad_weights_params&>(params);
 
         const std::vector<WeightsLayout> weightsLayouts = {
             WeightsLayout::oi,
@@ -61,8 +63,8 @@ namespace KernelSelector
         };
 
         DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<FullyConnectedGradWeightsParams>(params);
-        FullyConnectedGradWeightsParams& newParams = *static_cast<FullyConnectedGradWeightsParams*>(kd.params.get());
+        KernelData kd = KernelData::Default<fully_connected_grad_weights_params>(params);
+        fully_connected_grad_weights_params& newParams = *static_cast<fully_connected_grad_weights_params*>(kd.params.get());
 
         bool succeed = UpdateWeightsParams(
             newParams,
@@ -81,7 +83,14 @@ namespace KernelSelector
 
         auto& kernel = kd.kernels[0];
         FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
+        if (orgParams.use_momentum)
+        {
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::PREV_WEIGHTS_GRADIENT, 0 });
+            if (!orgParams.bias.empty())
+                kernel.arguments.push_back({ ArgumentDescriptor::Types::PREV_BIAS_GRADIENT, 0 });
+        }
         kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
+        kernel.arguments.push_back({ ArgumentDescriptor::Types::LEARNING_RATE, 0 });
 
         kd.estimatedTime = runInfo.effiency;
 

@@ -17,7 +17,7 @@
 #include "eltwise_kernel_base.h"
 #include "kernel_selector_utils.h" 
 
-namespace KernelSelector
+namespace kernel_selector
 {
     static uint32_t GetNumberOfInputs(EltwiseMode m)
     {
@@ -41,7 +41,7 @@ namespace KernelSelector
         }
     }
 
-    bool EltwiseKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    bool EltwiseKernelBase::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::ELTWISE ||
             o.GetType() != KernelType::ELTWISE)
@@ -49,7 +49,7 @@ namespace KernelSelector
             return false;
         }
 
-        const EltwiseParams& params = static_cast<const EltwiseParams&>(p);
+        const eltwise_params& params = static_cast<const eltwise_params&>(p);
 
         if (params.inputs.size() == 0)
         {
@@ -86,9 +86,26 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants EltwiseKernelBase::GetJitConstantsCommon(const EltwiseParams& params, bool useVload8) const
+    JitConstants EltwiseKernelBase::GetJitConstantsCommon(const eltwise_params& params, bool useVload8) const
     {
-        auto jit = MakeEltwiseJitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(params);
+
+        jit.AddConstants({
+            MakeJitConstant("ELTWISE_LAYOUT_BASED", params.eltwiseParams.layoutBased),
+            MakeJitConstant("QUANTIZATION_TERM",    params.eltwiseParams.int8_quantization),
+        });
+
+        if (params.eltwiseParams.int8_quantization)
+        {
+            if (params.eltwiseParams.output_calibration)
+            {
+                jit.AddConstant(MakeJitConstant("CALIBRATION_TERM", params.eltwiseParams.output_calibration));
+                jit.AddConstant(MakeJitConstant("O_QF", params.output_calibration_factors[0]));
+
+            }
+            else
+                jit.AddConstants({ MakeJitConstant("O_QF",       params.eltwiseParams.output_quantization_factor) });
+        }
 
         std::string inputs_decls, vload_decls;
         auto& updateInputs = params.eltwiseParams.updateInputIds;
@@ -126,7 +143,8 @@ namespace KernelSelector
 
         std::string do_eltwise;
 
-        auto& operations = params.eltwiseParams.operations;
+        auto& operations   = params.eltwiseParams.operations;
+        auto& coefficients = params.eltwiseParams.coefficients;
 
         for (size_t op_num = 0; op_num < operations.size(); op_num++)
         {
@@ -169,6 +187,11 @@ namespace KernelSelector
                 cast_type = "(MAKE_VECTOR_TYPE(UNIT_TYPE, 8))";
                 op = "const MAKE_VECTOR_TYPE(UNIT_TYPE, 8) tmp" + op_num_str + " = ";
             }
+            else if(params.eltwiseParams.int8_quantization)
+            {
+                cast_type = "(int)";
+                op = "const int tmp" + op_num_str + " = ";
+            }
             else
             {
                 cast_type = "(UNIT_TYPE)";
@@ -177,6 +200,25 @@ namespace KernelSelector
 
             input0_str = cast_type + "INPUT_" + op_num_str + "_0";
             input1_str = cast_type + "INPUT_" + op_num_str + "_1";
+
+            if (ew.mode == EltwiseMode::ADD)
+            {
+                std::vector<std::string> coeff_strings(ew.inputs.size(), "");
+                for (size_t input_idx = 0; input_idx < ew.inputs.size(); input_idx++)
+                {
+                    const auto& input = ew.inputs[input_idx];
+                    if (input.mode == EltwiseInputMode::INPUT_BUFFER && input.index < coefficients.size())
+                    {
+                        const float c = coefficients[input.index];
+                        if (c != 1.0f)
+                            coeff_strings[input_idx] = cast_type + "(" + std::to_string(c) + ")*";
+                    }
+                }
+
+                input0_str = coeff_strings[0] + input0_str;
+                input1_str = coeff_strings[1] + input1_str;
+            }
+
 
             switch (ew.mode)
             {
@@ -201,7 +243,7 @@ namespace KernelSelector
         }
 
         for (size_t update_input_idx = 0; update_input_idx < updateInputs.size(); update_input_idx++)
-            do_eltwise += "\\\n\tinput" + std::to_string(updateInputs[update_input_idx].inputId) +
+            do_eltwise += "\\\n\tinput" + std::to_string(updateInputs[update_input_idx].inputId) + 
             "[GET_INDEX(INPUT, " + std::to_string(updateInputs[update_input_idx].inputId) +
             ")] = tmp" + std::to_string(updateInputs[update_input_idx].tmpId) + ";";
 
@@ -209,7 +251,7 @@ namespace KernelSelector
 
         jit.AddConstant(MakeJitConstant("DO_ELTWISE", do_eltwise));
 
-        if (params.eltwiseParams.layoutBased)
+        if (params.eltwiseParams.layoutBased || params.eltwiseParams.int8_quantization)
         {
             jit.Merge(GetTensorFriendlyWorkGroupsJit(params.inputs[0]));
         }
@@ -217,20 +259,20 @@ namespace KernelSelector
         return jit;
     }
 
-    JitConstants EltwiseKernelBase::GetJitConstants(const EltwiseParams& params) const
+    JitConstants EltwiseKernelBase::GetJitConstants(const eltwise_params& params) const
     {
         return GetJitConstantsCommon(params, false);
     }
 
-    KernelsData EltwiseKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData EltwiseKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
 
-        KernelData kd = KernelData::Default<EltwiseParams>(params);
-        EltwiseParams& newParams = *static_cast<EltwiseParams*>(kd.params.get());
+        KernelData kd = KernelData::Default<eltwise_params>(params);
+        eltwise_params& newParams = *static_cast<eltwise_params*>(kd.params.get());
 
         auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
         auto cldnn_jit = GetJitConstants(newParams);
@@ -238,7 +280,7 @@ namespace KernelSelector
 
         const auto& out = newParams.output;
         auto& kernel = kd.kernels[0];
-        if (newParams.eltwiseParams.layoutBased)
+        if (newParams.eltwiseParams.layoutBased || newParams.eltwiseParams.int8_quantization)
         {
             kernel.workGroups.global = GetTensorFriendlyWorkGroups(newParams.inputs[0]);
         }
@@ -263,7 +305,7 @@ namespace KernelSelector
         }
         kernel.workGroups.local = GetOptimalLocalWorkGroupSizes(kernel.workGroups.global);
         kernel.kernelString = GetKernelString(kernelName, jit, entry_point, ROUND_ROBIN);
-        kernel.arguments = GetArgsDesc((uint32_t)newParams.inputs.size(), false, false);
+        kernel.arguments = GetArgsDesc((uint32_t)newParams.inputs.size(), false, false, newParams.eltwiseParams.int8_quantization, newParams.eltwiseParams.output_calibration);
 
         kd.estimatedTime = DONT_USE_IF_HAVE_SOMETHING_ELSE;
 

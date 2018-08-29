@@ -34,7 +34,7 @@ public:
 
     bool is_in_place() const
     {
-        return (!get_primitive()->output_padding && !input().get_primitive()->output_padding);
+        return (!this->get_output_layout().data_padding && !input().get_output_layout(false).data_padding);
     }
 };
 
@@ -61,3 +61,4 @@ private:
 using reshape_inst = typed_primitive_inst<reshape>;
 
 }
+

@@ -17,7 +17,7 @@
 #include "convolution_kernel_bfyx_3x3_dw_opt.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ConvolutionKernel_bfyx_3x3_dw_opt::ConvolutionKernel_bfyx_3x3_dw_opt() : ConvolutionKernelBase("convolution_gpu_bfyx_3x3_dw_opt")
     {
@@ -61,7 +61,7 @@ namespace KernelSelector
         return k;
     }
 
-    bool ConvolutionKernel_bfyx_3x3_dw_opt::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_bfyx_3x3_dw_opt::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o) ||
             !CovolutionCheckInput(p, o))
@@ -69,16 +69,16 @@ namespace KernelSelector
             return false;
         }
 
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
+        const convolution_params& cp = static_cast<const convolution_params&>(p);
 
-        if ((params.convParams.filterSize.x != 3) ||
-            (params.convParams.filterSize.y != 3) ||
-            (params.convParams.stride.x != 1) ||
-            (params.convParams.stride.y != 1) ||
-            (params.convParams.padding.x != 1) ||
-            (params.convParams.padding.y != 1) ||
-            (params.inputs[0].Feature().v != params.convParams.split) ||
-            params.output.PitchesDifferFromLogicalDims())
+        if ((cp.filterSize.x != 3) ||
+            (cp.filterSize.y != 3) ||
+            (cp.stride.x != 1) ||
+            (cp.stride.y != 1) ||
+            (cp.padding.x != 1) ||
+            (cp.padding.y != 1) ||
+            (cp.inputs[0].Feature().v != cp.split) ||
+            cp.output.PitchesDifferFromLogicalDims())
         {
             return false;
         }
@@ -98,7 +98,7 @@ namespace KernelSelector
         return AutoTuneOption{ { simdSize - 2, 7 }, ROUND_ROBIN };
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_3x3_dw_opt::SetDefault(const ConvolutionParams& params, int autoTuneIndex) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_bfyx_3x3_dw_opt::SetDefault(const convolution_params& params, int autoTuneIndex) const
     {
         constexpr int simdSize = 16;
 
@@ -123,7 +123,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    JitConstants ConvolutionKernel_bfyx_3x3_dw_opt::GetJitConstants(const ConvolutionParams& params, DispatchData kd) const
+    JitConstants ConvolutionKernel_bfyx_3x3_dw_opt::GetJitConstants(const convolution_params& params, const DispatchData& kd) const
     {
         stSize tileDims = { kd.cldnnStyle.blockWidth, kd.cldnnStyle.blockHeight };
         auto mem_consts = ConvolutionKernelBase::GetJitConstants(params, kd);
@@ -139,17 +139,17 @@ namespace KernelSelector
         return mem_consts;
     }
 
-    KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, const int autoTuneIndex) const
+    KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, const int autoTuneIndex) const
     {
         return GetCommonKernelsData(params, options, GetAutoTuneOptions(params, autoTuneIndex).exeMode, autoTuneIndex);
     }
 
-    KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetTunedKernelsDataByIndex(params, options, -1);
     }
 
-    KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetKernelsDataForAutoTune(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_3x3_dw_opt::GetKernelsDataForAutoTune(const Params& params, const optional_params& options) const
     {
         if (!Validate(params, options))
         {

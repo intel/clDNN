@@ -18,7 +18,7 @@
 
 #include "softmax_items_class_kernel_base.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
     class SoftmaxKerneItemsClassOptimized : public SoftmaxItemsClassKernelBase
     {
@@ -27,11 +27,11 @@ namespace KernelSelector
         SoftmaxKerneItemsClassOptimized() : Parent("softmax_gpu_items_class_optimized") {}
         virtual ~SoftmaxKerneItemsClassOptimized() {}
 
-        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         ParamsKey GetSupportedKey() const override;
 
     protected:
-        JitConstants GetJitConstants(const SoftmaxParams& params, DispatchData kd) const override;
-        DispatchData SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const override;
+        JitConstants GetJitConstants(const softmax_params& params, DispatchData kd) const override;
+        DispatchData SetDefault(const softmax_params& params, const optional_params& optParams) const override;
     };
 }

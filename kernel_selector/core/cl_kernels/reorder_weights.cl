@@ -34,8 +34,10 @@ inline uint FUNC(get_input_index)(uint o, uint i, uint y, uint x)
     return GET_FILTER_IY_XS_OS_XSV2_OSV_INDEX(INPUT0, o, i, y, x, SUB_GROUP_SIZE);
 #elif defined INPUT0_LAYOUT_IMAGE_2D_WEIGHTS_C1_B_FYX
     #error - not supported yet
+#elif defined INPUT0_LAYOUT_OS_IS_YX_ISA8_OSV8_ISV4
+	return GET_FILTER_OS_IS_YX_ISA8_OSV8_ISV4(INPUT0, o, i, y, x);
 #else
-#error - not supported
+#error reorder_weights.cl: input format - not supported
 #endif
 }
 
@@ -58,8 +60,10 @@ inline uint FUNC(get_output_index)(uint o, uint i, uint y, uint x)
     return GET_FILTER_IY_XS_OS_XSV2_OSV_INDEX(OUTPUT, o, i, y, x, SUB_GROUP_SIZE);
 #elif defined OUTPUT_LAYOUT_IMAGE_2D_WEIGHTS_C1_B_FYX
     return 0; //will not be used for images
+#elif defined OUTPUT_LAYOUT_OS_IS_YX_ISA8_OSV8_ISV4
+	return GET_FILTER_OS_IS_YX_ISA8_OSV8_ISV4(OUTPUT, o, i, y, x);
 #else
-#error - not supported
+#error reorder_weights.cl: output format - not supported
 #endif
 }
 

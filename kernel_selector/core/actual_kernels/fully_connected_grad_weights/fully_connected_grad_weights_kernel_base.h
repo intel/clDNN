@@ -16,22 +16,48 @@
 
 #pragma once
 
-#include "common_kernel_base.h"
+#include "training_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    class FullyConnectedGradWeightsKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // fully_connected_grad_weights_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct fully_connected_grad_weights_params : public training_params
+    {
+        fully_connected_grad_weights_params() : training_params(KernelType::FULLY_CONNECTED_GRAD_WEIGHTS) {}
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k = training_params::GetParamsKey();
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // fully_connected_grad_weights_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct fully_connected_grad_weights_optional_params : training_optional_params
+    {
+        fully_connected_grad_weights_optional_params() : training_optional_params(KernelType::FULLY_CONNECTED_GRAD_WEIGHTS) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FullyConnectedGradWeightsKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class FullyConnectedGradWeightsKernelBase : public training_kernel_base
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using training_kernel_base::training_kernel_base;
         virtual ~FullyConnectedGradWeightsKernelBase() {}
 
         using DispatchData = CommonDispatchData;
-
+    
     protected:
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const;
-        virtual JitConstants GetJitConstants(const FullyConnectedGradWeightsParams& params) const;
-        virtual DispatchData SetDefault(const FullyConnectedGradWeightsParams& params) const;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const;
+        virtual JitConstants GetJitConstants(const fully_connected_grad_weights_params& params) const;
+        virtual DispatchData SetDefault(const fully_connected_grad_weights_params& params) const;
     };
 }

@@ -18,6 +18,8 @@
 #include "mutable_data_inst.h"
 #include "primitive_type_base.h"
 #include "memory_impl.h"
+#include <random>
+#include "error_handler.h"
 
 namespace cldnn
 {
@@ -46,6 +48,7 @@ mutable_data_node::typed_program_node(const std::shared_ptr<mutable_data> dprim,
     : parent(dprim, prog), mem(api_cast(dprim->mem.get()))
 {
     recalc_output_layout(false);
+    fill_memory();
 }
 
 void mutable_data_node::attach_memory(memory_impl& new_mem, bool invalidate_users_if_changed)
@@ -54,12 +57,63 @@ void mutable_data_node::attach_memory(memory_impl& new_mem, bool invalidate_user
     recalc_output_layout(invalidate_users_if_changed);
 }
 
+void mutable_data_node::fill_memory()
+{
+    auto prim = get_primitive();
+
+    if (prim->fill_type == mutable_data::filler_type::no_fill)
+        return;
+
+    auto memory = mem.get();
+    auto layout = memory->get_layout();
+    if (layout.data_type != data_types::f32)
+        CLDNN_ERROR_MESSAGE(id(), "only f32 data types can be filled");
+
+    switch (prim->fill_type)
+    {
+    case mutable_data::filler_type::zero:
+        fill_memory_constant(0.f);
+        break;
+    case mutable_data::filler_type::xavier:
+        fill_memory_xavier();
+        break;
+    default:
+        break;
+    }
+}
+
+void mutable_data_node::fill_memory_xavier()
+{
+    auto memory = mem.get();
+    auto layout = memory->get_layout();
+    auto n = layout.count() / layout.size.batch[0];
+    float scale = float(sqrt(3.0f / (float)n));
+    std::default_random_engine generator(0);
+
+    mem_lock<float> lock(mem);
+    auto out_ptr = lock.begin();
+    std::uniform_real_distribution<float> distribution(-scale, scale);
+    for (uint32_t i = 0; i < (uint32_t)layout.count(); i++)
+        out_ptr[i] = distribution(generator);
+}
+
+void mutable_data_node::fill_memory_constant(float value)
+{
+    auto memory = mem.get();
+    auto layout = memory->get_layout();
+    mem_lock<float> lock(mem);
+    auto out_ptr = lock.begin();
+
+    for (uint32_t i = 0; i < (uint32_t)layout.count(); i++)
+        out_ptr[i] = value;
+}
+
 std::string mutable_data_inst::to_string(mutable_data_node const& node)
 {
     auto node_info = node.desc_to_json();
 
     std::stringstream primitive_description;
-
+    
     node_info.dump(primitive_description);
     return primitive_description.str();
 }

@@ -30,7 +30,7 @@
 
 namespace cldnn { namespace gpu {
 
-class kernel : public context_holder
+class kernel : public context_holder 
 {
     kernels_cache::kernel_id _kernel_id;
     bool _one_time_kernel; //If this flag is true, the kernel is intended to be executed only once (can be removed later from the cache).
@@ -38,13 +38,13 @@ class kernel : public context_holder
 public:
     explicit kernel(std::shared_ptr<gpu_toolkit> context, const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program = false, bool one_time_kernel = false)
         : context_holder(context)
-        , _kernel_id(context->get_kernels_cache().set_kernel_source(kernel_string, dump_custom_program, one_time_kernel))
+        , _kernel_id(context->get_kernels_cache().set_kernel_source(kernel_string, dump_custom_program, one_time_kernel)) 
 		, _one_time_kernel(one_time_kernel)
     {}
 
     kernel(const kernel& other) : context_holder(other.context()), _kernel_id(other._kernel_id), _one_time_kernel(other._one_time_kernel) {}
 
-    kernel& operator=(const kernel& other)
+    kernel& operator=(const kernel& other) 
     {
         if (this == &other)
         {
@@ -63,13 +63,20 @@ public:
         std::vector<memory_impl::cptr> intermediates;
         memory_impl::cptr output;
         memory_impl::cptr weights;
+        memory_impl::cptr recurrent;
+        memory_impl::cptr hidden;
+        memory_impl::cptr cell;
         memory_impl::cptr bias;
+        memory_impl::cptr lstm_packed;
         memory_impl::cptr weights_quantization_factors;
         memory_impl::cptr output_calibration_factors;
         memory_impl::cptr lookup_table;
         memory_impl::cptr scale_table;
         memory_impl::cptr slope;
+        memory_impl::cptr prev_weights_grad;
+        memory_impl::cptr prev_bias_grad;
         int32_t           split          = 0;
+        float             lr;
         const kernel_selector::kernel_scalar_arguments* scalars = nullptr;
     };
 

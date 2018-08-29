@@ -29,7 +29,7 @@ inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
 #elif defined INPUT0_LAYOUT_BF8_XY16
     return GET_DATA_BF8_XY16_INDEX(INPUT0, b, f, y, x);
 #else
-#error - not supported
+#error reorder_data_fast_b1.cl: input format - not supported
 #endif
 }
 
@@ -45,7 +45,7 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
 #elif defined OUTPUT_LAYOUT_BF8_XY16
     return GET_DATA_BF8_XY16_INDEX(OUTPUT, b, f, y, x);
 #else
-#error - not supported
+#error reorder_data_fast_b1.cl: output format - not supported
 #endif
 }
 

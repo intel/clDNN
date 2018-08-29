@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "convolution_grad_weights/convolution_grad_weights_kernel_selector.h"
+#include "convolution_grad_weights/convolution_grad_weights_kernel_base.h"
 
 namespace cldnn { namespace gpu {
 
@@ -39,6 +41,12 @@ protected:
         CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.input_memory(1).get_layout().data_type, "output memory", instance.output_memory().get_layout().data_type, "");
         CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.input_memory().get_layout().data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
 
+        if (instance.use_momentum())
+        {
+            CLDNN_ERROR_LAYOUT_MISMATCH(_outer.id(), "Filter memory", instance.weights_memory(0).get_layout(), "previous weights grad memory", _outer.prev_weights_grad(0).get_output_layout(), "");
+            CLDNN_ERROR_LAYOUT_MISMATCH(_outer.id(), "Bias memory", instance.bias_memory(0).get_layout(), "previous bias grad memory", _outer.prev_bias_grad(0).get_output_layout(), "");
+        }
+
         return res;
     }
 
@@ -48,13 +56,16 @@ protected:
 
         args.weights    = &instance.weights_memory(split);
         args.bias       = instance.bias_term() ? &instance.bias_memory(split) : nullptr;
+        args.prev_weights_grad = instance.use_momentum() ? &instance.prev_weights_grad(split) : nullptr;
+        args.prev_bias_grad = instance.bias_term() ? instance.use_momentum() ? &instance.prev_bias_grad(split) : nullptr : nullptr;
+        args.lr         = instance.get_network().get_learning_rate();
 
         return args;
     }
 
     virtual int32_t get_split() const override
-    {
-        return _outer.get_split();
+    { 
+        return _outer.get_split(); 
     }
 
 public:
@@ -88,31 +99,31 @@ public:
 
         const auto& input_offset = primitive->input_offset;
 
-        auto conv_grad_weights_params = get_weights_bias_default_params<kernel_selector::convolution_grad_weights_params>(arg, depthwise_separable_opt ? 1 : split);
-        auto conv_grad_weights_optional_params = get_default_weights_bias_optional_params<kernel_selector::convolution_grad_weights_optional_params>(arg.get_program());
+        auto conv_grad_weights_params = get_default_learning_params<kernel_selector::convolution_grad_weights_params>(arg, depthwise_separable_opt ? 1 : split);
+        auto conv_grad_weights_optional_params = get_default_learning_optional_params<kernel_selector::convolution_grad_weights_optional_params>(arg.get_program());
 
-        conv_grad_weights_params.convGradWeightsParams.depthwiseSeparableOpt = depthwise_separable_opt;
+        conv_grad_weights_params.depthwiseSeparableOpt = depthwise_separable_opt;
 
         conv_grad_weights_params.gradient = true;
         conv_grad_weights_params.inputs.push_back(convert_data_tensor(arg.get_dependency(1).get_output_layout()));
 
-        conv_grad_weights_params.convGradWeightsParams.split = split;
-        conv_grad_weights_params.convGradWeightsParams.filterSize = {
+        conv_grad_weights_params.split = split;
+        conv_grad_weights_params.filterSize = {
             (uint32_t)weights_size.spatial[0],
             (uint32_t)weights_size.spatial[1],
         };
 
-        conv_grad_weights_params.convGradWeightsParams.padding = {
+        conv_grad_weights_params.padding = {
             (uint32_t)std::max(-input_offset.spatial[0], 0),
             (uint32_t)std::max(-input_offset.spatial[1], 0)
         };
 
-        conv_grad_weights_params.convGradWeightsParams.stride = {
+        conv_grad_weights_params.stride = {
             (uint32_t)stride.spatial[0],
             (uint32_t)stride.spatial[1]
         };
 
-        conv_grad_weights_params.convGradWeightsParams.dilation = {
+        conv_grad_weights_params.dilation = {
             (uint32_t)dilation.spatial[0],
             (uint32_t)dilation.spatial[1]
         };

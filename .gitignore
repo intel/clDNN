@@ -4,3 +4,4 @@ build/*
 UnixMk
 **/.idea/*
 src/caps/private/*.inc
+/examples/utils/venv

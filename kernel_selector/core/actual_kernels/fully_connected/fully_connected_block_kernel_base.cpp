@@ -18,9 +18,9 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    JitConstants FullyConnectedBlockKernelBase::GetJitConstants(const FullyConnectedParams& params, const FullyConnectedBlockKernelBase::DispatchData& data) const
+    JitConstants FullyConnectedBlockKernelBase::GetJitConstants(const fully_connected_params& params, const FullyConnectedBlockKernelBase::DispatchData& data) const
     {
         auto cldnnJit = FullyConnectedKernelBase::GetJitConstants(params, data);
 

@@ -21,7 +21,7 @@
 #include "auto_tuner.h"
 #include "kernel_selector_common.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
     // SKL GT4e
     void tuning_cache_193B(tuning_data&);
@@ -42,7 +42,7 @@ namespace KernelSelector
         static std::shared_ptr<auto_tuner_offline> instance;
         static std::mutex mutex;
         auto_tuner_offline() = delete;
-        // this is singleton implementation, if called twice with different parameter,
+        // this is singleton implementation, if called twice with different parameter, 
         // second call param will be ignored
         auto_tuner_offline(const std::string& hw_id);
         tuning_data t_data;

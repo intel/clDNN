@@ -438,7 +438,7 @@ TEST(pooling_forward_gpu, offsets_max_yxfb_f32_wsiz2x2_wstr2x2_i3x3x1x1_zeropad)
 
     network network(engine, topology);
 
-    set_values(input_prim, {
+    set_values(input_prim, { 
         1.50f, -1.00f, -0.50f,
         1.00f, -1.00f, -1.00f,
        -1.00f, -1.00f, -0.50f
@@ -496,7 +496,7 @@ TEST(pooling_forward_gpu, basic_avg_yxfb_f32_wsiz2x2_wstr1x1_i3x3x1x1_nopad) {
     auto output_prim = outputs.begin()->second.get_memory();
 
     auto output_ptr = output_prim.pointer<float>();
-
+    
     EXPECT_EQ(1.0f,   output_ptr[0]);
     EXPECT_EQ(0.625f, output_ptr[1]);
     EXPECT_EQ(1.625f, output_ptr[2]);
@@ -1617,13 +1617,13 @@ public:
 
         int pooled_height = (int)(ceil((float)std::max(height - 2 * input_offset_height - kernel_height, 0) / stride_height)) + 1;
         int pooled_width = (int)(ceil((float)std::max(width - 2 * input_offset_width - kernel_width, 0) / stride_width)) + 1;
-
+        
         // Make sure that the last pooling starts strictly inside the image.
-        while ((pooled_height - 1) * stride_height >= height - input_offset_height)
+        while ((pooled_height - 1) * stride_height >= height - input_offset_height) 
         {
             --pooled_height;
         }
-        while ((pooled_width - 1) * stride_width >= width - input_offset_width)
+        while ((pooled_width - 1) * stride_width >= width - input_offset_width) 
         {
             --pooled_width;
         }
@@ -1647,18 +1647,18 @@ public:
 
         int input_offset_width = pooling->input_offset.spatial[0];
         int input_offset_height = pooling->input_offset.spatial[1];
-
+        
         int kernel_width = pooling->size.spatial[0];
         int kernel_height = pooling->size.spatial[1];
-
+        
         int stride_width = pooling->stride.spatial[0];
         int stride_height = pooling->stride.spatial[1];
-
+        
         auto output_tensor = get_expected_output_tensor();
 
         int pooled_width = output_tensor.spatial[0];
         int pooled_height = output_tensor.spatial[1];
-
+         
         //Output is bfyx
         auto output = memory::allocate(engine, cldnn::layout(inputs[0].get_layout().data_type, cldnn::format::bfyx, output_tensor, pooling->output_padding));
 
@@ -1679,13 +1679,13 @@ public:
                 {
                     output_mem[i] = (generic_params->data_type == data_types::f32) ? -FLT_MAX : -65504;
                 }
-                for (int b = 0; b < batch; b++)
+                for (int b = 0; b < batch; b++) 
                 {
-                    for (int f = 0; f < feature; f++)
+                    for (int f = 0; f < feature; f++) 
                     {
-                        for (int h = 0; h < pooled_height; h++)
+                        for (int h = 0; h < pooled_height; h++) 
                         {
-                            for (int w = 0; w < pooled_width; w++)
+                            for (int w = 0; w < pooled_width; w++) 
                             {
                                 int input_offset_x_start = w * stride_width + input_offset_width;
                                 int input_offset_x_end = std::min(input_offset_x_start + kernel_width, width);
@@ -1697,12 +1697,12 @@ public:
 
                                 const size_t output_index = get_linear_index(output.get_layout(), b, f, h, w, output_desc);
 
-                                for (int y = input_offset_y_start; y < input_offset_y_end; y++)
+                                for (int y = input_offset_y_start; y < input_offset_y_end; y++) 
                                 {
-                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++)
+                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++) 
                                     {
                                         const size_t input_index = get_linear_index(inputs[0].get_layout(), b, f, y, x, input_desc);
-
+                                        
                                         if (input_mem[input_index] > output_mem[output_index])
                                         {
                                             output_mem[output_index] = input_mem[input_index];
@@ -1743,30 +1743,30 @@ public:
                 {
                     output_mem[i] = 0;
                 }
-                for (int b = 0; b < batch; b++)
+                for (int b = 0; b < batch; b++) 
                 {
-                    for (int f = 0; f < feature; f++)
+                    for (int f = 0; f < feature; f++) 
                     {
-                        for (int h = 0; h < pooled_height; h++)
+                        for (int h = 0; h < pooled_height; h++) 
                         {
-                            for (int w = 0; w < pooled_width; w++)
-                            {
+                            for (int w = 0; w < pooled_width; w++) 
+                            {	
                                 int input_offset_x_start = w * stride_width + input_offset_width;
                                 int input_offset_x_end = std::min(input_offset_x_start + kernel_width, width);
                                 input_offset_x_start = std::max(input_offset_x_start, 0);
 
                                 int input_offset_y_start = h * stride_height + input_offset_height;
                                 int input_offset_y_end = std::min(input_offset_y_start + kernel_height, height);
-                                input_offset_y_start = std::max(input_offset_y_start, 0);
+                                input_offset_y_start = std::max(input_offset_y_start, 0);	
 
                                 int output_index = (b * feature + f) * output_height * output_width;
                                 tensor lower_padding = pooling->output_padding.lower_size();
                                 output_index += (lower_padding.spatial[1] + h) * output_width + lower_padding.spatial[0] + w;
 
                                 int num_of_elements = 0;
-                                for (int y = input_offset_y_start; y < input_offset_y_end; y++)
+                                for (int y = input_offset_y_start; y < input_offset_y_end; y++) 
                                 {
-                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++)
+                                    for (int x = input_offset_x_start; x < input_offset_x_end; x++) 
                                     {
                                         const size_t input_index = get_linear_index(inputs[0].get_layout(), b, f, y, x, input_desc);
                                         output_mem[output_index] += input_mem[input_index];
@@ -1786,7 +1786,7 @@ public:
                                     return output;
                                 }
                                 output_mem[output_index] /= (Type)num_of_elements;
-
+ 
                             }
                         }
                     }

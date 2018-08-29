@@ -53,3 +53,4 @@ CLDNN_DECLARE_PRIMITIVE_TYPE_ID(proposal);
 /// @}
 /// @}
 #endif /* PROPOSAL_H */
+

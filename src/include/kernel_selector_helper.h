@@ -21,155 +21,55 @@
 #include "gpu/ocl_toolkit.h"
 #include "tensor_type.h"
 #include "kernel_selector_params.h"
-#include "convolution/convolution_kernel_selector.h"
-#include "deconvolution/deconvolution_kernel_selector.h"
-#include "lrn/lrn_kernel_selector.h"
-#include "normalize/normalize_kernel_selector.h"
-#include "mvn/mvn_kernel_selector.h"
-#include "pooling/pooling_kernel_selector.h"
-#include "max_unpooling/max_unpooling_kernel_selector.h"
-#include "arg_max_min/arg_max_min_kernel_selector.h"
-#include "roi_pooling/roi_pooling_kernel_selector.h"
-#include "fully_connected/fully_connected_kernel_selector.h"
-#include "lookup_table/lookup_table_kernel_selector.h"
-#include "activation/activation_kernel_selector.h"
-#include "softmax/softmax_kernel_selector.h"
-#include "region_yolo/region_yolo_kernel_selector.h"
-#include "reorg_yolo/reorg_yolo_kernel_selector.h"
-#include "eltwise/eltwise_kernel_selector.h"
-#include "reorder/reorder_kernel_selector.h"
-#include "permute/permute_kernel_selector.h"
-#include "reshape/reshape_kernel_selector.h"
-#include "concatenation/concatenation_kernel_selector.h"
-#include "upsampling/upsampling_kernel_selector.h"
-#include "convolution_grad_weights/convolution_grad_weights_kernel_selector.h"
-#include "fully_connected_grad_input/fully_connected_grad_input_kernel_selector.h"
-#include "fully_connected_grad_weights/fully_connected_grad_weights_kernel_selector.h"
+#include "kernel_selector_common.h"
 #include "jitter.h"
 
 using namespace cldnn;
 
 namespace kernel_selector
 {
-    using n_dims                            = KernelSelector::Tensor::NDims;
-    using kernel_data                       = KernelSelector::KernelData;
-    using kernel_string                     = KernelSelector::KernelString;
-    using cl_kernel_data                    = KernelSelector::clKernelData;
-    using kernel_arguments                  = KernelSelector::Arguments;
-    using kernel_argument_element           = KernelSelector::ArgumentDescriptor;
-    using kernel_argument_types             = KernelSelector::ArgumentDescriptor::Types;
-    using kernel_scalar_arguments           = KernelSelector::Scalars;
-    using kernel_scalar_argument_types      = KernelSelector::ScalarDescriptor::Types;
-    using jit_constants                     = KernelSelector::JitConstants;
+    using n_dims                            = kernel_selector::Tensor::NDims;
+    using kernel_data                       = kernel_selector::KernelData;
+    using kernel_string                     = kernel_selector::KernelString;
+    using cl_kernel_data                    = kernel_selector::clKernelData;
+    using kernel_arguments                  = kernel_selector::Arguments;
+    using kernel_argument_element           = kernel_selector::ArgumentDescriptor;
+    using kernel_argument_types             = kernel_selector::ArgumentDescriptor::Types;
+    using kernel_scalar_arguments           = kernel_selector::Scalars;
+    using kernel_scalar_argument_types      = kernel_selector::ScalarDescriptor::Types;
+    using jit_constants                     = kernel_selector::JitConstants;
 
-    using data_type                         = KernelSelector::Datatype;
-    using kernel_type                       = KernelSelector::KernelType;
-    using weights_type                      = KernelSelector::WeightsType;
-    using activation_function               = KernelSelector::ActivationFunction;
-    using pool_type                         = KernelSelector::PoolType;
-    using pool_remainder                    = KernelSelector::PoolRemainder;
-	using argm_axis							= KernelSelector::ArgMaxMinAxis;
-	using argm_output						= KernelSelector::ArgMaxMinOut;
-    using lookt_axis                        = KernelSelector::LookUpTableAxis;
-    using lrn_mode                          = KernelSelector::LRNMode;
-    using normalize_mode                    = KernelSelector::NormalizeMode;
-    using mvn_mode                          = KernelSelector::MVNMode;
-    using kernel_divider_mode               = KernelSelector::KernelDividerMode;
-    using eltwise_mode                      = KernelSelector::EltwiseMode;
-    using eltwise_input_mode                = KernelSelector::EltwiseInputMode;
-    using softmax_dim                       = KernelSelector::SoftmaxDim;
-    using mean_subtruct_mode                = KernelSelector::MeanSubtractMode;
-    using mean_op                           = KernelSelector::MeanOp;
-    using concat_axis                       = KernelSelector::ConcatAxis;
-    using tuning_mode                       = KernelSelector::TuningMode;
-    using sample_type                       = KernelSelector::SampleType;
+    using data_type                         = kernel_selector::Datatype;
+    using kernel_type                       = kernel_selector::KernelType;
+    using weights_type                      = kernel_selector::WeightsType;
+    using activation_function               = kernel_selector::ActivationFunction;
+    using pool_type                         = kernel_selector::PoolType;
+    using pool_remainder                    = kernel_selector::PoolRemainder;
+	using argm_axis							= kernel_selector::ArgMaxMinAxis;
+	using argm_output						= kernel_selector::ArgMaxMinOut;
+    using lookt_axis                        = kernel_selector::LookUpTableAxis;
+    using lrn_mode                          = kernel_selector::LRNMode;
+    using normalize_mode                    = kernel_selector::NormalizeMode;
+    using mvn_mode                          = kernel_selector::MVNMode;
+    using kernel_divider_mode               = kernel_selector::KernelDividerMode;
+    using eltwise_mode                      = kernel_selector::EltwiseMode;
+    using eltwise_input_mode                = kernel_selector::EltwiseInputMode;
+    using softmax_dim                       = kernel_selector::SoftmaxDim;
+    using mean_subtruct_mode                = kernel_selector::MeanSubtractMode;
+    using mean_op                           = kernel_selector::MeanOp;
+    using concat_axis                       = kernel_selector::ConcatAxis;
+    using tuning_mode                       = kernel_selector::TuningMode;
+    using sample_type                       = kernel_selector::SampleType;
 
-    using data_tensor                       = KernelSelector::DataTensor;
-    using weights_tensor                    = KernelSelector::WeightsTensor;
-    using data_layout                       = KernelSelector::DataLayout;
-    using weights_layout                    = KernelSelector::WeightsLayout;
-    using multi_data_tensor                 = KernelSelector::MultiDataTensor;
+    using data_tensor                       = kernel_selector::DataTensor;
+    using weights_tensor                    = kernel_selector::WeightsTensor;
+    using data_layout                       = kernel_selector::DataLayout;
+    using weights_layout                    = kernel_selector::WeightsLayout;
+    using multi_data_tensor                 = kernel_selector::MultiDataTensor;
 
-    using params                            = KernelSelector::Params;
-    using base_params                       = KernelSelector::BaseParams;
-    using weight_bias_params                = KernelSelector::WeightBiasParams;
-	using arg_max_min_params				= KernelSelector::ArgMaxMinParams;
-    using lookup_table_params               = KernelSelector::LookUpTableParams;
-    using convolution_params                = KernelSelector::ConvolutionParams;
-    using deconvolution_params              = KernelSelector::DeconvolutionParams;
-    using lrn_params                        = KernelSelector::LRNParams;
-    using normalize_params                  = KernelSelector::NormalizeParams;
-    using mvn_params                        = KernelSelector::MVNParams;
-    using pooling_params                    = KernelSelector::PoolingParams;
-    using max_unpooling_params              = KernelSelector::MaxUnpoolingParams;
-    using roi_pooling_v1_params             = KernelSelector::ROIPoolingParams;
-    using fully_connected_params            = KernelSelector::FullyConnectedParams;
-    using fully_connected_grad_input_params = KernelSelector::FullyConnectedGradInputParams;
-    using fully_connected_grad_weights_params = KernelSelector::FullyConnectedGradWeightsParams;
-    using activation_params                 = KernelSelector::ActivationParams;
-    using softmax_params                    = KernelSelector::SoftmaxParams;
-    using region_yolo_params                = KernelSelector::RegionYoloParams;
-    using reorg_yolo_params                 = KernelSelector::ReorgYoloParams;
-    using eltwise_params                    = KernelSelector::EltwiseParams;
-    using reorder_base_params               = KernelSelector::ReorderBaseParams;
-    using permute_params                    = KernelSelector::PermuteParams;
-    using reorder_params                    = KernelSelector::ReorderParams;
-    using reorder_weights_params            = KernelSelector::ReorderWeightsParams;
-    using concatenation_params              = KernelSelector::ConcatenationParams;
-    using weights_reorder_params            = KernelSelector::WeightsReorderParams;
-    using generic_kernel_params             = KernelSelector::GenericKernelParams;
-    using upsampling_params                 = KernelSelector::UpSamplingParams;
-    using convolution_grad_weights_params   = KernelSelector::ConvolutionGradWeightsParams;
-
-    using optional_params                   = KernelSelector::OptionalParams;
-    using weights_bias_optional_params      = KernelSelector::WeightsBiasOptionalParams;
-	using arg_max_min_optional_params		= KernelSelector::ArgMaxMinOptionalParams;
-    using lookup_table_optional_params      = KernelSelector::LookUpTableOptionalParams;
-    using convolution_optional_params       = KernelSelector::ConvolutionOptionalParams;
-    using deconvolution_optional_params     = KernelSelector::DeconvolutionOptionalParams;
-    using lrn_optional_params               = KernelSelector::LRNOptionalParams;
-    using normalize_optional_params         = KernelSelector::NormalizeOptionalParams;
-    using mvn_optional_params               = KernelSelector::MVNOptionalParams;
-    using pooling_optional_params           = KernelSelector::PoolingOptionalParams;
-    using max_unpooling_optional_params     = KernelSelector::MaxUnpoolingOptionalParams;
-    using roi_pooling_optional_params       = KernelSelector::ROIPoolingOptionalParams;
-    using fully_connected_optional_params   = KernelSelector::FullyConnectedOptionalParams;
-    using fully_connected_grad_input_optional_params = KernelSelector::FullyConnectedGradInputOptionalParams;
-    using fully_connected_grad_weights_optional_params = KernelSelector::FullyConnectedGradWeightsOptionalParams;
-    using activation_optional_params        = KernelSelector::ActivationOptionalParams;
-    using softmax_optional_params           = KernelSelector::SoftmaxOptionalParams;
-    using region_yolo_optional_params       = KernelSelector::RegionYoloOptionalParams;
-    using reorg_yolo_optional_params        = KernelSelector::ReorgYoloOptionalParams;
-    using eltwise_optional_params           = KernelSelector::EltwiseOptionalParams;
-    using reorder_optional_params           = KernelSelector::ReorderOptionalParams;
-    using concatenation_optional_params     = KernelSelector::ConcatenationOptionalParams;
-    using upsampling_optional_params        = KernelSelector::UpSamplingOptionalParams;
-    using convolution_grad_weights_optional_params = KernelSelector::ConvolutiongradWeightsOptionalParams;
-
-	using arg_max_min_kernel_selector		= KernelSelector::ArgMaxMinKernelSelctor;
-    using lookup_table_kernel_selector      = KernelSelector::LookUpTableKernelSelctor;
-    using convolution_kernel_selector       = KernelSelector::ConvolutionKernelSelctor;
-    using deconvolution_kernel_selector     = KernelSelector::DeconvolutionKernelSelctor;
-    using lrn_kernel_selector               = KernelSelector::LRNKernelSelctor;
-    using normalize_kernel_selector         = KernelSelector::NormalizeKernelSelctor;
-    using mvn_kernel_selector               = KernelSelector::MVNKernelSelctor;
-    using pooling_kernel_selector           = KernelSelector::PoolingKernelSelctor;
-    using max_unpooling_kernel_selector     = KernelSelector::MaxUnpoolingKernelSelctor;
-    using roi_pooling_v1_kernel_selector    = KernelSelector::ROIPoolingKernelSelctor;
-    using fully_connected_kernel_selector   = KernelSelector::FullyConnectedKernelSelctor;
-    using fully_connected_grad_input_kernel_selector = KernelSelector::FullyConnectedGradInputKernelSelctor;
-    using fully_connected_grad_weights_kernel_selector = KernelSelector::FullyConnectedGradWeightsKernelSelctor;
-    using activation_kernel_selector        = KernelSelector::ActivationKernelSelctor;
-    using softmax_kernel_selector           = KernelSelector::SoftmaxKernelSelctor;
-    using region_yolo_kernel_selector       = KernelSelector::RegionYoloKernelSelctor;
-    using reorg_yolo_kernel_selector        = KernelSelector::ReorgYoloKernelSelctor;
-    using eltwise_kernel_selector           = KernelSelector::EltwiseKernelSelctor;
-    using reorder_kernel_selector           = KernelSelector::ReorderKernelSelctor;
-    using reshape_kernel_selector           = KernelSelector::ReshapeKernelSelctor;
-    using permute_kernel_selector           = KernelSelector::PermuteKernelSelctor;
-    using concatenation_kernel_selector     = KernelSelector::ConcatenationKernelSelctor;
-    using upsampling_kernel_selector        = KernelSelector::UpSamplingKernelSelector;
-    using convolution_grad_weights_kernel_selector = KernelSelector::ConvolutionGradWeightsKernelSelctor;
+    using params                            = kernel_selector::Params;
+    using weights_reorder_params            = kernel_selector::WeightsReorderParams;
+    using generic_kernel_params             = kernel_selector::GenericKernelParams;
 }
 
 inline kernel_selector::data_type to_data_type(data_types dt)
@@ -239,6 +139,7 @@ inline kernel_selector::data_layout to_data_layout(format f)
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::data_layout::bs_f_bsv16__af8;
     case format::bf8_xy16:          return kernel_selector::data_layout::bf8_xy16;
     case format::winograd_2x3_s1_data:  return kernel_selector::data_layout::winograd_2x3_s1_data;
+    case format::byxf_af32: return kernel_selector::data_layout::byxf_af32;
 //     case format::brfyx:          return kernel_selector::data_layout::brfyx;
     default:
         return kernel_selector::data_layout::bfyx;
@@ -260,6 +161,7 @@ static inline cldnn::format from_data_layout(kernel_selector::data_layout l)
     case kernel_selector::data_layout::bf8_xy16:          return cldnn::format::bf8_xy16;
     case kernel_selector::data_layout::brfyx:             return cldnn::format::bfyx;
     case kernel_selector::data_layout::winograd_2x3_s1_data:   return cldnn::format::winograd_2x3_s1_data;
+    case kernel_selector::data_layout::byxf_af32: return cldnn::format::byxf_af32;
     default:
         return cldnn::format::bfyx;
         break;
@@ -285,6 +187,7 @@ inline kernel_selector::weights_layout to_weights_layout(format f)
     case format::winograd_6x3_s1_fused_weights: return kernel_selector::weights_layout::winograd_6x3_s1_fused_weights;
     case format::image_2d_weights_winograd_6x3_s1_fbxyb:     return kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_fbxyb;
     case format::image_2d_weights_winograd_6x3_s1_xfbyb:     return kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_xfbyb;
+    case format::os_is_yx_isa8_osv8_isv4: return kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4;
     default:
         return kernel_selector::weights_layout::oi;
     }
@@ -311,6 +214,7 @@ static inline cldnn::format::type from_weights_layout(kernel_selector::weights_l
     case kernel_selector::weights_layout::winograd_6x3_s1_fused_weights:    return cldnn::format::winograd_6x3_s1_fused_weights;
     case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_fbxyb:        return cldnn::format::image_2d_weights_winograd_6x3_s1_fbxyb;
     case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_xfbyb:        return cldnn::format::image_2d_weights_winograd_6x3_s1_xfbyb;
+    case kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4: return cldnn::format::os_is_yx_isa8_osv8_isv4;
     default:
         return cldnn::format::bfyx;
     }
@@ -343,10 +247,17 @@ inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_
     const auto& lower_pad = pad.lower_size().sizes(l.format);
     const auto& upper_pad = pad.upper_size().sizes(l.format);
     const auto ks_layout = to_data_layout(l.format);
-    kernel_selector::n_dims vec(KernelSelector::DataTensor::ChannelsCount(ks_layout));
+    kernel_selector::n_dims vec(kernel_selector::DataTensor::ChannelsCount(ks_layout));
 
     size_t pitch = 1;
     size_t offset = 0;
+
+    auto new_vals = vals;
+
+    if (ks_layout == kernel_selector::Tensor::byxf_af32)
+    {
+        new_vals[3] = align_to(vals[3], 32);
+    }
 
     for (size_t i = 0; i < vec.size(); i++)
     {
@@ -354,6 +265,8 @@ inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_
         const auto d = vals[tensor_index];
         const auto lp = lower_pad[tensor_index];
         const auto up = upper_pad[tensor_index];
+        // tells us how many elements are reserved in memory for this tensor index
+        const auto reserved_in_mem_count = new_vals[tensor_index];
 
         auto& elm = vec[i];
         elm.v = static_cast<size_t>(d - add_offsets[tensor_index]);
@@ -362,10 +275,10 @@ inline kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_
         elm.pad.after = up;
 
         offset += pitch*(add_offsets[tensor_index]);
-        pitch *= (d + lp + up);
+        pitch *= (reserved_in_mem_count + lp + up);
     }
 
-    const int feature_index = KernelSelector::DataTensor::Channelndex(ks_layout, KernelSelector::Tensor::DataChannelName::FEATURE);
+    const int feature_index = kernel_selector::DataTensor::Channelndex(ks_layout, kernel_selector::Tensor::DataChannelName::FEATURE);
     vec[feature_index].v /= split;
 
     return kernel_selector::data_tensor(
@@ -382,7 +295,7 @@ inline kernel_selector::weights_tensor convert_weights_tensor(const layout& l)
     const auto base_layout = kernel_selector::weights_layout::oiyx;
     const auto ks_type = to_weights_type(l.data_type);
     const auto ks_layout = to_weights_layout(l.format);
-    std::vector<size_t> vec(KernelSelector::WeightsTensor::ChannelsCount(base_layout));
+    std::vector<size_t> vec(kernel_selector::WeightsTensor::ChannelsCount(base_layout));
 
     for (size_t i = 0; i < vec.size(); i++)
     {
@@ -440,22 +353,6 @@ inline kernel_selector::activation_function get_kernel_selector_activation_param
         return kernel_selector::activation_function::SQRT;
     case activation_elu:
         return kernel_selector::activation_function::ELU;
-    case activation_sin:
-        return kernel_selector::activation_function::SIN;
-    case activation_asin:
-        return kernel_selector::activation_function::ASIN;
-    case activation_sinh:
-        return kernel_selector::activation_function::SINH;
-    case activation_cos:
-        return kernel_selector::activation_function::COS;
-    case activation_acos:
-        return kernel_selector::activation_function::ACOS;
-    case activation_cosh:
-        return kernel_selector::activation_function::COSH;
-    case activation_log:
-        return kernel_selector::activation_function::LOG;
-    case activation_exp:
-        return kernel_selector::activation_function::EXP;
     default:
         throw std::runtime_error("Unknown activation function");
         break;
@@ -546,6 +443,24 @@ inline params_t get_weights_bias_default_params(const arg_t& arg, uint32_t split
     return params;
 }
 
+template <typename params_t, typename arg_t>
+inline params_t get_default_learning_params(const arg_t& arg, uint32_t split = 1)
+{
+	params_t params = get_weights_bias_default_params<params_t>(arg, split);
+
+	const auto learning_params = arg.get_program().get_options().template get<build_option_type::learning_config>()->params;
+
+	if (arg.use_momentum())
+	{
+		params.use_momentum = true;
+	}
+
+	params.momentum_factor = learning_params.momentum;
+	params.weights_decay = learning_params.weights_decay;
+
+	return params;
+}
+
 template <typename optional_params_t>
 inline optional_params_t get_default_optional_params(const program_impl& program)
 {
@@ -569,4 +484,10 @@ template <typename optional_params_t>
 inline optional_params_t get_default_weights_bias_optional_params(const program_impl& program)
 {
     return get_default_optional_params<optional_params_t>(program);
+}
+
+template <typename optional_params_t>
+inline optional_params_t get_default_learning_optional_params(const program_impl& program)
+{
+	return get_default_weights_bias_optional_params<optional_params_t>(program);
 }

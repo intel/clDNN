@@ -57,8 +57,8 @@ std::string fully_connected_grad_weights_inst::to_string(fully_connected_grad_we
 fully_connected_grad_weights_inst::typed_primitive_inst(network_impl& network, fully_connected_grad_weights_node const& node)
     :parent(network, node)
 {
-    auto input_layout = input_memory().get_layout();
-    auto output_layout = output_memory().get_layout();
+    auto input_layout = node.input().get_output_layout();
+    auto output_layout = node.get_output_layout();
 
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_layout.size.raw.size(), "output size", output_layout.size.raw.size(), "");
 

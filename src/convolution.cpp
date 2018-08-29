@@ -41,8 +41,8 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
     auto dilation = desc->dilation;
     auto split = desc->weights.size();
 
-    // compute how many outputs in rows and columns will be generate by filter.
-    // outp <= (input_size - (2*input_offset) - kernel_size)/ stride
+    // compute how many outputs in rows and columns will be generate by filter. 
+    // outp <= (input_size - (2*input_offset) - kernel_size)/ stride 
     auto filter_size = weights_layout.size;
 
     // TODO: Consider moving general parameter verification to arguments constructor.
@@ -109,7 +109,7 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 }
 
 std::string convolution_inst::to_string(convolution_node const& node)
-{
+{    
     auto desc       = node.get_primitive();
     auto strd       = desc->stride;
     auto split      = node.get_split();
@@ -143,10 +143,10 @@ convolution_inst::typed_primitive_inst(network_impl& network, convolution_node c
     : parent(network, node)
 {
     auto stride = argument.stride;
-    auto output_size = output_memory().get_layout().size;
 
-    auto input_inst = input_memory().get_layout();
-    auto output_inst = output_memory().get_layout();
+    auto input_inst = node.input().get_output_layout();
+    auto output_inst = node.get_output_layout();
+    auto output_size = output_inst.size;
 
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input number of dimensions", input_inst.size.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "Input/output dims mismtach");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Stride number of dimensions", stride.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "stride/output dims mismtach");
@@ -154,15 +154,14 @@ convolution_inst::typed_primitive_inst(network_impl& network, convolution_node c
     auto split = node.get_split();
     for (decltype(split) j = 0; j < split; j++)
     {
-        auto& filter_mem = weights_memory(j);
-        auto& filter_inst = filter_mem.get_layout(); //convolution filter
+        auto filter_inst = node.weights(j).get_output_layout(); //convolution filter
         if (bias_term())
         {
-            auto& bias_inst = bias_memory(j).get_layout();
+            auto bias_inst = node.bias(j).get_output_layout();
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias batch[0]", bias_inst.size.batch[0], "expected size of batch", 1, "Biases isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias feature[0]", bias_inst.size.feature[0], "expected size of feature", 1, "Biases isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[1]", bias_inst.size.spatial[1], "expected size of spatial[1]", 1, "Biases isn't 1D vector.");
-
+          
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[0]", bias_inst.size.spatial[0], "expected feature map number", output_size.feature[0] / split, "Bias/fm mismtach");
         }
 

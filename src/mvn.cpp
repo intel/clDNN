@@ -40,7 +40,7 @@ std::string mvn_inst::to_string(mvn_node const& node)
     auto across_channels = desc->across_channels ? "true" : "false";
     auto normalize_variance = desc->normalize_variance ? "true" : "false";
     auto& input       = node.input();
-
+    
     std::stringstream primitive_description;
 
     json_composite mvn_info;

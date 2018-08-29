@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "normalize/normalize_kernel_selector.h"
+#include "normalize/normalize_kernel_base.h"
 
 #include <algorithm>
 
@@ -43,19 +45,19 @@ protected:
 
 public:
 
-    static primitive_impl* create(const normalize_node& arg)
-    {
+    static primitive_impl* create(const normalize_node& arg) 
+    { 
         auto norm_params = get_default_params<kernel_selector::normalize_params>(arg);
         auto norm_optional_params = get_default_optional_params<kernel_selector::normalize_optional_params>(arg.get_program());
 
         const auto& scale_layout  = arg.scale().get_output_layout();
 
-        norm_params.normParams.normMode =
+        norm_params.normMode = 
             arg.get_primitive()->across_spatial ?
             kernel_selector::normalize_mode::ACROSS_SPATIAL :
             kernel_selector::normalize_mode::WITHIN_SPATIAL;
-        norm_params.normParams.epsilon = arg.get_primitive()->epsilon;
-        norm_params.normParams.scaleTable = convert_data_tensor(scale_layout).FlattenFeatureAndSpatials();
+        norm_params.epsilon = arg.get_primitive()->epsilon;
+        norm_params.scaleTable = convert_data_tensor(scale_layout).FlattenFeatureAndSpatials();
 
         auto& kernel_selector = kernel_selector::normalize_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(norm_params, norm_optional_params);
@@ -71,7 +73,7 @@ public:
 
 namespace {
     struct attach {
-        attach()
+        attach() 
         {
             implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), normalize_gpu::create);
             implementation_map<normalize>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), normalize_gpu::create);

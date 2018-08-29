@@ -17,14 +17,22 @@
 #include "mvn_kernel_base.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    JitConstants MVNKernelBase::GetJitConstants(const MVNParams& params, MVNKernelBase::DispatchData) const
+    JitConstants MVNKernelBase::GetJitConstants(const mvn_params& params, MVNKernelBase::DispatchData) const
     {
-        return MakeMVNJitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(params);
+
+        jit.AddConstants({
+            MakeJitConstant("EPSILON",              params.epsilon),
+            MakeJitConstant(toString(params.mvnMode), ""),
+            MakeJitConstant("NORMALIZE_VARIANCE",   params.mvnNormalizeVariance),
+        });
+
+        return jit;
     }
 
-    MVNKernelBase::DispatchData MVNKernelBase::SetDefault(const MVNParams& params) const
+    MVNKernelBase::DispatchData MVNKernelBase::SetDefault(const mvn_params& params) const
     {
         const auto& output = params.output;
 
@@ -34,7 +42,7 @@ namespace KernelSelector
 
         kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
-        if (params.mvnParams.mvnMode == MVNMode::WITHIN_CHANNELS)
+        if (params.mvnMode == MVNMode::WITHIN_CHANNELS)
         {
             global = { output.Batch().v, output.Feature().v, 1 };
         }
@@ -56,17 +64,17 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData MVNKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, float estimated_time) const
+    KernelsData MVNKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, float estimated_time) const
     {
         assert(params.GetType() == KernelType::MVN);
 
-        const MVNParams& orgParams = static_cast<const MVNParams&>(params);
+        const mvn_params& orgParams = static_cast<const mvn_params&>(params);
 
         DispatchData runInfo;
 
         runInfo = SetDefault(orgParams);
 
-        KernelData kd = KernelData::Default<MVNParams>(params);
+        KernelData kd = KernelData::Default<mvn_params>(params);
 
         auto finalKernelName = GetKernelName(orgParams);
         auto cldnn_jit = GetJitConstants(orgParams, runInfo);

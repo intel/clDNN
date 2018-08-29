@@ -62,7 +62,7 @@ public:
         for (int h = 0; h < 2; ++h)
         {
             float center_y = (h + 0.5f) * step;
-            for (int w = 0; w < 2; ++w)
+            for (int w = 0; w < 2; ++w) 
             {
                 float center_x = (w + 0.5f) * step;
                 prior_data[idx+prior_coordinates_offset+0] = (center_x - box_size / 2) * prior_multiplier;
@@ -83,17 +83,17 @@ public:
 
         // Fill confidences.
         idx = 0;
-        for (int i = 0; i < num_of_images; ++i)
+        for (int i = 0; i < num_of_images; ++i) 
         {
-            for (int j = 0; j < num_priors; ++j)
+            for (int j = 0; j < num_priors; ++j) 
             {
-                for (int c = 0; c < num_classes; ++c)
+                for (int c = 0; c < num_classes; ++c) 
                 {
-                    if (i % 2 == c % 2)
+                    if (i % 2 == c % 2) 
                     {
                         confidence_data[idx++] = j * 0.2f;
                     }
-                    else
+                    else 
                     {
                         confidence_data[idx++] = 1 - j * 0.2f;
                     }
@@ -105,13 +105,13 @@ public:
         const int num_loc_classes = share_location ? 1 : num_classes;
         const float loc_multiplier = variance_encoded_in_target ? variance : 1.0f;
         idx = 0;
-        for (int i = 0; i < num_of_images; ++i)
+        for (int i = 0; i < num_of_images; ++i) 
         {
-            for (int h = 0; h < 2; ++h)
+            for (int h = 0; h < 2; ++h) 
             {
-                for (int w = 0; w < 2; ++w)
+                for (int w = 0; w < 2; ++w) 
                 {
-                    for (int c = 0; c < num_loc_classes; ++c)
+                    for (int c = 0; c < num_loc_classes; ++c) 
                     {
                         location_data[idx++] = (w % 2 ? -1 : 1) * (i * 1 + c / 2.f + 0.5f) * loc_multiplier;
                         location_data[idx++] = (h % 2 ? -1 : 1) * (i * 1 + c / 2.f + 0.5f) * loc_multiplier;
@@ -140,7 +140,7 @@ public:
         {
             EXPECT_EQ(static_cast<int>((float)data[num * output.get_layout().size.spatial[0] + i]), atoi(items[i].c_str()));
         }
-        for (int i = 2; i < 7; ++i)
+        for (int i = 2; i < 7; ++i) 
         {
             EXPECT_TRUE(floating_point_equal(data[num * output.get_layout().size.spatial[0] + i], (T)(float)atof(items[i].c_str())));
         }
@@ -179,10 +179,10 @@ TYPED_TEST(detection_output_test, test_setup_basic)
     network.set_input_data("input_prior_box", input_prior_box);
 
     auto outputs = network.execute();
-
+    
     EXPECT_EQ(outputs.size(), size_t(1));
     EXPECT_EQ(outputs.begin()->first, "detection_output");
-
+    
     EXPECT_EQ(outputs.begin()->second.get_memory().get_layout().size.batch[0], 1);
     EXPECT_EQ(outputs.begin()->second.get_memory().get_layout().size.feature[0], 1);
     EXPECT_EQ(outputs.begin()->second.get_memory().get_layout().size.spatial[1], keep_top_k * this->num_of_images);
@@ -225,7 +225,7 @@ TYPED_TEST(detection_output_test, test_forward_share_location)
     EXPECT_EQ(outputs.begin()->second.get_memory().get_layout().size.spatial[0], 7);
 
     auto output_prim = outputs.begin()->second.get_memory();
-
+    
     this->check_results(output_prim, 0, "0 1 1.0 0.15 0.15 0.45 0.45");
     this->check_results(output_prim, 1, "0 1 0.8 0.55 0.15 0.85 0.45");
     this->check_results(output_prim, 2, "0 1 0.6 0.15 0.55 0.45 0.85");
@@ -682,3 +682,4 @@ TYPED_TEST(detection_output_test, test_forward_no_share_location_top_k_faster_rc
     this->check_results(output_prim, 6, "-1 0 0 0 0 0 0");
     this->check_results(output_prim, 7, "-1 0 0 0 0 0 0");
 }
+

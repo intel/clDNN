@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class ActivationKernelSelctor : public KernelSelctorBase
+    class activation_kernel_selector : public kernel_selector_base
     {
     public:
-        static ActivationKernelSelctor &Instance() {
-            static ActivationKernelSelctor instance_;
+        static activation_kernel_selector &Instance() {
+            static activation_kernel_selector instance_;
             return instance_;
         }
 
-        ActivationKernelSelctor();
+        activation_kernel_selector();
 
-        virtual ~ActivationKernelSelctor() {}
+        virtual ~activation_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

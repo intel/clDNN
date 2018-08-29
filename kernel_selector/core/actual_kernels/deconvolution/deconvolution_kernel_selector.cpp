@@ -18,15 +18,15 @@
 #include "deconvolution_kernel_ref.h"
 #include "deconvolution_kernel_bfyx_opt.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    DeconvolutionKernelSelctor::DeconvolutionKernelSelctor()
+    deconvolution_kernel_selector::deconvolution_kernel_selector()
     {
         Attach<DeconvolutionKernelRef>();
         Attach<DeconvolutionKernel_bfyx_opt>();
     }
 
-    KernelsData DeconvolutionKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData deconvolution_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::DECONVOLUTION);
     }

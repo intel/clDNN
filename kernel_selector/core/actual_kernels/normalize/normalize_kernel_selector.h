@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class NormalizeKernelSelctor : public KernelSelctorBase
+    class normalize_kernel_selector : public kernel_selector_base
     {
     public:
-        static NormalizeKernelSelctor &Instance() {
-            static NormalizeKernelSelctor instance_;
+        static normalize_kernel_selector &Instance() {
+            static normalize_kernel_selector instance_;
             return instance_;
         }
 
-        NormalizeKernelSelctor();
+        normalize_kernel_selector();
 
-        virtual ~NormalizeKernelSelctor() {}
+        virtual ~normalize_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

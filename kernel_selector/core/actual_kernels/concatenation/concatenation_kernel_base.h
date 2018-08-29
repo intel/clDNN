@@ -19,20 +19,65 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class ConcatenationKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // concatenation_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct concatenation_params : public base_params
+    {
+        concatenation_params() : base_params(KernelType::CONCATENATION) {}
+
+        ConcatAxis axis = ConcatAxis::FEATURE;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            auto k = base_params::GetParamsKey();
+            k.EnableConcatAxis(axis);
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // concatenation_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct concatenation_optional_params : optional_params
+    {
+        concatenation_optional_params() : optional_params(KernelType::CONCATENATION) {}
+        bool kernelPerInput = true;
+
+        virtual ParamsKey GetSupportedKey() const
+        {
+            ParamsKey k = optional_params::GetSupportedKey();
+
+            if (kernelPerInput)
+            {
+                k.EnableConcatKernelPerInput();
+            }
+            else
+            {
+                k.EnableConcatOneKernel();
+            }
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConcatenationKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class ConcatenationKernelBase : public common_kernel_base
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using common_kernel_base::common_kernel_base;
         virtual ~ConcatenationKernelBase() {}
 
         using DispatchData = CommonDispatchData;
     
     protected:
-        virtual bool Validate(const Params&, const OptionalParams&) const override;
-        virtual JitConstants GetJitConstants(const ConcatenationParams& params) const;
-        virtual DispatchData SetDefault(const ConcatenationParams& params) const;
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&) const;
+        virtual bool Validate(const Params&, const optional_params&) const override;
+        virtual JitConstants GetJitConstants(const concatenation_params& params) const;
+        virtual DispatchData SetDefault(const concatenation_params& params) const;
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params&) const;
     };
 }

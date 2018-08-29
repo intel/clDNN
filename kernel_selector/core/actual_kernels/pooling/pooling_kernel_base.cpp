@@ -16,9 +16,9 @@
 
 #include "pooling_kernel_base.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    bool PoolingKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    bool PoolingKernelBase::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::POOLING ||
             o.GetType() != KernelType::POOLING)
@@ -29,9 +29,17 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants PoolingKernelBase::GetJitConstants(const PoolingParams& params, PoolingKernelBase::DispatchData kd) const
+    JitConstants PoolingKernelBase::GetJitConstants(const pooling_params& pp, PoolingKernelBase::DispatchData kd) const
     {
-        JitConstants mem_consts = MakePoolingJitConstants(params);
+        JitConstants mem_consts = MakeBaseParamsJitConstants(pp);
+
+        mem_consts.AddConstants({
+            MakeJitConstant("POOL",     pp.poolSize),
+            MakeJitConstant("STRIDE",   pp.poolStride),
+            MakeJitConstant("PADDING",  pp.poolPad),
+            MakeJitConstant(toString(pp.poolType) + "_POOLING", 1),
+            MakeJitConstant(toString(pp.divMode) + "_KERNEL_DIVIDER", 1),
+        });
 
         if (kd.needsBoundary)
         {
@@ -42,16 +50,14 @@ namespace KernelSelector
     }
 
     // Checks if we need boundary checking in kernel.
-    bool PoolingKernelBase::NeedsBoundaryCheck(const PoolingParams& params) const
+    bool PoolingKernelBase::NeedsBoundaryCheck(const pooling_params& pp) const
     {
-        const auto& pp = params.poolParams;
-
         if (pp.poolPad.x != 0 || pp.poolPad.y != 0)
         {
             return true;
         }
 
-        const auto& input = params.inputs[0];
+        const auto& input = pp.inputs[0];
 
         if (input.X().v < pp.poolSize.x || input.Y().v < pp.poolSize.y)
         {
@@ -64,7 +70,7 @@ namespace KernelSelector
         return mod_x || mod_y;
     }
 
-    PoolingKernelBase::DispatchData PoolingKernelBase::SetDefault(const PoolingParams& params) const
+    PoolingKernelBase::DispatchData PoolingKernelBase::SetDefault(const pooling_params& params) const
     {
         const auto& output = params.output;
 
@@ -105,18 +111,18 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData PoolingKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, float estimatedTime) const
+    KernelsData PoolingKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, float estimatedTime) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
 
-        const PoolingParams& orgParams = static_cast<const PoolingParams&>(params);
+        const pooling_params& orgParams = static_cast<const pooling_params&>(params);
 
         DispatchData runInfo = SetDefault(orgParams);
 
-        KernelData kd = KernelData::Default<PoolingParams>(params);
+        KernelData kd = KernelData::Default<pooling_params>(params);
 
         auto cldnn_jit = GetJitConstants(orgParams, runInfo);
         auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
@@ -124,7 +130,7 @@ namespace KernelSelector
 
         auto& kernel = kd.kernels[0];
         FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
-        if(orgParams.poolParams.poolType == PoolType::MAX_WITH_ARGMAX)
+        if(orgParams.poolType == PoolType::MAX_WITH_ARGMAX)
             kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
 
         kd.estimatedTime = estimatedTime;

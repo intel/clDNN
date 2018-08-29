@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "upsampling/upsampling_kernel_selector.h"
+#include "upsampling/upsampling_kernel_base.h"
 
 namespace cldnn { namespace gpu {
 
@@ -50,9 +52,9 @@ struct upsampling_gpu : typed_primitive_gpu_impl<upsampling>
         if(primitive->with_activation)
             convert_activation_func_params(primitive, us_params);
 
-        us_params.usParams.scale = primitive->scale;
-        us_params.usParams.num_filter = primitive->num_filter;
-        us_params.usParams.sampleType = convert_to_sample_type(primitive->sample_type);
+        us_params.scale = primitive->scale;
+        us_params.num_filter = primitive->num_filter;
+        us_params.sampleType = convert_to_sample_type(primitive->sample_type);
 
         auto& kernel_selector = kernel_selector::upsampling_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(us_params, us_optional_params);

@@ -60,7 +60,7 @@ public:
     }
 
     decltype(auto) bias(size_t idx = 0) const
-    {
+    { 
         if (static_cast<int32_t>(idx) >= this->get_split())
             throw std::range_error("bias offset too big");
 
@@ -97,7 +97,7 @@ public:
     {
         return get_primitive()->output_calibration_factors.size() > 0;
     }
-
+    
     float get_input_qf() const { return input_qf; }
     float get_output_qf() const { return output_qf; }
 
@@ -127,12 +127,12 @@ public:
     {
         if (static_cast<int32_t>(index) >= node.get_split())
             throw std::range_error("weights offset too big");
-
+        
         return dep_memory(1 + index);
     }
 
     decltype(auto) bias_memory(size_t index) const
-    {
+    { 
         if (static_cast<int32_t>(index) >= node.get_split())
             throw std::range_error("bias offset too big");
 

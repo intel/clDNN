@@ -60,12 +60,12 @@ std::string apply_adam_inst::to_string(apply_adam_node const& node)
 }
 
 apply_adam_inst::typed_primitive_inst(network_impl& network, apply_adam_node const& node)
-    :parent(network, node)
+    :parent(network, node) 
 {
-    auto m_format = m_memory().get_layout().format;
-    auto v_format = v_memory().get_layout().format;
-    auto beta1_power_format = beta1_power_memory().get_layout().format;
-    auto beta2_power_format = beta2_power_memory().get_layout().format;
+    auto m_format = node.m().get_output_layout().format;
+    auto v_format = node.v().get_output_layout().format;
+    auto beta1_power_format = node.beta1_power().get_output_layout().format;
+    auto beta2_power_format = node.beta2_power().get_output_layout().format;
 
     CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "M format", m_format.value, "supported m formats", format::yxfb, format::bfyx );
     CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "V format", v_format.value, "supported v formats", format::yxfb, format::bfyx );

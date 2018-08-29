@@ -32,10 +32,10 @@
 #define DST_H POOLED_HEIGHT
 #define PITCH_ROI_R INPUT1_BATCH_PITCH
 
-#if GORUP_SIZE == 0
+#if GROUP_SIZE == 0
 #define DST_C INPUT0_FEATURE_NUM
 #else
-#define DST_C (GORUP_SIZE ? (INPUT0_FEATURE_NUM / GORUP_SIZE / GORUP_SIZE) : INPUT0_FEATURE_NUM)
+#define DST_C (GROUP_SIZE ? (INPUT0_FEATURE_NUM / GROUP_SIZE / GROUP_SIZE) : INPUT0_FEATURE_NUM)
 #endif
 
 // Note: In the non-ROI_OLD case we keep the coordinates in float instead
@@ -129,7 +129,7 @@ KERNEL(roi_pooling_gpu)
     const int y_after = CLAMP(ceil(roi_y + dy_after), 0, SRC_H);
 #endif
 
-#if GORUP_SIZE == 0
+#if GROUP_SIZE == 0
     const uint work_c = c;
 #else
 
@@ -137,14 +137,14 @@ KERNEL(roi_pooling_gpu)
     const COORD_T group_bin_w = (COORD_T)roi_w / DST_W;
     const COORD_T group_bin_h = (COORD_T)roi_h / DST_H;
     
-    const uint group_x = CLAMP(x * group_bin_w, 0, GORUP_SIZE - 1);
-    const uint group_y = CLAMP(y * group_bin_h, 0, GORUP_SIZE - 1);
+    const uint group_x = CLAMP(x * group_bin_w, 0, GROUP_SIZE - 1);
+    const uint group_y = CLAMP(y * group_bin_h, 0, GROUP_SIZE - 1);
 #else
     const uint group_x = x;
     const uint group_y = y;
 #endif
 
-    const uint work_c = group_x + GORUP_SIZE * (group_y + GORUP_SIZE * c);
+    const uint work_c = group_x + GROUP_SIZE * (group_y + GROUP_SIZE * c);
 #endif
 
     const __global UNIT_TYPE * data = src_data + INPUT0_OFFSET + INPUT0_FEATURE_PITCH*work_c;

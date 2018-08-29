@@ -16,7 +16,7 @@
 
 #include "pooling_kernel_gpu_average_opt.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey PoolingKernelGPUAverageOpt::GetSupportedKey() const
     {
@@ -32,26 +32,26 @@ namespace KernelSelector
         return k;
     }
 
-    bool PoolingKernelGPUAverageOpt::Validate(const Params& p, const OptionalParams& o) const
+    bool PoolingKernelGPUAverageOpt::Validate(const Params& p, const optional_params& o) const
     {
         if (!PoolingKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const PoolingParams& params = static_cast<const PoolingParams&>(p);
+        const pooling_params& params = static_cast<const pooling_params&>(p);
 
         if (params.activationFunc != ActivationFunction::NONE)
         {
             return{};
         }
 
-        if ((params.poolParams.poolSize.x != 3) ||
-            (params.poolParams.poolSize.y != 3) ||
-            (params.poolParams.poolStride.x != 1) ||
-            (params.poolParams.poolStride.y != 1) ||
-            (params.poolParams.poolPad.x != 1) ||
-            (params.poolParams.poolPad.y != 1) ||
+        if ((params.poolSize.x != 3) ||
+            (params.poolSize.y != 3) ||
+            (params.poolStride.x != 1) ||
+            (params.poolStride.y != 1) ||
+            (params.poolPad.x != 1) ||
+            (params.poolPad.y != 1) ||
             !(params.inputs[0] == params.output) ||
             params.inputs[0].PitchesDifferFromLogicalDims() ||
             params.output.PitchesDifferFromLogicalDims())
@@ -69,7 +69,7 @@ namespace KernelSelector
         return{ simdSize - 2, 7 };
     }
 
-    PoolingKernelBase::DispatchData PoolingKernelGPUAverageOpt::SetDefault(const PoolingParams& params) const
+    PoolingKernelBase::DispatchData PoolingKernelGPUAverageOpt::SetDefault(const pooling_params& params) const
     {
         constexpr int simdSize = 16;
 
@@ -90,7 +90,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    JitConstants PoolingKernelGPUAverageOpt::GetJitConstants(const PoolingParams& params, DispatchData kd) const
+    JitConstants PoolingKernelGPUAverageOpt::GetJitConstants(const pooling_params& params, DispatchData kd) const
     {
         auto tileDims = GetTileDimentions();
         auto mem_consts = PoolingKernelBase::GetJitConstants(params, kd);
@@ -100,13 +100,13 @@ namespace KernelSelector
             mem_consts.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", kd.lws0));
             mem_consts.AddConstant(MakeJitConstant("TILE_HEIGHT", tileDims.y));
             mem_consts.AddConstant(MakeJitConstant("TILE_WIDTH", tileDims.x));
-            mem_consts.AddConstant(MakeJitConstant("ONE_OVER_POOL_SIZE", 1.f / (params.poolParams.poolSize.x * params.poolParams.poolSize.y)));
+            mem_consts.AddConstant(MakeJitConstant("ONE_OVER_POOL_SIZE", 1.f / (params.poolSize.x * params.poolSize.y)));
         }
 
         return mem_consts;
     }
 
-    KernelsData PoolingKernelGPUAverageOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData PoolingKernelGPUAverageOpt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, FORCE_PRIORITY_7);
     }

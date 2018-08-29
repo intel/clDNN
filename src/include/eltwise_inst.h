@@ -29,10 +29,23 @@ struct typed_program_node<eltwise> : public typed_program_node_base<eltwise>
     using parent = typed_program_node_base<eltwise>;
 
 public:
-    using parent::parent;
+    typed_program_node(std::shared_ptr<primitive> prim, program_impl& prog)
+        :parent(prim, prog)
+        , output_qf(get_primitive()->output_quantization_factor)
+        , output_cf(!get_primitive()->output_calibration_factors.empty())
+    {
+    }
+
 
     decltype(auto) input(size_t idx = 0) const { return get_dependency(idx); }
-    size_t inputs_count() const { return get_dependencies().size(); }
+    size_t inputs_count() const { return get_dependencies().size() - (output_cf ? 1 : 0); }
+    decltype(auto) output_calibration_factors() const { return get_dependency(inputs_count()); }
+    bool output_calibration_term() const { return !get_primitive()->output_calibration_factors.empty(); }
+    float get_output_qf() const { return output_qf; }
+
+private:
+    float output_qf;
+    bool output_cf; // to know if we have calibration factors
 };
 
 using eltwise_node = typed_program_node<eltwise>;
@@ -48,6 +61,9 @@ public:
 
 public:
     typed_primitive_inst(network_impl& network, eltwise_node const& node);
+
+    decltype(auto) output_calibration_factors_memory() const { return dep_memory(node.inputs_count()); } // because last place should be reserved for calibration factors
+    bool output_calibration_factors_term() const { return node.output_calibration_term(); }
 };
 
 using eltwise_inst = typed_primitive_inst<eltwise>;

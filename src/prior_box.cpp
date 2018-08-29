@@ -48,7 +48,10 @@ namespace {
             step_h = static_cast<float>(img_height) / layer_height;
         }
         const float offset = argument.offset;
-        int num_priors = (int)argument.aspect_ratios.size() * (int)argument.min_sizes.size() + (int)argument.max_sizes.size();
+        int num_priors = argument.scale_all_sizes ? (int)argument.aspect_ratios.size() * (int)argument.min_sizes.size()
+                                                                                       + (int)argument.max_sizes.size()
+                                                  : (int)argument.aspect_ratios.size() + (int)argument.min_sizes.size()
+                                                                                       + (int)argument.max_sizes.size() - 1;
 
         mem_lock<dtype> lock{ output_mem };
         auto out_ptr = lock.begin();
@@ -87,22 +90,28 @@ namespace {
                         out_ptr[idx++] = (dtype)((center_y + box_height / 2.f) / img_height);
                     }
 
-                    // rest of priors
-                    for (size_t r = 0; r < argument.aspect_ratios.size(); ++r) {
-                        float ar = argument.aspect_ratios[r];
-                        if (fabs(ar - 1.) < 1e-6) {
-                            continue;
+                    if (argument.scale_all_sizes || (!argument.scale_all_sizes && (s == argument.min_sizes.size() - 1)))
+                    {
+                        min_size = argument.scale_all_sizes ? argument.min_sizes[s] : argument.min_sizes[0];
+                        // rest of priors
+                        for (size_t r = 0; r < argument.aspect_ratios.size(); ++r)
+                        {
+                            float ar = argument.aspect_ratios[r];
+                            if (fabs(ar - 1.) < 1e-6)
+                            {
+                                continue;
+                            }
+                            box_width = min_size * sqrt(ar);
+                            box_height = min_size / sqrt(ar);
+                            // xmin
+                            out_ptr[idx++] = (dtype) ((center_x - box_width / 2.f) / img_width);
+                            // ymin
+                            out_ptr[idx++] = (dtype) ((center_y - box_height / 2.f) / img_height);
+                            // xmax
+                            out_ptr[idx++] = (dtype) ((center_x + box_width / 2.f) / img_width);
+                            // ymax
+                            out_ptr[idx++] = (dtype) ((center_y + box_height / 2.f) / img_height);
                         }
-                        box_width = min_size * sqrt(ar);
-                        box_height = min_size / sqrt(ar);
-                        // xmin
-                        out_ptr[idx++] = (dtype)((center_x - box_width / 2.f) / img_width);
-                        // ymin
-                        out_ptr[idx++] = (dtype)((center_y - box_height / 2.f) / img_height);
-                        // xmax
-                        out_ptr[idx++] = (dtype)((center_x + box_width / 2.f) / img_width);
-                        // ymax
-                        out_ptr[idx++] = (dtype)((center_y + box_height / 2.f) / img_height);
                     }
                 }
             }
@@ -177,10 +186,10 @@ void prior_box_node::calc_result()
     result = get_program().get_engine().allocate_memory(get_output_layout());
 
     //perform calculations
-    if (input().get_output_layout().data_type == data_types::f32)
-        calculate_prior_box_output<data_type_to_type<data_types::f32>::type>(*result, input().get_output_layout(), *typed_desc());
-    else
+    if (input().get_output_layout().data_type == data_types::f16)
         calculate_prior_box_output<data_type_to_type<data_types::f16>::type>(*result, input().get_output_layout(), *typed_desc());
+    else
+        calculate_prior_box_output<data_type_to_type<data_types::f32>::type>(*result, input().get_output_layout(), *typed_desc());
 }
 
 layout prior_box_inst::calc_output_layout(prior_box_node const& node)
@@ -192,14 +201,16 @@ layout prior_box_inst::calc_output_layout(prior_box_node const& node)
     const int layer_width = input_layout.size.spatial[0];
     const int layer_height = input_layout.size.spatial[1];
 
-    int num_priors = (int)desc->aspect_ratios.size() * (int)desc->min_sizes.size() + (int)desc->max_sizes.size();
+    int num_priors = desc->scale_all_sizes ? (int)desc->aspect_ratios.size() * (int)desc->min_sizes.size() + (int)desc->max_sizes.size()
+                                           : (int)desc->aspect_ratios.size() + (int)desc->min_sizes.size() + (int)desc->max_sizes.size() - 1;
 
     // Since all images in a batch has same height and width, we only need to
     // generate one set of priors which can be shared across all images.
     // 2 features. First feature stores the mean of each prior coordinate.
     // Second feature stores the variance of each prior coordinate.
 
-    return{ input_layout.data_type, cldnn::format::bfyx, cldnn::tensor( 1, 2, 1, layer_width * layer_height * num_priors * 4 ) };
+    auto output_data_type = input_layout.data_type == data_types::f16 ? data_types::f16 : data_types::f32;
+    return{ output_data_type, cldnn::format::bfyx, cldnn::tensor( 1, 2, 1, layer_width * layer_height * num_priors * 4 ) };
 }
 
 std::string vector_to_string(std::vector<float> vec)
@@ -212,16 +223,17 @@ std::string vector_to_string(std::vector<float> vec)
 
 std::string prior_box_inst::to_string(prior_box_node const& node)
 {
-    auto desc      = node.get_primitive();
-    auto flip      = desc->flip ? "true" : "false";
-    auto clip      = desc->clip ? "true" : "false";
-    auto node_info = node.desc_to_json();
+    auto desc            = node.get_primitive();
+    auto flip            = desc->flip ? "true" : "false";
+    auto clip            = desc->clip ? "true" : "false";
+    auto scale_all_sizes = desc->scale_all_sizes ? "true" : "false";
+    auto node_info       = node.desc_to_json();
 
     std::string str_min_sizes    = vector_to_string(desc->min_sizes);
     std::string str_max_sizes    = vector_to_string(desc->max_sizes);
     std::string str_variance     = vector_to_string(desc->variance);
     std::string str_aspect_ratio = vector_to_string(desc->aspect_ratios);
-
+    
     std::stringstream primitive_description;
 
     json_composite prior_info;
@@ -237,6 +249,7 @@ std::string prior_box_inst::to_string(prior_box_node const& node)
     prior_info.add("aspect_ratio", str_aspect_ratio);
     prior_info.add("flip", flip);
     prior_info.add("clip", clip);
+    prior_info.add("scale all sizes", scale_all_sizes);
 
     json_composite step_info;
     step_info.add("step width", desc->step_width);
@@ -246,7 +259,7 @@ std::string prior_box_inst::to_string(prior_box_node const& node)
 
     node_info.add("prior box info", prior_info);
     node_info.dump(primitive_description);
-
+    
     return primitive_description.str();
 }
 

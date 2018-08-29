@@ -18,6 +18,8 @@
 #include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "reorder/reorder_kernel_selector.h"
+#include "reorder/reorder_kernel_base.h"
 #include "error_handler.h"
 
 namespace cldnn { namespace gpu {
@@ -60,34 +62,34 @@ public:
         if (arg.has_mean())
         {
             const auto& mean_layout = arg.mean().get_output_layout();
-            reorder_params.reorderParams.mean = convert_data_tensor(mean_layout);
-            reorder_params.reorderParams.mode = kernel_selector::mean_subtruct_mode::IN_BUFFER;
+            reorder_params.mean = convert_data_tensor(mean_layout);
+            reorder_params.mode = kernel_selector::mean_subtruct_mode::IN_BUFFER;
         }
         else if (arg.get_primitive()->subtract_per_feature.empty() == false)
         {
-            reorder_params.reorderParams.mode = kernel_selector::mean_subtruct_mode::INSIDE_PARAMS;
-            reorder_params.reorderParams.meanValues = arg.get_primitive()->subtract_per_feature;
+            reorder_params.mode = kernel_selector::mean_subtruct_mode::INSIDE_PARAMS;
+            reorder_params.meanValues = arg.get_primitive()->subtract_per_feature;
         }
         else
         {
-            reorder_params.reorderParams.mode = kernel_selector::mean_subtruct_mode::NONE;
+            reorder_params.mode = kernel_selector::mean_subtruct_mode::NONE;
         }
 
-        if (reorder_params.reorderParams.mode != kernel_selector::mean_subtruct_mode::NONE)
+        if (reorder_params.mode != kernel_selector::mean_subtruct_mode::NONE)
         {
             switch (arg.get_primitive()->mean_mode)
             {
             case cldnn_reorder_mean_mode::mean_none:
-                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::NONE;
+                reorder_params.mean_op = kernel_selector::mean_op::NONE;
                 break;
             case cldnn_reorder_mean_mode::mean_mul:
-                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::MUL;
+                reorder_params.mean_op = kernel_selector::mean_op::MUL;
                 break;
-            case cldnn_reorder_mean_mode::mean_subtract:
-                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::SUB;
+            case cldnn_reorder_mean_mode::mean_subtract: 
+                reorder_params.mean_op = kernel_selector::mean_op::SUB;
                 break;
             case cldnn_reorder_mean_mode::mean_div:
-                reorder_params.reorderParams.mean_op = kernel_selector::mean_op::DIV;
+                reorder_params.mean_op = kernel_selector::mean_op::DIV;
                 break;
             default:
                 throw std::out_of_range(arg.id() + ": unsupported mean_mode value.");
@@ -96,12 +98,12 @@ public:
 
         if (output_layout.format == format::winograd_2x3_s1_data)
         {
-            reorder_params.reorderParams.winograd_input_offset_x = arg.get_input_offset().spatial[0];
-            reorder_params.reorderParams.winograd_input_offset_y = arg.get_input_offset().spatial[1];
-            reorder_params.reorderParams.winograd_nr_tiles_x = ceil_div(output_layout.size.spatial[0], 4);
+            reorder_params.winograd_input_offset_x = arg.get_input_offset().spatial[0];
+            reorder_params.winograd_input_offset_y = arg.get_input_offset().spatial[1];
+            reorder_params.winograd_nr_tiles_x = ceil_div(output_layout.size.spatial[0], 4);
         }
 
-        reorder_params.reorderParams.winograd = input_layout.format.is_winograd() || output_layout.format.is_winograd();
+        reorder_params.winograd = input_layout.format.is_winograd() || output_layout.format.is_winograd();
 
         auto& kernel_selector = kernel_selector::reorder_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(reorder_params, reorder_optional_params);

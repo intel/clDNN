@@ -42,7 +42,7 @@ struct program_impl : public refcounted_obj<program_impl>
     friend struct program_node;
 
 public:
-    program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options);
+    program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal);
 
     void dump_memory_pool() const;
 
@@ -53,9 +53,9 @@ public:
     std::list<std::shared_ptr<program_node>> get_nodes() const;
     auto get_processing_order() const { return processing_order; }
     auto get_optimized_out() const { return optimized_out; }
-    auto& get_node(primitive_id const& id)
+    auto& get_node(primitive_id const& id) 
     {
-        try
+        try 
         {
             return *nodes_map.at(id);
         }
@@ -125,6 +125,7 @@ private:
     void analyze_output_size_handling_need();
     void replace_nodes_pre();
     void replace_nodes_post();
+	void handle_lstm();
     void handle_reshape();
 
     /*
@@ -142,6 +143,7 @@ private:
     void prepare_buffer_fusing();
     void prepare_primitive_fusing();
     void prepare_depthwise_sep_opt();
+    void prep_opt_depthwise_sep_post();
     void update_processing_order();
 
     /*
@@ -167,9 +169,9 @@ private:
 
     // Gets or creates program_node for given primitive 'prim' and inserts it as an intermediate
     // node between 'next' and it's dependency at 'prev_idx' index.
-    void add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx)
+    void add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep = true)
     {
-        add_intermediate(get_or_create(prim), next, prev_idx);
+        add_intermediate(get_or_create(prim), next, prev_idx, connect_int_node_with_old_dep);
     }
 
     void add_connection(program_node& prev, program_node& next)
@@ -182,6 +184,30 @@ private:
     {
         prev.users.remove(&next);
         next.dependencies.erase(std::remove(next.dependencies.begin(), next.dependencies.end(), &prev), next.dependencies.end());
+    }
+
+    void remove_all_connections(program_node& node) {
+        // since the graph is not topological sorted, we need to remove the node from both dependencies and users
+        for (auto &e : node.users) {
+            e->dependencies.erase(std::remove(e->dependencies.begin(), e->dependencies.end(), &node), e->dependencies.end());
+        }
+        for(auto &e : node.dependencies) {
+            e->users.remove(&node);
+        }
+        node.dependencies.clear();
+		node.users.clear();
+    }
+
+    bool processing_order_is_correct(program_node* node)
+    {
+        for (auto& dep : node->get_dependencies())
+        {
+            if (node->processing_num < dep->processing_num)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     void rename(program_node & node, primitive_id const & new_id);
@@ -207,6 +233,12 @@ private:
     void backward_bfs(std::function<void(program_node&)> const& mark_func = nullptr, std::function<void(program_node&)> const& unmark_func = nullptr) const;
 
     void dump_program(const char* stage, bool with_full_info, std::function<bool(program_node const&)> const& filter = nullptr) const;
+    //Dumps weights and biasses in serialization process, not working yet, in progress.
+    void dump_weights_and_biasses(std::vector<unsigned long long>& offsets, std::vector<std::string>& data_names, std::ofstream& file_stream) const;
+    //Makes serialization with given name.
+    //Placeholder, not working yet, in progress.
+    void serialize(std::string network_name, std::function<bool(program_node const&)> const& filter = nullptr) const;
+
 };
 }
 

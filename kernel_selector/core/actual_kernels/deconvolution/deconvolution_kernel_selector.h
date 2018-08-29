@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class DeconvolutionKernelSelctor : public KernelSelctorBase
+    class deconvolution_kernel_selector : public kernel_selector_base
     {
     public:
-        static DeconvolutionKernelSelctor &Instance() {
-            static DeconvolutionKernelSelctor instance_;
+        static deconvolution_kernel_selector &Instance() {
+            static deconvolution_kernel_selector instance_;
             return instance_;
         }
 
-        DeconvolutionKernelSelctor();
+        deconvolution_kernel_selector();
 
-        virtual ~DeconvolutionKernelSelctor() {}
+        virtual ~deconvolution_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

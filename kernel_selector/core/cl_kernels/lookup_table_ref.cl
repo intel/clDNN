@@ -28,3 +28,4 @@ KERNEL(lookup_table)(const __global UNIT_TYPE* input0, const __global float* ind
     output[global_index] = input0[(int)indices[global_index]*INPUT0_BATCH_NUM + b];
     #endif
 }
+	

@@ -52,7 +52,7 @@ std::string concatenation_inst::to_string(concatenation_node const& node)
 {
     auto node_info = node.desc_to_json();
     auto desc      = node.get_primitive();
-
+     
     std::stringstream ss_inputs;
     std::stringstream primitive_description;
 
@@ -78,16 +78,18 @@ std::string concatenation_inst::to_string(concatenation_node const& node)
 concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_node const& node)
     :parent(network, node)
 {
-    auto input_format = input_memory(0).get_layout().fused_format();
-    auto output_format = output_memory().get_layout().fused_format();
+    auto input_layout = node.input().get_output_layout();
+    auto input_format = input_layout.fused_format();
+    auto output_layout = node.get_output_layout();
+    auto output_format = output_layout.fused_format();
 
     tensor::value_type concat_count = 0;
-    auto input_size = input_memory(0).get_layout().size;;
-    auto output_size = output_memory().get_layout().size;
-    for (const auto& i : _deps)
+    auto input_size = input_layout.size;;
+    auto output_size = output_layout.size;
+    for (const auto& i : node.get_dependencies())
     {
-        auto& input_mem = i->output_memory();
-        auto input_mem_size = input_mem.get_layout().size;
+        auto input_i_layout = i->get_output_layout();
+        auto input_mem_size = input_i_layout.size;
         for (int dim = concatenation::along_b; dim <= concatenation::along_y; ++dim)
         {
             if (dim == node.get_primitive()->axis)
@@ -115,12 +117,13 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
 
     if (node.can_be_optimized())
     {
+        build_deps();
         std::list<std::vector<std::shared_ptr<primitive_inst>>*> stack = { &_deps };
         while (!stack.empty())
         {
             auto nodes_list = stack.front();
             stack.pop_front();
-
+        
             for (auto processed_node : *nodes_list)
             {
                 processed_node->_output = _output;

@@ -27,8 +27,8 @@ struct mutable_data_gpu : public typed_primitive_gpu_impl<mutable_data>
 
 public:
 
-    static primitive_impl* create(mutable_data_node const& arg)
-    {
+    static primitive_impl* create(mutable_data_node const& arg) 
+    { 
         return new mutable_data_gpu(arg, {});
     }
 };

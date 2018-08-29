@@ -18,7 +18,12 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
+
+    constexpr uint32_t winograd_tile_n = 4;
+    constexpr uint32_t winograd_tile_m = 8;
+    constexpr uint32_t winograd_input_tile_width = 4;
+    constexpr uint32_t winograd_input_tile_height = 1;
 
     ParamsKey ConvolutionKernel_Winograd_2x3_s1::GetSupportedKey() const
     {
@@ -42,13 +47,13 @@ namespace KernelSelector {
         return k;
     }
 
-    JitConstants ConvolutionKernel_Winograd_2x3_s1::GetJitConstants(const ConvolutionParams& params, Parent::DispatchData runInfo) const
+    JitConstants ConvolutionKernel_Winograd_2x3_s1::GetJitConstants(const convolution_params& params, const DispatchData& runInfo) const
     {
         JitConstants jit = Parent::GetJitConstants(params, runInfo);
 
-        const size_t input_tile_width = params.convParams.winograd_input_tile_width;
-        const size_t input_tile_height = params.convParams.winograd_input_tile_height;
-        const size_t winograd_filter_height = params.convParams.filterSize.y; //for this format, winograd filter is considered to be a set of 1d filters so its height should remain the same as original filter's
+        const size_t input_tile_width = winograd_input_tile_width;
+        const size_t input_tile_height = winograd_input_tile_height;
+        const size_t winograd_filter_height = params.filterSize.y; //for this format, winograd filter is considered to be a set of 1d filters so its height should remain the same as original filter's
 
         const size_t nr_tiles_x = Align(params.output.X().v, 4) / input_tile_width; //input is already in winograd domain, so simply divide its width by tile's width to get tiles count
         const size_t nr_tiles_y = Align(params.output.Y().v, 8) / input_tile_height;
@@ -65,15 +70,15 @@ namespace KernelSelector {
         return jit;
     }
 
-    ConvolutionKernel_Winograd_2x3_s1::Parent::DispatchData ConvolutionKernel_Winograd_2x3_s1::SetDefault(const ConvolutionParams& arg, int) const
+    ConvolutionKernel_Winograd_2x3_s1::Parent::DispatchData ConvolutionKernel_Winograd_2x3_s1::SetDefault(const convolution_params& arg, int) const
     {
         Parent::DispatchData runInfo = Parent::SetDefault(arg);
 
-        const size_t tile_n = arg.convParams.winograd_tile_n; //goes in-depth
-        const size_t tile_m = arg.convParams.winograd_tile_m; //goes over flattened x and y
+        const size_t tile_n = winograd_tile_n; //goes in-depth
+        const size_t tile_m = winograd_tile_m; //goes over flattened x and y
 
-        const size_t input_tile_width = arg.convParams.winograd_input_tile_width;
-        const size_t input_tile_height = arg.convParams.winograd_input_tile_height;
+        const size_t input_tile_width = winograd_input_tile_width;
+        const size_t input_tile_height = winograd_input_tile_height;
 
         const size_t nr_tiles_x = Align(arg.output.X().v, 4) / input_tile_width; //input is already in winograd domain, so simply divide its width by tile's width to get tiles count
         const size_t nr_tiles_y = Align(arg.output.Y().v, 8) / input_tile_height;
@@ -91,16 +96,14 @@ namespace KernelSelector {
         return runInfo;
     }
 
-    bool ConvolutionKernel_Winograd_2x3_s1::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_Winograd_2x3_s1::Validate(const Params& p, const optional_params& o) const
     {
         if (!Parent::Validate(p, o))
         {
             return false;
         }
 
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
-
-        const auto& cp = params.convParams;
+        const convolution_params& cp = static_cast<const convolution_params&>(p);
 
         const bool bStrideOK = (cp.stride.x == 1 && cp.stride.y == 1);
         const bool bDilationOK = (cp.stride.x == 1 && cp.stride.y == 1);
@@ -115,7 +118,7 @@ namespace KernelSelector {
         return true;
     }
 
-    KernelsData ConvolutionKernel_Winograd_2x3_s1::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_Winograd_2x3_s1::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

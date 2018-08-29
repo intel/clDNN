@@ -18,7 +18,7 @@
 
 #include "reorder_kernel_base.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
     class ReorderWeightsKernel : public ReorderKernelBase
     {
@@ -26,7 +26,7 @@ namespace KernelSelector
         ReorderWeightsKernel() : ReorderKernelBase("reorder_weights") {}
         virtual ~ReorderWeightsKernel() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

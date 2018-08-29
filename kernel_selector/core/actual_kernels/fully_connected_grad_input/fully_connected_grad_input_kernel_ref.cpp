@@ -16,7 +16,7 @@
 
 #include "fully_connected_grad_input_kernel_ref.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
 
     ParamsKey FullyConnectedGradInputKernelRef::GetSupportedKey() const
@@ -39,7 +39,7 @@ namespace KernelSelector
         k.EnableBiasPerFeature();
         k.EnableNonBiasTerm();
         //TODO: add support to batching, figure out the way to update weights/biases for multiple batches at the same time
-        //k.EnableBatching();
+        k.EnableBatching();
         k.EnableGradient();
         k.DisableTuning();
         return k;

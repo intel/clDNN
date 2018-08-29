@@ -97,7 +97,7 @@ KERNEL(pooling_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output
                     if(input[input_idx] > result)
                     {
                         const uint input_idx_bfyx_no_padding = input_offset_x + INPUT0_SIZE_X * (input_offset_y + INPUT0_SIZE_Y * (f + INPUT0_FEATURE_NUM * b));
-                        arg_max_idx = input_idx_bfyx;
+                        arg_max_idx = input_idx_bfyx_no_padding;
                     }
 #endif
                     result = FUNC_CALL(apply_pooling)(result, input[input_idx]);

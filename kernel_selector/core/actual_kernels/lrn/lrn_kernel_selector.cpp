@@ -23,9 +23,9 @@
 #include "lrn_kernel_across_channel_multiple_features.h"
 #include "lrn_kernel_within_channel_byxf_opt.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    LRNKernelSelctor::LRNKernelSelctor()
+    lrn_kernel_selector::lrn_kernel_selector()
     {
         Attach<LRNKernelRef>();
         Attach<LRNKernelWithinChannel>();
@@ -36,7 +36,7 @@ namespace KernelSelector
         Attach<LRNKernelAcrossChannelMultipleFeatures>();
     }
 
-    KernelsData LRNKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData lrn_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::LRN);
     }

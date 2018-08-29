@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "permute/permute_kernel_selector.h"
+#include "permute/permute_kernel_ref.h"
 
 using namespace cldnn;
 
@@ -31,24 +33,24 @@ struct permute_gpu : typed_primitive_gpu_impl<permute>
 
     static primitive_impl* create(const permute_node& arg)
     {
-        auto reorder_params = get_default_params<kernel_selector::permute_params>(arg);
-        auto reorder_optional_params = get_default_optional_params<kernel_selector::reorder_optional_params>(arg.get_program());
+        auto permute_params = get_default_params<kernel_selector::permute_params>(arg);
+        auto permute_optional_params = get_default_optional_params<kernel_selector::permute_optional_params>(arg.get_program());
 
-        uint16_t max_input_index = (uint16_t)(reorder_params.inputs[0].GetDims().size() - 1);
+        uint16_t max_input_index = (uint16_t)(permute_params.inputs[0].GetDims().size() - 1);
         const auto& permute_order = arg.get_primitive()->permute_order;
         for (size_t i = 0; i < permute_order.size(); i++)
         {
             auto order = permute_order[permute_order.size() - 1 - i];
-            reorder_params.permuteParams.order.push_back(max_input_index - order);
+            permute_params.order.push_back(max_input_index - order);
         }
         auto& kernel_selector = kernel_selector::permute_kernel_selector::Instance();
-        auto best_kernels = kernel_selector.GetBestKernels(reorder_params, reorder_optional_params);
+        auto best_kernels = kernel_selector.GetBestKernels(permute_params, permute_optional_params);
 
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
-        auto reorder = new permute_gpu(arg, best_kernels[0]);
+        auto permute = new permute_gpu(arg, best_kernels[0]);
 
-        return reorder;
+        return permute;
     }
 };
 

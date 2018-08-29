@@ -31,11 +31,16 @@
 #include "convolution_kernel_bfyx_1x1_gemm_buf.h"
 #include "convolution_kernel_winograd_2x3_s1_fused.h"
 #include "convolution_kernel_winograd_6x3_s1_fused.h"
+#include "convolution_kernel_MMAD.h"
+#include "convolution_kernel_MMAD_blocks.h"
+#include "convolution_kernel_1x1_gemm_MMAD.h"
+#include "convolution_kernel_byxf_af32_depthwise.h"
+
 #include <iostream>
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    ConvolutionKernelSelctor::ConvolutionKernelSelctor()
+    convolution_kernel_selector::convolution_kernel_selector()
     {
         Attach<ConvolutionKernel_bfyx_Ref>();
         Attach<ConvolutionKernel_bfyx_GEMMLike>();
@@ -52,10 +57,14 @@ namespace KernelSelector
         Attach<ConvolutionKernel_Winograd_6x3_s1_fused>();
         Attach<ConvolutionKernel_bfyx_1x1>();
         Attach<ConvolutionKernel_bfyx_1x1_gemm_buf>();
+        Attach<ConvolutionKernel_MMAD>();
+        Attach<ConvolutionKernel_MMAD_blocks>();
+        Attach<ConvolutionKernel_1x1_gemm_MMAD>();
+        Attach<ConvolutionKernel_byxf_af32_depthiwise>();
         //Attach<ConvolutionKernel_Tutorial>(); //In order to use this implementation for tutorial purposes please uncomment this line
     }
 
-    KernelsData ConvolutionKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData convolution_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         //const ConvolutionParams& orgParams = static_cast<const ConvolutionParams&>(params);
         //std::cout << orgParams.to_string() << std::endl;

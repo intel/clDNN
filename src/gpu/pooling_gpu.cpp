@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "pooling/pooling_kernel_selector.h"
+#include "pooling/pooling_kernel_base.h"
 
 namespace cldnn { namespace gpu {
 
@@ -106,7 +108,7 @@ public:
         const auto& input_sizes     = arg.input().get_output_layout().size;
         const auto& output_sizes    = arg.get_output_layout().size;
 
-        auto& pp                    = pool_params.poolParams;
+        auto& pp                    = pool_params;
 
         pp.poolType                 = cldnn_2_pool_type(primitive->mode);
         pp.remainderAction          = kernel_selector::pool_remainder::CEIL;
@@ -126,7 +128,7 @@ public:
             const auto& input_layout = arg.input().get_output_layout();
             pool_params.inputs[0] = convert_data_tensor(input_layout, 1, additional_offset);
         }
-
+        
         if (primitive->mode == pooling_mode::max_with_argmax)
             pool_params.inputs.push_back(convert_data_tensor(arg.argmax().get_output_layout()));
 
@@ -169,6 +171,8 @@ namespace {
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), pooling_gpu::create);
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), pooling_gpu::create);
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf), pooling_gpu::create);
+            // MMAD
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), pooling_gpu::create);
         }
         ~attach() {}
     };

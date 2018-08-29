@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <stdint.h>
 
-namespace KernelSelector
+namespace kernel_selector
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // KernelType
@@ -27,6 +27,8 @@ namespace KernelSelector
     {
         UNKNOWN,
 		ARG_MAX_MIN,
+        AVERAGE_UNPOOLING,
+        BATCH_NORM_GRAD,
         LOOKUP_TABLE,
         CONVOLUTION,
         DECONVOLUTION,
@@ -40,15 +42,22 @@ namespace KernelSelector
         ELTWISE,
         TABLE_LOOKUP,
         REORDER,
+        RESHAPE,
+        PERMUTE,
         CONCATENATION,
         UPSAMPLING,
         REGION_YOLO,
         REORG_YOLO,
         MAX_UNPOOLING,
         CONVOLUTION_GRAD_WEIGHTS,
+        SCALE_GRAD_WEIGHTS,
         MVN,
         FULLY_CONNECTED_GRAD_INPUT,
-        FULLY_CONNECTED_GRAD_WEIGHTS
+        FULLY_CONNECTED_GRAD_WEIGHTS,
+        LSTM_GEMM,
+        LSTM_ELT,
+        EMBED,
+        SOFT_MAX_LOSS_GRAD
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,14 +105,6 @@ namespace KernelSelector
         ELU,
         RELU_GRAD,
         RELU_NEGATIVE_SLOPE_GRAD,
-        SIN,
-        ASIN,
-        SINH,
-        COS,
-        ACOS,
-        COSH,
-        LOG,
-        EXP,
         NONE,
         NONE_GRAD
     };
@@ -147,6 +148,18 @@ namespace KernelSelector
         Y,
         XYF
     };
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// EmbedAxis
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	enum class EmbedAxis
+	{
+		BATCH,
+		FEATURE,
+		X,
+		Y,
+		XYF
+	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// ArgMaxMinDim
@@ -269,7 +282,7 @@ namespace KernelSelector
     {
         NONE,
         SUB,
-        MUL,
+        MUL, 
         DIV,
     };
 

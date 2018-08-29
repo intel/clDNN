@@ -18,14 +18,14 @@
 
 #include "fully_connected_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class FullyConnected_fb_io_block : public FullyConnectedKernelBase
     {
     public:
         FullyConnected_fb_io_block() : FullyConnectedKernelBase("fully_connected_gpu_fb_io_block_fp16") {}
 
-        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         ParamsKey GetSupportedKey() const override;
 
     protected:
@@ -47,8 +47,8 @@ namespace KernelSelector {
             uint32_t    rg_count;
         };
 
-        bool Validate(const Params& p, const OptionalParams& o) const override;
-        JitConstants GetJitConstants(const FullyConnectedParams& params, const FullyConnectedKernelBase::DispatchData& kd) const override;
-        std::unique_ptr<FullyConnectedKernelBase::DispatchData> SetDefault(const FullyConnectedParams& arg) const override;
+        bool Validate(const Params& p, const optional_params& o) const override;
+        JitConstants GetJitConstants(const fully_connected_params& params, const FullyConnectedKernelBase::DispatchData& kd) const override;
+        std::unique_ptr<FullyConnectedKernelBase::DispatchData> SetDefault(const fully_connected_params& arg) const override;
     };
 }

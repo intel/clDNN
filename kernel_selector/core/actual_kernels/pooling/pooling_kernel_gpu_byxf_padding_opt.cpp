@@ -16,7 +16,7 @@
 
 #include "pooling_kernel_gpu_byxf_padding_opt.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     ParamsKey PoolingKernelGPUByxfPaddingOpt::GetSupportedKey() const
     {
@@ -38,7 +38,7 @@ namespace KernelSelector
         return k;
     }
 
-    PoolingKernelBase::DispatchData PoolingKernelGPUByxfPaddingOpt::SetDefault(const PoolingParams& params) const
+    PoolingKernelBase::DispatchData PoolingKernelGPUByxfPaddingOpt::SetDefault(const pooling_params& params) const
     {
         const auto& output = params.output;
 
@@ -49,28 +49,28 @@ namespace KernelSelector
         return runInfo;
     }
 
-    JitConstants PoolingKernelGPUByxfPaddingOpt::GetJitConstants(const PoolingParams& params, DispatchData kd) const
+    JitConstants PoolingKernelGPUByxfPaddingOpt::GetJitConstants(const pooling_params& params, DispatchData kd) const
     {
         auto mem_consts = PoolingKernelBase::GetJitConstants(params, kd);
 
         return mem_consts;
     }
 
-    bool PoolingKernelGPUByxfPaddingOpt::Validate(const Params& p, const OptionalParams& o) const
+    bool PoolingKernelGPUByxfPaddingOpt::Validate(const Params& p, const optional_params& o) const
     {
         if (!PoolingKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const PoolingParams& params = static_cast<const PoolingParams&>(p);
+        const pooling_params& params = static_cast<const pooling_params&>(p);
         if (params.inputs[0].Feature().v % 8 != 0)
             return false;
 
         return true;
     }
 
-    KernelsData PoolingKernelGPUByxfPaddingOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData PoolingKernelGPUByxfPaddingOpt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, FORCE_PRIORITY_8);
     }

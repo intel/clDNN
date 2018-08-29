@@ -18,15 +18,15 @@
 #include "normalize_kernel_within_spatial_ref.h"
 #include "normalize_kernel_across_spatial_ref.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    NormalizeKernelSelctor::NormalizeKernelSelctor()
+    normalize_kernel_selector::normalize_kernel_selector()
     {
         Attach<NormalizeKernelWithinSpatialRef>();
         Attach<NormalizeKernelAcrossSpatialRef>();
     }
 
-    KernelsData NormalizeKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData normalize_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::NORMALIZE);
     }

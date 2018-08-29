@@ -54,22 +54,22 @@ namespace {
     {
         float x0, y0, x1, y1;
 
-        inline float area() const
-        {
-            return std::max(0.f, y1 - y0 + 1.f) * std::max(0.f, x1 - x0 + 1.f);
+        inline float area() const 
+        { 
+            return std::max(0.f, y1 - y0 + 1.f) * std::max(0.f, x1 - x0 + 1.f); 
         }
     };
 
     struct delta_t { float shift_x, shift_y, log_w, log_h; };
 
-    struct proposal_t
-    {
+    struct proposal_t 
+    { 
         proposal_t() = default;
         proposal_t(const roi_t& r, const float c, const size_t& o) : roi(r), confidence(c), ord(o) {}
 
-        roi_t roi;
-        float confidence;
-        size_t ord;
+        roi_t roi; 
+        float confidence; 
+        size_t ord; 
     };
 
     inline float float_read_helper(const float* mem)
@@ -113,7 +113,7 @@ namespace {
         else
         {
             std::sort(proposals.begin(), proposals.end(), cmp_fn);
-        }
+        }        
     }
 
     roi_t gen_bbox(
@@ -140,7 +140,7 @@ namespace {
             clamp(pred_center_x + half_pred_w, 0.f, img_w - 1.f), clamp(pred_center_y + half_pred_h, 0.f, img_h - 1.f)
         };
     }
-
+        
     std::vector<roi_t> perform_nms(
             const std::vector<proposal_t>& proposals,
             float iou_threshold,
@@ -193,14 +193,14 @@ struct proposal_gpu : typed_primitive_impl<proposal>
     proposal_gpu(const proposal_node& arg)
         : outer(arg)
     {}
-
+    
     template<typename dtype>
     void execute(proposal_inst& instance)
     {
         const std::vector<proposal_inst::anchor>& anchors = instance.get_anchors();
 
         size_t anchors_num = anchors.size();
-
+      
         auto& cls_scores = instance.dep_memory(proposal_inst::cls_scores_index);
         auto& bbox_pred  = instance.dep_memory(proposal_inst::bbox_pred_index);
         auto& image_info = instance.dep_memory(proposal_inst::image_info_index);
@@ -209,7 +209,7 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         const auto& score_size = cls_scores.get_layout().size;
         int fm_h = score_size.spatial[1];
         int fm_w = score_size.spatial[0];
-
+        
         int fm_sz = fm_w * fm_h;
 
         // original input image to the graph (after possible scaling etc.) so that coordinates are valid for it
@@ -297,12 +297,12 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         const std::vector<roi_t>& res = perform_nms(sorted_proposals_confidence, instance.argument.iou_threshold, instance.argument.post_nms_topn);
 
         auto& output = instance.output_memory();
-
+        
         mem_lock<dtype> output_ptr{ output };
-        dtype* top_data = output_ptr.data();
+        dtype* top_data = output_ptr.data();        
 
         size_t res_num_rois = res.size();
-
+        
         for (size_t i = 0; i < res_num_rois; ++i)
         {
             float_write_helper(top_data + 5 * i    , 0.0f);
@@ -315,7 +315,7 @@ struct proposal_gpu : typed_primitive_impl<proposal>
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, proposal_inst& instance) override
     {
-        for (auto& a : events)
+        for (auto& a : events) 
         {
             a->wait();
         }
@@ -335,7 +335,7 @@ struct proposal_gpu : typed_primitive_impl<proposal>
         return ev;
     }
 
-    static primitive_impl* create(const proposal_node& arg)
+    static primitive_impl* create(const proposal_node& arg) 
     {
         const layout & l = arg.image_info().get_output_layout();
         const size_t count = l.size.count();

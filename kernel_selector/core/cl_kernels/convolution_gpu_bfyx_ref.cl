@@ -74,11 +74,10 @@ KERNEL(convolution)(
                         uint input_idx = input_offset + (uint)input_offset_x*INPUT0_X_PITCH + (uint)input_offset_y*INPUT0_Y_PITCH + k*INPUT0_FEATURE_PITCH;
                         uint filter_idx = filter_offset + k*FILTER_IFM_PITCH + j*FILTER_Y_PITCH + i*FILTER_X_PITCH;
 #if QUANTIZATION_TERM
-                        // emulation dpas with 32bit accumulatorS
                         dotProd += (int)input[input_idx] * (int)weights[filter_idx];
 #else
                         dotProd += input[input_idx] * weights[filter_idx];
-#endif
+#endif                     
                     }
                 }
             }
@@ -93,6 +92,7 @@ KERNEL(convolution)(
 #endif
 #if QUANTIZATION_TERM
 #if CALIBRATION_TERM
+
     dotProd = (UNIT_TYPE)round(((float)dotProd * quantizations[f] * I_QF + biases[bias_index]) * calibrations[f]);
 #else  // CALIBRATION_TERM
     dotProd = (UNIT_TYPE)round(((float)dotProd * quantizations[f] * I_QF + biases[bias_index]) * O_QF);
@@ -108,6 +108,6 @@ KERNEL(convolution)(
     output[dst_index] = ACTIVATION(convert_char(dotProd), NL_M, NL_N);
 #else
     output[dst_index] = ACTIVATION(dotProd, NL_M, NL_N);
-#endif
-
+#endif   
+    
 }

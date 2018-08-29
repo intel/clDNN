@@ -158,7 +158,7 @@ protected:
                 {
                     _kernels[k].set_output_event(instance.node.is_output());
                 }
-
+    
                 auto event = _kernels[k].run(_kernel_data.kernels[k], tmp_events, args);
                 new_events.push_back(event);
             }

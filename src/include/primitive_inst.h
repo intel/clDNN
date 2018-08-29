@@ -18,6 +18,7 @@
 #pragma once
 
 #include "api/CPP/primitive.hpp"
+#include "api/CPP/concatenation.hpp"
 
 #include "event_impl.h"
 #include "program_impl.h"
@@ -25,6 +26,7 @@
 #include "meta_utils.h"
 #include "kernel_selector_helper.h"
 #include "network_impl.h"
+#include "program_node.h"
 
 #include <memory>
 #include <vector>
@@ -81,7 +83,7 @@ public:
     virtual ~primitive_inst() = default;
 
     const std::vector<std::shared_ptr<const primitive_inst>>& dependencies() const
-    {
+    { 
         return reinterpret_cast<std::vector<std::shared_ptr<const primitive_inst>> const&>(_deps);
     }
 
@@ -99,17 +101,26 @@ public:
     //return pointer to const to prevent arbitrary 'execute' call -> use primitive_inst.execute() instead
     const auto get_impl() const { return _impl.get(); }
 
-    memory_impl& input_memory(size_t index = 0)  const
-    {
+    memory_impl& input_memory(size_t index = 0)  const 
+    { 
         if (index >= inputs_memory_count())
             throw std::range_error("input offset too big");
-        return dep_memory(index);
+        return dep_memory(index); 
     }
 
     event_impl::ptr execute(const std::vector<event_impl::ptr>& events);
 
     auto output_changed() const { return _output_changed; }
     void reset_output_change() { _output_changed = false; }
+
+    void build_deps()
+    {
+        if (_deps.empty() && !_node.get_dependencies().empty())
+        {
+             _deps = _network.get_primitives(_node.get_dependencies());
+             _exec_deps = build_exec_deps(_deps);
+        }
+    }
 
 protected:
     primitive_inst(network_impl& network, program_node const& node, bool allocate_memory);
@@ -186,7 +197,7 @@ namespace details
         const PType& argument;
 
         api_typed_primitive_inst_base(network_impl& network, typed_node const& node)
-            : api_typed_primitive_inst_base(network, node, true)
+            : api_typed_primitive_inst_base(network, node, do_allocate_memory(node))
         {}
 
     protected:
@@ -200,6 +211,18 @@ namespace details
             : api_typed_primitive_inst_base(network, node, false)
         {
             _output = &buffer;
+        }
+
+    private:
+        bool do_allocate_memory(typed_node const& typ_node)
+        {
+            if (typ_node.template have_user_with_type<concatenation>() &&
+                typ_node.get_users().size() == 1 &&
+                typ_node.get_users().front()->can_be_optimized()) //check if the only user is concat
+            {
+                return false;
+            }
+            return true;
         }
     };
 
@@ -261,7 +284,7 @@ using typed_primitive_inst_base = std::conditional_t<meta::is_api_primitive_v<PT
 */
 template <class PType>
 class typed_primitive_inst : public typed_primitive_inst_base<PType>
-{
+{ 
     static_assert(meta::always_false_v<PType>, "Missing typed_primitive_inst specialization");
 };
 

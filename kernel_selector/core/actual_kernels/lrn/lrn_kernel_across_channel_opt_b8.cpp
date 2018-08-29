@@ -16,7 +16,7 @@
 
 #include "lrn_kernel_across_channel_opt_b8.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey LRNKernelAcrossChannel_b8::GetSupportedKey() const
     {
@@ -34,7 +34,7 @@ namespace KernelSelector
         return k;
     }
 
-    CommonDispatchData LRNKernelAcrossChannel_b8::SetDefault(const LRNParams& params) const
+    CommonDispatchData LRNKernelAcrossChannel_b8::SetDefault(const lrn_params& params) const
     {
         CommonDispatchData run_info = LRNKernelBase::SetDefault(params);
 
@@ -44,14 +44,14 @@ namespace KernelSelector
         return run_info;
     }
 
-    bool LRNKernelAcrossChannel_b8::Validate(const Params& p, const OptionalParams& o) const
+    bool LRNKernelAcrossChannel_b8::Validate(const Params& p, const optional_params& o) const
     {
         if (!LRNKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const LRNParams& params = static_cast<const LRNParams&>(p);
+        const lrn_params& params = static_cast<const lrn_params&>(p);
         const auto& out = params.output;
 
         const bool bSupportedPitch =
@@ -69,14 +69,14 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants LRNKernelAcrossChannel_b8::GetJitConstants(const LRNParams& params, DispatchData kd) const
+    JitConstants LRNKernelAcrossChannel_b8::GetJitConstants(const lrn_params& params, DispatchData kd) const
     {
         auto cldnnJit = LRNKernelBase::GetJitConstants(params, kd);
         cldnnJit.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", 8));
         return cldnnJit;
     }
 
-    KernelsData LRNKernelAcrossChannel_b8::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData LRNKernelAcrossChannel_b8::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, FORCE_PRIORITY_8);
     }

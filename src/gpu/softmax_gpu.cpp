@@ -18,6 +18,8 @@
 #include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "softmax/softmax_kernel_selector.h"
+#include "softmax/softmax_kernel_base.h"
 #include "error_handler.h"
 
 namespace cldnn { namespace gpu {
@@ -27,25 +29,24 @@ struct softmax_gpu : typed_primitive_gpu_impl<softmax>
 {
     using parent = typed_primitive_gpu_impl<softmax>;
     using parent::parent;
-
-    static primitive_impl* create(const softmax_node& arg)
+    
+    static primitive_impl* create(const softmax_node& arg) 
     {
         auto sm_params = get_default_params<kernel_selector::softmax_params>(arg);
         auto sm_optional_params = get_default_optional_params<kernel_selector::softmax_optional_params>(arg.get_program());
 
         auto& input = sm_params.inputs[0];
         auto& output = sm_params.output;
-        auto& sm = sm_params.smParams;
         const auto primitive = arg.get_primitive();
 
         switch (primitive->dimension)
         {
         case softmax::normalize_x:
-            sm.dim = kernel_selector::softmax_dim::X;
+            sm_params.dim = kernel_selector::softmax_dim::X;
             break;
 
         case softmax::normalize_y:
-            sm.dim = kernel_selector::softmax_dim::Y;
+            sm_params.dim = kernel_selector::softmax_dim::Y;
             break;
 
         case softmax::normalize_fyx:
@@ -53,11 +54,11 @@ struct softmax_gpu : typed_primitive_gpu_impl<softmax>
             input = input.FlattenFeatureAndSpatials();
             output = output.FlattenFeatureAndSpatials();
 
-            sm.dim = kernel_selector::softmax_dim::FEATURE;
+            sm_params.dim = kernel_selector::softmax_dim::FEATURE;
             break;
 
         case softmax::normalize_f:
-            sm.dim = kernel_selector::softmax_dim::FEATURE;
+            sm_params.dim = kernel_selector::softmax_dim::FEATURE;
             break;
 
         default:

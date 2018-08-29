@@ -17,7 +17,7 @@
 #include "reorder_to_winograd_2x3_kernel.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey ReorderToWinograd2x3Kernel::GetSupportedKey() const
     {
@@ -36,17 +36,17 @@ namespace KernelSelector
         return k;
     }
 
-    JitConstants ReorderToWinograd2x3Kernel::GetJitConstants(const ReorderParams& params) const
+    JitConstants ReorderToWinograd2x3Kernel::GetJitConstants(const reorder_params& params) const
     {
         auto jit = ReorderKernelBase::GetJitConstants(params);
 
-        jit.AddConstant(MakeJitConstant("INPUT0_OFFSET_SIZE_X", params.reorderParams.winograd_input_offset_x));
-        jit.AddConstant(MakeJitConstant("INPUT0_OFFSET_SIZE_Y", params.reorderParams.winograd_input_offset_y));
+        jit.AddConstant(MakeJitConstant("INPUT0_OFFSET_SIZE_X", params.winograd_input_offset_x));
+        jit.AddConstant(MakeJitConstant("INPUT0_OFFSET_SIZE_Y", params.winograd_input_offset_y));
 
         return jit;
     }
 
-    ReorderToWinograd2x3Kernel::DispatchData ReorderToWinograd2x3Kernel::SetDefault(const ReorderParams& params) const
+    ReorderToWinograd2x3Kernel::DispatchData ReorderToWinograd2x3Kernel::SetDefault(const reorder_params& params) const
     {
         DispatchData kd;
 
@@ -54,7 +54,7 @@ namespace KernelSelector
         const auto& output = params.output;
 
         kd.gws0 = static_cast<size_t>(input.Feature().v * input.Batch().v);
-        kd.gws1 = static_cast<size_t>(params.reorderParams.winograd_nr_tiles_x);
+        kd.gws1 = static_cast<size_t>(params.winograd_nr_tiles_x);
         kd.gws2 = static_cast<size_t>(output.Y().v);
 
         kd.lws0 = input.Feature().v > 32 ? 32 : static_cast<size_t>(input.Feature().v);
@@ -64,9 +64,9 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData ReorderToWinograd2x3Kernel::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ReorderToWinograd2x3Kernel::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        const ReorderParams& orgParams = static_cast<const ReorderParams&>(params);
+        const reorder_params& orgParams = static_cast<const reorder_params&>(params);
         return GetCommonKernelsData(orgParams, options, FORCE_PRIORITY_6);
     }
 }

@@ -17,17 +17,17 @@
 KERNEL (permute_ref)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
 {
     uint4 input_indices, output_indices;
-
+    
     input_indices[0] = get_global_id(0);
     input_indices[1] = get_global_id(1);
     input_indices[2] = get_global_id(2) % INPUT0_SIZES[2];
     input_indices[3] = get_global_id(2) / INPUT0_SIZES[2];
-
+    
     output_indices[0] = input_indices[PERMUTE_ORDER[0]];
     output_indices[1] = input_indices[PERMUTE_ORDER[1]];
     output_indices[2] = input_indices[PERMUTE_ORDER[2]];
     output_indices[3] = input_indices[PERMUTE_ORDER[3]];
-
+    
     uint input_offset =  INPUT0_OFFSET +
                          input_indices[0]*INPUT0_PITCHES[0] +
                          input_indices[1]*INPUT0_PITCHES[1] +

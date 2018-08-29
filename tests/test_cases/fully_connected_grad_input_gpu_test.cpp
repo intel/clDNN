@@ -48,7 +48,7 @@ TEST(fully_connected_grad_input_gpu, basic_bfyx) {
     //  -0.5     1    1.5
     //
     //  Output:
-    //  0.5625     11.25    5.0625
+    //  -1.125  5.625   10.125
 
 
     engine engine;
@@ -80,7 +80,7 @@ TEST(fully_connected_grad_input_gpu, basic_bfyx) {
     auto output_ptr = output_prim.pointer<float>();
 
     std::vector<float> expected_output_vec = {
-        0.5625f, 11.25f, 5.0625f
+        -1.125f, 5.625f, 10.125f
     };
 
     for (unsigned int i = 0; i < expected_output_vec.size(); i++)

@@ -31,6 +31,7 @@ public:
     using parent::parent;
 
     decltype(auto) input() const { return get_dependency(0); }
+    decltype(auto) input_arg() const { return get_dependency(1); }
     decltype(auto) slope_input() const { return get_dependency(2); }
 
     bool is_parameterized() const { return !typed_desc()->additional_params_input.empty(); }

@@ -18,18 +18,18 @@
 
 #include "fully_connected_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class FullyConnected_bf_io_input_spatial : public FullyConnectedKernelBase
     {
     public:
         FullyConnected_bf_io_input_spatial() : FullyConnectedKernelBase("fully_connected_gpu_bf_io_input_spatial") {}
 
-        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         ParamsKey GetSupportedKey() const override;
 
     protected:
-        bool Validate(const Params& p, const OptionalParams& o) const override;
-        std::unique_ptr<DispatchData> SetDefault(const FullyConnectedParams& arg) const override;
+        bool Validate(const Params& p, const optional_params& o) const override;
+        std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& arg) const override;
     };
 }

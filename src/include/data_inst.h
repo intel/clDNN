@@ -31,7 +31,7 @@ struct typed_program_node<data> : public typed_program_node_base<data>
 
     memory_impl& get_attached_memory() const { return *mem; }
     void attach_memory(memory_impl& new_mem, bool invalidate_users_if_changed = true);
-
+    
 private:
     memory_impl::ptr mem;
 };

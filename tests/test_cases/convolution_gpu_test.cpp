@@ -60,7 +60,7 @@ T kahan_summation(std::vector<T> &input) {
 
 template<typename T>
 VVF<T> reference_convolve(VVVF<T> &input, VVVF<T> &filter, int stride_y, int stride_x, float bias, int dilation_y = 1, int dilation_x = 1,
-        int input_padding_y = 0, int input_padding_x = 0, int output_padding_y = 0,
+        int input_padding_y = 0, int input_padding_x = 0, int output_padding_y = 0, 
         int output_padding_x = 0, size_t f_begin = 0)
 {
     size_t kernel_extent_y = dilation_y * (filter[0].size() - 1) + 1;
@@ -594,9 +594,9 @@ TEST(convolution_f32_fw_gpu, basic_convolution_input_and_output_padding) {
     EXPECT_EQ(f_size, 1);
     EXPECT_EQ(b_size, 1);
 
-    for (int y = y_pad; y < y_size - y_pad; ++y)
+    for (int y = y_pad; y < y_size - y_pad; ++y) 
     {
-        for (int x = x_pad; x < x_size - x_pad; ++x)
+        for (int x = x_pad; x < x_size - x_pad; ++x) 
         {
             EXPECT_EQ(output_vec[y][x], output_ptr[y * x_size + x]);
         }
@@ -1571,7 +1571,7 @@ TEST(convolution_f32_fw_gpu, basic_wsiz1x1_wstr2x2_in1x1x4x1_nopad_split2) {
     //
     //  Filter1:
     //  -2 -0.5  ofm=0
-    //   1  2    ofm=1
+    //   1  2    ofm=1 
     //  Bias1:
     //   1  5
     //
@@ -1583,7 +1583,7 @@ TEST(convolution_f32_fw_gpu, basic_wsiz1x1_wstr2x2_in1x1x4x1_nopad_split2) {
     //  -1  2.5
     //
     //  Output:
-    //  -2.25
+    //  -2.25  
     //   7.5
     //
     //  -1.75
@@ -1652,7 +1652,7 @@ TEST(convolution_f32_fw_gpu, basic_wsiz1x1_wstr2x2_in1x1x2x1_nopad_split2) {
     //
     //  Filter1:
     //  -2  ofm=0
-    //   1  ofm=1
+    //   1  ofm=1 
     //  Bias1:
     //   1  5
     //
@@ -1664,7 +1664,7 @@ TEST(convolution_f32_fw_gpu, basic_wsiz1x1_wstr2x2_in1x1x2x1_nopad_split2) {
     //  -1  2.5
     //
     //  Output:
-    //  -2
+    //  -2  
     //   6.5
     //
     //   1
@@ -1750,7 +1750,7 @@ TEST(convolution_f32_fw_gpu, basic_wsiz1x1_wstr2x2_in1x1x4x1_filter_1x3x2x1x1_no
     //  -1   2.5 2
     //
     //  Output:
-    //  -1.5
+    //  -1.5  
     //   8
     //   7.75
     //
@@ -2003,7 +2003,7 @@ TEST(convolution_gpu, DISABLED_two_1x1_kernels_after_each_other) {
 
     auto output_ptr = output_prim.pointer<float>();
     auto output_layout = output_prim.get_layout();
-
+    
     int y_size = output_layout.size.spatial[1];
     int x_size = output_layout.size.spatial[0];
     int f_size = output_layout.size.feature[0];
@@ -2223,7 +2223,7 @@ void quantize_weights(cldnn::memory& weights, cldnn::memory& w_qf)
         for (int w = 0; w < batch_pitch; w++)
             if (max < abs(ptr[ofm* batch_pitch + w]))
                 max = abs(ptr[ofm* batch_pitch + w]);
-
+       
         if (max == (T)0)
             max = (T)1; // do not quantize
 
@@ -2341,7 +2341,7 @@ TEST(convolution_f32_fw_gpu, byte_activation) {
     engine_configuration eng_conf(false, false, false, "", "", true, "", "kernels");
     engine engine{ eng_conf };
     auto input = memory::allocate(engine, { data_types::i8, format::bfyx,{ 1, 1, 5, 4 } });
-
+       
     VVVF<char> output_vec = {
         {
             { 11, 0, 15 },
@@ -2430,11 +2430,11 @@ TEST(convolution_f32_fw_gpu, quantized_convolution_low_prec_single_ofq) {
 
     set_values(biases, { 1.0f, -8.0f });
     VVVF<float> output_vec = {
-        {
+        { 
             { 21.0f, 28.0f, 39.0f },
             { 18.0f, 20.0f, 20.0f }
         },
-        {
+        { 
             { 155.0f, 245.0f, 348.0f },
             { 142.0f, 140.0f, 178.0f }
         } };
@@ -2458,7 +2458,7 @@ TEST(convolution_f32_fw_gpu, quantized_convolution_low_prec_single_ofq) {
 
     auto input = memory::allocate(engine, { data_types::i8, format::bfyx,{ 1, 1, 5, 4 } });
     auto weights = memory::allocate(engine, { data_types::i8, format::bfyx,{ 2, 1, 3, 2 } });
-    float i_qf = 1.0f;
+    float i_qf = 1.0f; 
     float o_qf = 127.0f / max_abs<float>(output_memory_f);
 
     std::vector<char> weights_values = { 1, 2, 1, 2, 1, 2, 19, 17, -1, -10, 32, 23 };
@@ -2568,10 +2568,10 @@ TEST(convolution_f32_fw_gpu, quantized_convolution_high_prec_calib_per_ofm) {
 
     auto output_memory_f = outputs_f.at("conv_f").get_memory();
     auto output_ptr_f = output_memory_f.pointer<float>();
-
+    
     auto input = memory::allocate(engine, { data_types::i8, format::bfyx,{ 1, 1, 5, 4 } });
     auto weights = memory::allocate(engine, { data_types::i8, format::bfyx,{ 2, 1, 3, 2 } });
-    float i_qf = 1.0f;
+    float i_qf = 1.0f; 
 
     std::vector<char> weights_values = { 1, 2, 1, 2, 1, 2, 19, 17, -1, -10, 32, 23 };
     set_values<char>(input, { 1, 2, 3, 4, 5, 2, 2, 3, 4, 6, 3, 3, 3, 5, 1, 1, 1, 1, 1, 1 });
@@ -2674,10 +2674,10 @@ TEST(convolution_f32_fw_gpu, calibration_advance) {
     auto w_qf_2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 1 } });
 
     std::vector<float> weights_values_f = { 1.0f, 2.0f, 1.0f, 2.0f, 1.0f, 2.0f, 1.9f, 1.7f, -1.0f, -1.0f, 3.2f, 2.3f };
-    std::vector<float> weights_values_f_2 = {
+    std::vector<float> weights_values_f_2 = { 
         1.5f, 2.3f, -1.0f, 3.0f, 5.6f, -1.0f,
         3.0f, 5.6f, -1.0f, 1.0f, 2.0f, 3.0f,
-
+        
         1.9f, 1.7f, -1.0f, 1.9f, 1.7f, -1.0f,
         -1.0f, 3.2f, 2.3f, -1.0f, 3.2f, 2.3f,
 
@@ -2970,7 +2970,7 @@ class convolution_test : public tests::generic_test
 
 public:
 
-    static void TearDownTestCase()
+    static void TearDownTestCase() 
     {
         for (auto generic_params : all_generic_params)
         {
@@ -2985,9 +2985,9 @@ public:
 
     static std::vector<cldnn::primitive*> generate_specific_test_params()
     {
-        // TODO: check split
+        // TODO: check split 
 
-        // TODO: check convolution without bias
+        // TODO: check convolution without bias 
 
         const std::vector<primitive_id>& weights = { "input1" };
         const std::vector<primitive_id>& bias = { "input2" };
@@ -3144,7 +3144,7 @@ public:
         const cldnn::convolution* convolution = (cldnn::convolution*)layer_params;
 
         data_types dt = inputs[0].get_layout().data_type;
-
+        
         tensor input_size = inputs[0].get_layout().size;
         tensor dilation = convolution->dilation;
         tensor stride = convolution->stride;
@@ -3173,7 +3173,7 @@ public:
 
         // Initialized output with zeros.
         std::fill(output_mem.begin(), output_mem.end(), static_cast<Type>(0));
-
+    
         // Add the bias
         for (int b = 0; b < input_size.batch[0]; b++)
         {
@@ -3289,7 +3289,7 @@ TEST_P(convolution_test, CONVOLUTION)
     run_single_test();
 }
 
-INSTANTIATE_TEST_CASE_P(DISABLED_CONVOLUTION,
-                        convolution_test,
+INSTANTIATE_TEST_CASE_P(DISABLED_CONVOLUTION, 
+                        convolution_test, 
                         ::testing::ValuesIn(convolution_test::generate_all_test_params()),
                         tests::generic_test::custom_param_name_functor());

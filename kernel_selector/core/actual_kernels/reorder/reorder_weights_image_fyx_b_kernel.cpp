@@ -17,7 +17,7 @@
 #include "reorder_weights_image_fyx_b_kernel.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey ReorderWeightsImage_fyx_b_Kernel::GetSupportedKey() const
     {
@@ -35,9 +35,9 @@ namespace KernelSelector
         return k;
     }
 
-    ReorderWeightsImage_fyx_b_Kernel::DispatchData ReorderWeightsImage_fyx_b_Kernel::SetDefault(const ReorderWeightsParams& params) const
+    ReorderWeightsImage_fyx_b_Kernel::DispatchData ReorderWeightsImage_fyx_b_Kernel::SetDefault(const reorder_weights_params& params) const
     {
-        const auto& out = params.reorderParams.output;
+        const auto& out = params.output;
 
         DispatchData kd;
 
@@ -57,9 +57,9 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData ReorderWeightsImage_fyx_b_Kernel::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ReorderWeightsImage_fyx_b_Kernel::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        const ReorderWeightsParams& orgParams = static_cast<const ReorderWeightsParams&>(params);
+        const reorder_weights_params& orgParams = static_cast<const reorder_weights_params&>(params);
         return GetCommonKernelsData(orgParams, options, FORCE_PRIORITY_4);
     }
 }

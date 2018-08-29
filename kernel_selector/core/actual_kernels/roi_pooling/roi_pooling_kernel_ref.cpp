@@ -16,7 +16,7 @@
 
 #include "roi_pooling_kernel_ref.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     ParamsKey ROIPoolingKernelRef::GetSupportedKey() const
     {
@@ -33,7 +33,7 @@ namespace KernelSelector {
         return k;
     }
 
-    static ROIPoolingKernelRef::DispatchData SetDefault(const ROIPoolingParams& params)
+    static ROIPoolingKernelRef::DispatchData SetDefault(const roi_pooling_params& params)
     {
         ROIPoolingKernelRef::DispatchData kd;
 
@@ -56,22 +56,30 @@ namespace KernelSelector {
         return kd;
     }
 
-    JitConstants ROIPoolingKernelRef::GetJitConstants(const ROIPoolingParams& params) const
+    JitConstants ROIPoolingKernelRef::GetJitConstants(const roi_pooling_params& rp) const
     {
-        auto jit = MakeROIPoolingV1JitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(rp);
 
         jit.AddConstants({
-            MakeJitConstant("MAX_POOL",                     params.roiParams.mode == PoolType::MAX),
-            MakeJitConstant("USE_OLD_SCALE_AND_ROUNDING",   params.roiParams.groupSize == 0)
+            MakeJitConstant("POOLED_HEIGHT",     rp.pooledHeight),
+            MakeJitConstant("POOLED_WIDTH",      rp.pooledWidth),
+            MakeJitConstant("SPATIAL_SCALE",     rp.spatialScale),
+            MakeJitConstant("GROUP_SIZE",        rp.groupSize),
+            MakeJitConstant(toString(rp.mode) + "_POOLING", 1),
+        });
+
+        jit.AddConstants({
+            MakeJitConstant("MAX_POOL",                     rp.mode == PoolType::MAX),
+            MakeJitConstant("USE_OLD_SCALE_AND_ROUNDING",   rp.groupSize == 0)
         });
 
         return jit;
     }
 
-    KernelsData ROIPoolingKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ROIPoolingKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         assert(params.GetType() == KernelType::ROI_POOLING);
-        const ROIPoolingParams& orgParams = static_cast<const ROIPoolingParams&>(params);
+        const roi_pooling_params& orgParams = static_cast<const roi_pooling_params&>(params);
 
         if (orgParams.activationFunc != ActivationFunction::NONE)
         {
@@ -79,7 +87,7 @@ namespace KernelSelector {
         }
 
         DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<ROIPoolingParams>(params);
+        KernelData kd = KernelData::Default<roi_pooling_params>(params);
 
         auto cldnn_jit = GetJitConstants(orgParams);
         auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);

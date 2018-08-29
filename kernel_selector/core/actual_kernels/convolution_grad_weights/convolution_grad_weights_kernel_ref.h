@@ -18,12 +18,12 @@
 
 #include "convolution_grad_weights_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class ConvolutionGradWeightsKernelRef : public ConvolutionGradWeightsKernelBase
     {
     public:
-        ConvolutionGradWeightsKernelRef() : ConvolutionGradWeightsKernelBase("convolution_grad_weights_gpu_ref") {}
+        ConvolutionGradWeightsKernelRef() : ConvolutionGradWeightsKernelBase("convolution_grad_weights_ref") {}
         virtual ~ConvolutionGradWeightsKernelRef() {}
 
         virtual ParamsKey GetSupportedKey() const override;

@@ -18,6 +18,8 @@
 #include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "reshape/reshape_kernel_ref.h"
+#include "reshape/reshape_kernel_selector.h"
 #include "error_handler.h"
 
 namespace cldnn { namespace gpu {
@@ -44,17 +46,17 @@ public:
             return new reshape_gpu(arg, {});
         }
 
-        auto reorder_params = get_default_params<kernel_selector::reorder_base_params>(arg);
-        auto reorder_optional_params = get_default_optional_params<kernel_selector::reorder_optional_params>(arg.get_program());
+        auto reorder_params = get_default_params<kernel_selector::reshape_params>(arg);
+        auto reorder_optional_params = get_default_optional_params<kernel_selector::reshape_optional_params>(arg.get_program());
 
         auto& kernel_selector = kernel_selector::reshape_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(reorder_params, reorder_optional_params);
 
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
-        auto reorder = new reshape_gpu(arg, best_kernels[0]);
+        auto reshape = new reshape_gpu(arg, best_kernels[0]);
 
-        return reorder;
+        return reshape;
     }
 };
 

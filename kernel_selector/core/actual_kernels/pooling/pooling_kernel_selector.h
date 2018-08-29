@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class PoolingKernelSelctor : public KernelSelctorBase
+    class pooling_kernel_selector : public kernel_selector_base
     {
     public:
-        static PoolingKernelSelctor &Instance() {
-            static PoolingKernelSelctor instance_;
+        static pooling_kernel_selector &Instance() {
+            static pooling_kernel_selector instance_;
             return instance_;
         }
 
-        PoolingKernelSelctor();
+        pooling_kernel_selector();
 
-        virtual ~PoolingKernelSelctor() {}
+        virtual ~pooling_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

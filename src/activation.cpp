@@ -33,10 +33,10 @@ layout activation_inst::calc_output_layout(activation_node const& node)
 }
 
 std::string activation_inst::to_string(activation_node const& node)
-{
+{   
     auto node_info = node.desc_to_json();
     auto desc      = node.get_primitive();
-
+       
     std::stringstream primitive_description;
 
     json_composite activation_info;
@@ -54,16 +54,17 @@ std::string activation_inst::to_string(activation_node const& node)
 activation_inst::typed_primitive_inst(network_impl& network, activation_node const& node)
     : parent(network, node)
 {
-    auto input_arg  = input_memory().get_layout();
-    auto output_arg = output_memory().get_layout();
-
+    auto input_arg  = node.input().get_output_layout();
+    auto output_arg = node.get_output_layout();
+    
     CLDNN_ERROR_NOT_EQUAL(node.id(), "ReLU input number", input_arg.size.raw.size(), "ReLU output number", output_arg.size.raw.size(), "Relu input/output num dismatch");
 
     if (is_parameterized())
     {
         /// Slope input x dimension should be equal to input feature size (one slope per channel).
-        auto slope_input_size = slope_memory().get_layout().size;
-        auto input_feature_size = input_memory().get_layout().size.feature[0];
+        auto slope_layout = node.slope_input().get_output_layout();
+        auto slope_input_size = slope_layout.size;
+        auto input_feature_size = slope_layout.size.feature[0];
 
         CLDNN_ERROR_LESS_THAN(node.id(), "Slope x size", slope_input_size.spatial[0], "input feature size", input_feature_size, "Dimensions mismatch between input and slope input in Activation layer(slope x size should be equal to input feature size)!");
 

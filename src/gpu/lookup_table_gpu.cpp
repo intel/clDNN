@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "lookup_table/lookup_table_kernel_selector.h"
+#include "lookup_table/lookup_table_kernel_base.h"
 #include "kernel_runner.h"
 
 namespace cldnn {
@@ -63,36 +65,36 @@ namespace cldnn {
                 auto lookt_params = get_default_params<kernel_selector::lookup_table_params>(arg);
                 auto lookt_optional_params = get_default_optional_params<kernel_selector::lookup_table_optional_params>(arg.get_program());
 
-                lookt_params.lookUpTableParams.inputIndices = convert_data_tensor(arg.indices().get_output_layout());
+                lookt_params.inputIndices = convert_data_tensor(arg.indices().get_output_layout());
                 if (with_axis) {
                     switch (axis)
                     {
                     case lookup_table::batch:
-                        lookt_params.lookUpTableParams.lookUpTableAxis = kernel_selector::lookt_axis::BATCH;
-                        lookt_params.lookUpTableParams.numberOfValues = (uint32_t)lookt_params.lookUpTableParams.inputIndices.Batch().v;
+                        lookt_params.lookUpTableAxis = kernel_selector::lookt_axis::BATCH;
+                        lookt_params.numberOfValues = (uint32_t)lookt_params.inputIndices.Batch().v;
                         break;
                     case lookup_table::feature:
-                        lookt_params.lookUpTableParams.lookUpTableAxis = kernel_selector::lookt_axis::FEATURE;
-                        lookt_params.lookUpTableParams.numberOfValues = (uint32_t)lookt_params.lookUpTableParams.inputIndices.Feature().v;
+                        lookt_params.lookUpTableAxis = kernel_selector::lookt_axis::FEATURE;
+                        lookt_params.numberOfValues = (uint32_t)lookt_params.inputIndices.Feature().v;
                         break;
                     case lookup_table::x:
-                        lookt_params.lookUpTableParams.lookUpTableAxis = kernel_selector::lookt_axis::X;
-                        lookt_params.lookUpTableParams.numberOfValues = (uint32_t)lookt_params.lookUpTableParams.inputIndices.X().v;
+                        lookt_params.lookUpTableAxis = kernel_selector::lookt_axis::X;
+                        lookt_params.numberOfValues = (uint32_t)lookt_params.inputIndices.X().v;
                         break;
                     case lookup_table::y:
-                        lookt_params.lookUpTableParams.lookUpTableAxis = kernel_selector::lookt_axis::Y;
-                        lookt_params.lookUpTableParams.numberOfValues = (uint32_t)lookt_params.lookUpTableParams.inputIndices.Y().v;
+                        lookt_params.lookUpTableAxis = kernel_selector::lookt_axis::Y;
+                        lookt_params.numberOfValues = (uint32_t)lookt_params.inputIndices.Y().v;
                         break;
                     default:
                         break;
                     }
                 }
                 else
-                    lookt_params.lookUpTableParams.numberOfValues = (uint32_t)lookt_params.lookUpTableParams.inputIndices.X().v;
-
+                    lookt_params.numberOfValues = (uint32_t)lookt_params.inputIndices.X().v;
+                
                 auto& kernel_selector = kernel_selector::lookup_table_kernel_selector::Instance();
-
-                KernelSelector::KernelsData best_kernels = kernel_selector.GetBestKernels(lookt_params, lookt_optional_params);
+                
+                kernel_selector::KernelsData best_kernels = kernel_selector.GetBestKernels(lookt_params, lookt_optional_params);
 
                 CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 

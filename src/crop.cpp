@@ -58,8 +58,9 @@ crop_inst::typed_primitive_inst(network_impl& network, crop_node const& node)
     :parent(network, node)
 {
     auto reference_input_sizes = argument.reference_input;
-    auto input_sizes = input_memory().get_layout().size;
-    auto input_format = input_memory().get_layout().format;
+    auto inp_layout = node.input().get_output_layout();
+    auto input_sizes = inp_layout.size;
+    auto input_format = inp_layout.format;
     auto offsets = argument.offsets;
 
     CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input format", input_format.value, "supported crop input formats", format::yxfb, format::bfyx );
@@ -74,6 +75,7 @@ crop_inst::typed_primitive_inst(network_impl& network, crop_node const& node)
 
     if (node.can_be_optimized())
     {
+        build_deps();
         reuse_input();
     }
 }

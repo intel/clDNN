@@ -18,7 +18,7 @@
 #include "kernel_selector_common.h"
 #include <sstream>
  
-namespace KernelSelector {
+namespace kernel_selector {
 
     std::string Params::to_string() const
     {
@@ -27,7 +27,7 @@ namespace KernelSelector {
         return s.str();
     }
 
-    std::string BaseParams::to_string() const
+    std::string base_params::to_string() const
     {
         std::stringstream s;
         s << Params::to_string() << "_";
@@ -43,69 +43,4 @@ namespace KernelSelector {
         return s.str();
     }
 
-    std::string ConvolutionParams::to_string() const
-    {
-        std::stringstream s;
-
-        s << BaseParams::to_string() << "_";
-        if (bias.empty())
-        {
-            s << "no_bias" << "_";
-        }
-        else
-        {
-            s << "bias_" << bias[0].PhysicalSize() << "_";
-        }
-        s << convParams.filterSize.x << "_" << convParams.filterSize.y << "_";
-        s << convParams.stride.x << "_" << convParams.stride.y << "_";
-        s << convParams.dilation.x << "_" << convParams.dilation.y << "_";
-        s << convParams.padding.x << "_" << convParams.padding.y << "_";
-        s << convParams.split;
-
-        return s.str();
-    }
-
-    std::string DeconvolutionParams::to_string() const
-    {
-        std::stringstream s;
-
-        s << BaseParams::to_string() << "_";
-        if (bias.empty())
-        {
-            s << "no_bias" << "_";
-        }
-        else
-        {
-            s << "bias_size:" << bias[0].PhysicalSize() << "_";
-        }
-        s << deconvParams.filterSize.x << "_" << deconvParams.filterSize.y << "_";
-        s << deconvParams.stride.x << "_" << deconvParams.stride.y << "_";
-        s << deconvParams.dilation.x << "_" << deconvParams.dilation.y << "_";
-        s << deconvParams.padding.x << "_" << deconvParams.padding.y << "_";
-        s << deconvParams.split;
-
-        return s.str();
-    }
-
-    std::string ConvolutionGradWeightsParams::to_string() const
-    {
-        std::stringstream s;
-
-        s << BaseParams::to_string() << "_";
-        if (bias.empty())
-        {
-            s << "no_bias" << "_";
-        }
-        else
-        {
-            s << "bias_" << bias[0].PhysicalSize() << "_";
-        }
-        s << convGradWeightsParams.filterSize.x << "_" << convGradWeightsParams.filterSize.y << "_";
-        s << convGradWeightsParams.stride.x << "_" << convGradWeightsParams.stride.y << "_";
-        s << convGradWeightsParams.dilation.x << "_" << convGradWeightsParams.dilation.y << "_";
-        s << convGradWeightsParams.padding.x << "_" << convGradWeightsParams.padding.y << "_";
-        s << convGradWeightsParams.split;
-
-        return s.str();
-    }
 }

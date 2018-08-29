@@ -17,7 +17,7 @@
 #include "lrn_kernel_ref.h"
 #include "kernel_selector_utils.h" 
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey LRNKernelRef::GetSupportedKey() const
     {
@@ -42,12 +42,12 @@ namespace KernelSelector
         return k;
     }
 
-    JitConstants LRNKernelRef::GetJitConstants(const LRNParams& params, LRNKernelRef::Parent::DispatchData kd) const
+    JitConstants LRNKernelRef::GetJitConstants(const lrn_params& params, LRNKernelRef::Parent::DispatchData kd) const
     {
-        const uint32_t round_norm_size = (params.lrnParams.localSize / 2) * 2 + 1;
+        const uint32_t round_norm_size = (params.localSize / 2) * 2 + 1;
         uint32_t numElement = round_norm_size * round_norm_size;
 
-        if (params.lrnParams.normMode == LRNMode::ACROSS_CHANNEL)
+        if (params.normMode == LRNMode::ACROSS_CHANNEL)
         {
             numElement = round_norm_size;
         }
@@ -65,7 +65,7 @@ namespace KernelSelector
         return jit;
     }
 
-    LRNKernelRef::Parent::DispatchData LRNKernelRef::SetDefault(const LRNParams& params) const
+    LRNKernelRef::Parent::DispatchData LRNKernelRef::SetDefault(const lrn_params& params) const
     {
         DispatchData kd = Parent::SetDefault(params);
 
@@ -85,7 +85,7 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData LRNKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData LRNKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, DONT_USE_IF_HAVE_SOMETHING_ELSE);
     }

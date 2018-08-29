@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
-	class ArgMaxMinKernelSelctor : public KernelSelctorBase
+	class arg_max_min_kernel_selector : public kernel_selector_base
 	{
 	public:
-		static ArgMaxMinKernelSelctor &Instance() {
-			static ArgMaxMinKernelSelctor instance_;
+		static arg_max_min_kernel_selector &Instance() {
+			static arg_max_min_kernel_selector instance_;
 			return instance_;
 		}
 
-		ArgMaxMinKernelSelctor();
+		arg_max_min_kernel_selector();
 
-		virtual ~ArgMaxMinKernelSelctor() {}
+		virtual ~arg_max_min_kernel_selector() {}
 
-		virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+		virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
 	};
 }

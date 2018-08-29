@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_bf_io_input_spatial.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_bf_io_input_spatial::GetSupportedKey() const
     {
@@ -36,7 +36,7 @@ namespace KernelSelector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_bf_io_input_spatial::DispatchData> FullyConnected_bf_io_input_spatial::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_bf_io_input_spatial::DispatchData> FullyConnected_bf_io_input_spatial::SetDefault(const fully_connected_params& arg) const
     {
         auto kd = FullyConnectedKernelBase::SetDefault(arg);
 
@@ -63,14 +63,14 @@ namespace KernelSelector
         return std::move(kd);
     }
 
-    bool FullyConnected_bf_io_input_spatial::Validate(const Params& p, const OptionalParams& o) const
+    bool FullyConnected_bf_io_input_spatial::Validate(const Params& p, const optional_params& o) const
     {
         if (!FullyConnectedKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const auto& params = static_cast<const FullyConnectedParams&>(p);
+        const auto& params = static_cast<const fully_connected_params&>(p);
 
         const auto &input = params.inputs[0];
         const auto &output = params.output;
@@ -83,9 +83,9 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData FullyConnected_bf_io_input_spatial::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData FullyConnected_bf_io_input_spatial::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
-        const auto& orgParams = static_cast<const FullyConnectedParams&>(params);
+        const auto& orgParams = static_cast<const fully_connected_params&>(params);
 
         const auto& input = orgParams.inputs[0];
         const auto& output = orgParams.output;
