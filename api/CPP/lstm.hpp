@@ -96,8 +96,8 @@ struct lstm : public primitive_base<lstm, CLDNN_PRIMITIVE_DESC(lstm)>
         , peepholes(dto->peepholes)
         , clip(dto->clip)
         , input_forget(dto->input_forget)
-        , activations(dto->activations, dto->activations + 3 * sizeof(cldnn_activation_func))
-        , activation_params(dto->activation_params, dto->activation_params + 3 * sizeof(cldnn_activation_additional_params))
+		, activations(dto->activations, std::end(dto->activations))
+		, activation_params(dto->activation_params, std::end(dto->activation_params))
         , offset_order(dto->offset_order)
     {
     }
@@ -285,8 +285,8 @@ struct lstm_elt : public primitive_base<lstm_elt, CLDNN_PRIMITIVE_DESC(lstm_elt)
         , cell(dto->cell)
         , clip(dto->clip)
         , input_forget(dto->input_forget)
-        , activations(dto->activations, dto->activations + 3 * sizeof(cldnn_activation_func))
-        , activation_params(dto->activation_params, dto->activation_params + 3 * sizeof(cldnn_activation_additional_params))
+		, activations(dto->activations, std::end(dto->activations))
+		, activation_params(dto->activation_params, std::end(dto->activation_params))
         , offset_order(dto->offset_order)
     {
     }

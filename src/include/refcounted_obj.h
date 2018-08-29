@@ -145,9 +145,10 @@ struct refcounted_obj_ptr
     }
 
     // for refcounted_obj_ptr<T>, allow conversion to refcounted_obj_ptr<const T>
-    operator refcounted_obj_ptr<const T> () const
+	template <class R>
+	operator refcounted_obj_ptr<const R> () const
     {
-        return refcounted_obj_ptr<const T>(_ptr);
+        return refcounted_obj_ptr<const R>(_ptr);
     }
 
 private:

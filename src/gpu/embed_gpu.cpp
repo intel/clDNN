@@ -32,7 +32,7 @@ namespace cldnn {
 		struct embed_gpu : typed_primitive_gpu_impl<embed>
 		{
 			using parent = typed_primitive_gpu_impl<embed>;
-			memory_impl::ptr new_input_mem;
+			memory_impl::cptr new_input_mem;
 
 
 			embed_gpu(const embed_node& arg, const kernel_selector::kernel_data& kd)

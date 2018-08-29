@@ -41,10 +41,10 @@ private:
 
     engine_impl::ptr engine;
     bool weights_and_bias_exist;
-    std::vector<memory_impl::ptr> input_buffers;
+    std::vector<memory_impl::cptr> input_buffers;
     std::vector<memory_impl::ptr> output_buffers;
-    std::vector<memory_impl::ptr> weight_buffers;
-    std::vector<memory_impl::ptr> bias_buffers;
+    std::vector<memory_impl::cptr> weight_buffers;
+    std::vector<memory_impl::cptr> bias_buffers;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
