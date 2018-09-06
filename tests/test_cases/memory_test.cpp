@@ -410,3 +410,47 @@ TEST(memory_pool, shared_mem_pool_diff_batches) {
 
     EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t)3928);
 }
+
+TEST(memory_pool, shared_dep_two_output) {
+
+    engine_configuration cfg{ false, false, false, std::string(), std::string(), true /*oooq*/, std::string(),std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine engine{ cfg };
+    auto batch_1 = 1;
+    auto feature_num = 1;
+    auto inp_x_size = 4;
+    auto inp_y_size = 4;
+    auto dt = data_types::f32;
+    auto fmt = format::bfyx;
+    layout lay_batch_1 = { dt, fmt,{ tensor(spatial(inp_x_size, inp_y_size), feature(feature_num), batch(batch_1)) } };
+    auto input_1 = memory::allocate(engine, lay_batch_1);
+    set_random_values<float>(input_1);
+
+    //build primitives
+    auto constant_0_0 = cldnn::data(
+        "constant_0_0",
+        input_1
+    );
+    auto result_1_0 = cldnn::concatenation(
+        "result_1_0",
+        { constant_0_0 },
+        cldnn::concatenation::along_b
+    );
+    auto result_2_0 = cldnn::concatenation(
+        "result_2_0",
+        { constant_0_0 },
+        cldnn::concatenation::along_b
+    );
+
+    //build and execute network
+    topology topo;
+    topo.add(constant_0_0);
+    topo.add(result_1_0);
+    topo.add(result_2_0);
+
+    build_options bo;
+    bo.set_option(build_option::optimize_data(true));
+
+    network network(engine, topo, bo);
+    auto outputs = network.execute();
+    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t)256);
+}
