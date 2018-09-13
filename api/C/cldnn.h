@@ -205,11 +205,11 @@ typedef enum /*:int32_t*/
     cldnn_build_option_optimize_data,           ///< Enable implicit reordering for user input.
     cldnn_build_option_debug,                   ///< Enable debug mode.
     cldnn_build_option_outputs,                 ///< User selected list of network outputs.
-	cldnn_build_option_learning_config,         ///< User defined learning parameters.
     cldnn_build_option_tuning_config,           ///< Tuning config.
     cldnn_build_option_graph_dumps_dir,         ///< Specifies a directory to which stages of network compilation should be dumped.
     cldnn_build_option_serialization,           ///< Specifies a name of files to which serialization should be dumped.
-    cldnn_build_option_load_program             ///< Specifies a name of load_program process.
+    cldnn_build_option_load_program,            ///< Specifies a name of load_program process.
+    cldnn_build_option_learning_config          ///< User defined learning parameters.
 } cldnn_build_option_type;
 
 /// @brief Tuning modes.
