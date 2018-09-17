@@ -44,9 +44,9 @@ KERNEL(pooling_gpu_byxf_opt)(const __global UNIT_TYPE* input, __global UNIT_TYPE
     const uint bf   = (uint)get_global_id(2);
     const uint f    = bf / INPUT0_BATCH_NUM * FEATURE_PER_ITEM;
     const uint b    = bf % INPUT0_BATCH_NUM;
-
+    
     VECTOR_TYPE feature_block;
-
+    
     if ((x >= OUTPUT_SIZE_X) || (y >= OUTPUT_SIZE_Y))
         return;
 
@@ -54,7 +54,7 @@ KERNEL(pooling_gpu_byxf_opt)(const __global UNIT_TYPE* input, __global UNIT_TYPE
     const int offset_y = (int)y*STRIDE_SIZE_Y;
 
     int input_idx = b*FEATURE_BLOCK_NUM*INPUT0_SIZE_X*INPUT0_SIZE_Y + FEATURE_BLOCK_NUM*INPUT0_SIZE_X*offset_y + FEATURE_BLOCK_NUM*offset_x + bf / INPUT0_BATCH_NUM;
-
+    
     out = UNIT_INIT_VAL;
 
     __attribute__((opencl_unroll_hint))

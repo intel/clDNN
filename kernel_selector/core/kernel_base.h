@@ -19,7 +19,7 @@
 #include "kernel_selector_common.h"
 #include "kernel_selector_params.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     class KernelBase
     {
@@ -27,12 +27,12 @@ namespace KernelSelector
         KernelBase(const std::string name) : kernelName(name) {}
         virtual ~KernelBase() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const = 0;
-        virtual KernelsData GetKernelsDataForAutoTune(const Params& params, const OptionalParams& options) const
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const = 0;
+        virtual KernelsData GetKernelsDataForAutoTune(const Params& params, const optional_params& options) const
         {
             return GetKernelsData(params, options);
         }
-        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, int /*autoTuneIndex*/) const
+        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, int /*autoTuneIndex*/) const
         {
             return GetKernelsData(params, options);
         }

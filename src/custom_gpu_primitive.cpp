@@ -33,7 +33,7 @@ std::string custom_gpu_primitive_inst::to_string(custom_gpu_primitive_node const
 {
     auto desc      = node.get_primitive();
     auto node_info = node.desc_to_json();
-
+    
     std::stringstream primitive_description;
 
     json_composite custom_gpu_prim_info;

@@ -15,8 +15,9 @@
 */
 
 #include "convolution_kernel_yxfb_yxio_b16.h"
+#include "convolution_params.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
 
     ParamsKey ConvolutionKernel_yxfb_yxio_b16::GetSupportedKey() const
@@ -41,7 +42,7 @@ namespace KernelSelector
         return k;
     }
 
-    std::string ConvolutionKernel_yxfb_yxio_b16::GetKernelName(const ConvolutionParams& params) const
+    std::string ConvolutionKernel_yxfb_yxio_b16::GetKernelName(const convolution_params& params) const
     {
         if (params.inputs[0].GetDType() == Datatype::F32)
         {
@@ -53,7 +54,43 @@ namespace KernelSelector
         }
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b16::SetDefault(const ConvolutionParams& arg, int) const
+    namespace {
+        // how many batches will a single work item compute
+        size_t GetBatchesPerWorkItem(size_t batch_size, Datatype dataType)
+        {
+            if (dataType == Datatype::F16)
+            {
+                const uint32_t min_batches_per_wi = 1;
+                const uint32_t min_lws = 16;
+
+                if (batch_size % (4 * min_batches_per_wi * min_lws) == 0)
+                {
+                    return 4 * min_batches_per_wi; // USE_BLOCK_READ_2 + as_half4
+                }
+                else if (batch_size % (2 * min_batches_per_wi * min_lws) == 0)
+                {
+                    return 2 * min_batches_per_wi; // USE_BLOCK_READ_1 + as_half2
+                }
+                else
+                {
+                    return min_batches_per_wi;
+                }
+            }
+            else
+            {
+                return 2;
+            }
+        }
+
+        size_t GetOfmPerWorkitem(Datatype dataType)
+        {
+            if (dataType == Datatype::F16)
+                return 16;
+            return 8;
+        }
+    }
+
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b16::SetDefault(const convolution_params& arg, int) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
 
@@ -61,47 +98,31 @@ namespace KernelSelector
         const auto batch_size = arg.output.Batch().v;
         const uint32_t min_lws = 16;
 
+        const size_t batchesPerWorkItem = GetBatchesPerWorkItem(batch_size, arg.inputs[0].GetDType());
+        const size_t ofmPerWorkItem = GetOfmPerWorkitem(arg.inputs[0].GetDType());
+
         if (arg.inputs[0].GetDType() == Datatype::F16)
         {
-            const uint32_t min_ofm_per_wi = 16;
-            const uint32_t min_batches_per_wi = 1;
-
-            runInfo.cldnnStyle.ofmPerWorkItem = min_ofm_per_wi;
-            if (batch_size % (4 * min_batches_per_wi * min_lws) == 0)
-            {
-                runInfo.cldnnStyle.batchesPerWorkItem = 4 * min_batches_per_wi; // USE_BLOCK_READ_2 + as_half4
-            }
-            else if (batch_size % (2 * min_batches_per_wi * min_lws) == 0)
-            {
-                runInfo.cldnnStyle.batchesPerWorkItem = 2 * min_batches_per_wi; // USE_BLOCK_READ_1 + as_half2
-            }
-            else
-            {
-                runInfo.cldnnStyle.batchesPerWorkItem = min_batches_per_wi;
-            }
-            
             runInfo.effiency = FORCE_PRIORITY_7;
         }
         else
         {
-            runInfo.cldnnStyle.ofmPerWorkItem = 8;
-            runInfo.cldnnStyle.batchesPerWorkItem = 2;
             runInfo.effiency = FORCE_PRIORITY_9;
         }
 
         runInfo.lws0 = min_lws;
-        runInfo.gws0 = filter_ofm_num * batch_size / (runInfo.cldnnStyle.ofmPerWorkItem * runInfo.cldnnStyle.batchesPerWorkItem);
+        runInfo.gws0 = filter_ofm_num * batch_size / (ofmPerWorkItem * batchesPerWorkItem);
         
         return runInfo;
     }
 
-    bool ConvolutionKernel_yxfb_yxio_b16::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_yxfb_yxio_b16::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o))
         {
             return false;
         }
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
+        const convolution_params& params = static_cast<const convolution_params&>(p);
 
         const auto filter_ofm_num = params.weights.OFM().v;
         const auto batch_size = params.output.Batch().v;
@@ -142,9 +163,12 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants ConvolutionKernel_yxfb_yxio_b16::GetJitConstants(const ConvolutionParams& params, DispatchData kd) const
+    JitConstants ConvolutionKernel_yxfb_yxio_b16::GetJitConstants(const convolution_params& params, const DispatchData& kd) const
     {
         auto jit = Parent::GetJitConstants(params, kd);
+
+        const auto local_work_group_size = kd.lws0;
+        const auto batch_size = params.output.Batch().v;
 
         if (params.inputs[0].GetDType() == Datatype::F32)
         {
@@ -157,7 +181,6 @@ namespace KernelSelector
         }
         else
         {
-            const auto batch_size = params.output.Batch().v;
             const auto batch_pad_before = params.output.Batch().pad.before;
             const auto feature_pitch = params.output.Feature().pitch;
 
@@ -171,10 +194,21 @@ namespace KernelSelector
             }
         }
 
+        const size_t batchesPerWorkItem = GetBatchesPerWorkItem(batch_size, params.inputs[0].GetDType());
+        const size_t ofmPerWorkItem = GetOfmPerWorkitem(params.inputs[0].GetDType());
+
+        jit.AddConstants({
+            MakeJitConstant("LOCAL_WORK_GROUP_SIZE", kd.lws0),
+            MakeJitConstant("OFM_PER_WORK_ITEM", ofmPerWorkItem),
+            MakeJitConstant("BATCHES_PER_WORK_ITEM",                            batchesPerWorkItem), // how many batches will a single work item compute
+            MakeJitConstant("LOCAL_WORK_GROUPS_PER_SINGLE_BATCHES_ELEMENTS",    std::max(batch_size / batchesPerWorkItem / local_work_group_size, static_cast<size_t>(1))), // how many local work groups we need to compute single element for each batch
+            MakeJitConstant("WORK_ITEMS_PER_SINGLE_BATCHES_ELEMENTS", batch_size / batchesPerWorkItem), // how many work items we need to compute single element for each batch
+        });
+
         return jit;
     }
 
-    KernelsData ConvolutionKernel_yxfb_yxio_b16::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_yxfb_yxio_b16::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

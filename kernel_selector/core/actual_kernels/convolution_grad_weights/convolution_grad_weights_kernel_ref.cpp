@@ -16,7 +16,7 @@
 
 #include "convolution_grad_weights_kernel_ref.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
 
     ParamsKey ConvolutionGradWeightsKernelRef::GetSupportedKey() const
@@ -38,8 +38,8 @@ namespace KernelSelector
         k.EnableTensorPitches();
         k.EnableBiasPerFeature();
         k.EnableNonBiasTerm();
-        //TODO: add support to batching, figure out the way to update weights/biases for multiple batches at the same time
-        //k.EnableBatching();
+        k.EnableMomentum();
+        k.EnableBatching();
         k.EnableSplitSupport();
         k.EnableGradient();
         k.DisableTuning();

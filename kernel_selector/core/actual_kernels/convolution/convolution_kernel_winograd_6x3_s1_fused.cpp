@@ -17,7 +17,7 @@
 #include "convolution_kernel_winograd_6x3_s1_fused.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     ParamsKey ConvolutionKernel_Winograd_6x3_s1_fused::GetSupportedKey() const
     {
@@ -38,7 +38,7 @@ namespace KernelSelector {
         return k;
     }
 
-    JitConstants ConvolutionKernel_Winograd_6x3_s1_fused::GetJitConstants(const ConvolutionParams& params, Parent::DispatchData runInfo) const
+    JitConstants ConvolutionKernel_Winograd_6x3_s1_fused::GetJitConstants(const convolution_params& params, const DispatchData& runInfo) const
     {
         JitConstants jit = Parent::GetJitConstants(params, runInfo);
 
@@ -55,8 +55,8 @@ namespace KernelSelector {
         auto C4_up16 = ((uint32_t)((idepth + 15) / 16) * 16) / 4;
 
 		//if there's input padding then input offset should be ignored
-		const auto inoffset_x = (input_pad_x) ? 0 : params.convParams.padding.x;
-		const auto inoffset_y = (input_pad_y) ? 0 : params.convParams.padding.y;
+		const auto inoffset_x = (input_pad_x) ? 0 : params.padding.x;
+		const auto inoffset_y = (input_pad_y) ? 0 : params.padding.y;
 
         jit.AddConstants({
             MakeJitConstant("H", rows),
@@ -82,7 +82,7 @@ namespace KernelSelector {
         return jit;
     }
 
-    std::vector<WeightsLayout> ConvolutionKernel_Winograd_6x3_s1_fused::GetSupportedWeightLayouts(const ConvolutionParams& params) const
+    std::vector<WeightsLayout> ConvolutionKernel_Winograd_6x3_s1_fused::GetSupportedWeightLayouts(const convolution_params& params) const
     {
         //check if image weights layout will fit into device memory, if not then try to fallback to buffer
         if (CheckImageSize(params, WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb))
@@ -95,7 +95,7 @@ namespace KernelSelector {
         }
     }
 
-    ConvolutionKernel_Winograd_6x3_s1_fused::Parent::DispatchData ConvolutionKernel_Winograd_6x3_s1_fused::SetDefault(const ConvolutionParams& arg, int) const
+    ConvolutionKernel_Winograd_6x3_s1_fused::Parent::DispatchData ConvolutionKernel_Winograd_6x3_s1_fused::SetDefault(const convolution_params& arg, int) const
     {
         Parent::DispatchData runInfo = Parent::SetDefault(arg);
 
@@ -106,8 +106,8 @@ namespace KernelSelector {
         const auto cols = arg.inputs[0].X().v + input_pad_x;
 
 		//if there's input padding then input offset should be ignored
-		const auto inoffset_x = (input_pad_x) ? 0 : arg.convParams.padding.x;
-		const auto inoffset_y = (input_pad_y) ? 0 : arg.convParams.padding.y;
+		const auto inoffset_x = (input_pad_x) ? 0 : arg.padding.x;
+		const auto inoffset_y = (input_pad_y) ? 0 : arg.padding.y;
 
         auto P = rows - 2 + 2 * inoffset_y;
         auto Q = cols - 2 + 2 * inoffset_x;
@@ -130,20 +130,20 @@ namespace KernelSelector {
         return runInfo;
     }
 
-    bool ConvolutionKernel_Winograd_6x3_s1_fused::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_Winograd_6x3_s1_fused::Validate(const Params& p, const optional_params& o) const
     {
         if (!Parent::Validate(p, o))
         {
             return false;
         }
 
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
+        const convolution_params& params = static_cast<const convolution_params&>(p);
 
         if ((params.weights.X().v != 3) || (params.weights.Y().v != 3) ||
-            (params.convParams.stride.x != 1) ||
-            (params.convParams.stride.y != 1) ||
-            (params.convParams.filterSize.x != 3) ||
-            (params.convParams.filterSize.y != 3) ||
+            (params.stride.x != 1) ||
+            (params.stride.y != 1) ||
+            (params.filterSize.x != 3) ||
+            (params.filterSize.y != 3) ||
             (params.output.Feature().v % 32) ||
             (params.inputs[0].Feature().v % 32) ||
             (params.output.Feature().pad.before != 0) || (params.output.Feature().pad.after != 0) ||
@@ -157,7 +157,7 @@ namespace KernelSelector {
         return true;
     }
 
-    KernelsData ConvolutionKernel_Winograd_6x3_s1_fused::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_Winograd_6x3_s1_fused::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, AGE_BASED);
     }

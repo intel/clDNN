@@ -910,7 +910,7 @@ TEST(deconvolution_f32_fw_gpu, basic_wsiz2x2_in1x2x2x2_bfyx_stride2_pad1_split2_
     //  Test for depthwise separable optimization, there are 16 weights and biases (split 16)
     //  data is similar as in basic_wsiz2x2_in1x2x2x2_bfyx_stride2_pad1_split2
 
-    engine engine;
+    engine engine; 
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 16, 2, 2 } });
     set_values(input, 

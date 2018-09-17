@@ -311,7 +311,7 @@ TEST(reshape_gpu_f32, multiple_users_with_reorder) {
     // Tests split with crop implementation
     //                                                   _ REORDER(yxfb) --> RELU(yxfb)
     //                                                  |
-    //  INPUT(bfyx,2x2x1x1)--RELU(bfyx)--RESHAPE(4x1x1x1)
+    //  INPUT(bfyx,2x2x1x1)--RELU(bfyx)--RESHAPE(4x1x1x1)  
     //                                                  |_
     //                                                     RELU(bfyx)
 

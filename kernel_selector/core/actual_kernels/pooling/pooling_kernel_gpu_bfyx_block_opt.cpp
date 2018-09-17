@@ -16,7 +16,7 @@
 
 #include "pooling_kernel_gpu_bfyx_block_opt.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey PoolingKernelGPUBfyxBlockOpt::GetSupportedKey() const
     {
@@ -40,36 +40,36 @@ namespace KernelSelector
         return k;
     }
 
-    PoolingKernelBase::DispatchData PoolingKernelGPUBfyxBlockOpt::SetDefault(const PoolingParams& params) const
+    PoolingKernelBase::DispatchData PoolingKernelGPUBfyxBlockOpt::SetDefault(const pooling_params& params) const
     {
         const auto& output = params.output;
 
         DispatchData runInfo = PoolingKernelBase::SetDefault(params);
 
-        runInfo.gws1 = CeilDiv(output.Y().v, params.poolParams.poolSize.y);
+        runInfo.gws1 = CeilDiv(output.Y().v, params.poolSize.y);
 
         return runInfo;
     }
 
-    JitConstants PoolingKernelGPUBfyxBlockOpt::GetJitConstants(const PoolingParams& params, DispatchData kd) const
+    JitConstants PoolingKernelGPUBfyxBlockOpt::GetJitConstants(const pooling_params& params, DispatchData kd) const
     {
         auto mem_consts = PoolingKernelBase::GetJitConstants(params, kd);
 
-        mem_consts.AddConstant(MakeJitConstant("BLOCK_SIZE_Y", params.poolParams.poolSize.y + params.poolParams.poolSize.y*params.poolParams.poolStride.y - 1));
+        mem_consts.AddConstant(MakeJitConstant("BLOCK_SIZE_Y", params.poolSize.y + params.poolSize.y*params.poolStride.y - 1));
 
         return mem_consts;
     }
 
-    bool PoolingKernelGPUBfyxBlockOpt::Validate(const Params& p, const OptionalParams& o) const
+    bool PoolingKernelGPUBfyxBlockOpt::Validate(const Params& p, const optional_params& o) const
     {
         if (!PoolingKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const PoolingParams& params = static_cast<const PoolingParams&>(p);
+        const pooling_params& params = static_cast<const pooling_params&>(p);
         if (NeedsBoundaryCheck(params) ||
-            params.poolParams.poolSize.x > 5 || params.poolParams.poolSize.y > 5)
+            params.poolSize.x > 5 || params.poolSize.y > 5)
         {
             return false;
         }
@@ -77,7 +77,7 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData PoolingKernelGPUBfyxBlockOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData PoolingKernelGPUBfyxBlockOpt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, FORCE_PRIORITY_8);
     }

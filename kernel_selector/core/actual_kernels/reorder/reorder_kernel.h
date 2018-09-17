@@ -18,7 +18,7 @@
 
 #include "reorder_kernel_base.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
     class ReorderKernelRef : public ReorderKernelBase
     {
@@ -26,8 +26,8 @@ namespace KernelSelector
         ReorderKernelRef() : ReorderKernelBase("reorder_data") {}
         virtual ~ReorderKernelRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
-        virtual JitConstants GetJitConstants(const ReorderParams& params) const override;
+        virtual JitConstants GetJitConstants(const reorder_params& params) const override;
     };
 }

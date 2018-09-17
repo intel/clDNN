@@ -49,6 +49,8 @@ std::string detection_output_inst::to_string(detection_output_node const& node)
     auto share_location      = desc->share_location ? "true" : "false";
     auto variance_encoded    = desc->variance_encoded_in_target ? "true" : "false";
     auto prior_is_normalized = desc->prior_is_normalized ? "true" : "false";
+    auto decrease_label_id   = desc->decrease_label_id ? "true" : "false";
+    auto clip                = desc->clip ? "true" : "false";
     auto& input_location     = node.location();
     auto& input_prior_box    = node.prior_box();
     auto& input_confidence   = node.confidence();
@@ -92,6 +94,8 @@ std::string detection_output_inst::to_string(detection_output_node const& node)
     detec_out_info.add("prior_is_normalized", prior_is_normalized);
     detec_out_info.add("input_width", desc->input_width);
     detec_out_info.add("input_height", desc->input_height);
+    detec_out_info.add("decrease_label_id", decrease_label_id);
+    detec_out_info.add("clip", clip);
     detec_out_info.dump(primitive_description);
 
     node_info.add("dection output info", detec_out_info);
@@ -103,21 +107,24 @@ std::string detection_output_inst::to_string(detection_output_node const& node)
 detection_output_inst::typed_primitive_inst(network_impl& network, detection_output_node const& node)
     :parent(network, node)
 {
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Location memory format", location_memory().get_layout().format.value, "expected bfyx input format", format::bfyx );
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Confidence memory format", confidence_memory().get_layout().format.value, "expected bfyx input format", format::bfyx );
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Prior box memory format", prior_box_memory().get_layout().format.value, "expected bfyx input format", format::bfyx );
+    auto location_layout = node.location().get_output_layout();
+    auto confidence_layout = node.confidence().get_output_layout();
+    auto prior_box_layout = node.prior_box().get_output_layout();
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Location memory format", location_layout.format.value, "expected bfyx input format", format::bfyx );
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Confidence memory format", confidence_layout.format.value, "expected bfyx input format", format::bfyx );
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Prior box memory format", prior_box_layout.format.value, "expected bfyx input format", format::bfyx );
 
-    tensor location_size = location_memory().get_layout().size;
-    CLDNN_ERROR_NOT_EQUAL(node.id(), "Location input dimensions", (location_size.feature[0] * location_size.batch[0]), "detection output layer dimensions", (int)location_memory().get_layout().count(), "Location input/ detection output dims mismatch");
+    tensor location_size = location_layout.size;
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Location input dimensions", (location_size.feature[0] * location_size.batch[0]), "detection output layer dimensions", (int)location_layout.count(), "Location input/ detection output dims mismatch");
 
-    tensor confidence_size = confidence_memory().get_layout().size;
-    CLDNN_ERROR_NOT_EQUAL(node.id(), "Confidence input dimensions", (confidence_size.feature[0] * confidence_size.batch[0]), "detection output layer dimensions", (int)confidence_memory().get_layout().count(), "Confidence input/detection output dims mistmach");
+    tensor confidence_size = confidence_layout.size;
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Confidence input dimensions", (confidence_size.feature[0] * confidence_size.batch[0]), "detection output layer dimensions", (int)confidence_layout.count(), "Confidence input/detection output dims mistmach");
 
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Confidence batch size", confidence_size.batch[0], "location input batch size", location_size.batch[0], "Batch sizes mismatch.");
 
     auto desc              = node.get_primitive();
     int prior_feature_size = desc->variance_encoded_in_target ? 1 : 2;
-    tensor prior_box_size = prior_box_memory().get_layout().size;
+    tensor prior_box_size = prior_box_layout.size;
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Prior box batch size", prior_box_size.batch[0], "expected value", 1, "");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Prior box spatial X", prior_box_size.spatial[0], "expected value", 1, "");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Prior box feature size", prior_box_size.feature[0], "expected value", prior_feature_size, "");

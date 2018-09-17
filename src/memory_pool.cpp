@@ -16,7 +16,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
+#include <algorithm> 
 #include <fstream>
 
 #include "memory_pool.h"
@@ -36,7 +36,7 @@ namespace cldnn
     memory_impl::ptr memory_pool::alloc_memory(const layout& layout)
     {
         auto context = _engine->get_context();
-
+        
         if (layout.bytes_count() > context->get_engine_info().max_alloc_mem_size)
         {
             throw error("exceeded max size of memory object allocation", CLDNN_ALLOC_SIZE_EXCEEDED);
@@ -71,7 +71,7 @@ namespace cldnn
     }
 
     bool memory_pool::has_conflict(const memory_set& a, const std::set<primitive_id>& b, uint32_t b_network_id)
-    {
+    {   
         std::set<primitive_id> a_same_network;
         for (auto const& mem_usr : a)
         {
@@ -104,7 +104,7 @@ namespace cldnn
         auto mem = alloc_memory(layout);
         {
             _non_padded_pool.emplace(layout.bytes_count(), memory_record({ {id, network_id } }, mem, network_id));
-            // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine.
+            // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine. 
             _engine->release();
         }
         return mem;
@@ -113,7 +113,7 @@ namespace cldnn
     memory_impl::ptr memory_pool::get_from_padded_pool(const layout& layout, const primitive_id& id, uint32_t network_id, const std::set<primitive_id>& restrictions)
     {
         auto first_level_cache = _padded_pool.find(layout);
-
+        
         if (first_level_cache != _padded_pool.end())
         {
             for (auto& rec_list : first_level_cache->second)
@@ -129,7 +129,7 @@ namespace cldnn
             }
             auto mem = alloc_memory(layout);
             first_level_cache->second.emplace_back(memory_record({ { id, network_id } }, mem, network_id));
-            return mem;
+            return mem;            
         }
         auto mem = alloc_memory(layout);
         std::list<memory_record> list = { memory_record({ { id, network_id } },mem, network_id) };
@@ -160,7 +160,7 @@ namespace cldnn
         auto mem = alloc_memory(layout);
         {
             _no_reusable_pool.emplace(layout.bytes_count(), memory_record({ { id, network_id } }, mem, network_id));
-            // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine.
+            // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine. 
             _engine->release();
         }
         return mem;
@@ -205,7 +205,7 @@ namespace cldnn
         , _temp_memory_used(0)
         , _max_peak_memory_used(0)
     {
-        _engine->release(); // since engine is refcount object and there is circular dependency until context will be moved to memory pool we need
+        _engine->release(); // since engine is refcount object and there is circular dependency until context will be moved to memory pool we need 
                             // to detach engine while destroying memory pool
     }
 
@@ -284,3 +284,4 @@ namespace cldnn
     }
 
 }
+

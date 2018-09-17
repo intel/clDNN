@@ -100,7 +100,7 @@ namespace {
         {
             options += o + " ";
         }
-
+        
         return options;
     }
 
@@ -112,7 +112,7 @@ namespace {
     }
 }
 
-kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code& kernels_source_code) const
+kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code& kernels_source_code) const 
 {
     sorted_code scode;
 
@@ -123,7 +123,7 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
         std::string         options             = code.second.kernel_strings->options;
         bool                batch_compilation   = code.second.kernel_strings->batch_compilation;
         bool                dump_custom_program = code.second.dump_custom_program;
-		bool                one_time_kernel     = code.second.one_time_kernel;
+        bool                one_time_kernel     = code.second.one_time_kernel;
 
         batch_compilation &= does_options_support_batch_compilation(options);
 
@@ -145,14 +145,14 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
         }
 
 
-		if (one_time_kernel)
+        if (one_time_kernel)
         {
             key += " __ONE_TIME__";
         }
 
         auto& current_bucket = scode[key];
         current_bucket.dump_custom_program = dump_custom_program;
-		current_bucket.one_time = one_time_kernel;
+        current_bucket.one_time = one_time_kernel;
 
         if (current_bucket.source.empty())
         {
@@ -189,7 +189,7 @@ kernels_cache::kernels_cache(gpu_toolkit& context): _context(context) {}
 kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program, bool one_time_kernel)
 {
     kernels_cache::kernel_id id;
-
+    
     // same kernel_string == same kernel
     const auto key = kernel_string.get()->get_hash();
 
@@ -200,7 +200,7 @@ kernels_cache::kernel_id kernels_cache::set_kernel_source(const std::shared_ptr<
     if (it == _kernels_code.end())
     {
         // we need unique id in order to avoid conflict across topologies.
-        const auto kernel_num = _kernels.size() + _kernels_code.size();
+        const auto kernel_num = _kernels.size() + _kernels_code.size(); 
         id = kernel_string->entry_point + "_" + std::to_string(kernel_num);
         _kernels_code[key] = { kernel_string, id, dump_custom_program, one_time_kernel };
     }
@@ -252,6 +252,8 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
             {
                 cl::Program program(_context.context(), sources);
                 program.build({ _context.device() }, program_source.options.c_str());
+                ///Store kernels for serialization process.
+                _context.store_binaries(program.getInfo<CL_PROGRAM_BINARIES>());
 
                 if (dump_sources)
                 {
@@ -280,14 +282,14 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
                 {
                     if (dump_sources)
                         dump_file.get() << p.second << "\n";
-
+                
                     err_log += p.second + '\n';
                 }
 
                 if (dump_sources)
                     dump_file.get() << "*/\n";
             }
-
+            
         }
 
         if (!err_log.empty())
@@ -301,7 +303,7 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
     }
 }
 
-kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id, bool one_time_kernel)
+kernels_cache::kernel_type kernels_cache::get_kernel(kernel_id id, bool one_time_kernel) 
 {
     build_all();
     if (one_time_kernel)
@@ -323,7 +325,7 @@ void kernels_cache::build_all()
 
     auto sorted_program_code = get_program_source(_kernels_code);
 
-	_one_time_kernels.clear();
+    _one_time_kernels.clear();
     for (auto& program : sorted_program_code)
     {
         auto kernels = build_program(program.second);
@@ -334,12 +336,12 @@ void kernels_cache::build_all()
             const auto& k_id = program.second.entry_point_to_id[entry_point];
             if (program.second.one_time)
             {
-				_one_time_kernels[k_id] = k.second;
-			}
-			else
-			{
+                _one_time_kernels[k_id] = k.second;
+            }
+            else
+            {
                 _kernels[k_id] = k.second;
-			}
+            }
         }
     }
 
@@ -348,3 +350,4 @@ void kernels_cache::build_all()
 }
 
 }}
+ 

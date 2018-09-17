@@ -16,9 +16,9 @@
 
 #include "lrn_kernel_base.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    bool LRNKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    bool LRNKernelBase::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::LRN ||
             o.GetType() != KernelType::LRN)
@@ -29,15 +29,25 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants LRNKernelBase::GetJitConstants(const LRNParams& params, LRNKernelBase::DispatchData kd) const
+    JitConstants LRNKernelBase::GetJitConstants(const lrn_params& params, LRNKernelBase::DispatchData kd) const
     {
-        JitConstants mem_consts = MakeLRNJitConstants(params);
+        JitConstants mem_consts = MakeBaseParamsJitConstants(params);
 
-        const auto& np = params.lrnParams;
+        const auto padding = (params.localSize - 1) / 2;
+
+        mem_consts.AddConstants({
+            MakeJitConstant("LOCAL_SIZE",   params.localSize),
+            MakeJitConstant("PADDING",      padding),
+            MakeJitConstant("ALPHA",        params.alpha),
+            MakeJitConstant("BETA",         params.beta),
+            MakeJitConstant("K",            params.k),
+            MakeJitConstant(toString(params.divMode) + "_KERNEL_DIVIDER", ""),
+            MakeJitConstant(toString(params.normMode), ""),
+        });
 
         //auto pad = (np.localSize) / 2;
-        auto alpha = np.alpha;
-        auto alpha_div_by_size = alpha / np.localSize;
+        auto alpha = params.alpha;
+        auto alpha_div_by_size = alpha / params.localSize;
         auto alpha_sign = std::signbit(alpha) ? -1.0f : 1.0f;
         // When used FP16 the value cannot be scaled afterwards by alpha (it must be scaled before computing sum of squares).
         auto alpha_abs_sqrt = std::sqrt(std::abs(alpha));
@@ -53,7 +63,7 @@ namespace KernelSelector
         return mem_consts;
     }
 
-    LRNKernelBase::DispatchData LRNKernelBase::SetDefault(const LRNParams& params) const
+    LRNKernelBase::DispatchData LRNKernelBase::SetDefault(const lrn_params& params) const
     {
         const auto& output = params.output;
 
@@ -76,17 +86,17 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData LRNKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, float estimatedTime) const
+    KernelsData LRNKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, float estimatedTime) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
 
-        const LRNParams& orgParams = static_cast<const LRNParams&>(params);
+        const lrn_params& orgParams = static_cast<const lrn_params&>(params);
 
         DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<LRNParams>(params);
+        KernelData kd = KernelData::Default<lrn_params>(params);
 
         auto cldnnJit = GetJitConstants(orgParams, runInfo);
         auto entryPoint = GetEntryPoint(kernelName, orgParams.layerID, options);

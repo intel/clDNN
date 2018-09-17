@@ -16,22 +16,46 @@
 
 #pragma once
 
-#include "common_kernel_base.h"
+#include "weight_bias_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    class FullyConnectedGradInputKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // fully_connected_grad_input_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct fully_connected_grad_input_params : public weight_bias_params
+    {
+        fully_connected_grad_input_params() : weight_bias_params(KernelType::FULLY_CONNECTED_GRAD_INPUT) {}
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            return weight_bias_params::GetParamsKey();
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // fully_connected_grad_input_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct fully_connected_grad_input_optional_params : weight_bias_optional_params
+    {
+        fully_connected_grad_input_optional_params() : weight_bias_optional_params(KernelType::FULLY_CONNECTED_GRAD_INPUT) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // FullyConnectedGradInputKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class FullyConnectedGradInputKernelBase : public WeightBiasKernelBase
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using WeightBiasKernelBase::WeightBiasKernelBase;
         virtual ~FullyConnectedGradInputKernelBase() {}
 
         using DispatchData = CommonDispatchData;
-
+    
     protected:
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const;
-        virtual JitConstants GetJitConstants(const FullyConnectedGradInputParams& params) const;
-        virtual DispatchData SetDefault(const FullyConnectedGradInputParams& params) const;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const;
+        virtual JitConstants GetJitConstants(const fully_connected_grad_input_params& params) const;
+        virtual DispatchData SetDefault(const fully_connected_grad_input_params& params) const;
     };
 }

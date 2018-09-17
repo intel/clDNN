@@ -20,19 +20,23 @@
 #include "pooling_kernel_gpu_average_opt.h"
 #include "pooling_kernel_gpu_bfyx_block_opt.h"
 #include "pooling_kernel_gpu_byxf_padding_opt.h"
- 
-namespace KernelSelector {
+#include "pooling_kernel_gpu_byxf_af32.h"
+#include "pooling_kernel_gpu_int8_ref.h"
 
-    PoolingKernelSelctor::PoolingKernelSelctor()
+namespace kernel_selector {
+
+    pooling_kernel_selector::pooling_kernel_selector()
     {
         Attach<PoolingKernelGPURef>();
         //Attach<PoolingKernelGPUAverageOpt>(); TODO: fix the kernel as it reads out of bounds now
         Attach<PoolingKernelGPUByxfOpt>();
         Attach<PoolingKernelGPUBfyxBlockOpt>();
         Attach<PoolingKernelGPUByxfPaddingOpt>();
+        Attach<PoolingKernelGPUInt8Ref>();
+        Attach<PoolingKerneGPU_byxf_af32>();
     }
 
-    KernelsData PoolingKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData pooling_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::POOLING);
     }

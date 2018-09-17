@@ -18,7 +18,7 @@
 
 #include "concatenation_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class ConcatenationKernel_depth_bfyx_no_pitch : public ConcatenationKernelBase
     {
@@ -26,9 +26,9 @@ namespace KernelSelector {
         ConcatenationKernel_depth_bfyx_no_pitch() : ConcatenationKernelBase("concatenation_gpu_depth_bfyx_no_pitch") {}
         virtual ~ConcatenationKernel_depth_bfyx_no_pitch() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
-        virtual DispatchData SetDefault(const ConcatenationParams& params) const override;
-        virtual bool Validate(const Params& p, const OptionalParams& o) const override;
+        virtual DispatchData SetDefault(const concatenation_params& params) const override;
+        virtual bool Validate(const Params& p, const optional_params& o) const override;
     };
 }

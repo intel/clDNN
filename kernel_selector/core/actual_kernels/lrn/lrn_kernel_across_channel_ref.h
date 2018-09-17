@@ -18,7 +18,7 @@
 
 #include "lrn_kernel_base.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
     class LRNKernelAcrossChannelRef : public LRNKernelBase
     {
@@ -26,10 +26,10 @@ namespace KernelSelector
         LRNKernelAcrossChannelRef() : LRNKernelBase("lrn_gpu_across_channel_ref") {}
         virtual ~LRNKernelAcrossChannelRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     private:
-        CommonDispatchData SetDefault(const LRNParams& params) const override;
+        CommonDispatchData SetDefault(const lrn_params& params) const override;
     };
 }

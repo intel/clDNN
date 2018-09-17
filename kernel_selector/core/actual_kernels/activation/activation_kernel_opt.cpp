@@ -17,7 +17,7 @@
 #include "activation_kernel_opt.h"
 #include "kernel_selector_utils.h" 
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     ParamsKey ActivationKernelOpt::GetSupportedKey() const
     {
@@ -34,7 +34,7 @@ namespace KernelSelector {
         return k;
     }
 
-    ActivationKernelOpt::Parent::DispatchData ActivationKernelOpt::SetDefault(const ActivationParams& params) const
+    ActivationKernelOpt::Parent::DispatchData ActivationKernelOpt::SetDefault(const activation_params& params) const
     {
         auto runInfo = Parent::SetDefault(params);
 
@@ -56,7 +56,7 @@ namespace KernelSelector {
         return runInfo;
     }
 
-    bool ActivationKernelOpt::Validate(const Params& p, const OptionalParams& o) const
+    bool ActivationKernelOpt::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::ACTIVATION ||
             o.GetType() != KernelType::ACTIVATION)
@@ -64,7 +64,7 @@ namespace KernelSelector {
             return false;
         }
 
-        const ActivationParams& params = static_cast<const ActivationParams&>(p);
+        const activation_params& params = static_cast<const activation_params&>(p);
 
         const auto totalSize = params.inputs[0].LogicalSize();
         if ((totalSize % NUM_COLS_WI) != 0 ||
@@ -83,16 +83,16 @@ namespace KernelSelector {
         return true;
     }
 
-    JitConstants ActivationKernelOpt::GetJitConstants(const ActivationParams& params, DispatchData) const
+    JitConstants ActivationKernelOpt::GetJitConstants(const activation_params& params, DispatchData kd) const
     {
-        auto jit = MakeActivationJitConstants(params);
+        auto jit = ActivationKernelBase::GetJitConstants(params, kd);
 
         jit.AddConstant(MakeJitConstant("NUM_COLS_WI", NUM_COLS_WI));
 
         return jit;
     }
 
-    KernelsData ActivationKernelOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ActivationKernelOpt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

@@ -18,7 +18,7 @@
 
 #include "convolution_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class ConvolutionKernel_yxfb_yxio_b1_block_mulitple_x : public ConvolutionKernelBase
     {
@@ -26,13 +26,13 @@ namespace KernelSelector {
         ConvolutionKernel_yxfb_yxio_b1_block_mulitple_x() : ConvolutionKernelBase("convolution_gpu_yxfb_yxio_b1_block_multiple_x_fp32") {}
         virtual ~ConvolutionKernel_yxfb_yxio_b1_block_mulitple_x() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     
     protected:
-        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override { return{ WeightsLayout::yxio }; }
-        bool Validate(const Params& p, const OptionalParams& o) const override;
-        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
-        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
+        std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override { return{ WeightsLayout::yxio }; }
+        bool Validate(const Params& p, const optional_params& o) const override;
+        JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
+        DispatchData SetDefault(const convolution_params& arg, int autoTuneIndex = -1) const override;
     };
 }

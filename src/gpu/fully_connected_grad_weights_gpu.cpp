@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "fully_connected_grad_weights/fully_connected_grad_weights_kernel_selector.h"
+#include "fully_connected_grad_weights/fully_connected_grad_weights_kernel_base.h"
 #include "api/CPP/fully_connected_grad_weights.hpp"
 
 namespace cldnn { namespace gpu {
@@ -30,11 +32,28 @@ struct fully_connected_grad_weights_gpu : typed_primitive_gpu_impl<fully_connect
 
 protected:
 
+    virtual bool validate(typed_primitive_inst<fully_connected_grad_weights>& instance) const override
+    {
+        bool res = parent::validate(instance);
+
+        if (instance.use_momentum())
+        {
+            CLDNN_ERROR_LAYOUT_MISMATCH(_outer.id(), "Filter memory", instance.weights_memory().get_layout(), "previous weights grad memory", _outer.prev_weights_grad().get_output_layout(), "");
+            CLDNN_ERROR_LAYOUT_MISMATCH(_outer.id(), "Bias memory", instance.bias_memory().get_layout(), "previous bias grad memory", _outer.prev_bias_grad().get_output_layout(), "");
+        }
+
+        return res;
+    }
+
     virtual kernel::kernel_arguments_data get_arguments(typed_primitive_inst<fully_connected_grad_weights>& instance, int32_t) const override
     {
         kernel::kernel_arguments_data args = parent::get_arguments(instance, 1);
         args.weights = &instance.weights_memory();
         args.bias = instance.bias_term() ? &instance.bias_memory() : nullptr;
+        args.prev_weights_grad = instance.use_momentum() ? &instance.prev_weights_grad() : nullptr;
+        args.prev_bias_grad = instance.bias_term() ? instance.use_momentum() ? &instance.prev_bias_grad() : nullptr : nullptr;
+
+        args.lr = instance.get_network().get_learning_rate();
 
         return args;
     }
@@ -43,8 +62,8 @@ public:
 
     static primitive_impl* create(const fully_connected_grad_weights_node& arg)
     {
-        auto fully_connected_grad_weights_params = get_weights_bias_default_params<kernel_selector::fully_connected_grad_weights_params>(arg);
-        auto fully_connected_grad_weights_optional_params = get_default_weights_bias_optional_params<kernel_selector::fully_connected_grad_weights_optional_params>(arg.get_program());
+        auto fully_connected_grad_weights_params = get_default_learning_params<kernel_selector::fully_connected_grad_weights_params>(arg);
+        auto fully_connected_grad_weights_optional_params = get_default_learning_optional_params<kernel_selector::fully_connected_grad_weights_optional_params>(arg.get_program());
 
         fully_connected_grad_weights_params.gradient = true;
         fully_connected_grad_weights_params.inputs.push_back(convert_data_tensor(arg.get_dependency(1).get_output_layout()));

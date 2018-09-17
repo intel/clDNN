@@ -41,8 +41,8 @@ namespace cldnn
     private:
         Type value;
     public:
-		json_leaf(const Type& val) : value(val) {}
-		json_leaf(Type&& val) : value(std::move(val)) {}
+        json_leaf(const Type& val) : value(val) {}
+        json_leaf(Type&& val) : value(std::move(val)) {}
         void dump(std::ostream& out, int) override
         {
             out << value << ",\n";
@@ -55,15 +55,15 @@ namespace cldnn
     private:
         std::vector<Type> values;
     public:
-		json_basic_array(const std::vector<Type>& arr) : values(arr) {}
-		json_basic_array(std::vector<Type>&& arr) : values(std::move(arr)) {}
+        json_basic_array(const std::vector<Type>& arr) : values(arr) {}
+        json_basic_array(std::vector<Type>&& arr) : values(std::move(arr)) {}
         void dump(std::ostream& out, int) override
         {
-			const char* delim = "";
+            const char* delim = "";
             for (size_t i = 0; i < values.size(); i++)
             {       
                 out << delim << values[i];
-				delim = ",";
+                delim = ",";
             }
             out << ",\n";
         }
@@ -92,16 +92,16 @@ namespace cldnn
                 out << spaces << it.first << " : ";
                 it.second->dump(out, offset);
             };
-			
+
             if (offset > 0)         
-			{
-				out << spaces << "},\n";
-				offset--;
+            {
+                out << spaces << "},\n";
+                offset--;
             }
-			else
-			{
-				out << spaces << "}\n";
-			}
+            else
+            {
+                out << spaces << "}\n";
+            }
         }
 
         template<class Type>

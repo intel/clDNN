@@ -16,15 +16,15 @@
 
 #include "fully_connected_grad_weights_kernel_selector.h"
 #include "fully_connected_grad_weights_kernel_ref.h"
-
-namespace KernelSelector
+ 
+namespace kernel_selector 
 {
-    FullyConnectedGradWeightsKernelSelctor::FullyConnectedGradWeightsKernelSelctor()
+    fully_connected_grad_weights_kernel_selector::fully_connected_grad_weights_kernel_selector()
     {
         Attach<FullyConnectedGradWeightsKernelRef>();
     }
 
-    KernelsData FullyConnectedGradWeightsKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData fully_connected_grad_weights_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::FULLY_CONNECTED_GRAD_WEIGHTS);
     }

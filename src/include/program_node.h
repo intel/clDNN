@@ -22,6 +22,7 @@
 
 #include "to_string_utils.h"
 #include "json_object.h"
+#include "xml_object.h"
 #include "meta_utils.h"
 
 namespace cldnn
@@ -91,6 +92,16 @@ public:
     void add_memory_dependency(primitive_id);
     void add_memory_dependency(std::vector<primitive_id>);
 
+    template<class PType>
+    bool have_user_with_type() const
+    {
+        for (auto const& usr : users)
+        {
+            if (usr->is_type<PType>()) return true;
+        }
+        return false;
+    }
+
     bool is_detached(bool whole_branch = false);
 
     auto const& get_users() { return users; }
@@ -102,6 +113,7 @@ public:
     const program_node* get_next() const { auto itr = processing_itr; return (*++itr); }
 
     json_composite desc_to_json() const;
+	xml_composite desc_to_xml() const;
     //do not modify primitive directly to keep synchronisation wit graph
     std::shared_ptr<const primitive> get_primitive() const { return desc; }
     //primitive modification functions
@@ -175,7 +187,10 @@ public:
     void can_be_optimized(bool opt) { optimized = opt; }
 
     primitive_id get_org_primitive_id() const { return org_id; }
-    void set_org_primitive_id(primitive_id org_prim_id) { org_id = org_prim_id; }
+    void set_org_primitive_id(primitive_id org_prim_id) 
+    {
+        org_id = org_prim_id;
+    }
 
     // returns immidiate dominator of this node if it's not its direct predecessor, otherwise returns nullptr
     program_node* get_dominator() { return dominator; }
@@ -257,7 +272,7 @@ protected:
     uint32_t processing_num = 0;
 
     // list of primitives that can reuse same memory buffers due to execution order conflicts
-    std::set<primitive_id> memory_dependencies;
+    std::set<primitive_id> memory_dependencies;  
 
     program_node* dominator = nullptr;
     program_node* joint = nullptr;

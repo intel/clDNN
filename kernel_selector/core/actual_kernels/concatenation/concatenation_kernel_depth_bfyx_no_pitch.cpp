@@ -17,7 +17,7 @@
 #include "concatenation_kernel_depth_bfyx_no_pitch.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
 
     ParamsKey ConcatenationKernel_depth_bfyx_no_pitch::GetSupportedKey() const
@@ -38,14 +38,24 @@ namespace KernelSelector
         return k;
     }
 
-    bool ConcatenationKernel_depth_bfyx_no_pitch::Validate(const Params& p, const OptionalParams& o) const
+    bool ConcatenationKernel_depth_bfyx_no_pitch::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConcatenationKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const ConcatenationParams& params = static_cast<const ConcatenationParams&>(p);
+        const concatenation_params& params = static_cast<const concatenation_params&>(p);
+
+        // all inputs have to have same layout
+        auto same_layout = params.inputs[0].GetLayout();
+        for (const auto& lt : params.inputs)
+        { 
+            if (lt.GetLayout() != same_layout)
+            {
+                return false;
+            }
+        }
 
         //kernel uses intel_sub_group_block_read that has 4-byte alignment requirement
         if (params.output.GetDType() == Datatype::F16)
@@ -66,13 +76,13 @@ namespace KernelSelector
         return true;
     }
 
-    ConcatenationKernelBase::DispatchData ConcatenationKernel_depth_bfyx_no_pitch::SetDefault(const ConcatenationParams& params) const
+    ConcatenationKernelBase::DispatchData ConcatenationKernel_depth_bfyx_no_pitch::SetDefault(const concatenation_params& params) const
     {
         DispatchData runInfo = ConcatenationKernelBase::SetDefault(params);
         const auto& input = params.inputs[0];
         const auto batch = input.Batch().v;
         runInfo.gws0 = batch;
-        runInfo.gws1 = Align(std::max((size_t)1, input.LogicalSize() / batch / 8), 16);
+        runInfo.gws1 = Align(std::max((size_t)1, input.LogicalSize() / batch), 16*8) / 8;
         runInfo.gws2 = 1;
 
         runInfo.lws0 = 1;
@@ -84,7 +94,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    KernelsData ConcatenationKernel_depth_bfyx_no_pitch::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData ConcatenationKernel_depth_bfyx_no_pitch::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         return GetCommonKernelsData(params, optParams);
     }

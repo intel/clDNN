@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "activation/activation_kernel_selector.h"
+#include "activation/activation_kernel_base.h"
 #include "api/CPP/activation_grad.hpp"
 
 namespace cldnn { namespace gpu {
@@ -41,8 +43,8 @@ struct activation_grad_gpu : typed_primitive_gpu_impl<activation_grad>
         return args;
     }
 
-    static primitive_impl* create(const activation_grad_node& arg)
-    {
+    static primitive_impl* create(const activation_grad_node& arg) 
+    { 
         auto activation_grad_params = get_default_params<kernel_selector::activation_params>(arg);
         auto activation_grad_optional_params = get_default_optional_params<kernel_selector::activation_optional_params>(arg.get_program());
 
@@ -59,11 +61,11 @@ struct activation_grad_gpu : typed_primitive_gpu_impl<activation_grad>
             const auto& slope_layout = arg.slope_input().get_output_layout();
             const auto& output_layout = arg.get_output_layout();
 
-            const auto params_num = KernelSelector::GetActivationAdditionalParamsNumber(activation_grad_params.activationFunc);
+            const auto params_num = kernel_selector::GetActivationAdditionalParamsNumber(activation_grad_params.activationFunc);
 
             CLDNN_ERROR_LESS_THAN(arg.id(), "Slope layout size count", slope_layout.size.count(), "output_layout.size.feature[0] * params_num", static_cast<size_t>(output_layout.size.feature[0] * params_num), "Error - not enough data inside additional params buffer");
 
-            activation_grad_params.actParams.inputActivationParams.push_back(convert_data_tensor(slope_layout));
+            activation_grad_params.inputActivationParams.push_back(convert_data_tensor(slope_layout));
         }
 
         auto& kernel_selector = kernel_selector::activation_kernel_selector::Instance();
@@ -81,7 +83,7 @@ namespace {
     struct attach {
         attach() {
             auto val_fw = activation_grad_gpu::create;
-
+    
             implementation_map<activation_grad>::add({
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), val_fw},
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw},

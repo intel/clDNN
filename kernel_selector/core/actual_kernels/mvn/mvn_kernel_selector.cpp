@@ -17,16 +17,16 @@
 #include "mvn_kernel_selector.h"
 #include "mvn_kernel_ref.h"
 #include "mvn_kernel_bfyx_opt.h"
-
-namespace KernelSelector
+ 
+namespace kernel_selector 
 {
-    MVNKernelSelctor::MVNKernelSelctor()
+    mvn_kernel_selector::mvn_kernel_selector()
     {
         Attach<MVNKernelRef>();
         Attach<MVNKernelBfyxOpt>();
     }
 
-    KernelsData MVNKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData mvn_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::MVN);
     }

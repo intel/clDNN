@@ -18,7 +18,7 @@
 
 #include "fully_connected_kernel_base.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     class FullyConnectedBlockKernelBase : public FullyConnectedKernelBase
     {
@@ -27,23 +27,23 @@ namespace KernelSelector
         virtual ~FullyConnectedBlockKernelBase() {}
 
     protected:
-        JitConstants GetJitConstants(const FullyConnectedParams& params, const DispatchData& kd) const override;
+        JitConstants GetJitConstants(const fully_connected_params& params, const DispatchData& kd) const override;
 
         // how many batches will a single work item compute
-        static size_t GetBatchesPerWorkItem(const FullyConnectedParams& params)
+        static size_t GetBatchesPerWorkItem(const fully_connected_params& params)
         {
             auto batchSize = params.output.Batch().v;
             return std::min(batchSize, static_cast<size_t>(32U));
         }
 
-        static size_t GetLocalGroupsSize(const FullyConnectedParams& params)
+        static size_t GetLocalGroupsSize(const fully_connected_params& params)
         {
             auto batchSize = params.output.Batch().v;
             return std::max(static_cast<size_t>(1U), batchSize / GetBatchesPerWorkItem(params));
         }
 
-        // how many neurons for a single batch will a single work item produce
-        static size_t GetNeuronsPerWorkItem(const FullyConnectedParams& params)
+        // how many neurons for a single batch will a single work item produce 
+        static size_t GetNeuronsPerWorkItem(const fully_connected_params& params)
         {
             auto batchSize = params.output.Batch().v;
             auto out_elements_count_per_batch = params.output.LogicalSize() / batchSize;

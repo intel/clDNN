@@ -19,19 +19,51 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class NormalizeKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // normalize_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct normalize_params : public base_params
+    {
+        normalize_params() : base_params(KernelType::NORMALIZE) {}
+
+        NormalizeMode normMode = NormalizeMode::ACROSS_SPATIAL;
+        float         epsilon = 1e-10f;
+        DataTensor    scaleTable;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k = base_params::GetParamsKey();
+
+            k.EnableNormalizeMode(normMode);
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // normalize_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct normalize_optional_params : optional_params
+    {
+        normalize_optional_params() : optional_params(KernelType::NORMALIZE) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // NormalizeKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class NormalizeKernelBase : public common_kernel_base
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using common_kernel_base::common_kernel_base;
         virtual ~NormalizeKernelBase() {}
 
         using DispatchData = CommonDispatchData;
 
     protected:
-        JitConstants GetJitConstants(const NormalizeParams& params) const;
-        DispatchData SetDefault(const NormalizeParams& params) const;
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&, float estimated_time) const;
+        JitConstants GetJitConstants(const normalize_params& params) const;
+        DispatchData SetDefault(const normalize_params& params) const;
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params&, float estimated_time) const;
     };
 }

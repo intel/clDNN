@@ -14,14 +14,14 @@
 
 
 #include "include/include_all.cl"
-
+    
 #define GLOBAL_SIZE 128
 #define LOCAL_SIZE GLOBAL_SIZE
 
 typedef struct /* Index and Value type that holds index and value used in this kernel */
 {
-    uint index;
-    UNIT_TYPE value;
+    uint index; 
+    UNIT_TYPE value; 
 } iav_type;
 
 #ifdef BATCH_AXIS
@@ -66,7 +66,7 @@ typedef struct /* Index and Value type that holds index and value used in this k
     #define UNIT_FILL_VAL UNIT_VAL_MIN
 #else
     #define COMPARE_SIGN >
-    #define UNIT_FILL_VAL UNIT_VAL_MAX
+    #define UNIT_FILL_VAL UNIT_VAL_MAX    
 #endif
 
 __attribute__((reqd_work_group_size(LOCAL_SIZE, 1, 1)))
@@ -99,7 +99,7 @@ KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output
         }
         global_index += GLOBAL_SIZE * GAP_SIZE;
         uint element_index = start_index + GLOBAL_SIZE;
-        while (global_index < offset + VALUES_NUM * GAP_SIZE)
+        while (global_index < offset + VALUES_NUM * GAP_SIZE) 
         {
             iav_type element;
             element.value = input[global_index];
@@ -124,9 +124,9 @@ KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output
         barrier(CLK_LOCAL_MEM_FENCE);
 
         __attribute__((opencl_unroll_hint))
-        for(uint scratch_offset = LOCAL_SIZE / 2; scratch_offset > 0; scratch_offset /= 2)
+        for(uint scratch_offset = LOCAL_SIZE / 2; scratch_offset > 0; scratch_offset /= 2) 
         {
-            if (local_index < scratch_offset)
+            if (local_index < scratch_offset) 
             {
                 iav_type other = scratch[local_index + scratch_offset];
                 iav_type mine = scratch[local_index];
@@ -139,7 +139,7 @@ KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output
             barrier(CLK_LOCAL_MEM_FENCE);
         }
 
-        if (local_index == 0)
+        if (local_index == 0) 
         {
             output[output_index + i] = scratch[0].index;
         }

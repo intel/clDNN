@@ -29,10 +29,11 @@
 #include "fully_connected_kernel_fb_io_block.h"
 #include "fully_connected_kernel_bf_io_input_spatial.h"
 #include "fully_connected_kernel_image_tutorial.h"
+#include "fully_connected_kernel_MMAD.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
-    FullyConnectedKernelSelctor::FullyConnectedKernelSelctor()
+    fully_connected_kernel_selector::fully_connected_kernel_selector()
     {
         Attach<FullyConnected_bfyx_Ref>();
         Attach<FullyConnected_bf_io_GEMM>();
@@ -47,9 +48,10 @@ namespace KernelSelector {
         Attach<FullyConnected_fb_io_block>();
         Attach<FullyConnected_fb_io_b8_f8>();
         Attach<FullyConnected_bf_io_input_spatial>();
+        Attach<FullyConnectedKernelMMAD>();
     }
 
-    KernelsData FullyConnectedKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData fully_connected_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetAutoTuneBestKernel(params, options, KernelType::FULLY_CONNECTED);
     }

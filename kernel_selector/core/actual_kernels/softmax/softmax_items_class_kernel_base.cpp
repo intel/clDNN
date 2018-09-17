@@ -16,7 +16,7 @@
 
 #include "softmax_items_class_kernel_base.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey SoftmaxItemsClassKernelBase::GetDefaultSupportedKey()
     {
@@ -57,11 +57,11 @@ namespace KernelSelector
         }
     }
 
-    JitConstants SoftmaxItemsClassKernelBase::GetJitConstants(const SoftmaxParams& params, DispatchData kd) const
+    JitConstants SoftmaxItemsClassKernelBase::GetJitConstants(const softmax_params& params, DispatchData kd) const
     {
         auto jit = SoftmaxKernelBase::GetJitConstants(params, kd);
 
-        switch (params.smParams.dim)
+        switch (params.dim)
         {
         case SoftmaxDim::X:
             jit.AddConstants({

@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_image_tutorial.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_image_tutorial::GetSupportedKey() const
     {
@@ -40,7 +40,7 @@ namespace KernelSelector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_image_tutorial::Parent::DispatchData> FullyConnected_image_tutorial::SetDefault(const FullyConnectedParams& params) const
+    std::unique_ptr<FullyConnected_image_tutorial::Parent::DispatchData> FullyConnected_image_tutorial::SetDefault(const fully_connected_params& params) const
     {
         auto runInfo = Parent::SetDefault(params);
         
@@ -60,7 +60,7 @@ namespace KernelSelector
         return std::move(runInfo);
     }
 
-    KernelsData FullyConnected_image_tutorial::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData FullyConnected_image_tutorial::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, DataLayout::bfyx,
         { WeightsLayout::image_2d_weights_c4_fyx_b }

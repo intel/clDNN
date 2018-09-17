@@ -16,8 +16,8 @@
 
 #include "mvn_kernel_bfyx_opt.h"
 #include "kernel_selector_utils.h"
-
-namespace KernelSelector
+ 
+namespace kernel_selector 
 {
     ParamsKey MVNKernelBfyxOpt::GetSupportedKey() const
     {
@@ -35,7 +35,7 @@ namespace KernelSelector
         return k;
     }
 
-    MVNKernelBfyxOpt::Parent::DispatchData MVNKernelBfyxOpt::SetDefault(const MVNParams& params) const
+    MVNKernelBfyxOpt::Parent::DispatchData MVNKernelBfyxOpt::SetDefault(const mvn_params& params) const
     {
         DispatchData kd;
 
@@ -43,7 +43,7 @@ namespace KernelSelector
 
         kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
-        if (params.mvnParams.mvnMode == MVNMode::WITHIN_CHANNELS)
+        if (params.mvnMode == MVNMode::WITHIN_CHANNELS)
         {
             kd.dataSetSize = input.X().v * input.Y().v;
             kd.dataSetsCount = input.Batch().v * input.Feature().v;
@@ -81,9 +81,9 @@ namespace KernelSelector
         return kd;
     }
 
-    JitConstants MVNKernelBfyxOpt::GetJitConstants(const MVNParams& params, MVNKernelBase::DispatchData kd) const
+    JitConstants MVNKernelBfyxOpt::GetJitConstants(const mvn_params& params, MVNKernelBase::DispatchData kd) const
     {
-        auto jit = MakeMVNJitConstants(params);
+        auto jit = MVNKernelBase::GetJitConstants(params, kd);
 
         jit.AddConstants({
             MakeJitConstant("ITEMS_NUM",      kd.itemsNum),
@@ -97,7 +97,7 @@ namespace KernelSelector
         return jit;
     }
 
-    KernelsData MVNKernelBfyxOpt::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData MVNKernelBfyxOpt::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         return GetCommonKernelsData(params, optParams, FORCE_PRIORITY_7);
     }

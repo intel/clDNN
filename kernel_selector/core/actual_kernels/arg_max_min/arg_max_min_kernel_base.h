@@ -19,12 +19,43 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
-	class ArgMaxMinKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // arg_max_min_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct arg_max_min_params : public base_params
+    {
+        arg_max_min_params() : base_params(KernelType::ARG_MAX_MIN) {}
+
+        ArgMaxMinAxis	argMaxMinAxis = ArgMaxMinAxis::XYF;
+        ArgMaxMinOut	argMaxMinOut = ArgMaxMinOut::MAX;
+        uint32_t		topK = 1;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k = base_params::GetParamsKey();
+            k.EnableArgMaxMinAxis(argMaxMinAxis);
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // arg_max_min_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct arg_max_min_optional_params : optional_params
+    {
+        arg_max_min_optional_params() : optional_params(KernelType::ARG_MAX_MIN) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ArgMaxMinKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	class ArgMaxMinKernelBase : public common_kernel_base
 	{
 	public:
-		using CommonKernelBase::CommonKernelBase;
+		using common_kernel_base::common_kernel_base;
 		virtual ~ArgMaxMinKernelBase() {}
 
 		struct DispatchData : public CommonDispatchData
@@ -32,9 +63,9 @@ namespace KernelSelector
 		};
 
 	protected:
-		virtual bool Validate(const Params&, const OptionalParams&) const override;
-		virtual JitConstants GetJitConstants(const ArgMaxMinParams& params) const;
-		virtual DispatchData SetDefault(const ArgMaxMinParams& params) const;
-		KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&, float estimatedTime) const;
+		virtual bool Validate(const Params&, const optional_params&) const override;
+		virtual JitConstants GetJitConstants(const arg_max_min_params& params) const;
+		virtual DispatchData SetDefault(const arg_max_min_params& params) const;
+		KernelsData GetCommonKernelsData(const Params& params, const optional_params&, float estimatedTime) const;
 	};
 }

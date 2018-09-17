@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_bs_f_bsv16_af8.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_bs_f_bsv16_af8::GetSupportedKey() const
     {
@@ -36,7 +36,7 @@ namespace KernelSelector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_bs_f_bsv16_af8::DispatchData> FullyConnected_bs_f_bsv16_af8::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_bs_f_bsv16_af8::DispatchData> FullyConnected_bs_f_bsv16_af8::SetDefault(const fully_connected_params& arg) const
     {
         auto kd = FullyConnectedBlockKernelBase::SetDefault(arg);
 
@@ -57,15 +57,15 @@ namespace KernelSelector
         return b16_layout;
     }
 
-    bool FullyConnected_bs_f_bsv16_af8::Validate(const Params& p, const OptionalParams& o) const
+    bool FullyConnected_bs_f_bsv16_af8::Validate(const Params& p, const optional_params& o) const
     {
         if (!FullyConnectedBlockKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const auto& params = static_cast<const FullyConnectedParams&>(p);
-        const auto& optParams = static_cast<const FullyConnectedOptionalParams&>(o);
+        const auto& params = static_cast<const fully_connected_params&>(p);
+        const auto& optParams = static_cast<const fully_connected_optional_params&>(o);
 
         if (!params.engineInfo.bSubGroupShortSupport && params.inputs[0].GetDType() == Datatype::F16)
         {
@@ -84,7 +84,7 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData FullyConnected_bs_f_bsv16_af8::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData FullyConnected_bs_f_bsv16_af8::GetKernelsData(const Params& params, const optional_params& optParams) const
     {   
         return GetCommonKernelsData(params, optParams, DataLayout::bs_f_bsv16__af8, { WeightsLayout::os_i_osv16__ai8 }, FORCE_PRIORITY_2);
     }

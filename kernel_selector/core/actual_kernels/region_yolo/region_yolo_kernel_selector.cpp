@@ -17,14 +17,14 @@
 #include "region_yolo_kernel_selector.h"
 #include "region_yolo_kernel_ref.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
-    RegionYoloKernelSelctor::RegionYoloKernelSelctor()
+    region_yolo_kernel_selector::region_yolo_kernel_selector()
     {
         Attach<RegionYoloKernelRef>();
     }
 
-    KernelsData RegionYoloKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData region_yolo_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::REGION_YOLO);
     }

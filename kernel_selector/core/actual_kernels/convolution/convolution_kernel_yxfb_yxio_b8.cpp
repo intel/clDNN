@@ -18,7 +18,7 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
 
     ParamsKey ConvolutionKernel_yxfb_yxio_b8::GetSupportedKey() const
@@ -41,7 +41,21 @@ namespace KernelSelector
         return k;
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b8::SetDefault(const ConvolutionParams& arg, int autoTuneIndex) const
+    namespace {
+        size_t GetOfmPerWorkitem(size_t filterOfmNum, size_t batchSize, size_t local_work_size)
+        {
+            if (((filterOfmNum * batchSize) / 16) % local_work_size)
+            {
+                return 8;
+            }
+            else
+            {
+                return 16;
+            }
+        }
+    }
+
+    ConvolutionKernelBase::DispatchData ConvolutionKernel_yxfb_yxio_b8::SetDefault(const convolution_params& arg, int autoTuneIndex) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg, autoTuneIndex);
 
@@ -52,30 +66,23 @@ namespace KernelSelector
         runInfo.lws1 = 1;
         runInfo.lws2 = 1;
 
-        if (((filterOfmNum * batchSize) / 16) % runInfo.lws0)
-        {
-            runInfo.cldnnStyle.ofmPerWorkItem = 8;
-        }
-        else
-        {
-            runInfo.cldnnStyle.ofmPerWorkItem = 16;
-        }
+        size_t ofmPerWorkItem = GetOfmPerWorkitem(filterOfmNum, batchSize, runInfo.lws0);
 
-        runInfo.gws0 = filterOfmNum * batchSize / (runInfo.cldnnStyle.ofmPerWorkItem * runInfo.cldnnStyle.batchesPerWorkItem);
+        runInfo.gws0 = filterOfmNum * batchSize / ofmPerWorkItem;
 
         runInfo.effiency = FORCE_PRIORITY_9;
         
         return runInfo;
     }
 
-    bool ConvolutionKernel_yxfb_yxio_b8::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernel_yxfb_yxio_b8::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
+        const convolution_params& params = static_cast<const convolution_params&>(p);
 
         if (!CheckPitchForSplitOnly(params))
         {
@@ -109,7 +116,19 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData ConvolutionKernel_yxfb_yxio_b8::GetKernelsData(const Params& params, const OptionalParams& options) const
+    JitConstants ConvolutionKernel_yxfb_yxio_b8::GetJitConstants(const convolution_params& params, const DispatchData& kd) const
+    {
+        JitConstants jits = ConvolutionKernelBase::GetJitConstants(params, kd);
+
+        size_t ofmPerWorkItem = GetOfmPerWorkitem(params.weights.OFM().v, params.output.Batch().v, kd.lws0);
+
+        jits.AddConstant(MakeJitConstant("OFM_PER_WORK_ITEM", ofmPerWorkItem));
+        jits.AddConstant(MakeJitConstant("LOCAL_WORK_GROUP_SIZE", kd.lws0));
+
+        return jits;
+    }
+
+    KernelsData ConvolutionKernel_yxfb_yxio_b8::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

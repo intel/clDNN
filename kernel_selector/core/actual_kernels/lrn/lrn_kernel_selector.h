@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class LRNKernelSelctor : public KernelSelctorBase
+    class lrn_kernel_selector : public kernel_selector_base
     {
     public:
-        static LRNKernelSelctor &Instance() {
-            static LRNKernelSelctor instance_;
+        static lrn_kernel_selector &Instance() {
+            static lrn_kernel_selector instance_;
             return instance_;
         }
 
-        LRNKernelSelctor();
+        lrn_kernel_selector();
 
-        virtual ~LRNKernelSelctor() {}
+        virtual ~lrn_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

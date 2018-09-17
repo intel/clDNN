@@ -18,7 +18,7 @@
 
 #include "convolution_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class ConvolutionKernel_yxfb_Ref : public ConvolutionKernelBase
     {
@@ -26,11 +26,11 @@ namespace KernelSelector {
         ConvolutionKernel_yxfb_Ref() : ConvolutionKernelBase("convolution_gpu_yxfb_ref") {}
         virtual ~ConvolutionKernel_yxfb_Ref() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override
+        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override
         { 
             return{ 
                 WeightsLayout::yxio,

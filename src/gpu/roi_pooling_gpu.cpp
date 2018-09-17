@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "roi_pooling/roi_pooling_kernel_selector.h"
+#include "roi_pooling/roi_pooling_kernel_ref.h"
 
 namespace cldnn { namespace gpu {
 
@@ -73,22 +75,22 @@ public:
         }
         CLDNN_ERROR_BOOL(arg.id(), "Batching", !hasSingleBatchOutput(arg.input()), "PS/ RoI Pooling doesn't support batching.");
 
-        auto roi_params = get_default_params<kernel_selector::roi_pooling_v1_params>(arg);
+        auto roi_params = get_default_params<kernel_selector::roi_pooling_params>(arg);
         auto roi_optional_params = get_default_optional_params<kernel_selector::roi_pooling_optional_params>(arg.get_program());
 
         const auto& out = roi_params.output;
-
+        
         const auto roi_bfyx = convert_data_tensor(rois_layout);
         const auto roi_bf = roi_bfyx.FlattenFeatureAndSpatials();
         roi_params.inputs.push_back(roi_bf);
         roi_params.output = { out.GetDims(), out.GetDType(), kernel_selector::data_layout::brfyx, out.GetViewOffset(), out.PhysicalSize(), out.GetPaddedVal() }; // TOOD: it's an hack - cldnn doesn't support roi pooling with batching
-        roi_params.roiParams.mode         = primitive->mode == pooling_mode::max ? kernel_selector::pool_type::MAX : kernel_selector::pool_type::AVG;
-        roi_params.roiParams.pooledWidth  = primitive->pooled_width;
-        roi_params.roiParams.pooledHeight = primitive->pooled_height;
-        roi_params.roiParams.spatialScale = primitive->spatial_scale;
-        roi_params.roiParams.groupSize    = group_sz;
+        roi_params.mode         = primitive->mode == pooling_mode::max ? kernel_selector::pool_type::MAX : kernel_selector::pool_type::AVG;
+        roi_params.pooledWidth  = primitive->pooled_width;
+        roi_params.pooledHeight = primitive->pooled_height;
+        roi_params.spatialScale = primitive->spatial_scale;
+        roi_params.groupSize    = group_sz;
 
-        auto& kernel_selector = kernel_selector::roi_pooling_v1_kernel_selector::Instance();
+        auto& kernel_selector = kernel_selector::roi_pooling_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(roi_params, roi_optional_params);
 
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");

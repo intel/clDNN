@@ -20,10 +20,12 @@
 #include "tensor_type.h"
 #include "kernel_selector_common.h"
 #include "reorder/reorder_weights_kernel_selector.h"
+#include "reorder/reorder_kernel_base.h"
+#include "convolution/convolution_params.h"
 
-namespace KernelSelector { namespace
-{
-    inline bool CheckConvolutionPaddedInputDesc(const ConvolutionParams& params, const DataTensor& reqDesc)
+namespace kernel_selector {
+
+    inline bool CheckConvolutionPaddedInputDesc(const convolution_params& params, const DataTensor& reqDesc)
     {
         assert(params.inputs.size() == 1);
 
@@ -39,33 +41,30 @@ namespace KernelSelector { namespace
             reqDesc.Feature().pad.after     <= params.inputs[0].Feature().pad.after &&
             reqDesc.Batch().pad.after       <= params.inputs[0].Batch().pad.after;
 
-        const auto& cp = params.convParams;
-        properPadding &= ((cp.padding.x == 0 && cp.padding.y == 0) || params.inputs[0].GetPaddedVal() == 0.f);
+        properPadding &= ((params.padding.x == 0 && params.padding.y == 0) || params.inputs[0].GetPaddedVal() == 0.f);
 
         return properPadding;
     }
 
-    inline DataTensor GetConvolutionBFYXPaddedTensor(const ConvolutionParams& params)
+    inline DataTensor GetConvolutionBFYXPaddedTensor(const convolution_params& cp)
     {
-        assert(params.inputs.size() == 1);
-        assert(params.inputs[0].GetDims().size() == 4U);
+        assert(cp.inputs.size() == 1);
+        assert(cp.inputs[0].GetDims().size() == 4U);
 
-        DataTensor t = params.inputs[0];
+        DataTensor t = cp.inputs[0];
         std::vector<Tensor::Pad> pad{ { 0,0 },{ 0,0 },{ 0,0 },{ 0,0 } };
-
-        const auto& cp = params.convParams;
 
         pad[0].before = cp.padding.x;
         pad[1].before = cp.padding.y;
 
-        const auto inputLimitX = (params.output.X().v - 1) * cp.stride.x + (cp.filterSize.x - 1) * cp.dilation.x + 1;
-        const auto inputLimitY = (params.output.Y().v - 1) * cp.stride.y + (cp.filterSize.y - 1) * cp.dilation.y + 1;
+        const auto inputLimitX = (cp.output.X().v - 1) * cp.stride.x + (cp.filterSize.x - 1) * cp.dilation.x + 1;
+        const auto inputLimitY = (cp.output.Y().v - 1) * cp.stride.y + (cp.filterSize.y - 1) * cp.dilation.y + 1;
 
         pad[0].after = (size_t)std::max((int)inputLimitX - (int)t.X().v - (int)pad[0].before, (int)0);
         pad[1].after = (size_t)std::max((int)inputLimitY - (int)t.Y().v - (int)pad[1].before, (int)0);
 
         Tensor::NDims dims(4);
-        const Tensor::NDims& orgDims = params.inputs[0].GetDims();
+        const Tensor::NDims& orgDims = cp.inputs[0].GetDims();
         size_t pitch = 1;
         for (size_t i = 0; i < dims.size(); i++)
         {
@@ -78,10 +77,10 @@ namespace KernelSelector { namespace
         return{dims, t.GetDType(), t.GetLayout()};
     }
 
-    inline bool CovolutionCheckInput(const Params& p, const OptionalParams& o)
+    inline bool CovolutionCheckInput(const Params& p, const optional_params& o)
     {
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
-        const ConvolutionOptionalParams& optParams = static_cast<const ConvolutionOptionalParams&>(o);
+        const convolution_params& params = static_cast<const convolution_params&>(p);
+        const convolution_optional_params& optParams = static_cast<const convolution_optional_params&>(o);
 
         const auto req_input = GetConvolutionBFYXPaddedTensor(params);
         const bool bProperInputDesc = CheckConvolutionPaddedInputDesc(params, req_input);
@@ -95,7 +94,7 @@ namespace KernelSelector { namespace
         return true;
     }
 
-    inline bool CovolutionUpdateInputParams(ConvolutionParams& params)
+    inline bool CovolutionUpdateInputParams(convolution_params& params)
     {
         const auto req_input = GetConvolutionBFYXPaddedTensor(params);
         const bool bProperInputDesc = CheckConvolutionPaddedInputDesc(params, req_input);
@@ -139,7 +138,7 @@ namespace KernelSelector { namespace
         return bProperWeightsLayout;
     }
 
-    inline std::vector<size_t> GetImageSizes(const KernelSelector::WeightsTensor& dimensions, const WeightsLayout layout)
+    inline std::vector<size_t> GetImageSizes(const kernel_selector::WeightsTensor& dimensions, const WeightsLayout layout)
     {
         auto ofm = dimensions.OFM().v;
         auto ifm = dimensions.IFM().v;
@@ -160,7 +159,7 @@ namespace KernelSelector { namespace
         }
     }
 
-    inline bool CheckImageSize(const WeightBiasParams& newParams, const WeightsLayout layout)
+    inline bool CheckImageSize(const weight_bias_params& newParams, const WeightsLayout layout)
     {
         if (!newParams.engineInfo.bImageSupport)
             return false;
@@ -175,7 +174,7 @@ namespace KernelSelector { namespace
         return true;
     }
 
-    inline bool UpdateWeightsParams(WeightBiasParams& newParams, const OptionalParams& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams)
+    inline bool UpdateWeightsParams(weight_bias_params& newParams, const optional_params& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams)
     {
         //validate if weights type is image and if device supports requested sizes
         for (auto& requested_layout : layouts)
@@ -186,7 +185,7 @@ namespace KernelSelector { namespace
                     return false;
             }
         }
-        const WeightsBiasOptionalParams& optParams = static_cast<const WeightsBiasOptionalParams&>(options);
+        const weight_bias_optional_params& optParams = static_cast<const weight_bias_optional_params&>(options);
 
         const auto dtype = DataTypeToWeightsType(newParams.inputs[0].GetDType());
         bool bProperWeights = CheckWeights(newParams.weights, dtype, layouts);
@@ -199,13 +198,13 @@ namespace KernelSelector { namespace
             }
 
             auto& reorderKS = ReorderWeightsKernelSelctor::Instance();
-            ReorderWeightsParams r_params;
+            reorder_weights_params r_params;
 
             r_params.layerID = newParams.layerID + "_reorder_";
-            r_params.reorderParams.input = newParams.weights;
-            r_params.reorderParams.output = newParams.weights.TransformIgnorePadding(layouts[0], dtype);
+            r_params.input = newParams.weights;
+            r_params.output = newParams.weights.TransformIgnorePadding(layouts[0], dtype);
 
-            ReorderOptionalParams op;
+            reorder_optional_params op;
             KernelsData kernels_data = reorderKS.GetBestKernels(r_params, op);
 
             if (kernels_data.empty())
@@ -215,12 +214,12 @@ namespace KernelSelector { namespace
 
             weightsReorderParams.engine = WeightsReorderParams::Engine::GPU;
             weightsReorderParams.clKernel = std::make_shared<clKernelData>(kernels_data[0].kernels[0]);
-            weightsReorderParams.newBufferSize = r_params.reorderParams.output.PhysicalSizeInBytes();
+            weightsReorderParams.newBufferSize = r_params.output.PhysicalSizeInBytes();
             weightsReorderParams.dtype = dtype;
-            weightsReorderParams.destLayout = r_params.reorderParams.output.GetLayout();
-            weightsReorderParams.toImageType = Tensor::IsImageType(r_params.reorderParams.output.GetLayout());
+            weightsReorderParams.destLayout = r_params.output.GetLayout();
+            weightsReorderParams.toImageType = Tensor::IsImageType(r_params.output.GetLayout());
             
-            newParams.weights = r_params.reorderParams.output;
+            newParams.weights = r_params.output;
         }
 
         return true;
@@ -297,7 +296,7 @@ namespace KernelSelector { namespace
         return lws;
     }
 
-    inline bool CheckInputsOutputNoPitchSameDims(const BaseParams& params)
+    inline bool CheckInputsOutputNoPitchSameDims(const base_params& params)
     {
         bool no_pitch_same_dims = true;
 
@@ -315,4 +314,4 @@ namespace KernelSelector { namespace
 
         return no_pitch_same_dims;
     }
-} }
+}

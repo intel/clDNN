@@ -42,6 +42,10 @@ layout deconvolution_inst::calc_output_layout(deconvolution_node const& node)
 
     auto number_of_features = weights_layout.size.batch[0] * static_cast<int32_t>(split);
 
+    //Deconvolution is used for convolution backward pass, but number of features will differ then
+    if(desc->gradient())
+        number_of_features = weights_layout.size.feature[0] * static_cast<int32_t>(split);
+
     if (desc->with_output_size)
     {
         CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined output spatial X", desc->output_size.spatial[0], "value 0", 0, "User-defined size of output layout must be positive (>= 1)");
@@ -88,6 +92,8 @@ std::string deconvolution_inst::to_string(deconvolution_node const& node)
         ss_biases << node.bias(i).id();
         ss_biases << ", count: " << node.bias(i).get_output_layout().count();
         i != (desc->bias.size() - 1) ? ss_biases << ", " : ss_biases << "";
+        if (node.get_depthwise_sep_opt())
+            break;
     }
 
     json_composite deconv_info;
@@ -113,10 +119,10 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
     : parent(network, node)
 {
     auto stride = argument.stride;
-    auto output_size = output_memory().get_layout().size;
 
-    auto input_inst = input_memory().get_layout();
-    auto output_inst = output_memory().get_layout();
+    auto input_inst = node.input().get_output_layout();
+    auto output_inst = node.get_output_layout();
+    auto output_size = output_inst.size;
 
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_inst.size.raw.size(), "output size", output_inst.size.raw.size(), "Input/output number of dimension does not match.");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Stride size", stride.raw.size(), "output size", output_inst.size.raw.size(), "Stride/output number of dimension does not match.");
@@ -124,13 +130,12 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
     auto split = node.get_split();
     for (decltype(split) j = 0; j < split; j++)
     {
-        auto& filter_mem = weights_memory(j);
-        auto& filter_inst = filter_mem.get_layout(); //deconvolution filter
+        auto filter_inst = node.weights(j).get_output_layout(); //deconvolution filter
         auto input_offset = argument.input_offset;
 
         if (argument.bias.size() != 0)
         {
-            auto& bias_inst = bias_memory(j).get_layout();
+            auto bias_inst = node.bias(j).get_output_layout();
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias batch[0]", bias_inst.size.batch[0], "dimension size", 1, "Batch[0] of bias should be 1. Bias isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias feature[0]", bias_inst.size.feature[0], "dimension size", 1, "Feature[0] of bias should be 1. Bias isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[1]", bias_inst.size.spatial[1], "dimension size", 1, "Spatial[1] of bias should be 1. Bias isn't 1D vector.");

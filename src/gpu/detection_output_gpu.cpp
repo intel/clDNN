@@ -45,7 +45,7 @@ namespace {
 
         bounding_box() : xmin(0), ymin(0), xmax(0), ymax(0) {}
 
-        bounding_box(const float xmin, const float ymin, const float xmax, const float ymax) :
+        bounding_box(const float xmin, const float ymin, const float xmax, const float ymax) : 
             xmin(xmin), ymin(ymin), xmax(xmax), ymax(ymax) {}
 
         // Computes the area of a bounding box.
@@ -68,7 +68,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
         const bounding_box& prior_bbox, const std::array<float, PRIOR_BOX_SIZE>& prior_variance,
         const prior_box_code_type code_type, const bool variance_encoded_in_target,
         const bounding_box& bbox, bounding_box* decoded_bbox,
-        const bool prior_is_normalized, const size_t image_width, const size_t image_height)
+        const bool prior_is_normalized, const size_t image_width, const size_t image_height, const bool clip)
     {
         float prior_bbox_xmin = prior_bbox.xmin;
         float prior_bbox_ymin = prior_bbox.ymin;
@@ -170,11 +170,19 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                 assert(0);
             }
         }
+
+        if (clip)
+        {
+            decoded_bbox->xmin = std::max(0.0f, std::min(1.0f, decoded_bbox->xmin));
+            decoded_bbox->ymin = std::max(0.0f, std::min(1.0f, decoded_bbox->ymin));
+            decoded_bbox->xmax = std::max(0.0f, std::min(1.0f, decoded_bbox->xmax));
+            decoded_bbox->ymax = std::max(0.0f, std::min(1.0f, decoded_bbox->ymax));
+        }
     }
 
     static void apply_nms(const std::vector<bounding_box>& bboxes,
         std::vector<std::pair<float,int>>& scores,
-        const float nms_threshold, const float eta, const int top_k)
+        const float nms_threshold, const float eta, const int top_k) 
     {
         // Sort the scores in descending order and keep top_k scores if needed.
         if ((top_k != -1) && ((int)scores.size() > top_k))
@@ -314,7 +322,8 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                 for (std::pair<float,int> score_prior : label_detections)
                 {
                     out_ptr[count * DETECTION_OUTPUT_ROW_SIZE] = (dtype)(float)image;
-                    out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 1] = (dtype)(float)label;
+                    out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 1] = args.decrease_label_id ? ((dtype)((float)label - 1.0f))
+                                                                                            : (dtype)(float)label;
                     out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 2] = (dtype)score_prior.first;
                     const bounding_box& bbox = bboxes[score_prior.second];
                     out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 3] = (dtype)bbox.xmin;
@@ -341,7 +350,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
     }
 
     // Compute the linear index taking the padding into account.
-    static inline int get_linear_feature_index(const int batch_id, const int feature_id, const int input_buffer_size_f, const int input_buffer_size_y,
+    static inline int get_linear_feature_index(const int batch_id, const int feature_id, const int input_buffer_size_f, const int input_buffer_size_y, 
         const int input_buffer_size_x, const int input_padding_lower_y, const int input_padding_lower_x)
     {
         // This helper function assumes input layout with x_size = 1 and y_size = 1;
@@ -395,7 +404,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                                                                                         input_buffer_size_x, input_padding_lower_y, input_padding_lower_x)]);
                     bboxes[prior].ymax = (float)(location_data[get_linear_feature_index(image, idx + cls * PRIOR_BOX_SIZE + 3, input_buffer_size_f, input_buffer_size_y,
                                                                                         input_buffer_size_x, input_padding_lower_y, input_padding_lower_x)]);
-                }
+                }   
             }
         }
     }
@@ -452,7 +461,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
             label_to_scores.resize(num_classes);
             int idx = get_linear_feature_index(image, 0, input_buffer_size_f, input_buffer_size_y,
                 input_buffer_size_x, input_padding_lower_y, input_padding_lower_x);
-
+            
             if (stride == 1 && std::is_same<dtype, float>::value)
             {
                 float const* confidence_ptr_float = (float const*)(&(*confidence_data));
@@ -545,7 +554,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                                                  args.prior_info_size, args.prior_coordinates_offset,
                                                  prior_bboxes, prior_variances);
 
-        // Create the decoded bounding boxes according to locations predictions and prior-boxes.
+        // Create the decoded bounding boxes according to locations predictions and prior-boxes. 
         for (int image = 0; image < num_of_images; ++image)
         {
             std::vector<std::vector<bounding_box>>& bboxes_per_image = bboxes[image];
@@ -561,14 +570,14 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
                 const std::vector<bounding_box>& label_loc_preds = locations[image][label];
                 int label_loc_preds_size = (int)label_loc_preds.size();
                 assert((int)prior_bboxes.size() == label_loc_preds_size);
-
+                
                 bboxes_per_image[label].clear();
 
                 for (int i = 0; i < label_loc_preds_size; ++i)
                 {
                     bounding_box decoded_bbox;
                     decode_bounding_box(prior_bboxes[i], prior_variances[i], args.code_type, args.variance_encoded_in_target, label_loc_preds[i], &decoded_bbox,
-                                        args.prior_is_normalized, args.input_width, args.input_height);
+                                        args.prior_is_normalized, args.input_width, args.input_height, args.clip);
                     bboxes_per_image[label].emplace_back(decoded_bbox);
                 }
             }
@@ -580,7 +589,7 @@ struct detection_output_gpu : typed_primitive_impl<detection_output>
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, detection_output_inst& instance) override
     {
-        for (auto& a : events)
+        for (auto& a : events) 
         {
             a->wait();
         }

@@ -44,7 +44,7 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
     if (desc->mode == pooling_mode::max_with_argmax)
     {
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Argmax primitive", static_cast<size_t>(desc->argmax.empty()), "should not be empty", static_cast<size_t>(0), "Argmax primitive not present despite max_with_argmax mode.");
-
+        
         auto argmax_layout = node.argmax().get_output_layout();
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Argmax data type", static_cast<size_t>(argmax_layout.data_type), "expected to be fp32", static_cast<size_t>(data_types::f32), "Argmax data type is not fp32.");
         CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input_layout.format", input_layout.format.value, "argmax_layout.format", argmax_layout.format);

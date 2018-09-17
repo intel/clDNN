@@ -22,7 +22,7 @@
 #include <iostream>
 #endif
 
-namespace KernelSelector { namespace gpu { namespace cache {
+namespace kernel_selector { namespace gpu { namespace cache {
 
 primitive_db::primitive_db() : primitives({
     #include "ks_primitive_db.inc"

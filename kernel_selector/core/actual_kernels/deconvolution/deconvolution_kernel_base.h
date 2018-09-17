@@ -16,22 +16,73 @@
 
 #pragma once
 
-#include "common_kernel_base.h"
+#include "weight_bias_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class DeconvolutionKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // deconvolution_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct deconvolution_params : public weight_bias_params
+    {
+        deconvolution_params() : weight_bias_params(KernelType::DECONVOLUTION) {}
+
+        uSize    filterSize;
+        uSize    stride;
+        uSize    dilation;
+        uSize    padding;
+        uint32_t split = 1;
+        bool     depthwiseSeparableOpt = false;
+
+        virtual std::string to_string() const override;
+
+        virtual ParamsKey GetParamsKey() const override
+        {
+            ParamsKey k = weight_bias_params::GetParamsKey();
+
+            if (split > 1)
+            {
+                k.EnableSplitSupport();
+            }
+
+            if (dilation.x != 1 ||
+                dilation.y != 1)
+            {
+                k.EnableDilation();
+            }
+
+            if (depthwiseSeparableOpt)
+            {
+                k.EnableDepthwiseSeparableOpt();
+            }
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // deconvolution_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct deconvolution_optional_params : weight_bias_optional_params
+    {
+        deconvolution_optional_params() : weight_bias_optional_params(KernelType::DECONVOLUTION) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // DeconvolutionKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class DeconvolutionKernelBase : public WeightBiasKernelBase
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using WeightBiasKernelBase::WeightBiasKernelBase;
         virtual ~DeconvolutionKernelBase() {}
 
         using DispatchData = CommonDispatchData;
     
     protected:
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const;
-        virtual JitConstants GetJitConstants(const DeconvolutionParams& params) const;
-        virtual DispatchData SetDefault(const DeconvolutionParams& params) const;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const;
+        virtual JitConstants GetJitConstants(const deconvolution_params& params) const;
+        virtual DispatchData SetDefault(const deconvolution_params& params) const;
     };
 }

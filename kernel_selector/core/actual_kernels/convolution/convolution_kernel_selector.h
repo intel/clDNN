@@ -19,20 +19,20 @@
 #include "kernel_selector.h"
 #include "kernel_runner_interface.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class ConvolutionKernelSelctor : public KernelSelctorBase
+    class convolution_kernel_selector : public kernel_selector_base
     {
     public:
-        static ConvolutionKernelSelctor &Instance() {
-            static ConvolutionKernelSelctor instance_;
+        static convolution_kernel_selector &Instance() {
+            static convolution_kernel_selector instance_;
             return instance_;
         }
 
-        ConvolutionKernelSelctor();
+        convolution_kernel_selector();
 
-        virtual ~ConvolutionKernelSelctor() {}
+        virtual ~convolution_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

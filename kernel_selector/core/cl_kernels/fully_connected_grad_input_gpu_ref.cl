@@ -25,10 +25,10 @@ KERNEL(fully_connected_grad_input_gpu_ref)(
     const uint x            = get_global_id(1);
     const uint y            = get_global_id(2);
     const uint b_f          = get_global_id(0);
-    const uint batch_id     = b_f / INPUT0_FEATURE_NUM;
-    const uint feature_id   = b_f % INPUT0_FEATURE_NUM;
+    const uint batch_id     = b_f % INPUT0_BATCH_NUM;
+    const uint feature_id   = b_f / INPUT0_BATCH_NUM;
 
-    if(b_f >= INPUT0_FEATURE_NUM * INPUT0_BATCH_NUM)
+    if(b_f >= INPUT1_FEATURE_NUM * INPUT0_BATCH_NUM)
         return;
 
     ACCUMULATOR_TYPE result = 0;
@@ -40,9 +40,6 @@ KERNEL(fully_connected_grad_input_gpu_ref)(
 
         result += (ACCUMULATOR_TYPE)(input_grad[input_grad_idx] * weights[filter_idx]);
     }
-
-    const uint input_idx = GET_DATA_INDEX(INPUT1, batch_id, feature_id, y, x);
-    result *= ACTIVATION((UNIT_TYPE)input[input_idx], NL_M, NL_N);
 
     const uint output_idx = GET_DATA_INDEX(OUTPUT, batch_id, feature_id, y, x);
     output[output_idx] = result;

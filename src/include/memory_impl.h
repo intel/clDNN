@@ -37,6 +37,7 @@ struct memory_impl : refcounted_obj<memory_impl>
     }
     virtual void* lock() = 0;
     virtual void unlock() = 0;
+    virtual void fill(unsigned char pattern, event_impl::ptr ev) = 0;
     size_t size() const { return _layout.bytes_count(); }
     virtual bool is_allocated_by(const engine_impl& engine) const { return &engine == _engine.get(); }
     const refcounted_obj_ptr<engine_impl>& get_engine() const { return _engine; }
@@ -55,6 +56,7 @@ struct simple_attached_memory : memory_impl
 
     void* lock() override { return _pointer; }
     void unlock() override {}
+    void fill(unsigned char, event_impl::ptr) override {}
 private:
     void* _pointer;
 };

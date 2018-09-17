@@ -376,7 +376,7 @@ TEST(reorder_gpu_f16, basic_subtract_f32_output_f32) {
                          -2.5f,  2.2f,
                          10.0f,  7.0f
     };
-
+    
     auto output_ptr = output.pointer<float>();
     for (int i = 0; i < 16; i++)
     {
@@ -454,13 +454,13 @@ TEST(reorder_gpu_f16, basic_subtract_value) {
 
     half_t answers[16] = { half_t(0x3800), half_t(0x3E00), //  0.5f, 1.5f,
                            half_t(0x4100), half_t(0x4300), //  2.5f, 3.5f,
-
+                            
                            half_t(0x4100), half_t(0x4300), //  2.5f, 3.5f,
                            half_t(0x4480), half_t(0x4580), //  4.5f, 5.5f,
-
+                            
                            half_t(0xB800), half_t(0xB800), // -0.5f, -0.5f,
                            half_t(0x0000), half_t(0xBC00), //  0.0f, -1.0f,
-
+                            
                            half_t(0xBC00), half_t(0x4166), // -1.0f,  2.7f,
                            half_t(0x48C0), half_t(0x4580)  //  9.5f,  5.5f
     };
@@ -616,7 +616,7 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
 	//  Intermediate        : 1x4x5x5 (FP32) {different mem format and ordering}
 	//  Output              : 1x3x5x5 (FP32) {using crop layer to reduce feature dimention and drop A from RGBA}
 	//
-	//  Output is expected to contain the same value as input
+	//  Output is expected to contain the same value as input 
 	//
 	const int kernel_size = 5;
 	const int feature_size = 4;
@@ -642,7 +642,7 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
 	// Allocate memory for input image.
 	auto input_memory = memory::allocate(engine, in_layout);
 	set_values(input_memory, input_i8);
-
+    
     // Create input_layout description
 	// "input" - is the primitive id inside topology
 	input_layout input("input", in_layout);
@@ -698,7 +698,7 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
     std::vector<uint8_t> testinput;// This will be used to direct access elements of test input in the next test
     for (auto it = input_i8.begin(); it < input_i8.end(); it++)
     {
-
+        
         uint8_t val = *it;
         testinput.push_back(val); // This will be used to direct access elements of test input in the next test
         size_t current_feature = source_index % feature_size;
@@ -1150,7 +1150,7 @@ public:
     static std::vector<std::tuple<test_params*, cldnn::primitive*>> generate_specific_test_params()
     {
         generic_test::generate_generic_test_params(all_generic_params);
-
+        
         for (const auto& test_param : all_generic_params)
         {
             cldnn::tensor input_tensor = test_param->input_layouts[0].size;
@@ -1173,7 +1173,7 @@ public:
             {
                 //TODO: check input + output padding.
                 all_test_params.push_back(std::make_tuple(test_param, new reorder("reorder", "input0", output_layout, subtract)));
-
+                
             }
         }
 
@@ -1197,7 +1197,7 @@ public:
         std::vector<float> subtract_per_feature = reorder->subtract_per_feature;
         assert(mean == "");
         assert(subtract_per_feature.size() == 0);
-
+        
         auto output = memory::allocate(engine, cldnn::layout(reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
 
         cldnn::pointer<InputType> input_mem = inputs[0].pointer<InputType>();

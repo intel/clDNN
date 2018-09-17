@@ -23,7 +23,7 @@ KERNEL(pooling_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output,
     const uint bf   = (uint)get_global_id(2);
     const uint f    = bf % INPUT0_FEATURE_NUM;
     const uint b    = bf / INPUT0_FEATURE_NUM;
-
+    
     if (x >= INPUT0_SIZE_X)
     {
         return;
@@ -47,8 +47,8 @@ KERNEL(pooling_gpu)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output,
     const uint b_output = pool_idx / OUTPUT_SIZE_X / OUTPUT_SIZE_Y / OUTPUT_FEATURE_NUM;
 
     const uint output_pos = GET_DATA_INDEX(OUTPUT, b_output, f_output, y_output, x_output);
-    output[output_pos] = ACTIVATION(input[input_id], NL_M ,NL_N);
+    output[output_pos] += ACTIVATION(input[input_id], NL_M ,NL_N);
 #else
-    output[pool_idx] = ACTIVATION(input[input_id], NL_M ,NL_N);
+    output[pool_idx] += ACTIVATION(input[input_id], NL_M ,NL_N);
 #endif
 }

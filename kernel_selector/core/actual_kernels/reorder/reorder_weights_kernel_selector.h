@@ -18,9 +18,9 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class ReorderWeightsKernelSelctor : public KernelSelctorBase
+    class ReorderWeightsKernelSelctor : public kernel_selector_base
     {
     public:
         static ReorderWeightsKernelSelctor &Instance() {
@@ -32,6 +32,6 @@ namespace KernelSelector
 
         virtual ~ReorderWeightsKernelSelctor() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

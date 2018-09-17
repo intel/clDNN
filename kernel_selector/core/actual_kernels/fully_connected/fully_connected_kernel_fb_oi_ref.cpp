@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_fb_oi_ref.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_fb_oi_ref::GetSupportedKey() const
     {
@@ -36,7 +36,7 @@ namespace KernelSelector
         return k;
     }
 
-    KernelsData FullyConnected_fb_oi_ref::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData FullyConnected_fb_oi_ref::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         return GetCommonKernelsData(params, optParams, DataLayout::fb, { WeightsLayout::oi });
     }

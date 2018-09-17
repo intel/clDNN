@@ -16,7 +16,7 @@ bool user_event::get_profiling_info_impl(std::list<cldnn_profiling_interval>& in
     {
         return false;
     }
-
+    
     info.push_back({ "duration", static_cast<uint64_t>(_duration->value().count()) });
     return true;
 }

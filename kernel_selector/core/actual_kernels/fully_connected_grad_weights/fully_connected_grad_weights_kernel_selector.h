@@ -17,21 +17,21 @@
 #pragma once
 
 #include "kernel_selector.h"
-
-namespace KernelSelector
+ 
+namespace kernel_selector 
 {
-    class FullyConnectedGradWeightsKernelSelctor : public KernelSelctorBase
+    class fully_connected_grad_weights_kernel_selector : public kernel_selector_base
     {
     public:
-        static FullyConnectedGradWeightsKernelSelctor &Instance() {
-            static FullyConnectedGradWeightsKernelSelctor instance_;
+        static fully_connected_grad_weights_kernel_selector &Instance() {
+            static fully_connected_grad_weights_kernel_selector instance_;
             return instance_;
         }
 
-        FullyConnectedGradWeightsKernelSelctor();
+        fully_connected_grad_weights_kernel_selector();
 
-        virtual ~FullyConnectedGradWeightsKernelSelctor() {}
+        virtual ~fully_connected_grad_weights_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

@@ -16,11 +16,15 @@
 
 #include "softmax_kernel_base.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    JitConstants SoftmaxKernelBase::GetJitConstants(const SoftmaxParams& params, SoftmaxKernelBase::DispatchData kd) const
+    JitConstants SoftmaxKernelBase::GetJitConstants(const softmax_params& params, SoftmaxKernelBase::DispatchData kd) const
     {
-        JitConstants mem_consts = MakeSoftmaxJitConstants(params);
+        JitConstants mem_consts = MakeBaseParamsJitConstants(params);
+
+        mem_consts.AddConstants({
+            MakeJitConstant("ALONG_" + toString(params.dim), "")
+        });
 
         mem_consts.AddConstants({
             MakeJitConstant("ITEMS_NUM",      kd.itemsNum),
@@ -34,7 +38,7 @@ namespace KernelSelector
         return mem_consts;
     }
 
-    SoftmaxKernelBase::DispatchData SoftmaxKernelBase::SetDefault(const SoftmaxParams& params, const OptionalParams&) const
+    SoftmaxKernelBase::DispatchData SoftmaxKernelBase::SetDefault(const softmax_params& params, const optional_params&) const
     {
         DispatchData runInfo;
 
@@ -57,7 +61,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    bool SoftmaxKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    bool SoftmaxKernelBase::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::SOFT_MAX ||
             o.GetType() != KernelType::SOFT_MAX)
@@ -68,15 +72,15 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData SoftmaxKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData SoftmaxKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
 
-        const SoftmaxParams& orgParams = static_cast<const SoftmaxParams&>(params);
-        KernelData kd = KernelData::Default<SoftmaxParams>(params);
+        const softmax_params& orgParams = static_cast<const softmax_params&>(params);
+        KernelData kd = KernelData::Default<softmax_params>(params);
 
         auto runInfo = SetDefault(orgParams, options);
         auto cldnn_jit = GetJitConstants(orgParams, runInfo);
@@ -91,14 +95,14 @@ namespace KernelSelector
         return{ kd };
     }
 
-    bool SoftmaxKernelBaseBF::Validate(const Params& p, const OptionalParams& o) const
+    bool SoftmaxKernelBaseBF::Validate(const Params& p, const optional_params& o) const
     {
         if (!Parent::Validate(p, o))
         {
             return false;
         }
 
-        const SoftmaxParams& params = static_cast<const SoftmaxParams&>(p);
+        const softmax_params& params = static_cast<const softmax_params&>(p);
         const auto& input = params.inputs[0];
 
         if (params.activationFunc != ActivationFunction::NONE)
@@ -112,7 +116,7 @@ namespace KernelSelector
             return true;
         }
 
-        switch (params.smParams.dim)
+        switch (params.dim)
         {
         case SoftmaxDim::X:         return input.Y().v == 1 && input.Feature().v == 1;
         case SoftmaxDim::Y:         return input.X().v == 1 && input.Feature().v == 1;
@@ -121,7 +125,7 @@ namespace KernelSelector
         }
     }
 
-    SoftmaxKernelBase::DispatchData SoftmaxKernelBaseBF::SetDefault(const SoftmaxParams& params, const OptionalParams& options) const
+    SoftmaxKernelBase::DispatchData SoftmaxKernelBaseBF::SetDefault(const softmax_params& params, const optional_params& options) const
     {
         const auto& input = params.inputs[0];
 

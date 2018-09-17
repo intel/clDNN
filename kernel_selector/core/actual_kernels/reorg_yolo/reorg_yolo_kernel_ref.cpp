@@ -17,7 +17,7 @@
 #include "reorg_yolo_kernel_ref.h"
 #include "kernel_selector_utils.h" 
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     
     ParamsKey ReorgYoloKernelRef::GetSupportedKey() const
@@ -35,17 +35,17 @@ namespace KernelSelector
         return k;
     }
 
-    JitConstants ReorgYoloKernelRef::GetJitConstants(const ReorgYoloParams& params) const
+    JitConstants ReorgYoloKernelRef::GetJitConstants(const reorg_yolo_params& ry) const
     {
-        const auto& ry = params.ryParams;
-        JitConstants jit = MakeReorgYoloJitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(ry);
+
         jit.AddConstants({
-            MakeJitConstant("STRIDE_",        ry.stride),
+            MakeJitConstant("STRIDE",  ry.stride),
         });
 
         return jit;
     }
-    ReorgYoloKernelRef::DispatchData SetDefault(const ReorgYoloParams& params)
+    ReorgYoloKernelRef::DispatchData SetDefault(const reorg_yolo_params& params)
     {
         ReorgYoloKernelRef::DispatchData kd;
 
@@ -74,13 +74,13 @@ namespace KernelSelector
 
         return kd;
     }
-    KernelsData ReorgYoloKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ReorgYoloKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         assert(params.GetType() == KernelType::REORG_YOLO);
-        const ReorgYoloParams& orgParams = static_cast<const ReorgYoloParams&>(params);
+        const reorg_yolo_params& orgParams = static_cast<const reorg_yolo_params&>(params);
 
         DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<ReorgYoloParams>(params);
+        KernelData kd = KernelData::Default<reorg_yolo_params>(params);
 
         auto cldnn_jit = GetJitConstants(orgParams);
         auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);

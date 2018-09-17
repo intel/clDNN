@@ -36,7 +36,6 @@ layout max_unpooling_inst::calc_output_layout(max_unpooling_node const& node)
     auto argmax_layout = node.argmax().get_output_layout();
 
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Argmax data type", static_cast<size_t>(argmax_layout.data_type), "expected to be fp32", static_cast<size_t>(data_types::f32), "Argmax data type is not fp32.");
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input_layout.format", input_layout.format.value, "argmax_layout.format", argmax_layout.format);
 
     if (desc->with_output_size)
     {

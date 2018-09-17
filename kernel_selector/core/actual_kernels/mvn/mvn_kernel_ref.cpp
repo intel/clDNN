@@ -15,8 +15,8 @@
 */
 
 #include "mvn_kernel_ref.h"
-
-namespace KernelSelector
+ 
+namespace kernel_selector 
 {
     ParamsKey MVNKernelRef::GetSupportedKey() const
     {
@@ -40,15 +40,15 @@ namespace KernelSelector
         return k;
     }
 
-    std::string MVNKernelRef::GetKernelName(const MVNParams& params) const
+    std::string MVNKernelRef::GetKernelName(const mvn_params& params) const
     {
-        if (params.mvnParams.mvnMode == MVNMode::ACROSS_CHANNELS)
+        if (params.mvnMode == MVNMode::ACROSS_CHANNELS)
             return kernelName + "_accross_channels";
         else
             return kernelName + "_within_channels";
     }
 
-    KernelsData MVNKernelRef::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData MVNKernelRef::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         return GetCommonKernelsData(params, optParams, FORCE_PRIORITY_9);
     }

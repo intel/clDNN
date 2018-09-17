@@ -17,16 +17,16 @@
 #pragma once
 
 #include "max_unpooling_kernel_base.h"
-
-namespace KernelSelector
-{
+ 
+namespace kernel_selector 
+{    
     class MaxUnpoolingKernelGPURef : public MaxUnpoolingKernelBase
     {
     public:
         MaxUnpoolingKernelGPURef() : MaxUnpoolingKernelBase("max_unpooling_gpu_ref") {}
         virtual ~MaxUnpoolingKernelGPURef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

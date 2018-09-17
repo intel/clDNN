@@ -18,14 +18,36 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    JitConstants FullyConnectedKernelBase::GetJitConstants(const FullyConnectedParams& params, const FullyConnectedKernelBase::DispatchData&) const
+    JitConstants FullyConnectedKernelBase::GetJitConstants(const fully_connected_params& params, const FullyConnectedKernelBase::DispatchData&) const
     {
-        return MakeFullyConnectedJitConstants(params);
+        JitConstants jit = WeightBiasKernelBase::GetJitConstants(params);
+        const auto& input = params.inputs[0];
+        const auto x_size = input.LogicalSize() / input.Batch().v;
+
+        jit.AddConstant(MakeJitConstant("INPUT0_ELEMENTS_COUNT", x_size));
+        jit.AddConstant(MakeJitConstant("QUANTIZATION_TERM", params.int8_quantization));
+
+        if (params.int8_quantization)
+        {
+            jit.AddConstants({ MakeJitConstant("W_QF", params.weights_quantization_factors[0]) });
+            jit.AddConstants({ MakeJitConstant("I_QF",params.input_quantization_factor) });
+
+            if (params.output_calibration)
+            {
+                jit.AddConstant(MakeJitConstant("CALIBRATION_TERM", params.output_calibration));
+                jit.AddConstant(MakeJitConstant("O_QF", params.output_calibration_factors[0]));
+
+            }
+            else
+                jit.AddConstants({ MakeJitConstant("O_QF",       params.output_quantization_factor) });
+        }
+
+        return jit;
     }
 
-    std::unique_ptr<FullyConnectedKernelBase::DispatchData> FullyConnectedKernelBase::SetDefault(const FullyConnectedParams& params) const
+    std::unique_ptr<FullyConnectedKernelBase::DispatchData> FullyConnectedKernelBase::SetDefault(const fully_connected_params& params) const
     {
         std::unique_ptr<DispatchData> dispatchData = std::make_unique<DispatchData>();
         dispatchData->fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
@@ -45,7 +67,7 @@ namespace KernelSelector
         return std::move(dispatchData);
     }
 
-    KernelsData FullyConnectedKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time) const
+    KernelsData FullyConnectedKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time) const
     {
         if (!Validate(params, options) ||
             wl.empty())
@@ -53,8 +75,8 @@ namespace KernelSelector
             return KernelsData();
         }
 
-        const auto& orgParams = static_cast<const FullyConnectedParams&>(params);
-        const auto& orgOptParams = static_cast<const FullyConnectedOptionalParams&>(options);
+        const auto& orgParams = static_cast<const fully_connected_params&>(params);
+        const auto& orgOptParams = static_cast<const fully_connected_optional_params&>(options);
 
         bool bProperInput = orgParams.inputs[0].GetLayout() == dl;
         if (!bProperInput && !orgParams.inputs[0].PitchesDifferFromLogicalDims())
@@ -71,8 +93,8 @@ namespace KernelSelector
             return KernelsData();
         }
 
-        KernelData kd = KernelData::Default<FullyConnectedParams>(params);
-        FullyConnectedParams& newParams = *static_cast<FullyConnectedParams*>(kd.params.get());
+        KernelData kd = KernelData::Default<fully_connected_params>(params);
+        fully_connected_params& newParams = *static_cast<fully_connected_params*>(kd.params.get());
 
         if (!bProperInput)
         {
@@ -100,7 +122,7 @@ namespace KernelSelector
         std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, *runInfo.get(), kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
+        FillCLKernelData(kernel, *runInfo.get(), kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty(), 1, newParams.int8_quantization, newParams.output_calibration);
 
         kd.estimatedTime = estimated_time;
         kd.autoTuneIndex = -1;

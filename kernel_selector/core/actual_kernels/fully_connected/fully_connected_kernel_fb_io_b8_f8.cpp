@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_fb_io_b8_f8.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_fb_io_b8_f8::GetSupportedKey() const
     {
@@ -37,12 +37,12 @@ namespace KernelSelector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_fb_io_b8_f8::DispatchData> FullyConnected_fb_io_b8_f8::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_fb_io_b8_f8::DispatchData> FullyConnected_fb_io_b8_f8::SetDefault(const fully_connected_params& arg) const
     {
         auto kd = FullyConnectedBlockKernelBase::SetDefault(arg);
 
         const auto& output = arg.output;
-
+        
         size_t groups_per_batches = GetLocalGroupsSize(arg);
         kd->gws0 = output.LogicalSize() / (GetNeuronsPerWorkItem(arg) * GetBatchesPerWorkItem(arg) * groups_per_batches);
         kd->gws1 = groups_per_batches;
@@ -52,14 +52,14 @@ namespace KernelSelector
         return std::move(kd);
     }
 
-    bool FullyConnected_fb_io_b8_f8::Validate(const Params& p, const OptionalParams& o) const
+    bool FullyConnected_fb_io_b8_f8::Validate(const Params& p, const optional_params& o) const
     {
         if (!FullyConnectedBlockKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const auto& params = static_cast<const FullyConnectedParams&>(p);
+        const auto& params = static_cast<const fully_connected_params&>(p);
 
         const auto& output = params.output;
         const auto batches = output.Batch().v;
@@ -77,11 +77,11 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData FullyConnected_fb_io_b8_f8::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData FullyConnected_fb_io_b8_f8::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         assert(params.GetType() == KernelType::FULLY_CONNECTED);
 
-        const auto& orgParams = static_cast<const FullyConnectedParams&>(params);
+        const auto& orgParams = static_cast<const fully_connected_params&>(params);
 
         float estimated_time =
             orgParams.inputs[0].GetDType() == Datatype::F16 && orgParams.output.Batch().v >= 16 ?

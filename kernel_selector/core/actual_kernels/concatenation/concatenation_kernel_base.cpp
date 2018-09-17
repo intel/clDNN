@@ -17,12 +17,12 @@
 #include "tensor_type.h"
 #include "concatenation_kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    static int32_t GetConcatChannelIndex(const ConcatenationParams& params)
+    static int32_t GetConcatChannelIndex(const concatenation_params& params)
     {
         Tensor::DataChannelName name = Tensor::DataChannelName::X;
-        switch (params.concatParams.axis)
+        switch (params.axis)
         {
         case ConcatAxis::X:         name = Tensor::DataChannelName::X; break;
         case ConcatAxis::Y:         name = Tensor::DataChannelName::Y; break;
@@ -34,31 +34,36 @@ namespace KernelSelector
         return DataTensor::Channelndex(params.output.GetLayout(), name);
     }
 
-    bool ConcatenationKernelBase::Validate(const Params& p, const OptionalParams&) const
+    bool ConcatenationKernelBase::Validate(const Params& p, const optional_params&) const
     {
         if (p.GetType() != KernelType::CONCATENATION)
         {
             return false;
         }
 
-        const ConcatenationParams& params = static_cast<const ConcatenationParams&>(p);
+        const concatenation_params& params = static_cast<const concatenation_params&>(p);
 
         if (GetConcatChannelIndex(params) == -1)
         {
             return false;
         }
 
-        return true;
+        return true; 
     }
 
-    JitConstants ConcatenationKernelBase::GetJitConstants(const ConcatenationParams& params) const
+    JitConstants ConcatenationKernelBase::GetJitConstants(const concatenation_params& params) const
     {
-        auto jit = MakeConcatenationJitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(params);
+
+        jit.AddConstants({
+            MakeJitConstant("CONCAT_" + toString(params.axis), 1),
+        });
+
         jit.AddConstant(MakeJitConstant("CONCAT_AXIS_INDEX", GetConcatChannelIndex(params)));
         return jit;
     }
 
-    ConcatenationKernelBase::DispatchData ConcatenationKernelBase::SetDefault(const ConcatenationParams& params) const
+    ConcatenationKernelBase::DispatchData ConcatenationKernelBase::SetDefault(const concatenation_params& params) const
     {
         DispatchData kd;
 
@@ -68,7 +73,7 @@ namespace KernelSelector
         {
             kd.gws0 = dims.size() < 2 ? 1 : dims[2].v;
             kd.gws1 = dims.size() < 3 ? 1 : dims[1].v;
-            kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;
+            kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;                         
         }
         else
         {
@@ -89,16 +94,16 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData ConcatenationKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConcatenationKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options) const
     {
         if (!Validate(params,  options))
         {
             return{};
         }
 
-        const ConcatenationParams& orgParams = static_cast<const ConcatenationParams&>(params);
+        const concatenation_params& orgParams = static_cast<const concatenation_params&>(params);
 
-        KernelData kd = KernelData::Default<ConcatenationParams>(params, orgParams.inputs.size());
+        KernelData kd = KernelData::Default<concatenation_params>(params, orgParams.inputs.size());
 
         uint32_t lastOffset = 0;
         const auto concatChannelIndex = GetConcatChannelIndex(orgParams);

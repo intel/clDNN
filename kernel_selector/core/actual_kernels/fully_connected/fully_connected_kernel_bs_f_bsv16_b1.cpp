@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_bs_f_bsv16_b1.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_bs_f_bsv16_b1::GetSupportedKey() const
     {
@@ -37,7 +37,7 @@ namespace KernelSelector
         return k;
     }
 
-    JitConstants FullyConnected_bs_f_bsv16_b1::GetJitConstants(const FullyConnectedParams& params, const FullyConnectedKernelBase::DispatchData& run_info) const
+    JitConstants FullyConnected_bs_f_bsv16_b1::GetJitConstants(const fully_connected_params& params, const FullyConnectedKernelBase::DispatchData& run_info) const
     {
         auto &d = static_cast<const DispatchData&>(run_info);
         auto cldnn_jit = FullyConnectedKernelBase::GetJitConstants(params, run_info);
@@ -58,7 +58,7 @@ namespace KernelSelector
         return cldnn_jit;
     }
 
-    std::unique_ptr<FullyConnected_bs_f_bsv16_b1::FullyConnectedKernelBase::DispatchData> FullyConnected_bs_f_bsv16_b1::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_bs_f_bsv16_b1::FullyConnectedKernelBase::DispatchData> FullyConnected_bs_f_bsv16_b1::SetDefault(const fully_connected_params& arg) const
     {
         auto run_info = std::make_unique<DispatchData>(*FullyConnectedKernelBase::SetDefault(arg).get());
 
@@ -96,7 +96,7 @@ namespace KernelSelector
         return std::move(run_info);
     }
 
-    KernelsData FullyConnected_bs_f_bsv16_b1::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData FullyConnected_bs_f_bsv16_b1::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         return GetCommonKernelsData(params, optParams, DataLayout::bf, {WeightsLayout::os_i_osv16}, FORCE_PRIORITY_5);
     }

@@ -18,7 +18,7 @@
 
 #include "lrn_kernel_base.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
     class LRNKernelAcrossChannel_b8 : public LRNKernelBase
     {
@@ -26,12 +26,12 @@ namespace KernelSelector
         LRNKernelAcrossChannel_b8() : LRNKernelBase("lrn_gpu_across_channel_yxfb_b8_opt") {}
         virtual ~LRNKernelAcrossChannel_b8() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     private:
-        bool Validate(const Params& p, const OptionalParams& o) const override;
-        JitConstants GetJitConstants(const LRNParams& params, DispatchData kd) const override;
-        CommonDispatchData SetDefault(const LRNParams& params) const override;
+        bool Validate(const Params& p, const optional_params& o) const override;
+        JitConstants GetJitConstants(const lrn_params& params, DispatchData kd) const override;
+        CommonDispatchData SetDefault(const lrn_params& params) const override;
     };
 }

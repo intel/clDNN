@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "arg_max_min/arg_max_min_kernel_selector.h"
+#include "arg_max_min/arg_max_min_kernel_base.h"
 #include "kernel_runner.h"
 
 namespace cldnn {
@@ -59,21 +61,21 @@ namespace cldnn {
 				auto argm_params = get_default_params<kernel_selector::arg_max_min_params>(arg);
 				auto argm_optional_params = get_default_optional_params<kernel_selector::arg_max_min_optional_params>(arg.get_program());
 
-				argm_params.argMaxParams.topK = top_k;
+				argm_params.topK = top_k;
 				if (with_axis) {
 					switch (axis)
 					{
                     case arg_max_min::batch:
-						argm_params.argMaxParams.argMaxMinAxis = kernel_selector::argm_axis::BATCH;
+						argm_params.argMaxMinAxis = kernel_selector::argm_axis::BATCH;
                         break;
 					case arg_max_min::feature:
-						argm_params.argMaxParams.argMaxMinAxis = kernel_selector::argm_axis::FEATURE;
+						argm_params.argMaxMinAxis = kernel_selector::argm_axis::FEATURE;
                         break;
                     case arg_max_min::x:
-						argm_params.argMaxParams.argMaxMinAxis = kernel_selector::argm_axis::X;
+						argm_params.argMaxMinAxis = kernel_selector::argm_axis::X;
                         break;
                     case arg_max_min::y:
-						argm_params.argMaxParams.argMaxMinAxis = kernel_selector::argm_axis::Y;
+						argm_params.argMaxMinAxis = kernel_selector::argm_axis::Y;
                         break;
                     default:
 						break;
@@ -81,12 +83,12 @@ namespace cldnn {
 				}
 
 				if (out_type == primitive->max)
-					argm_params.argMaxParams.argMaxMinOut = kernel_selector::argm_output::MAX;
+					argm_params.argMaxMinOut = kernel_selector::argm_output::MAX;
 				else
-					argm_params.argMaxParams.argMaxMinOut = kernel_selector::argm_output::MIN;
+					argm_params.argMaxMinOut = kernel_selector::argm_output::MIN;
 				auto& kernel_selector = kernel_selector::arg_max_min_kernel_selector::Instance();
 
-				KernelSelector::KernelsData best_kernels = kernel_selector.GetBestKernels(argm_params, argm_optional_params);
+				kernel_selector::KernelsData best_kernels = kernel_selector.GetBestKernels(argm_params, argm_optional_params);
 
 				CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 

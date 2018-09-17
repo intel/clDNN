@@ -18,6 +18,8 @@
 #include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "reorg_yolo/reorg_yolo_kernel_selector.h"
+#include "reorg_yolo/reorg_yolo_kernel_ref.h"
 #include "error_handler.h"
 
 namespace cldnn {
@@ -36,7 +38,7 @@ namespace cldnn {
 
                 const auto& primitive = arg.get_primitive();
 
-                ry_params.ryParams.stride = primitive->stride;
+                ry_params.stride = primitive->stride;
 
                 auto& kernel_selector = kernel_selector::reorg_yolo_kernel_selector::Instance();
                 auto best_kernels = kernel_selector.GetBestKernels(ry_params, ry_optional_params);

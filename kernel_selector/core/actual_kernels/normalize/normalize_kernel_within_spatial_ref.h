@@ -18,7 +18,7 @@
 
 #include "normalize_kernel_base.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
     class NormalizeKernelWithinSpatialRef : public NormalizeKernelBase
     {
@@ -26,7 +26,7 @@ namespace KernelSelector
         NormalizeKernelWithinSpatialRef() : NormalizeKernelBase("normalize_gpu_within_spatial_ref") {}
         virtual ~NormalizeKernelWithinSpatialRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

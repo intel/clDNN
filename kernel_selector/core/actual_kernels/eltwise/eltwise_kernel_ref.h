@@ -18,7 +18,7 @@
 
 #include "eltwise_kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     class EltwiseKernelRef : public EltwiseKernelBase
     {
@@ -26,7 +26,7 @@ namespace KernelSelector
         EltwiseKernelRef() : EltwiseKernelBase("generic_eltwise_ref") {}
         virtual ~EltwiseKernelRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

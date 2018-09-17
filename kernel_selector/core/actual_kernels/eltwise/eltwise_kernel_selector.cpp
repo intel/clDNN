@@ -18,15 +18,15 @@
 #include "eltwise_kernel_ref.h"
 #include "eltwise_kernel_vload8.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    EltwiseKernelSelctor::EltwiseKernelSelctor()
+    eltwise_kernel_selector::eltwise_kernel_selector()
     {
         Attach<EltwiseKernelRef>();
         Attach<EltwiseKernel_vload8>();
     }
 
-    KernelsData EltwiseKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData eltwise_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::ELTWISE);
     }

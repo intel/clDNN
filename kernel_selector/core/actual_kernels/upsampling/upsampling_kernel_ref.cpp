@@ -17,7 +17,7 @@
 #include "upsampling_kernel_ref.h"
 #include "kernel_selector_utils.h" 
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     ParamsKey UpSamplingKernelRef::GetSupportedKey() const
     {
@@ -34,7 +34,7 @@ namespace KernelSelector {
         return k;
     }
 
-    KernelsData UpSamplingKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData UpSamplingKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

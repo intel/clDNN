@@ -27,14 +27,14 @@ namespace cl {
 class Kernel;
 }
 
-namespace KernelSelector
+namespace kernel_selector
 {
     struct KernelString;
 }
 
 namespace kernel_selector
 {
-    using kernel_string = KernelSelector::KernelString;
+    using kernel_string = kernel_selector::KernelString;
 }
 
 namespace cldnn { namespace gpu {
@@ -52,7 +52,7 @@ public:
         uint32_t kernels_counter = 0;
         std::string options;
         bool dump_custom_program = false;
-		bool one_time = false;
+        bool one_time = false;
         std::map<std::string, std::string> entry_point_to_id;
     };
 
@@ -61,7 +61,7 @@ public:
         std::shared_ptr<kernel_selector::kernel_string> kernel_strings;
         std::string id;
         bool dump_custom_program;
-		bool one_time_kernel;
+        bool one_time_kernel;
     };
 
     typedef std::string kernel_id;
@@ -86,7 +86,7 @@ private:
 public:
     kernel_id set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string, bool dump_custom_program, bool one_time_kernel);
     kernel_type get_kernel(kernel_id id, bool one_time_kernel);
-
+    gpu_toolkit& get_context() { return _context; }
     //forces compilation of all pending kernels/programs
     void build_all();
 };

@@ -39,25 +39,23 @@ event_impl::ptr primitive_inst::execute(const std::vector<event_impl::ptr>& even
     on_execute();
 
     if (_exec_deps.size() == 0)
-        return _impl->execute(events, *this);
+       return _impl->execute(events, *this);      
 
     std::vector<event_impl::ptr> dependencies;
     dependencies.reserve(_exec_deps.size());
 
-    for(auto& input : _exec_deps)
+    for (auto& input : _exec_deps)
     {
         dependencies.emplace_back(get_network().execute_primitive(input, events));
     }
 
-     return _impl->execute(dependencies, *this);
+    return _impl->execute(dependencies, *this);  
 }
 
 primitive_inst::primitive_inst(network_impl& network, program_node const& node, bool allocate_memory)
     : _network(network)
     , _node(node)
     , _impl(node.get_selected_impl())
-    , _deps(network.get_primitives(node.get_dependencies()))
-    , _exec_deps(build_exec_deps(_deps))
     , _output()
     , _output_changed(false)
 {

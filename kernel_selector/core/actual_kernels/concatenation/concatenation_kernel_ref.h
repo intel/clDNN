@@ -18,7 +18,7 @@
 
 #include "concatenation_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class ConcatenationKernelRef : public ConcatenationKernelBase
     {
@@ -26,9 +26,9 @@ namespace KernelSelector {
         ConcatenationKernelRef() : ConcatenationKernelBase("concatenation_gpu_ref") {}
         virtual ~ConcatenationKernelRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     protected:
-        JitConstants GetJitConstants(const ConcatenationParams& params) const override;
+        JitConstants GetJitConstants(const concatenation_params& params) const override;
     };
 }

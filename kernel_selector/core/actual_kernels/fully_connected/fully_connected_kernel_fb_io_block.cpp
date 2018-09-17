@@ -17,7 +17,7 @@
 #include "fully_connected_kernel_fb_io_block.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey FullyConnected_fb_io_block::GetSupportedKey() const
     {
@@ -35,11 +35,11 @@ namespace KernelSelector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_fb_io_block::FullyConnectedKernelBase::DispatchData> FullyConnected_fb_io_block::SetDefault(const FullyConnectedParams& arg) const
+    std::unique_ptr<FullyConnected_fb_io_block::FullyConnectedKernelBase::DispatchData> FullyConnected_fb_io_block::SetDefault(const fully_connected_params& arg) const
     {
         auto kd = std::make_unique<DispatchData>(*FullyConnectedKernelBase::SetDefault(arg).get());
         const auto& output = arg.output;
-
+        
         auto batch_size = output.Batch().v;
         auto response_size = output.Feature().v;
 
@@ -50,7 +50,7 @@ namespace KernelSelector
         constexpr uint32_t units_per_chunk = chunk_byte_size / unit_byte_size;
         constexpr uint32_t units_per_sg_read = sub_group_size * units_per_chunk;
 
-
+        
         // Number of response groups. Each group (except last) writes units_per_sg_read responses
         // for at least one input data set from batch.
         auto rg_count = CeilDiv(response_size, units_per_sg_read);
@@ -72,7 +72,7 @@ namespace KernelSelector
         return std::move(kd);
     }
 
-    JitConstants FullyConnected_fb_io_block::GetJitConstants(const FullyConnectedParams& params, const FullyConnectedKernelBase::DispatchData& run_info) const
+    JitConstants FullyConnected_fb_io_block::GetJitConstants(const fully_connected_params& params, const FullyConnectedKernelBase::DispatchData& run_info) const
     {
         auto &d = static_cast<const DispatchData&>(run_info);
         auto cldnn_jit = FullyConnectedKernelBase::GetJitConstants(params, run_info);
@@ -91,14 +91,14 @@ namespace KernelSelector
         return cldnn_jit;
     }
 
-    bool FullyConnected_fb_io_block::Validate(const Params& p, const OptionalParams& o) const
+    bool FullyConnected_fb_io_block::Validate(const Params& p, const optional_params& o) const
     {
         if (!FullyConnectedKernelBase::Validate(p, o))
         {
             return false;
         }
 
-        const auto& params = static_cast<const FullyConnectedParams&>(p);
+        const auto& params = static_cast<const fully_connected_params&>(p);
 
         const auto& output = params.output;
         const auto responseSize = output.Feature().v;
@@ -130,11 +130,11 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData FullyConnected_fb_io_block::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData FullyConnected_fb_io_block::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         assert(params.GetType() == KernelType::FULLY_CONNECTED);
 
-        const auto& orgParams = static_cast<const FullyConnectedParams&>(params);
+        const auto& orgParams = static_cast<const fully_connected_params&>(params);
 
         float estimated_time =
             orgParams.inputs[0].GetDType() == Datatype::F16 && orgParams.output.Batch().v >= 16 ?

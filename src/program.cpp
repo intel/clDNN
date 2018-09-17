@@ -48,6 +48,7 @@
 #include "reorder_inst.h"
 #include "reshape_inst.h"
 #include "scale_inst.h"
+#include "embed_inst.h"
 #include "softmax_inst.h"
 #include "split_inst.h"
 #include "program_dump_graph.h"
@@ -55,6 +56,10 @@
 #include "eltwise_inst.h"
 #include "fully_connected_inst.h"
 #include "mvn_inst.h"
+#include "lstm_inst.h"
+#include "lstm_gemm_inst.h"
+#include "lstm_elt_inst.h"
+#include "embed_inst.h"
 
 #include "network_impl.h"
 #include "kernel_selector_helper.h"
@@ -63,12 +68,16 @@
 
 #include <fstream>
 #include <algorithm>
+#include <stdio.h>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
 namespace cldnn
 {
 
-CLDNN_DEFINE_INTERNAL_PRIM(connector)
-CLDNN_DEFINE_SIMPLE_PRIM_INST(connector)
+    CLDNN_DEFINE_INTERNAL_PRIM(connector)
+        CLDNN_DEFINE_SIMPLE_PRIM_INST(connector)
 
 }
 
@@ -190,7 +199,7 @@ namespace {
             std::copy(src.begin(), src.end(), dst.begin() + (i - begin_offset)*src.size());
         }
 
-        for(size_t i = 0; i < end_offset - begin_offset - 1; i++)
+        for (size_t i = 0; i < end_offset - begin_offset - 1; i++)
             node.remove_dependency(begin_offset + 1);
 
         auto& data_node = node.get_dependency(begin_offset).as<data>();
@@ -244,7 +253,7 @@ namespace {
     }
 }
 
-program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options)
+program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal)
     : engine(&engine_ref), options(options), output_size_handling_enabled(true)
 {
     static std::atomic<uint32_t> id_gen{ 0 };
@@ -263,8 +272,16 @@ program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topolog
     post_optimize_graph();
 
     engine->compile_program(*this);
+    this->dump_program("13_finished", true);
 
-     this->dump_program("13_finished", true);
+    //Makes serialization with given name.
+    //Placeholder, not working yet, in progress.
+    auto serialization_network_name = get_serialization_network_name(options);
+    if (!serialization_network_name.empty() && !is_internal)
+    {
+        this->serialize(serialization_network_name);
+    }
+
     cleanup();
 }
 
@@ -284,7 +301,7 @@ void program_impl::analyze_output_size_handling_need()
             if (!prim->with_output_size)
                 continue;
 
-            tensor specified_output_range({0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1]}, 1);
+            tensor specified_output_range({ 0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1] }, 1);
 
             auto filter_size = prim_node.weights(0).get_output_layout().size;
 
@@ -303,13 +320,13 @@ void program_impl::analyze_output_size_handling_need()
             if (!prim->with_output_size)
                 continue;
 
-            tensor specified_output_range({0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1]}, 1);
+            tensor specified_output_range({ 0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1] }, 1);
 
             auto filter_size = prim_node.weights(0).get_output_layout().size;
 
             auto calc_output_range = calc_sliding_window_needed_input_range(
                 prim_node.input().get_output_layout().size,
-                filter_size, prim->input_offset, prim->stride, {1, 1, 1, 1}, true, 1);
+                filter_size, prim->input_offset, prim->stride, { 1, 1, 1, 1 }, true, 1);
 
             if (specified_output_range != calc_output_range)
                 handling_needed = true;
@@ -322,12 +339,12 @@ void program_impl::analyze_output_size_handling_need()
             if (!prim->with_output_size)
                 continue;
 
-            tensor specified_output_range({0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1]}, 1);
+            tensor specified_output_range({ 0, 0, prim->output_size.spatial[0], prim->output_size.spatial[1] }, 1);
 
             // TODO: Check compatibility of output size calculation (with caffe).
             auto calc_output_range = calc_sliding_window_output_range<swor_mode::exceed_once_data>(
                 prim_node.input().get_output_layout().size,
-                prim->size, prim->input_offset, prim->stride, {1, 1, 1, 1}, true, 1);
+                prim->size, prim->input_offset, prim->stride, { 1, 1, 1, 1 }, true, 1);
 
             if (specified_output_range != calc_output_range)
                 handling_needed = true;
@@ -356,7 +373,6 @@ void program_impl::init_graph(topology_impl const& topology)
         auto& n = get_or_create(prim.second);
         inputs.push_back(&n);
     }
-
     replace_nodes_pre();
 
     for (auto itr = inputs.begin(); itr != inputs.end(); )
@@ -375,7 +391,7 @@ void program_impl::init_graph(topology_impl const& topology)
                 node->dependencies.push_back(dep_node.get());
                 dep_node->users.push_back(node);
             }
-            catch(...) {
+            catch (...) {
                 throw std::runtime_error("Program doesn't contain primitive: " + dep +
                     " that is input to: " + node->get_primitive()->id);
             }
@@ -386,6 +402,7 @@ void program_impl::init_graph(topology_impl const& topology)
     }
 
     replace_nodes_post();
+    handle_lstm();
     set_outputs();
     calc_processing_order();
 
@@ -405,7 +422,7 @@ void program_impl::pre_optimize_graph()
 
     // TODO: uncomment as soon as IE will enable OOOQ by default
     //if (get_engine().configuration().enable_parallelisation)
-        reorder_nodes_for_parallel_execution();
+    reorder_nodes_for_parallel_execution();
 
     analyze_output_size_handling_need();
 
@@ -462,6 +479,7 @@ void program_impl::post_optimize_graph()
     post_optimize_weights(lo); dump_program("9_reordered_weights", true);
     remove_redundant_reorders(); dump_program("10_removed_redundant_reorders", true); //TODO: do we need it at this place also?
     propagate_constants(); dump_program("11_propagated_constants", true);
+    prep_opt_depthwise_sep_post();
     update_processing_order(); dump_program("12_validated_processing_order", true);
     prepare_memory_dependencies();
 }
@@ -488,6 +506,13 @@ void program_impl::cleanup()
             }
         }
     }
+}
+
+
+std::string getIdString(size_t i) {
+    std::stringstream ss;
+    ss << std::setw(5) << std::setfill('0') << i;
+    return ss.str();
 }
 
 void program_impl::replace_nodes_pre()
@@ -528,7 +553,7 @@ void program_impl::replace_nodes_post()
         auto& node = (*node_itr).second;
 
         //find split primitives and create crop primitives out of them
-        if(node->is_type<split>())
+        if (node->is_type<split>())
         {
             //check if split is not used by any primitive, as it will be optimized
             if (node->get_users().size() != 0)
@@ -580,7 +605,7 @@ void program_impl::replace_nodes_post()
         {
             auto upsampling_prim = node->as<upsampling>().typed_desc();
 
-            if(upsampling_prim->sample_type != upsampling_sample_type::bilinear)
+            if (upsampling_prim->sample_type != upsampling_sample_type::bilinear)
                 continue;
 
             //check if num_filter is not 0 (required for bilinear upsampling)
@@ -601,7 +626,7 @@ void program_impl::replace_nodes_post()
 
             //setting weights for deconvolution
             auto kernel_size = static_cast<tensor::value_type>((2 * scale) - (scale % 2));
-            layout weights_layout(data_types::f32, format::bfyx, tensor( num_filter, 1, kernel_size, kernel_size ));
+            layout weights_layout(data_types::f32, format::bfyx, tensor(num_filter, 1, kernel_size, kernel_size));
 
             memory_impl::ptr data_to_allocate = engine->allocate_memory(weights_layout);
             mem_lock<float> dst{ data_to_allocate };
@@ -659,7 +684,7 @@ void program_impl::replace_nodes_post()
             auto deconv_prim = node->as<deconvolution>().typed_desc();
 
             //limit optimization to stride = 1
-            if (deconv_prim->stride.spatial[0] != 1 || deconv_prim->stride.spatial[1] != 1)
+            if (deconv_prim->stride.spatial[0] != 1 || deconv_prim->stride.spatial[1] != 1 || deconv_prim->gradient())
                 continue;
 
             primitive_id deconv_id = node->id();
@@ -690,7 +715,7 @@ void program_impl::replace_nodes_post()
                 auto weights_node_ptr = nodes_map.find(weights_id)->second;
                 remove_connection(*weights_node_ptr, *node);
                 //get filter spatial sizes for input offset adjustment, perform this only once as all filters shouls have same size
-                if(weights_id == weights_vec[0])
+                if (weights_id == weights_vec[0])
                     filter_size = weights_node_ptr->get_output_layout().size;
             }
 
@@ -752,6 +777,151 @@ void program_impl::replace_nodes_post()
             continue;
         }
     }
+}
+
+void program_impl::handle_lstm()
+{
+    bool hasLSTMParent;
+    auto itr = nodes_map.begin(); //note we need to use iterators since currently processed element can be removed
+    while (itr != nodes_map.end())
+    {
+        auto node_itr = itr++;
+        auto& node = (*node_itr).second;
+        hasLSTMParent = false;
+        // replace lstm node with lstm_gemm and lstm_elt nodes
+        if (node->is_type<lstm>()) {
+
+            auto lstm_prim = node->as<lstm>().typed_desc();
+            std::vector<primitive_id> output_ids_offsets;
+            std::list<program_node*> concat_depends;
+            std::list<program_node*> cell_list;
+            primitive_id weights_id = lstm_prim->weights;
+            primitive_id recurrent_id = lstm_prim->recurrent;
+            primitive_id bias_id = node->as<lstm>().bias_term() ? lstm_prim->bias : "";
+            primitive_id hidden_id = node->as<lstm>().initial_hidden_term() ? lstm_prim->initial_hidden : "";
+            primitive_id cell_id = node->as<lstm>().initial_cell_term() ? lstm_prim->initial_cell : "";
+            //removing connection with weights to get proper dependency order for next operations
+            remove_connection(*nodes_map.at(weights_id), *node);
+            remove_connection(*nodes_map.at(recurrent_id), *node);
+            if (node->as<lstm>().bias_term())
+                remove_connection(*nodes_map.at(bias_id), *node);
+
+            //input size lstm
+            size_t sequence_len = 0;
+            for (auto& depend : node->get_dependencies())
+            {
+                if (depend->is_type<crop>())
+                {
+                    sequence_len++;
+                }
+
+            }
+            //calculating sizes
+            auto input_size = node->get_dependency(0).get_output_layout().size;
+            auto recurrent_size = nodes_map.at(lstm_prim->recurrent)->get_output_layout().size;
+            auto hidden_size = tensor(input_size.batch[0], recurrent_size.feature[0], recurrent_size.spatial[0], input_size.feature[0]);
+
+            //check if parent is lstm node
+            for (auto& user : node->get_users())
+            {
+                if (user->is_type<lstm>())
+                {
+                    hasLSTMParent = true;
+                }
+            }
+
+            //lstm expanding
+            for (size_t i = 0; i < sequence_len; ++i) {
+                primitive_id lstm_gemm_id = node->id() + ":lstm_gemm" + getIdString(i);
+                primitive_id lstm_elt_id = node->id() + ":lstm_elt" + getIdString(i);
+                primitive_id crop_id = node->id() + ":crop" + getIdString(i);
+                primitive_id lstm_gemm_input_id = node->get_dependency(i).get_org_primitive_id();
+
+                auto lstm_gemm_node = std::make_shared<lstm_gemm>(lstm_gemm_id, lstm_gemm_input_id, weights_id, recurrent_id, bias_id, hidden_id);
+                auto &n1 = get_or_create(lstm_gemm_node);
+
+
+                auto lstm_elt_node = std::make_shared<lstm_elt>(lstm_elt_id, lstm_gemm_id, cell_id, lstm_prim->clip, lstm_prim->input_forget,
+                    lstm_prim->activations, lstm_prim->activation_params, lstm_prim->offset_order);
+                auto &n2 = get_or_create(lstm_elt_node);
+                //adding lstm_elt as user
+                add_connection(n1, n2);
+                //adding dependecy to lstm_gemm node
+                //input
+                add_connection(node->get_dependency(i), n1);
+                //adding weights and initial values to lstm_gemm
+                add_connection(*nodes_map.at(weights_id), n1);
+                add_connection(*nodes_map.at(recurrent_id), n1);
+                if (node->as<lstm>().bias_term())
+                    add_connection(*nodes_map.at(bias_id), n1);
+
+                //adding cell and hiddens as dependencies
+                if (i > 0)
+                {
+                    add_connection(*cell_list.back(), n2);
+                    add_connection(*concat_depends.back(), n1);
+                }
+                //if initial values are present
+                else
+                {
+                    if (node->as<lstm>().initial_hidden_term())
+                        add_connection(*nodes_map.at(hidden_id), n1);
+                    if (node->as<lstm>().initial_cell_term())
+                        add_connection(*nodes_map.at(cell_id), n2);
+                }
+
+                //lstm_hidden
+                hidden_id = crop_id + ":hidden";
+                auto crop_hidden = std::make_shared<crop>(hidden_id, lstm_elt_id, hidden_size, tensor{ 0,0,0,0 });
+                auto &n3 = get_or_create(crop_hidden);
+                //adding eltwise as dependency to hidden
+                add_connection(n2, n3);
+
+                //if parent is lstm adding hiddens as dependency
+                if (hasLSTMParent)
+                {
+                    for (auto& user : node->get_users())
+                    {
+                        add_connection(n3, *user);
+                    }
+                }
+                concat_depends.push_back(&n3);
+
+                //lstm_cell
+                if (i < sequence_len - 1) {
+                    cell_id = crop_id + ":cell";
+                    auto crop_cell = std::make_shared<crop>(cell_id, lstm_elt_id, hidden_size, tensor{ 0,1,0,0 });
+                    auto &n4 = get_or_create(crop_cell);
+                    add_connection(n2, n4);
+                    cell_list.push_back(&n4);
+                }
+                output_ids_offsets.push_back(hidden_id);
+            }
+
+            //if theres no next lstm, concatenation is created
+            if (!hasLSTMParent)
+            {
+                primitive_id original_id = node->id();
+                primitive_id concatenation_id = original_id + ":concat";
+                auto concatenation_node = std::make_shared<concatenation>(concatenation_id, output_ids_offsets, concatenation::along_f);
+                auto &n5 = get_or_create(concatenation_node);
+                for (auto concat_dependency : concat_depends)
+                {
+                    add_connection(*concat_dependency, n5);
+                }
+                for (auto& user : node->get_users())
+                {
+                    add_connection(n5, *user);
+                }
+            }
+
+            //removing expanded node
+            remove_all_connections(*node);
+            nodes_map.erase(node->id());
+            continue;
+        }
+    }
+
 }
 
 void program_impl::set_outputs()
@@ -833,6 +1003,15 @@ void program_impl::update_processing_order()
     for (auto& node : processing_order)
     {
         node->processing_num = ++idx;
+    }
+    // TODO: REMOVE BELOW, AFTER 847 FIX
+    for (auto& node : processing_order)
+    {
+        if(!processing_order_is_correct(node))
+        {
+            engine->set_mem_pool(false);
+            return;
+        }
     }
 }
 
@@ -1002,7 +1181,7 @@ void program_impl::calc_dominators()
     auto root_itr = processing_order.begin();
     while (root_itr != processing_order.end())
     {
-        if ((*root_itr)->get_users().size() > 1)
+        if ((*root_itr)->is_in_data_flow() && (*root_itr)->get_users().size() > 1)
             break;
 
         ++root_itr;
@@ -1048,7 +1227,7 @@ void program_impl::calc_dominators()
         while (itr != processing_order.end())
         {
             auto node = *(itr++);
-            if (!node->is_in_data_flow()) //eliminate helper nodes
+            if (!node->is_in_data_flow()) //eliminate helper nodes  || node->get_dependencies().size() == 0
                 continue;
 
             //pick first (processed) predecessor
@@ -1083,7 +1262,9 @@ void program_impl::calc_dominators()
     while (ritr != processing_order.rend())
     {
         auto node = *(ritr++);
-        if (!node->is_in_data_flow())
+        if (!node->dominator)
+            continue;
+        else if (!node->is_in_data_flow())
             continue;
         else if (node->dominator == node)
             node->dominator = nullptr;
@@ -1183,14 +1364,22 @@ void program_impl::trim_to_outputs()
 
 void add_memory_dependency(program_node* node, program_node* dep)
 {
-    if (!dep->can_be_optimized())
+    if (node->can_be_optimized() ||
+        !dep->can_be_optimized())
     {
         node->add_memory_dependency(dep->id());
     }
     else
     {
+        if (node->id() == dep->id())
+        {
+            return;
+        }
         for (auto subdep : dep->get_dependencies())
+        {
             add_memory_dependency(node, subdep);
+            add_memory_dependency(subdep, node);
+        }        
     }
 }
 
@@ -1336,7 +1525,7 @@ std::string program_impl::get_memory_dependencies_string() const
         itr++;
         mem_dep = mem_dep.append("primitive: ").append(node->id()).append(" restricted list: ");
         for (auto it : node->get_memory_dependencies())
-            mem_dep == mem_dep.append( it ).append(", ");
+            mem_dep == mem_dep.append(it).append(", ");
         mem_dep = mem_dep.append("\n");
     }
     return mem_dep;
@@ -1565,7 +1754,7 @@ void program_impl::reorder_inputs(layout_optimizer& lo)
                 }
             }
 
-            if(!reorder_removed)
+            if (!reorder_removed)
                 input_node.recalc_output_layout();
             else
                 conv_node.recalc_output_layout();
@@ -1591,7 +1780,7 @@ void program_impl::reorder_inputs(layout_optimizer& lo)
             apply_needed_padding(conv_node, input_node, padding{ conv_prim->input_offset.negate().sizes(), upper_input_padding.sizes() });
 
             auto winograd_output = std::make_shared<reorder>("_winograd_" + conv_node.id(), conv_node.id(), input_layout.format,
-                input_layout.data_type, std::vector<float>{}, cldnn_reorder_mean_mode::mean_subtract,  conv_node.output_layout.data_padding);
+                input_layout.data_type, std::vector<float>{}, cldnn_reorder_mean_mode::mean_subtract, conv_node.output_layout.data_padding);
             conv_node.output_layout.data_padding = padding{};
             auto& back_node = get_or_create(winograd_output);
             back_node.processing_itr = processing_order.insert(std::next(conv_node.processing_itr), &back_node);
@@ -1737,7 +1926,7 @@ void program_impl::pre_optimize_bias(layout_optimizer& lo)
             output_layout);
 
         if (reorder.first)
-            this->add_intermediate(reorder.first, node, dep_idx);
+            this->add_intermediate(reorder.first, node, dep_idx, !reorder.second);
     };
 
     //generic lambda function which prepares given primitive for weights optimization
@@ -1772,7 +1961,12 @@ void program_impl::pre_optimize_bias(layout_optimizer& lo)
         }
         else if (prim.type() == fully_connected::type_id())
         {
-            prep_opt(prim.as<fully_connected>());
+            if (!prim.as<fully_connected>().weights_quantization_term())
+                prep_opt(prim.as<fully_connected>());
+        }
+        else if (prim.type() == embed::type_id())
+        {
+            prep_opt(prim.as<embed>());
         }
     }
 }
@@ -1896,7 +2090,8 @@ void program_impl::post_optimize_weights(layout_optimizer& lo)
     {
         auto* impl = node.get_selected_impl().get();
         auto output_layout = node.get_output_layout();
-        auto weights_layout = node.get_dependency(1).get_output_layout();
+        auto& weights_node = node.get_dependency(1);
+        auto weights_layout = weights_node.get_output_layout();
         const auto weights_type = layout_optimizer::data_type::weights;
 
         auto reorders = lo.get_generic_layer(
@@ -1921,7 +2116,7 @@ void program_impl::post_optimize_weights(layout_optimizer& lo)
     //generic lambda function which prepares given primitive for weights optimization
     //it deduces the type of weights from the type of the argument and calls 'add_weights' for all
     //weights used by given primitive.
-    //argument should match few requirements:
+    //argument should match requirements:
     // - it should be of a form 'typed_program_node<T>&'
     // - 'T.weights' should be either of type 'primitive_id' or 'std::vector<primitive_id>'
     const auto prep_opt = [this, &add_weights](auto& node) -> void
@@ -1949,34 +2144,66 @@ void program_impl::post_optimize_weights(layout_optimizer& lo)
         {
             prep_opt(prim.as<fully_connected>());
         }
+        //else if (prim.type() == lstm_gemm::type_id())//TODO: Enable postoptimize weights for lstm
+        //{
+        //    prep_opt(prim.as<lstm_gemm>()); //we should take care of weights and reccurent
+        //}
     }
+}
+
+void program_impl::prep_opt_depthwise_sep_post()
+{
     const auto prep_opt_depthwise_sep = [this](auto& node) -> void
     {
         if (!node.get_depthwise_sep_opt())
             return;
 
-        auto weights_offset = node.get_primitive()->input.size();
-        auto bias_offset = weights_offset + wrap_if_single(node.get_primitive()->weights).size();
-
-        const auto& weights_layout = node.get_dependency(1).get_output_layout();
         const auto& split = node.get_primitive()->split();
 
+        auto dependency_offset = node.get_primitive()->input.size();
         //concatenate weights
         {
             //if weights were optimized it is needed to use the sizes after optimization
-            auto target_layout = get_weights_layout(node.get_dependency(1), split);
-            merge_buffers(engine, node, target_layout, weights_offset, bias_offset);
+            auto target_layout = get_weights_layout(node.get_dependency(dependency_offset), split);
+            merge_buffers(engine, node, target_layout, dependency_offset, dependency_offset + split);
+            dependency_offset++;
         }
 
         //concatenate biases
         if (node.get_primitive()->bias.size() != 0)
         {
-            auto target_layout = layout(weights_layout.data_type, cldnn::format::bfyx, { 1, 1, weights_layout.size.batch[0] * split, 1 });
-            merge_buffers(engine, node, target_layout, weights_offset + 1, bias_offset + 1);
+            const auto& bias_layout = node.get_dependency(dependency_offset).get_output_layout();
+            auto target_layout = layout(bias_layout.data_type, cldnn::format::bfyx, { 1, 1, bias_layout.size.spatial[0] * split, 1 });
+            merge_buffers(engine, node, target_layout, dependency_offset, dependency_offset + split);
+            dependency_offset++;
         }
 
-        //override node split, as only one kernel will be executed
-        node.set_split(1);
+        if (node.template is_type<convolution>())
+        {
+            auto& prim_node = node.template as<convolution>();
+            const auto& prim = prim_node.get_primitive();
+
+            // concatenate weights quantization factors
+            if (prim->weights_quantization_factors.size() != 0)
+            {
+                const auto& weights_quantization_layout = node.get_dependency(dependency_offset).get_output_layout();
+                auto target_layout = layout(weights_quantization_layout.data_type, cldnn::format::bfyx, { 1, 1, weights_quantization_layout.size.batch[0] * split, 1 });
+                merge_buffers(engine, node, target_layout, dependency_offset, dependency_offset + split);
+                dependency_offset++;
+            }
+            // concatenate output callibration factors
+            if (prim->output_calibration_factors.size() != 0)
+            {
+                const auto& output_callibration_layout = node.get_dependency(dependency_offset).get_output_layout();
+                auto target_layout = layout(output_callibration_layout.data_type, cldnn::format::bfyx, { 1, 1, output_callibration_layout.size.batch[0] * split, 1 });
+                merge_buffers(engine, node, target_layout, dependency_offset, dependency_offset + split);
+                dependency_offset++;
+            }
+        }
+
+        if (node.get_primitive())
+            //override node split, as only one kernel will be executed
+            node.set_split(1);
     };
 
     //depthiwise separated convolution/deconvolution optimization
@@ -1991,7 +2218,7 @@ void program_impl::post_optimize_weights(layout_optimizer& lo)
 }
 
 void program_impl::apply_needed_padding(program_node& node, program_node& prev_node,
-                                                const padding& needed_padding)
+    const padding& needed_padding)
 {
     auto target_layout = prev_node.get_output_layout();
 
@@ -2046,7 +2273,7 @@ void program_impl::prepare_padding()
 
                 auto needed_padding = calc_sliding_window_needed_input_padding(
                     prim_node.input().get_output_layout(),
-                    prim->output_size, filter_size, prim->input_offset, prim->stride, {1, 1, 1, 1}, true, 1);
+                    prim->output_size, filter_size, prim->input_offset, prim->stride, { 1, 1, 1, 1 }, true, 1);
 
                 apply_needed_padding(prim_node, prim_node.input(), needed_padding);
             }
@@ -2085,7 +2312,7 @@ void program_impl::prepare_padding()
         auto conv_layout = node.get_output_layout();
 
         // right now output padding optimization is only available for bfyx format and data type = float32
-        if (conv_layout.format != cldnn::format::bfyx && conv_layout.format != cldnn::format::bf8_xy16)
+        if (conv_layout.format != cldnn::format::bfyx && conv_layout.format != cldnn::format::bf8_xy16 && conv_layout.format != cldnn::format::byxf_af32)
         {
             continue;
         }
@@ -2206,7 +2433,6 @@ void program_impl::propagate_constants()
             curr_node.users.end()
         );
         replace(curr_node, new_node, false, false);
-
     }
 }
 
@@ -2254,7 +2480,7 @@ void program_impl::prepare_buffer_fusing()
                     // todo: in future, if this case is problem, it can be optimized further to enable buffer fusing
                     //       per single input rather than all/none
                     // + restrict input types to pooling, convolution and activation only due to problems with output padding on b and f
-                    if ((!input->is_type<pooling>() && !input->is_type<convolution>() && !input->is_type<activation>() && !input->is_type<concatenation>() && !input->is_type<crop>()) ||
+                    if ((!input->is_type<pooling>() && !input->is_type<convolution>() && !input->is_type<activation>() && !input->is_type<concatenation>() && !input->is_type<crop>() && !input->is_type<scale>()) ||
                         (input->is_output() && !is_debug) ||
                         input->get_users().size() > 2)
                         return;
@@ -2381,6 +2607,7 @@ void program_impl::prepare_buffer_fusing()
 
         do_for_types<reshape>(*node, [this](reshape_node& node)
         {
+            node.get_output_layout();
             if (node.is_in_place())
                 node.can_be_optimized(true);
         });
@@ -2750,7 +2977,7 @@ bool program_impl::remove_if_dangling(program_node& node, bool detach_whole_bran
             if (rem->is_input())
                 inputs.remove(rem);
 
-            if(std::find(processing_order.begin(), processing_order.end(), rem) != processing_order.end())
+            if (std::find(processing_order.begin(), processing_order.end(), rem) != processing_order.end())
                 processing_order.erase(rem->processing_itr);
             optimized_out.push_back(rem->id());
             nodes_map.erase(rem->id());
@@ -2886,10 +3113,6 @@ void program_impl::dump_memory_pool() const
     {
         return;
     }
-    if (path.back() != '/' && path.back() != '\\')
-    {
-        path += "/";
-    }
 
     path += "cldnn_memory_pool.log";
     auto dep = get_memory_dependencies_string();
@@ -2904,10 +3127,6 @@ void program_impl::dump_program(const char* stage, bool with_full_info, std::fun
     if (path.empty())
     {
         return;
-    }
-    if (path.back() != '/' && path.back() != '\\')
-    {
-        path += "/";
     }
 
     std::ofstream graph(path + "cldnn_program_" + std::to_string(prog_id) + "_" + stage + ".graph");
@@ -2926,4 +3145,43 @@ void program_impl::dump_program(const char* stage, bool with_full_info, std::fun
 
     graph.open(path + "cldnn_program_" + std::to_string(prog_id) + "_" + stage + ".optimized");
     dump_graph_optimized(graph, *this);
+}
+
+//Dumps weights and biasses in serialization process, not working yet, in progress.
+void program_impl::dump_weights_and_biasses(std::vector<unsigned long long>& offsets, std::vector<std::string>& data_names, std::ofstream& file_stream) const
+{
+    for (auto const& n : nodes_map)
+    {
+        auto dependency_count = (unsigned int)n.second.get()->get_dependencies().size();
+        for (unsigned int dp = 0; dp < dependency_count; dp++)
+        {
+            auto& dependency = n.second.get()->get_dependency(dp);
+            if (dependency.is_type<data>())
+            {
+                offsets.push_back(offsets.empty() ? 0ull : offsets.back());
+                auto& mem = dependency.as<data>().get_attached_memory();
+                if (mem.get_layout().data_type == data_types::f32)
+                    dump_data(mem, file_stream, offsets.back(), sizeof(float));
+                else
+                    dump_data(mem, file_stream, offsets.back(), sizeof(short));
+                data_names.push_back(dependency.as<data>().id());
+            }
+        }
+    }
+    file_stream.close();
+}
+
+//Makes serialization with given name.
+//Placeholder, not working yet, in progress.
+void program_impl::serialize(std::string network_name, std::function<bool(program_node const&)> const& filter) const
+{
+    std::vector<unsigned long long> offsets;
+    std::vector<std::string> data_names;
+
+    std::ofstream file_stream(network_name + "_" + "serialization" + ".bin", std::ios::binary);
+    dump_kernels(engine->get_context().get()->get_kernels_cache().get_context().get_binaries(), offsets, data_names, file_stream);
+    dump_weights_and_biasses(offsets, data_names, file_stream);
+
+    std::ofstream graph(network_name + "_" + "serialization" + ".xml");
+    dump_to_xml(graph, *this, filter, offsets, data_names);
 }

@@ -18,7 +18,7 @@
 
 #include "deconvolution_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class DeconvolutionKernel_bfyx_opt : public DeconvolutionKernelBase
     {
@@ -29,6 +29,6 @@ namespace KernelSelector {
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        CommonDispatchData SetDefault(const DeconvolutionParams& params) const override;
+        CommonDispatchData SetDefault(const deconvolution_params& params) const override;
     };
 }

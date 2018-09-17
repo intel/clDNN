@@ -17,21 +17,21 @@
 #pragma once
 
 #include "mvn_kernel_base.h"
-
-namespace KernelSelector
-{
+ 
+namespace kernel_selector 
+{    
     class MVNKernelBfyxOpt : public MVNKernelBase
     {
     public:
         MVNKernelBfyxOpt() : MVNKernelBase("mvn_gpu_bfyx_opt") {}
         virtual ~MVNKernelBfyxOpt() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
         using Parent = MVNKernelBase;
 
     private:
-        DispatchData SetDefault(const MVNParams& params) const override;
-        JitConstants GetJitConstants(const MVNParams& params, MVNKernelBase::DispatchData kd) const override;
+        DispatchData SetDefault(const mvn_params& params) const override;
+        JitConstants GetJitConstants(const mvn_params& params, MVNKernelBase::DispatchData kd) const override;
     };
 }

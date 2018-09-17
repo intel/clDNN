@@ -75,6 +75,14 @@ file(GLOB_RECURSE __CLDNN_Sources__actual_kernels
     "${__CLDNN_Directory__actual_kernels}/*.hpp"
     "${__CLDNN_Directory__actual_kernels}/*.cpp"
   )
+foreach(__CLDNN_FilePath ${__CLDNN_Sources__actual_kernels})
+  string(REPLACE ";" "\;" __CLDNN_FilePath "${__CLDNN_FilePath}") # [WA#1] Must escape ; again if occurred in item.
+  get_filename_component(__CLDNN_FileDir "${__CLDNN_FilePath}" DIRECTORY)
+  get_filename_component(__CLDNN_DirName "${__CLDNN_FileDir}" NAME)
+  
+  set(__CLDNN_FileLabel "${__CLDNN_Label__actual_kernels}\\${__CLDNN_DirName}")
+  source_group("${__CLDNN_FileLabel}" FILES ${__CLDNN_FilePath})
+endforeach()
 
 set(__CLDNN_Directory__cl_kernels      "${__CLDNN_Directory__core}/cl_kernels")
 set(__CLDNN_Label__cl_kernels          "${__CLDNN_Label__core}\\cl_kernels")
@@ -109,7 +117,7 @@ source_group("${__CLDNN_Label__main}"             FILES ${__CLDNN_Sources__main}
 source_group("${__CLDNN_Label__core}"             FILES ${__CLDNN_Sources__core})
 source_group("${__CLDNN_Label__common}"           FILES ${__CLDNN_Sources__common})
 source_group("${__CLDNN_Label__core_common}"      FILES ${__CLDNN_Sources__core_common})
-source_group("${__CLDNN_Label__actual_kernels}"   FILES ${__CLDNN_Sources__actual_kernels})
+#source_group("${__CLDNN_Label__actual_kernels}"  FILES ${__CLDNN_Sources__actual_kernels})
 source_group("${__CLDNN_Label__cl_kernels}"       FILES ${__CLDNN_Sources__cl_kernels})
 source_group("${__CLDNN_Label__cg_cache}"         FILES ${__CLDNN_Sources__cg_cache})
 

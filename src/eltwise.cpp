@@ -33,6 +33,23 @@ layout eltwise_inst::calc_output_layout(eltwise_node const& node)
     return node.input().get_non_padded_output_layout();
 }
 
+static inline std::string stringify_vector(std::vector<float> v)
+{
+    std::stringstream s;
+
+    s << "{ ";
+
+    for (size_t i = 0; i < v.size(); ++i)
+    {
+        s << v.at(i);
+        if (i + 1 < v.size()) s << ", ";
+    }
+
+    s << " }";
+
+    return s.str();
+}
+
 std::string eltwise_inst::to_string(eltwise_node const& node)
 {
     auto node_info  = node.desc_to_json();
@@ -79,6 +96,10 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
         eltwise_info.add("input_"+std::to_string(i), node.input(i).id());
     }
     eltwise_info.add("mode", str_mode);
+    if (desc->mode == eltwise_mode::sum)
+    {
+        eltwise_info.add("coefficients", stringify_vector(desc->coefficients));
+    }
     if (desc->with_activation)
     {
         eltwise_info.add("with activation", activation);
@@ -93,11 +114,12 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
 eltwise_inst::typed_primitive_inst(network_impl& network, eltwise_node const& node)
     :parent(network, node)
 {
-    auto batch_size = input_memory(0).get_layout().size.batch[0];
-    auto feature_size = input_memory(0).get_layout().size.feature[0];
+    auto input_layout = node.input().get_output_layout();
+    auto batch_size = input_layout.size.batch[0];
+    auto feature_size = input_layout.size.feature[0];
 
-    auto input_batch_size = input_memory(0).get_layout().size.batch[0];
-    auto input_feature_size = input_memory(0).get_layout().size.feature[0];
+    auto input_batch_size = input_layout.size.batch[0];
+    auto input_feature_size = input_layout.size.feature[0];
 
     if (batch_size != 1)
     {

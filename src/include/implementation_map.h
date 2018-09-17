@@ -17,6 +17,7 @@
 
 #include <map>
 #include <functional>
+#include <typeinfo>
 
 template<typename T, typename U>
 class singleton_map : public std::map<T, U> {
@@ -49,7 +50,7 @@ template <class PType>
 struct typed_program_node;
 
 template<typename primitive_kind>
-struct implementation_key
+struct implementation_key 
 {
     typedef std::tuple<engine_types, data_types, format::type> type;
     type operator()(engine_types engine_type, const typed_program_node<primitive_kind>& primitive)
@@ -157,13 +158,13 @@ public:
     using map_type = singleton_map<key_type, factory_type>;
 
     static factory_type get(engine_types engine_type, const typed_program_node<primitive_kind>& primitive) {
-        // lookup in database; throw if not found
+        // lookup in database; throw if not found 
         auto key = key_builder()(engine_type, primitive);
         auto it = map_type::instance().find(key);
-        if (it == std::end(map_type::instance()))
-            throw std::runtime_error("not yet implemented");
+        if (it == std::end(map_type::instance())) 
+            throw std::runtime_error(std::string("implementation_map for ")+typeid(primitive_kind).name() +" could not find any implementation to match key");
 
-        // create implementation & attach it to result
+        // create implementation & attach it to result 
         return it->second;
     }
 

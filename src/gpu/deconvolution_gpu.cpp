@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "deconvolution/deconvolution_kernel_selector.h"
+#include "deconvolution/deconvolution_kernel_base.h"
 
 namespace cldnn { namespace gpu {
 
@@ -64,8 +66,6 @@ public:
         const auto& primitive = arg.get_primitive();
         const auto& weights_layout = arg.weights(0).get_output_layout();
 
-        assert(arg.get_output_layout().size.feature[0] / arg.get_primitive()->split() == weights_layout.size.batch[0]); // memory::format oixy
-
         switch (weights_layout.fused_format())
         {
             // FP32 (float)
@@ -91,33 +91,31 @@ public:
 
         const auto& input_offset = primitive->input_offset;
 
-        assert(arg.get_output_layout().size.feature[0] / primitive->split() == weights_layout.size.batch[0]);
-
         auto deconv_params = get_weights_bias_default_params<kernel_selector::deconvolution_params>(arg, depthwise_separable_opt ? 1 : split);
         auto deconv_optional_params = get_default_weights_bias_optional_params<kernel_selector::deconvolution_optional_params>(arg.get_program());
 
         if(primitive->with_activation)
             convert_activation_func_params(primitive, deconv_params);
 
-        deconv_params.deconvParams.depthwiseSeparableOpt = depthwise_separable_opt;
+        deconv_params.depthwiseSeparableOpt = depthwise_separable_opt;
 
-        deconv_params.deconvParams.split = split;
-        deconv_params.deconvParams.filterSize = {
+        deconv_params.split = split;
+        deconv_params.filterSize = {
             (uint32_t)weights_size.spatial[0],
             (uint32_t)weights_size.spatial[1],
         };
 
-        deconv_params.deconvParams.padding = {
+        deconv_params.padding = {
             (uint32_t)std::max(-input_offset.spatial[0], 0),
             (uint32_t)std::max(-input_offset.spatial[1], 0)
         };
 
-        deconv_params.deconvParams.stride = {
+        deconv_params.stride = {
             (uint32_t)stride.spatial[0],
             (uint32_t)stride.spatial[1]
         };
 
-        deconv_params.deconvParams.dilation = {
+        deconv_params.dilation = {
             (uint32_t)dilation.spatial[0],
             (uint32_t)dilation.spatial[1]
         };

@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class SoftmaxKernelSelctor : public KernelSelctorBase
+    class softmax_kernel_selector : public kernel_selector_base
     {
     public:
-        static SoftmaxKernelSelctor &Instance() {
-            static SoftmaxKernelSelctor instance_;
+        static softmax_kernel_selector &Instance() {
+            static softmax_kernel_selector instance_;
             return instance_;
         }
 
-        SoftmaxKernelSelctor();
+        softmax_kernel_selector();
 
-        virtual ~SoftmaxKernelSelctor() {}
+        virtual ~softmax_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

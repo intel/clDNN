@@ -17,15 +17,15 @@
 #include "permute_kernel_selector.h"
 #include "permute_kernel_ref.h"
  
-namespace KernelSelector {
+namespace kernel_selector {
 
-    PermuteKernelSelctor::PermuteKernelSelctor()
+    permute_kernel_selector::permute_kernel_selector()
     {
         Attach<PermuteKernelRef>();
     }
 
-    KernelsData PermuteKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData permute_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
-        return GetNaiveBestKernel(params, options, KernelType::REORDER);
+        return GetNaiveBestKernel(params, options, KernelType::PERMUTE);
     }
 }

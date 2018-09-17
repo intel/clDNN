@@ -19,20 +19,47 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
-    class ReorgYoloKernelRef : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // reorg_yolo_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct reorg_yolo_params : public base_params
+    {
+        reorg_yolo_params() : base_params(KernelType::REORG_YOLO) {}
+
+        uint32_t stride;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            auto k = base_params::GetParamsKey();
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // reorg_yolo_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct reorg_yolo_optional_params : optional_params
+    {
+        reorg_yolo_optional_params() : optional_params(KernelType::REORG_YOLO) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ReorgYoloKernelRef
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class ReorgYoloKernelRef : public common_kernel_base
     {
     public:
-        ReorgYoloKernelRef() : CommonKernelBase("reorg_yolo_gpu_ref") {}
+        ReorgYoloKernelRef() : common_kernel_base("reorg_yolo_gpu_ref") {}
         virtual ~ReorgYoloKernelRef() {}
 
         using DispatchData = CommonDispatchData;        
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
 
     protected:
-        virtual JitConstants GetJitConstants(const ReorgYoloParams& params) const;
+        virtual JitConstants GetJitConstants(const reorg_yolo_params& params) const;
     };
 }

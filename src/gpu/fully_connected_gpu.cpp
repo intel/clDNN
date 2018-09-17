@@ -20,6 +20,9 @@
 #include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
+#include "fully_connected/fully_connected_kernel_selector.h"
+#include "fully_connected/fully_connected_params.h"
+
 #include "network_impl.h"
 #include "error_handler.h"
 #include "kernel_runner.h"
@@ -35,7 +38,7 @@ struct fully_connected_gpu : typed_primitive_gpu_impl<fully_connected>
     using parent = typed_primitive_gpu_impl<fully_connected>;
 
     std::vector<network_impl::ptr> _reorders;   // TODO: move this reorder to graph compiler
-    memory_impl::ptr new_input_mem;      // TODO: remove this hack
+    memory_impl::cptr new_input_mem;      // TODO: remove this hack
 
     fully_connected_gpu(const fully_connected_node& arg, const kernel_selector::kernel_data& kd, std::vector<network_impl::ptr> reorders)
         : parent(arg, kd)
@@ -52,6 +55,8 @@ protected:
         args.output     = &instance.output_memory();
         args.weights    = &instance.weights_memory();
         args.bias       = instance.bias_term() ? &instance.bias_memory() : nullptr;
+        args.weights_quantization_factors = instance.weights_quantization_factors_term() ? &instance.weights_quantization_factors_memory() : nullptr;
+        args.output_calibration_factors = instance.output_calibration_factors_term() ? &instance.output_calibration_factors_memory() : nullptr;
 
         return args;
     }
@@ -93,6 +98,21 @@ public:
 
         const auto primitive = arg.get_primitive();
 
+        if (primitive->weights_quantization_factors.size() > 0)
+        {
+            fc_params.int8_quantization = true;
+            fc_params.weights_quantization_factors.push_back(convert_data_tensor(arg.weights_quantization_factors().get_output_layout()).FlattenFeatureAndSpatials());
+            fc_params.input_quantization_factor = arg.get_input_qf();
+
+            if (primitive->output_calibration_factors.size() > 0)
+            {
+                fc_params.output_calibration = true;
+                fc_params.output_calibration_factors.push_back(convert_data_tensor(arg.output_calibration_factors().get_output_layout()).FlattenFeatureAndSpatials());
+            }
+            else
+                fc_params.output_quantization_factor = arg.get_output_qf();
+        }
+
         fc_optional_params.tuningParams.runner = std::make_shared<gpu::kernel_runner>(arg.get_program().get_engine(), true);
 
         auto& kernel_selector = kernel_selector::fully_connected_kernel_selector::Instance();
@@ -101,7 +121,7 @@ public:
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         const auto& new_fc_params = *static_cast<kernel_selector::fully_connected_params*>(best_kernels[0].params.get());
-        std::vector<network_impl::ptr> reorders;
+        std::vector<network_impl::ptr> reorders; 
         if (fc_params.inputs[0].GetLayout() != new_fc_params.inputs[0].GetLayout())
         {
             const auto& input_layout = arg.input().get_output_layout();
@@ -131,6 +151,8 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), val_fw },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), val_fw },
                 { std::make_tuple(engine_types::ocl, data_types::i8,  format::bfyx), val_fw },
+                // MMAD
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf_af32), val_fw },
             });
         }
         ~attach() {}

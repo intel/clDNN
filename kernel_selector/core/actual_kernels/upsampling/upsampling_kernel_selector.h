@@ -18,20 +18,20 @@
 
 #include "kernel_selector.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class UpSamplingKernelSelector : public KernelSelctorBase
+    class upsampling_kernel_selector : public kernel_selector_base
     {
     public:
-        static UpSamplingKernelSelector &Instance() {
-            static UpSamplingKernelSelector instance_;
+        static upsampling_kernel_selector &Instance() {
+            static upsampling_kernel_selector instance_;
             return instance_;
         }
 
-        UpSamplingKernelSelector();
+        upsampling_kernel_selector();
 
-        virtual ~UpSamplingKernelSelector() {}
+        virtual ~upsampling_kernel_selector() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const override;
     };
 }

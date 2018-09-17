@@ -17,7 +17,7 @@
 #include "softmax_kernel_items_class_optimized.h"
 #include "kernel_selector_utils.h" 
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     // how many workitems we use to calculate item classes for one output, only 16 supported right now
     static const auto workitems_per_classes = 16;
@@ -27,18 +27,18 @@ namespace KernelSelector
         return GetDefaultSupportedKey();
     }
 
-    SoftmaxKerneItemsClassOptimized::Parent::DispatchData SoftmaxKerneItemsClassOptimized::SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const
+    SoftmaxKerneItemsClassOptimized::Parent::DispatchData SoftmaxKerneItemsClassOptimized::SetDefault(const softmax_params& params, const optional_params& optParams) const
     {
         auto runInfo = Parent::SetDefault(params, optParams);
 
         auto& input = params.inputs[0];
         
         size_t item_class_count = 0;
-        const auto global = GetSoftmaxDimGlobalSizes(params.smParams.dim, params.output);
+        const auto global = GetSoftmaxDimGlobalSizes(params.dim, params.output);
 
         assert(global.size() == 3);
 
-        switch (params.smParams.dim)
+        switch (params.dim)
         {
         case SoftmaxDim::X:
             item_class_count = input.X().v;
@@ -76,7 +76,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    JitConstants SoftmaxKerneItemsClassOptimized::GetJitConstants(const SoftmaxParams& params, DispatchData kd) const
+    JitConstants SoftmaxKerneItemsClassOptimized::GetJitConstants(const softmax_params& params, DispatchData kd) const
     {
         auto jit = SoftmaxItemsClassKernelBase::GetJitConstants(params, kd);
 
@@ -84,7 +84,7 @@ namespace KernelSelector
 
         return jit;
     }
-    KernelsData SoftmaxKerneItemsClassOptimized::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData SoftmaxKerneItemsClassOptimized::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

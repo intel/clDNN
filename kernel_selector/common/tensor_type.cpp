@@ -18,7 +18,7 @@
 #include "tensor_type.h"
 #include "common_tools.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     namespace Tensor
     {
@@ -35,6 +35,7 @@ namespace KernelSelector
             { 0, 1, 2,-1, 3 },  // DataLayout::bf8_xy16
             { 0, 1, 2, 3, 4 },  // DataLayout::brfyx
             { 2, 1, 0,-1, 3 },  // DataLayout::winograd_2x3_s1_data
+            { 1, 2, 0,-1, 3 },  // DataLayout::byxf_af32
         } };
 
         std::array<std::array<int, 4>, WeightsLayout::WeightsLayoutCount> WeightsTensor::weightsChannelArray
@@ -49,7 +50,7 @@ namespace KernelSelector
             { 0, 1, 2, 3 },  // WeightsLayout::os_iyx_osv16_rotate_180
             { -1,-1, 0, 1 }, // WeightsLayout::os_i_osv8__ai8
             { -1,-1, 0, 1 }, // WeightsLayout::os_i_osv16__ai8
-            { -1,-1, 0, 1 }, // WeightsLayout::os_i_osv16
+            { -1,-1, 0, 1 }, // WeightsLayout::os_i_osv16            
             { 1, 2, 3, 0 },  // WeightsLayout::i_yxs_os_yxsv2_osv16
             { 1, 2, 3, 0 },  // WeightsLayout::iy_xs_os_xsv2_osv16__ao32
             { 1, 2, 3, 0 },  // WeightsLayout::iy_xs_os_xsv2_osv8__ao32
@@ -60,6 +61,7 @@ namespace KernelSelector
             { 0, 1, 2, 3 },  // WeightsLayout::winograd_6x3_s1_fused_weights
             { 0, 1, 2, 3 },  // WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb
             { 0, 1, 2, 3 },  // WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb
+            { 0, 1, 2, 3},   // WeightsLayout::os_is_yx_isa8_osv8_isv4
         } };
 
         NDims DataTensor::GetSimpleDims(const std::vector<size_t>& d, DataLayout l)
@@ -85,6 +87,10 @@ namespace KernelSelector
                 newDims[3] = RoundUp(newDims[2] * newDims[3], 16);
                 newDims[2] = 1;
                 break;
+            case byxf_af32:
+                assert(newDims.size() == 4);
+                newDims[0] = RoundUp(newDims[0], 32);
+                break;
             default:
                 break;
             }
@@ -97,6 +103,15 @@ namespace KernelSelector
                 Pad p = { 0, newDims[i] - d[i] };
                 ret[i] = { d[i], pitch, p };
                 pitch *= newDims[i];
+            }
+
+            if (l == byxf_af32)
+            {
+                ret[0].pitch = 1;
+                ret[1].pitch = ret[0].pitch * newDims[0];
+                ret[2].pitch = ret[1].pitch * newDims[1];
+                ret[3].pitch = ret[2].pitch * newDims[2];
+                ret[4].pitch = ret[3].pitch * newDims[3];
             }
 
             return ret;
@@ -260,6 +275,11 @@ namespace KernelSelector
                 assert(newDims.size() == 4);
                 newDims[0] = RoundUp(newDims[0], 32);
                 break;
+            case os_is_yx_isa8_osv8_isv4:
+                assert(newDims.size() == 4);
+                newDims[3] = RoundUp(newDims[3], 8);
+                newDims[2] = RoundUp(newDims[2], 32);
+                break;
             default:
                 break;
             }
@@ -284,9 +304,14 @@ namespace KernelSelector
             {
                 ret[2].pitch     = RoundUp(ret[1].v, 2) * ret[1].pitch;
                 ret[1].pad.after = newDims[1] - ret[1].v;
-
+                
                 ret[3].pitch     = ret[2].v * ret[2].pitch;
                 ret[2].pad.after = newDims[2] - ret[2].v;
+            }
+            else if (l == os_is_yx_isa8_osv8_isv4)
+            {
+                ret[0].pitch = 256;
+                ret[1].pitch = ret[0].pitch * ret[0].v;
             }
 
             return ret;

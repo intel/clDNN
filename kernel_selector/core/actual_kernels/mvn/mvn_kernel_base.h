@@ -19,12 +19,47 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    class MVNKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // mvn_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct mvn_params : public base_params
+    {
+        mvn_params() : base_params(KernelType::MVN) {}
+
+        MVNMode mvnMode = MVNMode::WITHIN_CHANNELS;
+        bool mvnNormalizeVariance = true;
+        float         epsilon = 1e-10f;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            ParamsKey k = base_params::GetParamsKey();
+
+            k.EnableMVNMode(mvnMode);
+
+            if (mvnNormalizeVariance)
+                k.EnableMVNNormalizeVariance();
+
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // mvn_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct mvn_optional_params : optional_params
+    {
+        mvn_optional_params() : optional_params(KernelType::MVN) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MVNKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class MVNKernelBase : public common_kernel_base
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using common_kernel_base::common_kernel_base;
         virtual ~MVNKernelBase() {}
 
         struct DispatchData : public CommonDispatchData
@@ -34,7 +69,7 @@ namespace KernelSelector
             size_t dataSetsCount;
             size_t dataSetSize;
 
-            DispatchData()
+            DispatchData() 
                 : itemsNum(0)
                 , leftovers(0)
                 , dataSetsCount(0)
@@ -43,9 +78,9 @@ namespace KernelSelector
         };
 
     protected:
-        virtual JitConstants GetJitConstants(const MVNParams& params, DispatchData kd) const;
-        virtual DispatchData SetDefault(const MVNParams& params) const;
-        virtual std::string GetKernelName(const MVNParams&) const { return kernelName; }
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&, float estimated_time) const;
+        virtual JitConstants GetJitConstants(const mvn_params& params, DispatchData kd) const;
+        virtual DispatchData SetDefault(const mvn_params& params) const;
+        virtual std::string GetKernelName(const mvn_params&) const { return kernelName; }
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params&, float estimated_time) const;
     };
 }

@@ -17,7 +17,7 @@
 #include "activation_kernel_ref.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector {
+namespace kernel_selector {
 
     ParamsKey ActivationKernelRef::GetSupportedKey() const
     {
@@ -36,7 +36,7 @@ namespace KernelSelector {
         return k;
     }
 
-    KernelsData ActivationKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ActivationKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

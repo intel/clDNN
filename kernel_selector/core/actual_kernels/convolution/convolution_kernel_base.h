@@ -16,28 +16,28 @@
 
 #pragma once
 
-#include "common_kernel_base.h"
-#include "kernel_selector_params.h"
+#include "weight_bias_kernel_base.h"
+#include "convolution_params.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    class ConvolutionKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConvolutionKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class ConvolutionKernelBase : public WeightBiasKernelBase
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using WeightBiasKernelBase::WeightBiasKernelBase;
         virtual ~ConvolutionKernelBase() {}
 
         struct DispatchData : public CommonDispatchData
         {
             struct CLDNNStyle
             {
-                size_t ofmPerWorkItem;          // how many output feature maps a single work item compute
-                size_t batchesPerWorkItem;      // how many batches will a single work item compute
                 size_t blockWidth, blockHeight; // used for kernels processing blocks
                 size_t prefetch;
                 size_t inputBlockArraySize;     // Number of elements in array of UNIT_TYPE that must be specified in kernel to store/cache input block.
                 size_t inputBlockWidth;         // Number of elements in X dimension stored/cached in input block.
-                size_t leftovers;
             };
 
             struct GEMMStyle
@@ -58,14 +58,14 @@ namespace KernelSelector
         };
     
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const = 0;
-        virtual std::string GetKernelName(const ConvolutionParams&) const { return kernelName; }
+        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const = 0;
+        virtual std::string GetKernelName(const convolution_params&) const { return kernelName; }
         virtual bool NeedPaddedInput() const { return false; }
-        virtual bool Validate(const Params& p, const OptionalParams& o) const override;
-        virtual JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const;
-        virtual DispatchData SetDefault(const ConvolutionParams& params, int autoTuneIndex = -1) const;
-        bool CheckWorkGroups(const DispatchData&) const;
-        bool CheckPitchForSplitOnly(const ConvolutionParams& params) const;
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams& options, const std::string exeMode = ROUND_ROBIN, int autoTuneIndex = -1) const;
+        virtual bool Validate(const Params& p, const optional_params& o) const override;
+        virtual JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const;
+        virtual DispatchData SetDefault(const convolution_params& params, int autoTuneIndex = -1) const;
+        static bool CheckWorkGroups(const DispatchData&);
+        static bool CheckPitchForSplitOnly(const convolution_params& params);
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params& options, const std::string exeMode = ROUND_ROBIN, int autoTuneIndex = -1) const;
     };
 }

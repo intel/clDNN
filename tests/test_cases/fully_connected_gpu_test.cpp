@@ -177,7 +177,7 @@ TEST(DISABLED_fully_connected_gpu, generic_random_short) {
                 }
             }
         }
-    }
+    }  
 }
 
 TEST(fully_connected_gpu, no_biases) {
@@ -493,7 +493,7 @@ TEST(fully_connected_gpu, yxfn_f32) {
     //   3  -4      f1: b0
 
     //  Weights:
-    //   1  -1      n0: fm0
+    //   1  -1      n0: fm0  
     //   2   0      n0: fm1
     //   3   4      n1: fm0
     //   0.5 5      n1: fm1

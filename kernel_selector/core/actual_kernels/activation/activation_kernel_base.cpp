@@ -17,10 +17,10 @@
 #include "activation_kernel_base.h"
 #include "kernel_selector_utils.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
 
-    ActivationKernelBase::DispatchData ActivationKernelBase::SetDefault(const ActivationParams& arg) const
+    ActivationKernelBase::DispatchData ActivationKernelBase::SetDefault(const activation_params& arg) const
     {
         const auto& out = arg.output;
 
@@ -46,12 +46,28 @@ namespace KernelSelector
         return runInfo;
     }
 
-    JitConstants ActivationKernelBase::GetJitConstants(const ActivationParams& params, DispatchData) const
+    JitConstants ActivationKernelBase::GetJitConstants(const activation_params& params, DispatchData) const
     {
-        return MakeActivationJitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(params);
+
+        const auto& inputNlParams = params.inputActivationParams;
+
+        jit.AddConstants({
+            MakeJitConstant("PARAMS_NUM", GetActivationAdditionalParamsNumber(params.activationFunc)),
+        });
+
+        if (!inputNlParams.empty())
+        {
+            jit.AddConstants({
+                MakeJitConstant("ADDITIONAL_PARAMS", inputNlParams[0]),
+                MakeJitConstant("PARAMETERIZED", ""),
+            });
+        }
+
+        return jit;
     }
 
-    bool ActivationKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    bool ActivationKernelBase::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::ACTIVATION ||
             o.GetType() != KernelType::ACTIVATION)
@@ -62,16 +78,16 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData ActivationKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ActivationKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
 
-        KernelData kd = KernelData::Default<ActivationParams>(params);
+        KernelData kd = KernelData::Default<activation_params>(params);
 
-        ActivationParams& newParams = *static_cast<ActivationParams*>(kd.params.get());
+        activation_params& newParams = *static_cast<activation_params*>(kd.params.get());
         const std::string kernel_id = GetEntryPoint(kernelName, params.layerID, options);
 
         auto runInfo = SetDefault(newParams);
@@ -81,11 +97,11 @@ namespace KernelSelector
         
         auto& kernel = kd.kernels[0];
         FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point);
-
+        
         if (newParams.gradient)
             kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
 
-        if (!newParams.actParams.inputActivationParams.empty())
+        if (!newParams.inputActivationParams.empty())
         {
             kernel.arguments.push_back({ ArgumentDescriptor::Types::SLOPE, 0 });
         }

@@ -16,7 +16,7 @@
 
 #include "normalize_kernel_across_spatial_ref.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey NormalizeKernelAcrossSpatialRef::GetSupportedKey() const
     {
@@ -38,7 +38,7 @@ namespace KernelSelector
         return k;
     }
 
-    KernelsData NormalizeKernelAcrossSpatialRef::GetKernelsData(const Params& params, const OptionalParams& optParams) const
+    KernelsData NormalizeKernelAcrossSpatialRef::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         return GetCommonKernelsData(params, optParams, FORCE_PRIORITY_9);
     }

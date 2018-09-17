@@ -17,14 +17,14 @@
 #include "reorg_yolo_kernel_selector.h"
 #include "reorg_yolo_kernel_ref.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
-    ReorgYoloKernelSelctor::ReorgYoloKernelSelctor()
+    reorg_yolo_kernel_selector::reorg_yolo_kernel_selector()
     {
         Attach<ReorgYoloKernelRef>();
     }
 
-    KernelsData ReorgYoloKernelSelctor::GetBestKernels(const Params& params, const OptionalParams& options) const
+    KernelsData reorg_yolo_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
         return GetNaiveBestKernel(params, options, KernelType::REORG_YOLO);
     }

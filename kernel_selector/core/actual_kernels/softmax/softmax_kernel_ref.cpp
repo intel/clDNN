@@ -17,18 +17,18 @@
 #include "softmax_kernel_ref.h"
 #include "kernel_selector_utils.h" 
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey SoftmaxKernelRef::GetSupportedKey() const
     {
         return GetDefaultSupportedKey();
     }
 
-    SoftmaxKernelRef::Parent::DispatchData SoftmaxKernelRef::SetDefault(const SoftmaxParams& params, const OptionalParams& optParams) const
+    SoftmaxKernelRef::Parent::DispatchData SoftmaxKernelRef::SetDefault(const softmax_params& params, const optional_params& optParams) const
     {
         auto runInfo = Parent::SetDefault(params, optParams);
 
-        const auto global = GetSoftmaxDimGlobalSizes(params.smParams.dim, params.output);
+        const auto global = GetSoftmaxDimGlobalSizes(params.dim, params.output);
 
         assert(global.size() == 3);
 
@@ -47,7 +47,7 @@ namespace KernelSelector
         return runInfo;
     }
 
-    KernelsData SoftmaxKernelRef::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData SoftmaxKernelRef::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

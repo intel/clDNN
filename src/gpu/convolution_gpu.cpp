@@ -20,6 +20,8 @@
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
 #include "kernel_runner.h"
+#include "convolution/convolution_kernel_selector.h"
+#include "convolution/convolution_params.h"
 
 namespace cldnn { namespace gpu {
 
@@ -35,8 +37,8 @@ protected:
         bool res = parent::validate(instance);
 
         // Check whether all memory elements use the same unit type (FP16 or FP32).
-        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.input_memory().get_layout().data_type, "output memory", instance.output_memory().get_layout().data_type, "");
-        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.input_memory().get_layout().data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
+        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "output memory", instance.node.get_output_layout().data_type, "");
+        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
 
         return res;
     }
@@ -53,8 +55,8 @@ protected:
     }
 
     virtual int32_t get_split() const override
-    {
-        return _outer.get_split();
+    { 
+        return _outer.get_split(); 
     }
 
 public:
@@ -92,50 +94,42 @@ public:
         if(primitive->with_activation)
             convert_activation_func_params(primitive, conv_params);
 
-        if (input_layout.format == format::winograd_2x3_s1_data)
-        {
-            conv_params.convParams.winograd_tile_n = 4;
-            conv_params.convParams.winograd_tile_m = 8;
-            conv_params.convParams.winograd_input_tile_width = 4;
-            conv_params.convParams.winograd_input_tile_height = 1;
-        }
+        conv_params.depthwiseSeparableOpt = depthwise_separable_opt;
+        conv_params.transposed = transposed;
 
-        conv_params.convParams.depthwiseSeparableOpt = depthwise_separable_opt;
-        conv_params.convParams.transposed = transposed;
-
-        conv_params.convParams.split = split;
-        conv_params.convParams.filterSize = {
+        conv_params.split = split;
+        conv_params.filterSize = {
             (uint32_t)weights_size.spatial[0],
             (uint32_t)weights_size.spatial[1],
         };
 
-        conv_params.convParams.padding = {
+        conv_params.padding = {
             (uint32_t)std::max(-input_offset.spatial[0], 0),
             (uint32_t)std::max(-input_offset.spatial[1], 0)
         };
 
-        conv_params.convParams.stride = {
+        conv_params.stride = {
             (uint32_t)std::min(stride.spatial[0], input_size.spatial[0]),
             (uint32_t)std::min(stride.spatial[1], input_size.spatial[1])
         };
-        conv_params.convParams.dilation = {
+        conv_params.dilation = {
             (uint32_t)std::min(dilation.spatial[0], input_size.spatial[0]),
             (uint32_t)std::min(dilation.spatial[1], input_size.spatial[1])
         };
-
+        
         if (primitive->weights_quantization_factors.size() > 0)
         {
-            conv_params.convParams.int8_quantization = true;
+            conv_params.int8_quantization = true;
             conv_params.weights_quantization_factors.push_back(convert_data_tensor(arg.weights_quantization_factors().get_output_layout()).FlattenFeatureAndSpatials());
-            conv_params.convParams.input_quantization_factor = arg.get_input_qf();
+            conv_params.input_quantization_factor = arg.get_input_qf();
 
             if (primitive->output_calibration_factors.size() > 0)
             {
-                conv_params.convParams.output_calibration = true;
+                conv_params.output_calibration = true;
                 conv_params.output_calibration_factors.push_back(convert_data_tensor(arg.output_calibration_factors().get_output_layout()).FlattenFeatureAndSpatials());
             }
             else
-                conv_params.convParams.output_quantization_factor = arg.get_output_qf();
+                conv_params.output_quantization_factor = arg.get_output_qf();
         }
 
         auto& kernel_selector = kernel_selector::convolution_kernel_selector::Instance();
@@ -147,8 +141,8 @@ public:
             conv_optional_params.tuningParams.runner = std::make_shared<gpu::kernel_runner>(arg.get_program().get_engine(), true);
         }
 
-        KernelSelector::KernelsData best_kernels = kernel_selector.GetBestKernels(conv_params, conv_optional_params);
-
+        kernel_selector::KernelsData best_kernels = kernel_selector.GetBestKernels(conv_params, conv_optional_params);
+		
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
         auto conv = new convolution_gpu(arg, best_kernels[0]);
@@ -171,6 +165,8 @@ namespace{
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bf8_xy16), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), convolution_gpu::create);
+            // MMAD
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), convolution_gpu::create);
         }
         ~attach() {}
     };

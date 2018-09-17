@@ -43,7 +43,7 @@ struct memory_user
 
     memory_user(primitive_id id, uint32_t network_id) :
         _id(id) ,
-        _network_id(network_id)
+        _network_id(network_id) 
     {}
 
     friend std::ostream& operator<<(std::ostream& os, const memory_user& memory_user)
@@ -90,8 +90,8 @@ struct padded_pool_comparer
 };
 
     // memory_pool class implements memory manager that handles 4 memory pools
-    // - non padded buffers -
-    //     1 user requests for buffer with no padding.
+    // - non padded buffers - 
+    //     1 user requests for buffer with no padding. 
     //     2 Check if buffer with requested size exist
     //     3   * yes: check if any of current users exist on request conflict list if no - return this memory, otherwise goto 4
     //         * no: goto 4
@@ -99,7 +99,7 @@ struct padded_pool_comparer
     // - padded buffers - not implemented yet
     // - images 2d - not implemented yet
     // - images 2d arrays - not implemented yet
-    // - immutable - if user request for non reusable resource don't use pool, return
+    // - immutable - if user request for non reusable resource don't use pool, return 
 
 // TODO list:
 // - resolve engine <--> memory_pool circular dependency

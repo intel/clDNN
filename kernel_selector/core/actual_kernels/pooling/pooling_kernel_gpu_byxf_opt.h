@@ -18,7 +18,7 @@
 
 #include "pooling_kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     class PoolingKernelGPUByxfOpt : public PoolingKernelBase
     {
@@ -26,11 +26,11 @@ namespace KernelSelector
         PoolingKernelGPUByxfOpt() : PoolingKernelBase("pooling_gpu_byxf_opt") {}
         virtual ~PoolingKernelGPUByxfOpt() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
     protected:
-        bool Validate(const Params&, const OptionalParams&) const override;
-        JitConstants GetJitConstants(const PoolingParams& params, DispatchData kd) const override;
-        DispatchData SetDefault(const PoolingParams& params) const override;
+        bool Validate(const Params&, const optional_params&) const override;
+        JitConstants GetJitConstants(const pooling_params& params, DispatchData kd) const override;
+        DispatchData SetDefault(const pooling_params& params) const override;
     };
 }

@@ -81,11 +81,12 @@ convolution_grad_weights_inst::typed_primitive_inst(network_impl& network, convo
 {
     auto stride = argument.stride;
     auto dilation = argument.dilation;
-    auto output_size = output_memory().get_layout().size;
 
-    auto input_inst = input_memory(1).get_layout();
-    auto input_grad_inst = input_memory(0).get_layout();
-    auto output_inst = output_memory().get_layout();
+    auto input_inst = node.input(1).get_output_layout();
+    auto input_grad_inst = node.input().get_output_layout();
+    auto desc = node.get_primitive();
+    auto output_inst = node.get_output_layout();
+    auto output_size = output_inst.size;
 
     CLDNN_ERROR_NOT_EQUAL(node.id(), "convolution_grad_weights Input_grad size", input_grad_inst.size.raw.size(), "Input size", output_inst.size.raw.size(), "Input_grad/Input number of dimension does not match.");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "convolution_grad_weights Input size", input_inst.size.raw.size(), "output size", output_inst.size.raw.size(), "Input/output number of dimension does not match.");
@@ -95,16 +96,23 @@ convolution_grad_weights_inst::typed_primitive_inst(network_impl& network, convo
     CLDNN_ERROR_NOT_EQUAL(node.id(), "convolution_grad_weights dilation x", dilation.spatial[0], "should be 1", 1, "Only dilation x = 1 is supported right now.");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "convolution_grad_weights dilation y", dilation.spatial[1], "should be 1", 1, "Only dilation y = 1 is supported right now.");
 
+    if (use_momentum())
+    {
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "number of weights", desc->weights.size(), "should be same as prev_weights_grad number", desc->prev_weights_grad.size(), "");
+        if (bias_term())
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "number of bias", desc->bias.size(), "should be same as prev_bias_grad number", desc->prev_bias_grad.size(), "");
+    }
+
     auto split = node.get_split();
     for (decltype(split) j = 0; j < split; j++)
     {
-        auto& filter_mem = weights_memory(j);
-        auto& filter_inst = filter_mem.get_layout(); //convolution_grad_weights filter
+        auto& filter_mem = node.weights(j);
+        auto filter_inst = filter_mem.get_output_layout(); //convolution_grad_weights filter
         auto input_offset = argument.input_offset;
 
         if (argument.bias.size() != 0)
         {
-            auto& bias_inst = bias_memory(j).get_layout();
+            auto bias_inst = node.bias(j).get_output_layout();
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias batch[0]", bias_inst.size.batch[0], "dimension size", 1, "Batch[0] of bias should be 1. Bias isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias feature[0]", bias_inst.size.feature[0], "dimension size", 1, "Feature[0] of bias should be 1. Bias isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[1]", bias_inst.size.spatial[1], "dimension size", 1, "Spatial[1] of bias should be 1. Bias isn't 1D vector.");

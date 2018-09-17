@@ -17,7 +17,7 @@
 #include "convolution_kernel_bfyx_ref.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
     
     ParamsKey ConvolutionKernel_bfyx_Ref::GetSupportedKey() const
     {
@@ -50,7 +50,7 @@ namespace KernelSelector {
         return k;
     }
 
-    KernelsData ConvolutionKernel_bfyx_Ref::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionKernel_bfyx_Ref::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options);
     }

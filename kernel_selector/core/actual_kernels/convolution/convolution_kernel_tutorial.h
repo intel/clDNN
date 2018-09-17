@@ -28,7 +28,7 @@
 #define BASIC_TUTORIAL          // Skeleton to add a new kernel
 #endif
  
-namespace KernelSelector {
+namespace kernel_selector {
     
     class ConvolutionKernel_Tutorial : public ConvolutionKernelBase
     {
@@ -37,11 +37,11 @@ namespace KernelSelector {
         ConvolutionKernel_Tutorial() : Parent("convolution_tutorial") {}
         virtual ~ConvolutionKernel_Tutorial() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override
+        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override
         {
             return{
                 WeightsLayout::oiyx,
@@ -52,9 +52,9 @@ namespace KernelSelector {
         }
 
 #ifdef ADVANCED_TUTORIAL
-        bool         Validate(const Params& p, const OptionalParams& o)                 const override;
-        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd)  const override;
-        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1)   const override;
+        bool         Validate(const Params& p, const optional_params& o)                 const override;
+        JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd)  const override;
+        DispatchData SetDefault(const convolution_params& arg, int autoTuneIndex = -1)   const override;
 #endif
     };
 }

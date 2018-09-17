@@ -15,9 +15,9 @@
 */
 
 #include "lrn_kernel_within_channel_byxf_opt.h"
-#include "kernel_selector_utils.h"
+#include "kernel_selector_utils.h" 
 
-namespace KernelSelector
+namespace kernel_selector
 {
     ParamsKey LRNKernelWithinChannelByxfOpt::GetSupportedKey() const
     {
@@ -37,12 +37,12 @@ namespace KernelSelector
         return k;
     }
 
-    JitConstants LRNKernelWithinChannelByxfOpt::GetJitConstants(const LRNParams& params, LRNKernelWithinChannelByxfOpt::Parent::DispatchData kd) const
+    JitConstants LRNKernelWithinChannelByxfOpt::GetJitConstants(const lrn_params& params, LRNKernelWithinChannelByxfOpt::Parent::DispatchData kd) const
     {
-        const uint32_t round_norm_size = (params.lrnParams.localSize / 2) * 2 + 1;
+        const uint32_t round_norm_size = (params.localSize / 2) * 2 + 1;
         uint32_t numElement = round_norm_size * round_norm_size;
 
-        if (params.lrnParams.normMode == LRNMode::ACROSS_CHANNEL)
+        if (params.normMode == LRNMode::ACROSS_CHANNEL)
         {
             numElement = round_norm_size;
         }
@@ -60,7 +60,7 @@ namespace KernelSelector
         return jit;
     }
 
-    LRNKernelWithinChannelByxfOpt::Parent::DispatchData LRNKernelWithinChannelByxfOpt::SetDefault(const LRNParams& params) const
+    LRNKernelWithinChannelByxfOpt::Parent::DispatchData LRNKernelWithinChannelByxfOpt::SetDefault(const lrn_params& params) const
     {
         DispatchData kd = Parent::SetDefault(params);
 
@@ -80,13 +80,13 @@ namespace KernelSelector
         return kd;
     }
 
-    bool LRNKernelWithinChannelByxfOpt::Validate(const Params& p, const OptionalParams& o) const
+    bool LRNKernelWithinChannelByxfOpt::Validate(const Params& p, const optional_params& o) const
     {
-        if (!LRNKernelBase::Validate(p, o))
+        if (!LRNKernelBase::Validate(p, o)) 
         {
             return false;
         }
-        const LRNParams& params = static_cast<const LRNParams&>(p);
+        const lrn_params& params = static_cast<const lrn_params&>(p);
         if(params.inputs[0].Feature().v % 8 != 0)
         {
             return false;
@@ -94,7 +94,7 @@ namespace KernelSelector
         return true;
     }
 
-    KernelsData LRNKernelWithinChannelByxfOpt::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData LRNKernelWithinChannelByxfOpt::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetCommonKernelsData(params, options, FORCE_PRIORITY_7);
     }

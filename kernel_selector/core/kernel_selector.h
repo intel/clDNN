@@ -22,18 +22,18 @@
 #include "kernel_runner_interface.h"
 #include "auto_tuner.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
     using KernelList = std::vector<std::shared_ptr<KernelBase>>;
     using ForceList = std::map<std::string, bool>;
 
-    class KernelSelctorBase
+    class kernel_selector_base
     {
     public:
-        KernelSelctorBase();
-        virtual ~KernelSelctorBase() {}
+        kernel_selector_base();
+        virtual ~kernel_selector_base() {}
 
-        virtual KernelsData GetBestKernels(const Params& params, const OptionalParams& options) const = 0;
+        virtual KernelsData GetBestKernels(const Params& params, const optional_params& options) const = 0;
 
     protected:
         template<typename T>
@@ -42,9 +42,9 @@ namespace KernelSelector
             implementations.push_back(std::make_shared<T>(T()));
         }
 
-        virtual KernelsData GetNaiveBestKernel(const Params& params, const OptionalParams& options, KernelType kType) const;
+        virtual KernelsData GetNaiveBestKernel(const Params& params, const optional_params& options, KernelType kType) const;
 
-        virtual KernelsData GetAutoTuneBestKernel(const Params& params, const OptionalParams& options, KernelType kType) const;
+        virtual KernelsData GetAutoTuneBestKernel(const Params& params, const optional_params& options, KernelType kType) const;
 
         KernelList implementations;
         ForceList forceKernels;

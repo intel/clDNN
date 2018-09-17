@@ -17,6 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "memory_gpu.h"
 #include "engine_impl.h"
+#include "ocl_base_event.h"
 
 namespace cldnn { namespace gpu {
 
@@ -58,6 +59,11 @@ void gpu_buffer::unlock() {
         _context->queue().enqueueUnmapMemObject(_buffer, _mapped_ptr);
         _mapped_ptr = nullptr;
     }
+}
+
+void gpu_buffer::fill(unsigned char pattern, event_impl::ptr ev) {
+    cl::Event ev_ocl = dynamic_cast<base_event*>(ev.get())->get();
+    _context->queue().enqueueFillBuffer<unsigned char>(_buffer, pattern, 0, size(), 0, &ev_ocl);
 }
 
 gpu_image2d::gpu_image2d(const refcounted_obj_ptr<engine_impl>& engine, const layout& layout)
@@ -129,6 +135,12 @@ void gpu_image2d::unlock() {
         _context->queue().enqueueUnmapMemObject(_buffer, _mapped_ptr);
         _mapped_ptr = nullptr;
     }
+}
+
+void gpu_image2d::fill(unsigned char pattern, event_impl::ptr ev) {
+    cl::Event ev_ocl = dynamic_cast<base_event*>(ev.get())->get();
+    cl_uint4 pattern_uint4 = { pattern, pattern, pattern, pattern };
+    _context->queue().enqueueFillImage(_buffer, pattern_uint4, { 0, 0, 0 }, { _width, _height, 1 }, 0, &ev_ocl);
 }
 
 }}

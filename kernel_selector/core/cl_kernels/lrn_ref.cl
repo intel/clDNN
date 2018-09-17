@@ -14,8 +14,6 @@
 // limitations under the License.
 */
 
-
-
 #include "include/common.cl"
 #include "include/fetch.cl"
 #include "include/data_types.cl"

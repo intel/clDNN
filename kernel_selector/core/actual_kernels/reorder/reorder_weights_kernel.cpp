@@ -18,13 +18,15 @@
 #include "reorder_weights_kernel.h"
 #include "kernel_selector_utils.h" 
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     ParamsKey ReorderWeightsKernel::GetSupportedKey() const
     {
         ParamsKey k;
+        k.EnableInputWeightsType(WeightsType::INT8);
         k.EnableInputWeightsType(WeightsType::F16);
         k.EnableInputWeightsType(WeightsType::F32);
+        k.EnableOutputWeightsType(WeightsType::INT8);
         k.EnableOutputWeightsType(WeightsType::F16);
         k.EnableOutputWeightsType(WeightsType::F32);
         k.EnableAllInputWeightsLayout();
@@ -35,9 +37,9 @@ namespace KernelSelector
         return k;
     }
 
-    KernelsData ReorderWeightsKernel::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ReorderWeightsKernel::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        const ReorderWeightsParams& orgParams = static_cast<const ReorderWeightsParams&>(params);
+        const reorder_weights_params& orgParams = static_cast<const reorder_weights_params&>(params);
         return GetCommonKernelsData(orgParams, options, DONT_USE_IF_HAVE_SOMETHING_ELSE);
     }
 }

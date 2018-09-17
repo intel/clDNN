@@ -104,7 +104,7 @@ event_impl::ptr engine_impl::create_user_event(bool set)
 }
 
 void engine_impl::flush_network()
-{
+{ 
     get_context()->flush();
 }
 
@@ -113,9 +113,9 @@ void engine_impl::release_pending_memory()
     get_context()->release_pending_memory();
 }
 
-program_impl::ptr engine_impl::build_program(const topology_impl& topology, const build_options& options)
+program_impl::ptr engine_impl::build_program(const topology_impl& topology, const build_options& options, bool is_internal)
 {
-    return{ new program_impl(*this, topology, options), false };
+    return{ new program_impl(*this, topology, options, is_internal), false };
 }
 
 network_impl::ptr engine_impl::build_network(const topology_impl& topology, const build_options& options, bool internal_network)
@@ -139,8 +139,10 @@ gpu::engine_info_internal engine_impl::get_engine_info() const
     return _context->get_engine_info();
 }
 
-void engine_impl::compile_program(program_impl&)
+void engine_impl::compile_program(program_impl& program)
 {
+    if (!program.get_options().get<build_option_type::serialize_network>()->serialization_network_name.empty()) 
+        _context->get_kernels_cache().get_context().set_serialization_flag(true);
     //TODO: better compilation logic instead of a simple 'compile all'?
     _context->get_kernels_cache().build_all();
 }

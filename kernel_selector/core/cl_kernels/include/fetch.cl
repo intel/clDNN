@@ -55,6 +55,23 @@ inline uint FUNC(get_bf8_xy16_index)(uint b, uint f, uint y, uint x, uint x_size
     return idx;
 }
 
+inline uint FUNC(get_byxf_af32_index)(uint b, uint f, uint y, uint x, uint y_pitch, uint b_pitch, uint f_size, uint offset)
+{
+	const uint f_aligned_to_32 = ((f_size + 31) / 32) * 32;
+	const uint b_offset = b * b_pitch;
+	const uint xy_offset = f_aligned_to_32 * x + y_pitch * y;
+	const uint f_offset = f;
+	const size_t idx = offset + xy_offset + b_offset + f_offset;
+	return idx;
+}
+
+#define GET_DATA_BYXF_AF32_INDEX(prefix, b, f, y, x)\
+	FUNC_CALL(get_byxf_af32_index)(                 \
+		b, f, y, x, CAT(prefix, _Y_PITCH),          \
+		CAT(prefix, _BATCH_PITCH),                      \
+		CAT(prefix, _FEATURE_NUM),                 \
+		CAT(prefix, _OFFSET))
+
 #define GET_DATA_BF8_XY16_INDEX(prefix, b, f, y, x)     \
     FUNC_CALL(get_bf8_xy16_index)(                      \
         b, f, y, x, CAT(prefix, _SIZE_X ),              \
@@ -166,6 +183,32 @@ inline uint FUNC(get_iy_xs_os_xsv2_osv_index)(uint o, uint i, uint y, uint x, ui
         CAT(prefix, _X_PITCH),                                                  \
         CAT(prefix, _OFFSET),                                                   \
         sub_group_size)
+
+inline uint FUNC(get_os_is_yx_isa8_osv8_isv4_index)(uint o, uint i, uint y, uint x, uint size_x, uint size_y, uint size_ifm, uint size_ofm, uint offset)
+{
+    const uint f_32_aligned = ((size_ifm + 31)/32) * 32;
+	const uint isv2_idx = i % 4;
+	const uint osv_idx = o % 8;
+	const uint isv1_idx = (i / 4) % 8;
+	const uint is_idx = i / 32;
+	const uint os_idx = o / 8;
+
+	size_t idx = offset + isv2_idx + 4 * (osv_idx + 8 * isv1_idx);
+	idx += x * 4 * 8 * 8;
+	idx += y * size_x * 4 * 8 * 8;
+	idx += is_idx * size_y * size_x * 4 * 8 * 8;
+	idx += os_idx * (f_32_aligned/32) * size_y * size_x * 4 * 8 * 8;
+
+    return idx;
+}
+
+#define GET_FILTER_OS_IS_YX_ISA8_OSV8_ISV4(prefix, o, i, y, x) \
+	FUNC_CALL(get_os_is_yx_isa8_osv8_isv4_index)(                               \
+        o, i, y, x, CAT(prefix, _SIZE_X ),                                      \
+        CAT(prefix, _SIZE_Y),                                                \
+        CAT(prefix, _IFM_NUM),                                                  \
+        CAT(prefix, _OFM_NUM),                                                  \
+        CAT(prefix, _OFFSET))
 
 #define DECLARE_SAMPLER const sampler_t imageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST
 

@@ -22,7 +22,7 @@
 
 /// \brief Class providing interface to retrieve a list of primitive implementations per primitive id
 ///
-namespace KernelSelector { namespace gpu { namespace cache {
+namespace kernel_selector { namespace gpu { namespace cache {
 
 using code = std::string;
 using primitive_id = std::string;

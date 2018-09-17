@@ -18,7 +18,7 @@
 
 #include "convolution_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class ConvolutionKernel_bfyx_os_iyx_osv16 : public ConvolutionKernelBase
     {
@@ -27,17 +27,17 @@ namespace KernelSelector {
         ConvolutionKernel_bfyx_os_iyx_osv16();
         virtual ~ConvolutionKernel_bfyx_os_iyx_osv16() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
-        virtual KernelsData GetKernelsDataForAutoTune(const Params& params, const OptionalParams& options) const override;
-        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const OptionalParams& options, int autoTuneIndex) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
+        virtual KernelsData GetKernelsDataForAutoTune(const Params& params, const optional_params& options) const override;
+        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, int autoTuneIndex) const override;
         virtual ParamsKey GetSupportedKey() const override;
     
     protected:
-        std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&)  const override;
-        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
-        bool Validate(const Params& p, const OptionalParams& o) const override;
+        std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&)  const override;
+        JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
+        bool Validate(const Params& p, const optional_params& o) const override;
         bool NeedPaddedInput() const override { return true; }
-        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
+        DispatchData SetDefault(const convolution_params& arg, int autoTuneIndex = -1) const override;
 
     private:
         struct AutoTuneOption

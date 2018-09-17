@@ -26,7 +26,7 @@
 #define AGE_BASED "-cl-no-subgroup-ifp"
 #define ROUND_ROBIN ""
 
-namespace KernelSelector {
+namespace kernel_selector {
 
 #ifndef UNUSED
 #define UNUSED(a) (void)a
@@ -50,7 +50,7 @@ namespace KernelSelector {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // usings
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    using primitive_db = KernelSelector::gpu::cache::primitive_db;
+    using primitive_db = kernel_selector::gpu::cache::primitive_db;
 
     std::string GetStringEnv(const char* varName);
 
@@ -136,13 +136,20 @@ namespace KernelSelector {
             OUTPUT,
             WEIGHTS,
             BIAS,
+            PREV_WEIGHTS_GRADIENT,
+            PREV_BIAS_GRADIENT,
             SCALE_TABLE,
             SLOPE,
             SPLIT,
             INTERNAL_BUFFER,
             SCALAR,
             WEIGHTS_QUANTIZATION_FACTORS,
-            OUTPUT_CALIBRATION_FACTORS
+            OUTPUT_CALIBRATION_FACTORS,
+            RECURRENT, // RNN/LSTM/GRU recurrent weights
+            HIDDEN,    // RNN/LSTM/GRU hidden input
+            CELL,      // LSTM cell input
+            LSTM_PACK, // LSTM packed output
+            LEARNING_RATE
         };
 
         enum class ScalarTypes
@@ -289,17 +296,18 @@ namespace KernelSelector {
     {
         switch (l)
         {
-        case KernelSelector::DataLayout::bf:                return "BF";
-        case KernelSelector::DataLayout::fb:                return "FB";
-        case KernelSelector::DataLayout::bfyx:              return "BFYX";
-        case KernelSelector::DataLayout::yxfb:              return "YXFB";
-        case KernelSelector::DataLayout::byxf:              return "BYXF";
-        case KernelSelector::DataLayout::fyxb:              return "FYXB";
-        case KernelSelector::DataLayout::bs_f_bsv8__af8:    return "BS_F_BSV8__AF8";
-        case KernelSelector::DataLayout::bs_f_bsv16__af8:   return "BS_F_BSV16__AF8";
-        case KernelSelector::DataLayout::bf8_xy16:          return "BF8_XY16";
-        case KernelSelector::DataLayout::brfyx:             return "BRFYX";
-        case KernelSelector::DataLayout::winograd_2x3_s1_data: return "WINOGRAD_2x3_S1_DATA";
+        case kernel_selector::DataLayout::bf:                return "BF";
+        case kernel_selector::DataLayout::fb:                return "FB";
+        case kernel_selector::DataLayout::bfyx:              return "BFYX";
+        case kernel_selector::DataLayout::yxfb:              return "YXFB";
+        case kernel_selector::DataLayout::byxf:              return "BYXF";
+        case kernel_selector::DataLayout::fyxb:              return "FYXB";
+        case kernel_selector::DataLayout::bs_f_bsv8__af8:    return "BS_F_BSV8__AF8";
+        case kernel_selector::DataLayout::bs_f_bsv16__af8:   return "BS_F_BSV16__AF8";
+        case kernel_selector::DataLayout::bf8_xy16:          return "BF8_XY16";
+        case kernel_selector::DataLayout::brfyx:             return "BRFYX";
+        case kernel_selector::DataLayout::winograd_2x3_s1_data: return "WINOGRAD_2x3_S1_DATA";
+        case kernel_selector::DataLayout::byxf_af32: return "BYXF_AF32";
         default: return "";
         }
     }
@@ -408,7 +416,7 @@ namespace KernelSelector {
         }
     }
 
-	inline std::string toString(ArgMaxMinAxis mode)
+	inline std::string toString(ArgMaxMinAxis mode) 
 	{
 		switch (mode)
 		{
@@ -523,6 +531,7 @@ namespace KernelSelector {
         case WeightsLayout::winograd_6x3_s1_fused_weights:    return "WINOGRAD_6x3_S1_FUSED_WEIGHTS";
         case WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb: return "IMAGE_2D_WEIGHTS_WINOGRAD_6x3_S1_FBXYB";
         case WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb: return "IMAGE_2D_WEIGHTS_WINOGRAD_6x3_S1_XFBYB";
+        case WeightsLayout::os_is_yx_isa8_osv8_isv4: return "OS_IS_YX_ISA8_OSV8_ISV4";
         default:
             return "";
             break;

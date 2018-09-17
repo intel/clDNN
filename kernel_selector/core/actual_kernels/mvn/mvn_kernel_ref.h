@@ -17,19 +17,19 @@
 #pragma once
 
 #include "mvn_kernel_base.h"
-
-namespace KernelSelector
-{
+ 
+namespace kernel_selector 
+{    
     class MVNKernelRef : public MVNKernelBase
     {
     public:
         MVNKernelRef() : MVNKernelBase("mvn_gpu_ref") {}
         virtual ~MVNKernelRef() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        std::string GetKernelName(const MVNParams&) const override;
+        std::string GetKernelName(const mvn_params&) const override;
     };
 }

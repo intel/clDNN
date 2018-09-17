@@ -17,14 +17,23 @@
 #include "normalize_kernel_base.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    JitConstants NormalizeKernelBase::GetJitConstants(const NormalizeParams& params) const
+    JitConstants NormalizeKernelBase::GetJitConstants(const normalize_params& np) const
     {
-        return MakeNormalizeJitConstants(params);
+        JitConstants jit = MakeBaseParamsJitConstants(np);
+
+        jit.AddConstants({
+            MakeJitConstant("SCALE_TABLE",          np.scaleTable),
+            MakeJitConstant("EPSILON",              np.epsilon),
+            MakeJitConstant(toString(np.normMode),  ""),
+            MakeJitConstant("THRESHOLD",            0.0001f),
+        });
+
+        return jit;
     }
 
-    NormalizeKernelBase::DispatchData NormalizeKernelBase::SetDefault(const NormalizeParams& params) const
+    NormalizeKernelBase::DispatchData NormalizeKernelBase::SetDefault(const normalize_params& params) const
     {
         const auto& output = params.output;
 
@@ -34,7 +43,7 @@ namespace KernelSelector
 
         std::vector<size_t> global(3);
 
-        if (params.normParams.normMode == NormalizeMode::WITHIN_SPATIAL)
+        if (params.normMode == NormalizeMode::WITHIN_SPATIAL)
         {
             global = { output.X().v, output.Y().v, output.Batch().v };
         }
@@ -56,17 +65,17 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData NormalizeKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, float estimated_time) const
+    KernelsData NormalizeKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, float estimated_time) const
     {
         assert(params.GetType() == KernelType::NORMALIZE);
 
-        const NormalizeParams& orgParams = static_cast<const NormalizeParams&>(params);
+        const normalize_params& orgParams = static_cast<const normalize_params&>(params);
 
         DispatchData runInfo;
 
         runInfo = SetDefault(orgParams);
 
-        KernelData kd = KernelData::Default<NormalizeParams>(params);
+        KernelData kd = KernelData::Default<normalize_params>(params);
 
         auto cldnn_jit = GetJitConstants(orgParams);
         auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);

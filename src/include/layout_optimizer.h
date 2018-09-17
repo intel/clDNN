@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@
 #include "deconvolution_inst.h"
 #include "fully_connected_inst.h"
 #include "detection_output_inst.h"
-
+#include "embed_inst.h"
+#include "lstm_gemm_inst.h"
 #include "generic_layer.hpp"
 
 #include "kernel_selector_common.h"
@@ -41,7 +42,7 @@ namespace cldnn
 class primitive_inst;
 
 //this class is used for both static and dynamic reordering of data withing network.
-//static reordering is done for cldnn::data (i.e. immutable) primitives via internal network
+//static reordering is done for cldnn::data (i.e. immutable) primitives via internal network 
 //  - its done once before network build by running reorder in separate network and fetching its result.
 //dynamic reordering is done for cldnn::input_layout (i.e. unknown data during network building)
 //  - its done by inserting extra reorder into target topology.
@@ -108,6 +109,8 @@ private:
     layout get_expected_layout(layout const& current_layout, data_type type, deconvolution_node const& node, layout const& output_or_weights_layout);
     layout get_expected_layout(layout const& current_layout, data_type type, fully_connected_node const& node, layout const& output_or_weights_layout);
     layout get_expected_layout(layout const& current_layout, data_type type, detection_output_node const& node, layout const& output_or_weights_layout);
+    layout get_expected_layout(layout const& current_layout, data_type type, embed_node const& node, layout const& output_or_weights_layout);
+    layout get_expected_layout(layout const& current_layout, data_type type, lstm_gemm_node const& node, layout const& output_or_weights_layout);
 
     bool convolution_bfyx_opt(const layout& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv);
     bool convolution_byxf_opt(const layout& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv);
@@ -143,7 +146,7 @@ public:
                      T& node,
                      layout const& user_layout)
         -> std::enable_if_t<
-            meta::is_any_of_v<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node>,
+            meta::is_any_of_v<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node, embed_node, lstm_gemm_node>,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
         >
     {
@@ -159,7 +162,7 @@ public:
                      T& node,
                      layout const& user_layout)
         -> std::enable_if_t<
-            !meta::is_any_of_v<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node>,
+            !meta::is_any_of_v<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node, embed_node, lstm_gemm_node>,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
         >
     {

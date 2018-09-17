@@ -19,7 +19,6 @@
 #include "engine_impl.h"
 #include "event_impl.h"
 #include "program_impl.h"
-
 #include "api/CPP/data.hpp"
 #include "api/CPP/mutable_data.hpp"
 #include "api/CPP/input_layout.hpp"
@@ -44,15 +43,16 @@ network_impl::network_impl(const program_impl& program, bool is_internal)
     {
         net_id = ++id_gen;
     }
-    _program->get_nodes().reverse();
-    for (auto const& node : _program->get_nodes())
-        allocate_primitive_instance(*node);
-    _program->get_nodes().reverse();
+
+    allocate_primitives();
+    build_insts_deps();
+    build_exec_order();
+
     _program->dump_memory_pool();
 }
 
 network_impl::network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options, bool is_internal)
-    : network_impl(*engine.build_program(topo, options), is_internal)
+    : network_impl(*engine.build_program(topo, options, is_internal), is_internal)
 {
 }
 
@@ -97,10 +97,76 @@ void network_impl::set_input_data(const primitive_id& id, memory_impl& data)
     input->set_data(data);
 }
 
-std::string network_impl::get_primitive_info(const primitive_id& id) const
+void network_impl::set_learning_rate(const float lr)
 {
+    _learning_rate = lr;
+}
+
+float network_impl::get_learning_rate()
+{
+    return _learning_rate;
+}
+
+std::string network_impl::get_primitive_info(const primitive_id& id) const
+{    
     const auto& node = _program->get_node(id);
     return node.type()->to_string(node);
+}
+
+void network_impl::allocate_primitives()
+{
+    auto nodes = _program->get_nodes();
+    std::vector<std::shared_ptr<program_node>> nodes_to_allocate{};
+    nodes_to_allocate.insert(nodes_to_allocate.begin(), nodes.begin(), nodes.end());
+    std::sort(nodes_to_allocate.begin(), nodes_to_allocate.end(), [](auto const& lhs, auto const& rhs)
+    {
+        return (lhs->get_output_layout().bytes_count() > rhs->get_output_layout().bytes_count());
+    });
+
+    for (auto const& node : nodes_to_allocate)
+    {
+        allocate_primitive_instance(*node);
+    }
+}
+
+void network_impl::build_exec_order_vist(program_node* node)
+{
+    if (!(!node->is_type<data>() && !(node->is_type<mutable_data>() && node->get_dependencies().empty())))
+    {
+        return;
+    }
+    auto it = std::find_if(_exec_order.begin(), _exec_order.end(),
+        [&](std::shared_ptr<primitive_inst> inst) 
+    {
+        return inst->id() == node->id();
+    });
+    if (_exec_order.end() != it) //found
+    {
+        return;
+    }
+    for (auto& dep : node->get_dependencies())
+    {
+        build_exec_order_vist(dep);
+    }
+    _exec_order.push_back(get_primitive(node->id()));
+}
+
+void network_impl::build_exec_order()
+{
+    _program->get_nodes().reverse();
+    for (auto& node : _program->get_nodes())
+    {
+        build_exec_order_vist(node.get());
+    }
+    _program->get_nodes().reverse();
+}
+
+void network_impl::build_insts_deps()
+{
+    for (auto& inst : _primitives)
+    {
+        inst.second->build_deps();
+    }
 }
 
 void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& events)
@@ -109,15 +175,22 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
     reset_execution(false);
 
     for (auto& inst : _exec_order)
+    {
         execute_primitive(inst, events);
+    }
+
     for (auto& dout : _data_outputs) //data primitives are not executed so if they are marked as output we need to add them valid events manually
+    {
         _events[dout->id()] = get_engine().create_user_event(true);
+    }
 
     for (auto& prim : _primitives)
+    {
         prim.second->reset_output_change();
+    }
 
-    // Using output of previouse network as input to another one may cause hazard (in OOOQ mode) if user would not
-    // provide proper event to execution. Flushing pipeline should prevent this kind of issues.
+    // Using output of previouse network as input to another one may cause hazard (in OOOQ mode) if user would not 
+    // provide proper event to execution. Flushing pipeline should prevent this kind of issues. 
     // In scenarios with a big number of very small networks it can provide performance drop.
     get_engine().flush_network();
 }
@@ -209,8 +282,6 @@ void network_impl::allocate_primitive_instance(program_node const& node)
 
     auto inst = node.type()->create_instance(*this, node);
     _primitives[node.id()] = inst;
-    if (!node.is_type<data>() && !(node.is_type<mutable_data>() && node.get_dependencies().empty()))
-        _exec_order.push_back(inst);
     if (node.is_input())
         _inputs.push_back(inst);
     if (node.is_output())

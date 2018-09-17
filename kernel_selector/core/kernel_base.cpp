@@ -16,7 +16,7 @@
 
 #include "kernel_base.h"
 
-namespace KernelSelector
+namespace kernel_selector
 {
     const primitive_db KernelBase::db;
     size_t KernelBase::counter = 0;

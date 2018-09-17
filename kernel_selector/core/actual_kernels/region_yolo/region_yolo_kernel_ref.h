@@ -19,20 +19,51 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
  
-namespace KernelSelector 
+namespace kernel_selector 
 {    
-    class RegionYoloKernelRef : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // region_yolo_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct region_yolo_params : public base_params
+    {
+        region_yolo_params() : base_params(KernelType::REGION_YOLO) {}
+
+        uint32_t coords;
+        uint32_t classes;
+        uint32_t num;
+        uint32_t mask_size;
+        bool do_softmax;
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            auto k = base_params::GetParamsKey();
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // region_yolo_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct region_yolo_optional_params : optional_params
+    {
+        region_yolo_optional_params() : optional_params(KernelType::REGION_YOLO) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // RegionYoloKernelRef
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class RegionYoloKernelRef : public common_kernel_base
     {
     public:
-        RegionYoloKernelRef() : CommonKernelBase("region_yolo_gpu_ref") {}
+        RegionYoloKernelRef() : common_kernel_base("region_yolo_gpu_ref") {}
         virtual ~RegionYoloKernelRef() {}
 
         using DispatchData = CommonDispatchData;        
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
 
     protected:
-        virtual JitConstants GetJitConstants(const RegionYoloParams& params) const;
+        virtual JitConstants GetJitConstants(const region_yolo_params& params) const;
     };
 }

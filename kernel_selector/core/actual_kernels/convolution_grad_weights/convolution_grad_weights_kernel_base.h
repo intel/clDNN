@@ -16,22 +16,72 @@
 
 #pragma once
 
-#include "common_kernel_base.h"
+#include "training_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    class ConvolutionGradWeightsKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // convolution_grad_weights_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct convolution_grad_weights_params : public training_params
+    {
+        convolution_grad_weights_params() : training_params(KernelType::CONVOLUTION_GRAD_WEIGHTS) {}
+
+        uSize    filterSize;
+        uSize    stride;
+        uSize    dilation;
+        uSize    padding;
+        uint32_t split = 1;
+        bool     depthwiseSeparableOpt = false;
+
+        virtual std::string to_string() const override;
+
+        virtual ParamsKey GetParamsKey() const override
+        {
+            ParamsKey k = training_params::GetParamsKey();
+
+            if (split > 1)
+            {
+                k.EnableSplitSupport();
+            }
+
+            if (dilation.x != 1 ||
+                dilation.y != 1)
+            {
+                k.EnableDilation();
+            }
+
+            if (depthwiseSeparableOpt)
+            {
+                k.EnableDepthwiseSeparableOpt();
+            }
+            return k;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // convolution_grad_weights_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct convolution_grad_weights_optional_params : training_optional_params
+    {
+        convolution_grad_weights_optional_params() : training_optional_params(KernelType::CONVOLUTION_GRAD_WEIGHTS) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ConvolutionGradWeightsKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class ConvolutionGradWeightsKernelBase : public training_kernel_base
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using training_kernel_base::training_kernel_base;
         virtual ~ConvolutionGradWeightsKernelBase() {}
 
         using DispatchData = CommonDispatchData;
-
+    
     protected:
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const;
-        virtual JitConstants GetJitConstants(const ConvolutionGradWeightsParams& params) const;
-        virtual DispatchData SetDefault(const ConvolutionGradWeightsParams& params) const;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const;
+        virtual JitConstants GetJitConstants(const convolution_grad_weights_params& params) const;
+        virtual DispatchData SetDefault(const convolution_grad_weights_params& params) const;
     };
 }

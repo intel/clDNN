@@ -19,12 +19,36 @@
 #include "common_kernel_base.h"
 #include "kernel_selector_params.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    class MaxUnpoolingKernelBase : public CommonKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // max_unpooling_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct max_unpooling_params : public base_params
+    {
+        max_unpooling_params() : base_params(KernelType::MAX_UNPOOLING) {}
+
+        virtual ParamsKey GetParamsKey() const
+        {
+            return base_params::GetParamsKey();
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // max_unpooling_optional_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct max_unpooling_optional_params : optional_params
+    {
+        max_unpooling_optional_params() : optional_params(KernelType::MAX_UNPOOLING) {}
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MaxUnpoolingKernelBase
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class MaxUnpoolingKernelBase : public common_kernel_base
     {
     public:
-        using CommonKernelBase::CommonKernelBase;
+        using common_kernel_base::common_kernel_base;
         virtual ~MaxUnpoolingKernelBase() {}
 
         struct DispatchData : public CommonDispatchData
@@ -33,9 +57,9 @@ namespace KernelSelector
         };
 
     protected:
-        virtual bool Validate(const Params&, const OptionalParams&) const override;
-        virtual JitConstants GetJitConstants(const MaxUnpoolingParams& params) const;
-        virtual DispatchData SetDefault(const MaxUnpoolingParams& params) const;
-        KernelsData GetCommonKernelsData(const Params& params, const OptionalParams&, float estimatedTime) const;
+        virtual bool Validate(const Params&, const optional_params&) const override;
+        virtual JitConstants GetJitConstants(const max_unpooling_params& params) const;
+        virtual DispatchData SetDefault(const max_unpooling_params& params) const;
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params&, float estimatedTime) const;
     };
 }

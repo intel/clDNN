@@ -17,14 +17,52 @@
 #include "convolution_grad_weights_kernel_base.h"
 #include "kernel_selector_utils.h"
 
-namespace KernelSelector
+namespace kernel_selector 
 {
-    JitConstants ConvolutionGradWeightsKernelBase::GetJitConstants(const ConvolutionGradWeightsParams& params) const
+    std::string convolution_grad_weights_params::to_string() const
     {
-        return MakeConvolutionGradWeightsJitConstants(params);
+        std::stringstream s;
+
+        s << base_params::to_string() << "_";
+        if (bias.empty())
+        {
+            s << "no_bias" << "_";
+        }
+        else
+        {
+            s << "bias_" << bias[0].PhysicalSize() << "_";
+        }
+        s << filterSize.x << "_" << filterSize.y << "_";
+        s << stride.x << "_" << stride.y << "_";
+        s << dilation.x << "_" << dilation.y << "_";
+        s << padding.x << "_" << padding.y << "_";
+        s << split;
+
+        return s.str();
     }
 
-    ConvolutionGradWeightsKernelBase::DispatchData ConvolutionGradWeightsKernelBase::SetDefault(const ConvolutionGradWeightsParams& params) const
+    JitConstants ConvolutionGradWeightsKernelBase::GetJitConstants(const convolution_grad_weights_params& cp) const
+    {
+        JitConstants jit = training_kernel_base::GetJitConstants(cp);
+        const auto& padding = cp.padding;
+        const auto& input = cp.inputs[0];
+
+        int64_t input_offset_with_padding = (int64_t)input.GetFirstElementOffset() - (cp.filterSize.x - 1 + padding.x)*input.X().pitch - (cp.filterSize.y - 1 + padding.y)*input.Y().pitch;
+        input_offset_with_padding = std::max(input_offset_with_padding, (int64_t)0);
+
+        jit.AddConstants({
+            MakeJitConstant("STRIDE",                       cp.stride),
+            MakeJitConstant("PADDING",                      cp.padding),
+            MakeJitConstant("DILATION",                     cp.dilation),
+            MakeJitConstant("FILTER_ARRAY_NUM",             cp.split),
+            MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
+            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      cp.depthwiseSeparableOpt),
+        });
+
+        return jit;
+    }
+
+    ConvolutionGradWeightsKernelBase::DispatchData ConvolutionGradWeightsKernelBase::SetDefault(const convolution_grad_weights_params& params) const
     {
         auto input_features = params.weights.IFM().v;
         auto output_features = params.weights.OFM().v;
@@ -48,11 +86,16 @@ namespace KernelSelector
         return kd;
     }
 
-    KernelsData ConvolutionGradWeightsKernelBase::GetKernelsData(const Params& params, const OptionalParams& options) const
+    KernelsData ConvolutionGradWeightsKernelBase::GetKernelsData(const Params& params, const optional_params& options) const
     {
         assert(params.GetType() == KernelType::CONVOLUTION_GRAD_WEIGHTS);
 
-        const ConvolutionGradWeightsParams& orgParams = static_cast<const ConvolutionGradWeightsParams&>(params);
+        if (!Validate(params, options))
+        {
+            return{};
+        }
+
+        const convolution_grad_weights_params& orgParams = static_cast<const convolution_grad_weights_params&>(params);
 
         const std::vector<WeightsLayout> weightsLayouts = {
             WeightsLayout::oiyx,
@@ -62,8 +105,8 @@ namespace KernelSelector
         };
 
         DispatchData runInfo = SetDefault(orgParams);
-        KernelData kd = KernelData::Default<ConvolutionGradWeightsParams>(params);
-        ConvolutionGradWeightsParams& newParams = *static_cast<ConvolutionGradWeightsParams*>(kd.params.get());
+        KernelData kd = KernelData::Default<convolution_grad_weights_params>(params);
+        convolution_grad_weights_params& newParams = *static_cast<convolution_grad_weights_params*>(kd.params.get());
 
         bool succeed = UpdateWeightsParams(
             newParams,
@@ -82,8 +125,15 @@ namespace KernelSelector
 
         auto& kernel = kd.kernels[0];
         FillCLKernelData(kernel, runInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty());
+        if (newParams.use_momentum)
+        {
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::PREV_WEIGHTS_GRADIENT, 0 });
+            if (!newParams.bias.empty())
+                kernel.arguments.push_back({ ArgumentDescriptor::Types::PREV_BIAS_GRADIENT, 0 });
+        }
         kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
+        kernel.arguments.push_back({ ArgumentDescriptor::Types::LEARNING_RATE, 0 });
 
         kd.estimatedTime = runInfo.effiency;
 

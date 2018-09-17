@@ -19,6 +19,8 @@
 #include "implementation_map.h"
 #include "error_handler.h"
 #include "kernel_selector_helper.h"
+#include "mvn/mvn_kernel_selector.h"
+#include "mvn/mvn_kernel_base.h"
 
 #include <algorithm>
 
@@ -34,17 +36,17 @@ struct mvn_gpu : typed_primitive_gpu_impl<mvn>
 
 public:
 
-    static primitive_impl* create(const mvn_node& arg)
-    {
+    static primitive_impl* create(const mvn_node& arg) 
+    { 
         auto mvn_params = get_default_params<kernel_selector::mvn_params>(arg);
         auto mvn_optional_params = get_default_optional_params<kernel_selector::mvn_optional_params>(arg.get_program());
 
-        mvn_params.mvnParams.mvnMode =
+        mvn_params.mvnMode =
             arg.get_primitive()->across_channels ?
             kernel_selector::mvn_mode::ACROSS_CHANNELS :
             kernel_selector::mvn_mode::WITHIN_CHANNELS;
-        mvn_params.mvnParams.mvnNormalizeVariance = arg.get_primitive()->normalize_variance;
-        mvn_params.mvnParams.epsilon = arg.get_primitive()->epsilon;
+        mvn_params.mvnNormalizeVariance = arg.get_primitive()->normalize_variance;
+        mvn_params.epsilon = arg.get_primitive()->epsilon;
 
         auto& kernel_selector = kernel_selector::mvn_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(mvn_params, mvn_optional_params);
@@ -60,7 +62,7 @@ public:
 
 namespace {
     struct attach {
-        attach()
+        attach() 
         {
             implementation_map<mvn>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), mvn_gpu::create);
             implementation_map<mvn>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), mvn_gpu::create);

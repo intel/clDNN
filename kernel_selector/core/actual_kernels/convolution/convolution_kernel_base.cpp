@@ -18,9 +18,9 @@
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
 
-namespace KernelSelector 
+namespace kernel_selector 
 {
-    bool ConvolutionKernelBase::Validate(const Params& p, const OptionalParams& o) const
+    bool ConvolutionKernelBase::Validate(const Params& p, const optional_params& o) const
     {
         if (p.GetType() != KernelType::CONVOLUTION ||
             o.GetType() != KernelType::CONVOLUTION)
@@ -28,8 +28,8 @@ namespace KernelSelector
             return false;
         }
 
-        const ConvolutionParams& params = static_cast<const ConvolutionParams&>(p);
-        const ConvolutionOptionalParams& optParams = static_cast<const ConvolutionOptionalParams&>(o);
+        const convolution_params& params = static_cast<const convolution_params&>(p);
+        const convolution_optional_params& optParams = static_cast<const convolution_optional_params&>(o);
 
         bool bSupportedWeightsLayout = false;
 
@@ -48,11 +48,43 @@ namespace KernelSelector
         return true;
     }
 
-    JitConstants ConvolutionKernelBase::GetJitConstants(const ConvolutionParams& params, ConvolutionKernelBase::DispatchData kd) const
+    JitConstants ConvolutionKernelBase::GetJitConstants(const convolution_params& params, const DispatchData& kd) const
     {
+        JitConstants mem_consts = WeightBiasKernelBase::GetJitConstants(params);
+        const auto& padding = params.padding;
+        const auto& input = params.inputs[0];
+
+        int64_t input_offset_with_padding = (int64_t)input.GetFirstElementOffset() - padding.x*input.X().pitch - input.Y().pitch*padding.y;
+        input_offset_with_padding = std::max(input_offset_with_padding, (int64_t)0);
+
+        mem_consts.AddConstants({
+            MakeJitConstant("STRIDE",                       params.stride),
+            MakeJitConstant("PADDING",                      params.padding),
+            MakeJitConstant("DILATION",                     params.dilation),
+            MakeJitConstant("FILTER_ARRAY_NUM",             params.split),
+            MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
+            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      params.depthwiseSeparableOpt),
+            MakeJitConstant("QUANTIZATION_TERM",            params.int8_quantization),
+        });
+
+        if (params.int8_quantization)
+        {
+            mem_consts.AddConstants({ MakeJitConstant("W_QF", params.weights_quantization_factors[0]) });
+            mem_consts.AddConstants({ MakeJitConstant("I_QF",params.input_quantization_factor) });
+
+            if (params.output_calibration)
+            {
+                mem_consts.AddConstant(MakeJitConstant("CALIBRATION_TERM", params.output_calibration));
+                mem_consts.AddConstant(MakeJitConstant("O_QF", params.output_calibration_factors[0]));
+
+            }
+            else
+                mem_consts.AddConstants({ MakeJitConstant("O_QF", params.output_quantization_factor) });
+        }
+
         std::vector<uint32_t> unrollLoopParams{
-            params.convParams.filterSize.x,
-            params.convParams.filterSize.y,
+            params.filterSize.x,
+            params.filterSize.y,
             (uint32_t)kd.gemmStyle.globalWorkSizeDX,
             (uint32_t)kd.gemmStyle.globalWorkSizeDY,
             (uint32_t)kd.gemmStyle.globalWorkSizeDZ,
@@ -63,29 +95,13 @@ namespace KernelSelector
 
         auto loopCount = *std::max_element(unrollLoopParams.begin(), unrollLoopParams.end());
 
-        JitConstants mem_consts = MakeConvolutionParamsJitConstants(params);
         JitConstants mem_consts_loop = MakeLoopUnrollParamsJitConstants(loopCount);
         mem_consts.Merge(mem_consts_loop);
-
-        if (params.inputs[0].GetLayout() == DataLayout::yxfb &&
-            params.weights.GetLayout() == WeightsLayout::yxio)
-        {
-            const auto local_work_group_size = kd.lws0;
-            const auto batch_size = params.output.Batch().v;
-
-            mem_consts.AddConstants({
-                MakeJitConstant("LOCAL_WORK_GROUP_SIZE",                            local_work_group_size),
-                MakeJitConstant("OFM_PER_WORK_ITEM",                                kd.cldnnStyle.ofmPerWorkItem), // how many output feature maps for a single batch will a single work item produce
-                MakeJitConstant("BATCHES_PER_WORK_ITEM",                            kd.cldnnStyle.batchesPerWorkItem), // how many batches will a single work item compute
-                MakeJitConstant("LOCAL_WORK_GROUPS_PER_SINGLE_BATCHES_ELEMENTS",    std::max(batch_size / kd.cldnnStyle.batchesPerWorkItem / local_work_group_size, static_cast<size_t>(1))), // how many local work groups we need to compute single element for each batch
-                MakeJitConstant("WORK_ITEMS_PER_SINGLE_BATCHES_ELEMENTS",           batch_size / kd.cldnnStyle.batchesPerWorkItem), // how many work items we need to compute single element for each batch
-            });
-        }
 
         return mem_consts;
     }
 
-    bool ConvolutionKernelBase::CheckWorkGroups(const ConvolutionKernelBase::DispatchData& kd) const
+    bool ConvolutionKernelBase::CheckWorkGroups(const ConvolutionKernelBase::DispatchData& kd)
     {
         if (kd.gws0 == 0 ||
             kd.gws1 == 0 ||
@@ -138,13 +154,13 @@ namespace KernelSelector
         }
     }
 
-    bool ConvolutionKernelBase::CheckPitchForSplitOnly(const ConvolutionParams& params) const
+    bool ConvolutionKernelBase::CheckPitchForSplitOnly(const convolution_params& params)
     {
         // TODO: it's better to add pitch+offset support than handle this case
-        return CheckTensorForSplit(params.inputs[0], params.convParams.split);
+        return CheckTensorForSplit(params.inputs[0], params.split);
     }
 
-    ConvolutionKernelBase::DispatchData ConvolutionKernelBase::SetDefault(const ConvolutionParams& params, int) const
+    ConvolutionKernelBase::DispatchData ConvolutionKernelBase::SetDefault(const convolution_params& params, int) const
     {
         DispatchData kd;
 
@@ -170,28 +186,31 @@ namespace KernelSelector
         kd.lws1 = local[1];
         kd.lws2 = local[2];
 
-        
-        kd.cldnnStyle.ofmPerWorkItem = 1;
-        kd.cldnnStyle.batchesPerWorkItem = 1;
         kd.cldnnStyle.blockWidth = 1;
         kd.cldnnStyle.blockHeight = 1;
         kd.cldnnStyle.prefetch = 0;
         kd.cldnnStyle.inputBlockArraySize = 0;
         kd.cldnnStyle.inputBlockWidth = 0;
-        kd.cldnnStyle.leftovers = 0;
+
+        kd.gemmStyle.globalWorkSizeDX = 1;
+        kd.gemmStyle.globalWorkSizeDY = 1;
+        kd.gemmStyle.globalWorkSizeDZ = 1;
+        kd.gemmStyle.subBlockDimK = 1;
+        kd.gemmStyle.subBlockDimM = 0;
+        kd.gemmStyle.subBlockDimN = 0;
         kd.effiency = DONT_USE_IF_HAVE_SOMETHING_ELSE;
         return kd;
     }
 
-    KernelsData ConvolutionKernelBase::GetCommonKernelsData(const Params& params, const OptionalParams& options, const std::string exeMode, int autoTuneIndex) const
+    KernelsData ConvolutionKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, const std::string exeMode, int autoTuneIndex) const
     {
         if (!Validate(params, options))
         {
             return{};
         }
 
-        KernelData kd = KernelData::Default<ConvolutionParams>(params);
-        ConvolutionParams& newParams = *static_cast<ConvolutionParams*>(kd.params.get());
+        KernelData kd = KernelData::Default<convolution_params>(params);
+        convolution_params& newParams = *static_cast<convolution_params*>(kd.params.get());
 
         if (NeedPaddedInput())
         {
@@ -222,7 +241,7 @@ namespace KernelSelector
         auto jit = CreateJit(finalKernelName, cldnnJit, entryPoint);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, finalKernelName, jit, entryPoint, exeMode, true, !newParams.bias.empty(), 1, newParams.convParams.int8_quantization, newParams.convParams.output_calibration);
+        FillCLKernelData(kernel, runInfo, finalKernelName, jit, entryPoint, exeMode, true, !newParams.bias.empty(), 1, newParams.int8_quantization, newParams.output_calibration);
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
 
         kd.estimatedTime = runInfo.effiency;

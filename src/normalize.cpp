@@ -40,7 +40,7 @@ std::string normalize_inst::to_string(normalize_node const& node)
     auto norm_region  = desc->across_spatial ? "across spatial" : "within spatial";
     auto& input       = node.input();
     auto& scale_input = node.scale();
-
+    
     std::stringstream primitive_description;
 
     json_composite normalize_info;
@@ -59,9 +59,11 @@ normalize_inst::typed_primitive_inst(network_impl& network, normalize_node const
     :parent(network, node)
 {
     /// Scale x dimension should be 1 (if all channels have the same scale) or equal to input feature size (one scale per channel).
-    auto scale_size = scale_memory().get_layout().size;
+    auto scale_layout = node.scale().get_output_layout();
+    auto scale_size = scale_layout.size;
     auto scale_feature_size = scale_size.spatial[0];
-    auto input_feature_size = input_memory().get_layout().size.feature[0];
+    auto input_layout = node.input().get_output_layout();
+    auto input_feature_size = input_layout.size.feature[0];
 
     if (scale_feature_size != 1)
     {

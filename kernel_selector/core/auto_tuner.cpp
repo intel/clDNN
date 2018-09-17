@@ -21,7 +21,7 @@
 #include <fstream>
 
  
-namespace KernelSelector 
+namespace kernel_selector 
 {
     std::tuple<std::string, int> AutoTuner::LoadKernelOnline(const TuningMode tuningMode, const std::string& tuningFilePath, const std::string& deviceID, const std::string& driverVersion, const std::string& hostVersion, const std::string& hash)
     {

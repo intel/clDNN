@@ -18,14 +18,14 @@
 
 #include "fully_connected_kernel_base.h"
 
-namespace KernelSelector {
+namespace kernel_selector {
 
     class FullyConnected_yxfb_ref : public FullyConnectedKernelBase
     {
     public:
         FullyConnected_yxfb_ref() : FullyConnectedKernelBase("fully_connected_gpu_yxfb_ref") {}
 
-        KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         ParamsKey GetSupportedKey() const override;
     };
 }

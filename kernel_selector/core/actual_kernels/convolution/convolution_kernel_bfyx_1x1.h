@@ -18,7 +18,7 @@
 
 #include "convolution_kernel_base.h"
  
-namespace KernelSelector {
+namespace kernel_selector {
     
     class ConvolutionKernel_bfyx_1x1 : public ConvolutionKernelBase
     {
@@ -28,18 +28,18 @@ namespace KernelSelector {
         ConvolutionKernel_bfyx_1x1() : ConvolutionKernelBase("convolution_gpu_bfyx_1x1") {}
         virtual ~ConvolutionKernel_bfyx_1x1() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const OptionalParams& options) const override;
+        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const ConvolutionParams&) const override
+        virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override
         {
             return{
                 WeightsLayout::os_i_osv16__ai8,
             };
         }
-        bool Validate(const Params& p, const OptionalParams& o) const override;
-        DispatchData SetDefault(const ConvolutionParams& arg, int autoTuneIndex = -1) const override;
-        JitConstants GetJitConstants(const ConvolutionParams& params, DispatchData kd) const override;
+        bool Validate(const Params& p, const optional_params& o) const override;
+        DispatchData SetDefault(const convolution_params& arg, int autoTuneIndex = -1) const override;
+        JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
     };
 }
