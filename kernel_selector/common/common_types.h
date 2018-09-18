@@ -57,7 +57,8 @@ namespace kernel_selector
         LSTM_GEMM,
         LSTM_ELT,
         EMBED,
-        SOFT_MAX_LOSS_GRAD
+        SOFT_MAX_LOSS_GRAD,
+        BROADCAST,
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
