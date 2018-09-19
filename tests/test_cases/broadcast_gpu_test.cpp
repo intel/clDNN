@@ -463,6 +463,6 @@ TEST(broadcast_gpu, basic_error_on_nondiv_bc_size) {
     std::vector<float> input_data = generate_rnd_real_input<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8.0f, 8.0f);
     set_values(input, input_data);
 
-    EXPECT_THROW(network(engine, topology), std::runtime_error);
+    EXPECT_THROW(network(engine, topology), std::logic_error);
 }
 
