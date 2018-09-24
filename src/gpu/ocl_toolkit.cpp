@@ -23,6 +23,9 @@
 #include <iomanip>
 #include <ios>
 
+#include <fstream>
+#include <boost/optional.hpp>
+
 // NOTE: Due to buggy scope transition of warnings we need to disable warning in place of use/instantation
 //       of some types (even though we already disabled them in scope of definition of these types).
 //       Moreover this warning is pretty much now only for annoyance: it is generated due to lack
@@ -169,6 +172,11 @@ std::shared_ptr<gpu_toolkit> gpu_toolkit::create(const configuration & cfg)
     }
 }
 
+struct gpu_toolkit::ocl_logger
+{
+    boost::optional<std::ofstream> _log_file;
+};
+
 gpu_toolkit::gpu_toolkit(const configuration& config) 
     : _configuration(config)
     , _device(get_gpu_device(config, _platform_id))
@@ -270,6 +278,8 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
                  but cl_khr_throttle_hints is not supported by current OpenCL implementation.");
         }
     }
+
+    _logger = std::make_unique<ocl_logger>(ocl_logger());
 
     if (logging_enabled())
     {
@@ -391,6 +401,11 @@ event_impl::ptr gpu_toolkit::enqueue_marker(std::vector<event_impl::ptr> const& 
     }
 }
 
+event_impl::ptr gpu_toolkit::group_events(std::vector<event_impl::ptr> const& deps)
+{
+    return{ new base_events(shared_from_this(), deps), false };
+}
+
 void gpu_toolkit::flush()
 {
     if (logging_enabled())
@@ -452,7 +467,7 @@ void gpu_toolkit::sync_events(std::vector<event_impl::ptr> const & deps)
     bool needs_barrier = false;
     for (auto& dep : deps)
     {
-        auto* ocl_ev = dynamic_cast<base_event*>(dep.get());
+        auto* ocl_ev = dynamic_cast<ocl_base_event*>(dep.get());
         if (ocl_ev->get_queue_stamp() > _last_barrier)
         {
             needs_barrier = true;
@@ -484,19 +499,19 @@ void gpu_toolkit::sync_events(std::vector<event_impl::ptr> const & deps)
 
 std::ofstream& gpu_toolkit::open_log()
 {
-    if (!_log_file.is_initialized())
+    if (!_logger->_log_file.is_initialized())
     {
-        _log_file.emplace(_configuration.log, std::ios::out | std::ios::trunc);
-        if (!_log_file.is_initialized())
+        _logger->_log_file.emplace(_configuration.log, std::ios::out | std::ios::trunc);
+        if (!_logger->_log_file.is_initialized())
             throw std::runtime_error("Could not initialize ocl_toolkit log file");
-        if (!_log_file->is_open())
+        if (!_logger->_log_file->is_open())
         {
-            _log_file.reset();
+            _logger->_log_file.reset();
             throw std::runtime_error("Could not open ocl_toolkit log file '" + _configuration.log + "' for writing");
         }
     }
 
-    return _log_file.get();
+    return _logger->_log_file.get();
 }
 
 }

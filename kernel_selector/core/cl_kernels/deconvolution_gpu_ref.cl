@@ -21,7 +21,11 @@ KERNEL(deconvolution_gpu_yxfb_ref)(
 #if BIAS_TERM
     const __global UNIT_TYPE* bias,
 #endif
-    uint split_idx)
+    uint split_idx
+#if FUSED_ELTWISE
+	, const __global UNIT_TYPE* fuse_input
+#endif
+	)
 {
     UNIT_TYPE result = UNIT_VAL_ZERO;
 
@@ -95,7 +99,13 @@ KERNEL(deconvolution_gpu_yxfb_ref)(
 #endif
     const uint out_split_offset = split_idx * OUTPUT_FEATURE_PITCH * FILTER_OFM_NUM;
     const uint dst_index = OUTPUT_OFFSET + out_split_offset + batch_offset*OUTPUT_BATCH_PITCH + ofm_offset*OUTPUT_FEATURE_PITCH + out_y*OUTPUT_Y_PITCH + out_x*OUTPUT_X_PITCH;
+#if FUSED_ELTWISE && !GRADIENT
+	output[dst_index] = ACTIVATION(result + fuse_input[dst_index], NL_M, NL_N);
+#elif FUSED_ELTWISE && GRADIENT
+	output[dst_index] = result + fuse_input[dst_index];
+#else
     output[dst_index] = ACTIVATION(result, NL_M, NL_N);
+#endif
 }
 
 #undef ACTIVATION

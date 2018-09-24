@@ -65,7 +65,6 @@ KERNEL(convolution_1x1_gemm_MMAD)(
         tileC[i] = 0;
     }
 
-   	__attribute__((opencl_unroll_hint(1)))
     for (uint k = 0; k < FILTER_IFM_MMAD_NUM; ++k)
     {
         // load A tile ( input )

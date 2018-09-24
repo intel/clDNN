@@ -176,7 +176,7 @@ TEST(memory_pool, multi_outputs_network) {
 
 TEST(memory_pool, oooq) {
     /*          -- relu1 - concat1- relu4 -- 
-        input<  -- relu2 |                   >-- concat2 -- relu6
+        input<  -- relu2 /                   >-- concat2 -- relu6
                 -- relu3 --  relu5 --------- 
        neither of relu5, relu6 nor relu7 can share resource with relu4. */
 
@@ -207,13 +207,13 @@ TEST(memory_pool, oooq) {
     network.set_input_data("input", input);
     auto outputs = network.execute();
 
-    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 2816);
+    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 2304);
 }
 
 TEST(memory_pool, shared_mem_pool_same_topology_twice) {
-    /*          -- relu1 - concat1- relu4 --
-    input<  -- relu2 |                   >-- concat2 -- relu6
-    -- relu3 --  relu5 ---------
+    /*                -- relu1 - concat1- relu4 --
+    input<  -- relu2 |                             >-- concat2 -- relu6
+                      -- relu3 --  relu5 ---------
     neither of relu5, relu6 nor relu7 can share resource with relu4. */
 
     engine_configuration cfg{ false, false, false, std::string(), std::string(), true /*oooq*/, std::string(),std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
@@ -254,7 +254,7 @@ TEST(memory_pool, shared_mem_pool_same_topology_twice) {
     auto output_layout_first = output_memory_first.get_layout();
     auto output_ptr_first = output_memory_first.pointer<float>();
 
-    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t)2816);
+    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 2304);
 
     network network_second(engine, topology, bo);
     network_second.set_input_data("input", input);
@@ -264,7 +264,7 @@ TEST(memory_pool, shared_mem_pool_same_topology_twice) {
     auto output_layout_second = output_memory_second.get_layout();
     auto output_ptr_second = output_memory_second.pointer<float>();
 
-    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t)3584);
+    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t)3072);
     EXPECT_EQ(output_layout_first, output_layout_second);
 
     int y_size = output_layout_first.size.spatial[1];

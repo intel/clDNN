@@ -44,6 +44,16 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 9.0
+    New features:
+    - log2 activation function
+    - support for i32 and i64 types
+    - select primitive
+	- border primitive
+	- tile primitive
+    Bug fixes:
+    - dilation > input size fix
+
 ### Drop 8.0
     New features:
     - lstm primitive

@@ -35,6 +35,9 @@ public:
     decltype(auto) v() const { return get_dependency(2); }
     decltype(auto) beta1_power() const { return get_dependency(3); }
     decltype(auto) beta2_power() const { return get_dependency(4); }
+    decltype(auto) additional_dep() const { return get_dependency(5); }
+
+    bool has_additional_dep() const { return get_dependencies().size() > 5; }
 };
 
 using apply_adam_node = typed_program_node<apply_adam>;
@@ -55,6 +58,9 @@ public:
     decltype(auto) v_memory() const { return dep_memory(2); }
     decltype(auto) beta1_power_memory() const { return dep_memory(3); }
     decltype(auto) beta2_power_memory() const { return dep_memory(4); }
+    decltype(auto) additional_dep() const { return dep_memory(5); }
+
+    bool has_additional_dep() const { return _deps.size() > 5; }
 };
 
 using apply_adam_inst = typed_primitive_inst<apply_adam>;

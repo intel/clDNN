@@ -120,7 +120,6 @@ private:
     */
     void mark_constants();
     void mark_data_flow();
-    void calc_dominators();
     // TODO: Remove once we will get full support for input/output padding in all primitive implementations.
     void analyze_output_size_handling_need();
     void replace_nodes_pre();
@@ -133,7 +132,7 @@ private:
     */
     void trim_to_outputs();
     void remove_redundant_reorders();
-    void reorder_nodes_for_parallel_execution();
+    void calculate_BFS_processing_order();
     void reorder_inputs(layout_optimizer& lo);
     void pre_optimize_bias(layout_optimizer& lo);
     void post_optimize_weights(layout_optimizer& lo);
@@ -141,10 +140,11 @@ private:
     void prepare_padding();
     void propagate_constants();
     void prepare_buffer_fusing();
+    void fuse_skip_layers(program_node* node);
     void prepare_primitive_fusing();
     void prepare_depthwise_sep_opt();
     void prep_opt_depthwise_sep_post();
-    void update_processing_order();
+    void update_processing_numbers();
 
     /*
     ** Memory pool functions
@@ -227,11 +227,7 @@ private:
     //prereq: node cannot be marked as output and has to have exactly one dependency
     //returns if 'node' has been extracted and removed successfully
     bool extract_and_remove(program_node& node);
-
     void replace_data_with_optimized(std::map<primitive_id, memory_impl::ptr> const& replace_map);
-    void forward_bfs(std::function<void(program_node&)> const& mark_func = nullptr, std::function<void(program_node&)> const& unmark_func = nullptr) const;
-    void backward_bfs(std::function<void(program_node&)> const& mark_func = nullptr, std::function<void(program_node&)> const& unmark_func = nullptr) const;
-
     void dump_program(const char* stage, bool with_full_info, std::function<bool(program_node const&)> const& filter = nullptr) const;
     //Dumps weights and biasses in serialization process, not working yet, in progress.
     void dump_weights_and_biasses(std::vector<unsigned long long>& offsets, std::vector<std::string>& data_names, std::ofstream& file_stream) const;

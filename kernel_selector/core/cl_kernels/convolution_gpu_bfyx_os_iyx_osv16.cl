@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include "include/include_all.cl"
+#include "include/common.cl"
+#include "include/data_types.cl"
+#include "include/activation_functions.cl"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Just-in-time macro definitions:

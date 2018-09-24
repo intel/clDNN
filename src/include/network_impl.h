@@ -70,8 +70,6 @@ public:
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<program_node*>& nodes);
     event_impl::ptr execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<event_impl::ptr>& events);
     void allocate_primitives();
-    void build_exec_order_vist(program_node*);
-    void build_exec_order();
     void build_insts_deps();
     auto get_id() const { return net_id; }
     bool is_internal() const { return _internal; }

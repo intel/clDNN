@@ -119,7 +119,9 @@ void cldnn_change_input_layout(cldnn_topology topology, cldnn_primitive_id id, c
         if (new_layout.data_type != cldnn_data_type::cldnn_f16 &&
             new_layout.data_type != cldnn_data_type::cldnn_f32 &&
             new_layout.data_type != cldnn_data_type::cldnn_i8 &&
-            new_layout.data_type != cldnn_data_type::cldnn_u8)
+            new_layout.data_type != cldnn_data_type::cldnn_u8 &&
+            new_layout.data_type != cldnn_data_type::cldnn_i32 &&
+            new_layout.data_type != cldnn_data_type::cldnn_i64)
             throw std::invalid_argument("Unknown data_type of layout.");
         api_cast(topology)->change_input_layout(id, new_layout);
     });
@@ -765,7 +767,9 @@ cldnn_memory cldnn_allocate_memory(cldnn_engine engine, cldnn_layout layout, cld
         if (layout.data_type != cldnn_data_type::cldnn_f16 &&
             layout.data_type != cldnn_data_type::cldnn_f32 &&
             layout.data_type != cldnn_data_type::cldnn_i8 &&
-            layout.data_type != cldnn_data_type::cldnn_u8)
+            layout.data_type != cldnn_data_type::cldnn_u8 &&
+            layout.data_type != cldnn_data_type::cldnn_i32 &&
+            layout.data_type != cldnn_data_type::cldnn_i64)
             throw std::invalid_argument("Unknown data_type of layout.");
 
         return init_external_from_internal(api_cast(engine)->allocate_memory(layout));
@@ -909,6 +913,7 @@ PRIMITIVE_TYPE_ID_CALL_IMPL(arg_max_min)
 PRIMITIVE_TYPE_ID_CALL_IMPL(average_unpooling)
 PRIMITIVE_TYPE_ID_CALL_IMPL(batch_norm)
 PRIMITIVE_TYPE_ID_CALL_IMPL(batch_norm_grad)
+PRIMITIVE_TYPE_ID_CALL_IMPL(border)
 PRIMITIVE_TYPE_ID_CALL_IMPL(broadcast)
 PRIMITIVE_TYPE_ID_CALL_IMPL(convolution)
 PRIMITIVE_TYPE_ID_CALL_IMPL(crop)
@@ -951,3 +956,5 @@ PRIMITIVE_TYPE_ID_CALL_IMPL(lstm)
 PRIMITIVE_TYPE_ID_CALL_IMPL(lstm_gemm)
 PRIMITIVE_TYPE_ID_CALL_IMPL(lstm_elt)
 PRIMITIVE_TYPE_ID_CALL_IMPL(softmax_loss_grad)
+PRIMITIVE_TYPE_ID_CALL_IMPL(tile)
+PRIMITIVE_TYPE_ID_CALL_IMPL(select)

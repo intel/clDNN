@@ -46,7 +46,6 @@ network_impl::network_impl(const program_impl& program, bool is_internal)
 
     allocate_primitives();
     build_insts_deps();
-    build_exec_order();
 
     _program->dump_memory_pool();
 }
@@ -129,37 +128,6 @@ void network_impl::allocate_primitives()
     }
 }
 
-void network_impl::build_exec_order_vist(program_node* node)
-{
-    if (!(!node->is_type<data>() && !(node->is_type<mutable_data>() && node->get_dependencies().empty())))
-    {
-        return;
-    }
-    auto it = std::find_if(_exec_order.begin(), _exec_order.end(),
-        [&](std::shared_ptr<primitive_inst> inst) 
-    {
-        return inst->id() == node->id();
-    });
-    if (_exec_order.end() != it) //found
-    {
-        return;
-    }
-    for (auto& dep : node->get_dependencies())
-    {
-        build_exec_order_vist(dep);
-    }
-    _exec_order.push_back(get_primitive(node->id()));
-}
-
-void network_impl::build_exec_order()
-{
-    _program->get_nodes().reverse();
-    for (auto& node : _program->get_nodes())
-    {
-        build_exec_order_vist(node.get());
-    }
-    _program->get_nodes().reverse();
-}
 
 void network_impl::build_insts_deps()
 {
@@ -174,9 +142,46 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
     //Wait for previous execution completion
     reset_execution(false);
 
-    for (auto& inst : _exec_order)
+    for (auto& inst : _program->get_processing_order())
     {
-        execute_primitive(inst, events);
+        if (!inst->is_type<data>() &&
+            !(inst->is_type<mutable_data>() && inst->get_dependencies().empty()))
+        {
+            execute_primitive(get_primitive(inst->id()), events);
+            _exec_order.push_back(get_primitive(inst->id()));
+        }
+    }
+
+    for (auto& inst : _program->get_processing_order())
+    {
+        //Special handling for mutable data. The event should be the same as the user or dependency with highest processing_num as
+        //the mutable_data can be updated when is both user or dependency.
+        if (inst->is_type<mutable_data>())
+        {
+            decltype(inst->get_processing_num()) proc_num = 0;
+            for (auto& user : inst->get_users())
+            {
+                auto user_proc_num = user->get_processing_num();
+                if (user_proc_num > proc_num)
+                {
+                    _events[inst->id()] = _events[user->id()];
+                    proc_num = user_proc_num;
+                }
+            }
+
+            if (!inst->get_dependencies().empty())
+            {
+                for (auto& dep : inst->get_dependencies())
+                {
+                    auto dep_proc_num = dep->get_processing_num();
+                    if (dep_proc_num > proc_num)
+                    {
+                        _events[inst->id()] = _events[dep->id()];
+                        proc_num = dep_proc_num;
+                    }
+                }
+            }
+        }
     }
 
     for (auto& dout : _data_outputs) //data primitives are not executed so if they are marked as output we need to add them valid events manually
@@ -260,10 +265,8 @@ refcounted_obj_ptr<event_impl> network_impl::execute_primitive(const std::shared
 {
     auto id = primitive->id();
     auto it = _events.find(id);
-    if(it != _events.end())
-    {
-        return it->second;
-    }
+    bool found = (it != _events.end());
+    CLDNN_ERROR_BOOL(id, "Invalid primitive call ", found, "Primitive " + id + " is tried to be executed for the second time");
 
     event_impl::ptr ev;
     if (!get_engine().get_context()->enabled_single_kernel() || get_engine().get_context()->single_kernel_name() == id)

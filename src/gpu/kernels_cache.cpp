@@ -25,6 +25,8 @@
 
 #include "kernel_selector_helper.h"
 
+#include <boost/optional.hpp>
+
 #define MAX_KERNELS_PER_PROGRAM 10
 
 namespace cldnn { namespace gpu {

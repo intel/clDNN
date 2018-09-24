@@ -64,7 +64,7 @@ static std::string stringify_port(const program_node & p)
 {
     std::stringstream res;
     auto node_info = p.desc_to_json();
-    node_info.dump(res);
+    node_info->dump(res);
 
     return res.str();
 }
@@ -93,8 +93,8 @@ std::string proposal_inst::to_string(proposal_node const& node)
     params.add("scales", stringify_vector(desc->scales));
     proposal_info.add("params", params);
 
-    node_info.add("proposal info", proposal_info);
-    node_info.dump(primitive_description);
+    node_info->add("proposal info", proposal_info);
+    node_info->dump(primitive_description);
 
     return primitive_description.str();
 }

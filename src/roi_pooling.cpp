@@ -68,8 +68,8 @@ std::string roi_pooling_inst::to_string(roi_pooling_node const& node)
     roi_info.add("spatial_scale", desc->spatial_scale);
     roi_info.add("group_sz", desc->group_sz);
 
-    node_info.add("roi info", roi_info);
-    node_info.dump(primitive_description);
+    node_info->add("roi info", roi_info);
+    node_info->dump(primitive_description);
 
     return primitive_description.str();
 }

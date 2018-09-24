@@ -48,6 +48,7 @@ namespace kernel_selector
             brfyx,              // 4D+batch
             winograd_2x3_s1_data, //winograd convolution input, F(2,3) -- filter 3x3 with stride 1
             byxf_af32, // for MMAD convolution
+            fs_bs_yx_bsv4_fsv32, // for batched MMAD
             DataLayoutCount // NMBER OF ELEMENTS IN ENUM
         };
 

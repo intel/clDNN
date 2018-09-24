@@ -37,6 +37,7 @@
 #define ACTIVATION_ACOS(input)                          (acos(input))
 #define ACTIVATION_COSH(input)                          (cosh(input))
 #define ACTIVATION_LOG(input)                           (log(input))
+#define ACTIVATION_LOG2(input)                          (log2(input))
 #define ACTIVATION_EXP(input)                           (exp(input))
 
 #define ACTIVATION_RELU_GRAD(input_grad, input)                          (input_grad * (input > UNIT_VAL_ZERO ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0)))
@@ -76,6 +77,8 @@
     #define ACTIVATION(input, m, n) ACTIVATION_COSH(input)
 #elif defined ACTIVATION_FUNCTION_LOG
     #define ACTIVATION(input, m, n) ACTIVATION_LOG(input)
+#elif defined ACTIVATION_FUNCTION_LOG2
+    #define ACTIVATION(input, m, n) ACTIVATION_LOG2(input)
 #elif defined ACTIVATION_FUNCTION_EXP
     #define ACTIVATION(input, m, n) ACTIVATION_EXP(input)
 #elif defined ACTIVATION_FUNCTION_ELU

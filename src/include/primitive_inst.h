@@ -25,12 +25,10 @@
 #include "memory_impl.h"
 #include "meta_utils.h"
 #include "kernel_selector_helper.h"
-#include "network_impl.h"
 #include "program_node.h"
 
 #include <memory>
 #include <vector>
-#include <boost/optional.hpp>
 
 namespace cldnn
 {
@@ -96,7 +94,7 @@ public:
     bool can_be_optimized() const { return _node.can_be_optimized(); }
     const auto desc() const { return _node.get_primitive(); }
     network_impl& get_network() const { return _network; }
-    uint32_t get_network_id() const { return _network.get_id(); }
+    uint32_t get_network_id() const;
 
     //return pointer to const to prevent arbitrary 'execute' call -> use primitive_inst.execute() instead
     const auto get_impl() const { return _impl.get(); }
@@ -113,14 +111,7 @@ public:
     auto output_changed() const { return _output_changed; }
     void reset_output_change() { _output_changed = false; }
 
-    void build_deps()
-    {
-        if (_deps.empty() && !_node.get_dependencies().empty())
-        {
-             _deps = _network.get_primitives(_node.get_dependencies());
-             _exec_deps = build_exec_deps(_deps);
-        }
-    }
+    void build_deps();
 
 protected:
     primitive_inst(network_impl& network, program_node const& node, bool allocate_memory);

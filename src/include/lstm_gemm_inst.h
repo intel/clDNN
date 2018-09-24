@@ -38,6 +38,7 @@ public:
     }
     bool bias_term() const { return !get_primitive()->bias.empty(); }
     bool hidden_term() const { return !get_primitive()->hidden.empty(); }
+    uint32_t direction() const { return get_primitive()->direction; }
 };
 
 using lstm_gemm_node = typed_program_node<lstm_gemm>;
@@ -62,6 +63,7 @@ public:
     }
     bool bias_term() const { return !argument.bias.empty(); }
     bool hidden_term() const { return !argument.hidden.empty(); }
+    uint32_t direction() const { return argument.direction; }
 };
 
 using lstm_gemm_inst = typed_primitive_inst<lstm_gemm>;

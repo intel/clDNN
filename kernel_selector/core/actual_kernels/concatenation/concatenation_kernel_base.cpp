@@ -124,7 +124,7 @@ namespace kernel_selector
 
             kernel.workGroups.global = { runInfo.gws0, runInfo.gws1, runInfo.gws2 };
             kernel.workGroups.local = { runInfo.lws0, runInfo.lws1, runInfo.lws2 };
-            kernel.kernelString = GetKernelString(kernelName, jit, entryPoint);
+            kernel.kernelString = GetKernelString(kernelName, jit, entryPoint, params.engineInfo);
             kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, (uint32_t)i });
             kernel.arguments.push_back({ ArgumentDescriptor::Types::OUTPUT, 0 });
 

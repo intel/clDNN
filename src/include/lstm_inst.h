@@ -47,6 +47,7 @@ public:
     bool initial_cell_term() const { return !get_primitive()->initial_cell.empty(); }
     auto activations() const { return get_primitive()->activations; }
     auto activation_params() const { return get_primitive()->activation_params; }
+    auto sequence_len() const { return get_primitive()->input.size(); }
 };
 
 using lstm_node = typed_program_node<lstm>;

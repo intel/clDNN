@@ -20,9 +20,6 @@
 #include "api/CPP/primitive.hpp"
 #include "internal_primitive.h"
 
-#include "to_string_utils.h"
-#include "json_object.h"
-#include "xml_object.h"
 #include "meta_utils.h"
 
 namespace cldnn
@@ -35,6 +32,9 @@ struct typed_program_node;
 
 template <class PType>
 struct internal_primitive_type_base;
+
+class json_composite;
+class xml_composite;
 
 /*
     Base class for all primitives which wraps API class and extends it to be used
@@ -58,6 +58,8 @@ struct program_node
     program_node(std::shared_ptr<primitive> prim, program_impl& prog);
 
     program_node(program_node const&) = delete;
+
+    virtual ~program_node() = default;
 
 public:
     virtual const primitive_id& id() const { return desc->id; }
@@ -108,12 +110,8 @@ public:
     // for const method, add const to stored successors/predecessors
     auto const& get_users() const { return reinterpret_cast<const std::list<const program_node*>&>(users); }
 
-    bool has_next() const;
-    program_node* get_next() { auto itr = processing_itr; return (*++itr); }
-    const program_node* get_next() const { auto itr = processing_itr; return (*++itr); }
-
-    json_composite desc_to_json() const;
-	xml_composite desc_to_xml() const;
+    std::unique_ptr<json_composite> desc_to_json() const;
+	std::unique_ptr<xml_composite> desc_to_xml() const;
     //do not modify primitive directly to keep synchronisation wit graph
     std::shared_ptr<const primitive> get_primitive() const { return desc; }
     //primitive modification functions
@@ -192,30 +190,10 @@ public:
         org_id = org_prim_id;
     }
 
-    // returns immidiate dominator of this node if it's not its direct predecessor, otherwise returns nullptr
-    program_node* get_dominator() { return dominator; }
-    const program_node* get_dominator() const { return dominator; }
-
-    //returns joint point associated with this node,
-    //if the node is not a split point (i.e. it has exactly one user) this function returns nullptr,
-    //otherwise returns pointer to a node which immidiately post-dominates this
-    program_node* get_joint() { return joint; }
-    const program_node* get_joint() const { return joint; }
-
-    bool is_joint_point() const { return dominator != nullptr; }
-    bool is_split_point() const { return joint != nullptr; }
-
     bool is_constant() const { return constant; }
     bool has_non_const_user() const { return (!constant || constant_frontier); }
-
-    //returns true if all paths from network's source to sink must come through this node
-    //(i.e. if this is a dominator of all the outputs)
-    //a source, in this context, is defined as an input which lies within a data flow (see is_in_data_flow)
-    bool is_in_main_branch() const { return main_branch; }
-
     //returns true if this node is within main data flow of the network (i.e. it does not describe helper data like convolution's weights etc.)
     bool is_in_data_flow() const { return data_flow; }
-
     //conversion from generic to specific
     template <class To, class..., class = std::enable_if_t<!std::is_same<To, primitive>::value>>
     typed_program_node<To>& as()
@@ -272,19 +250,14 @@ protected:
     uint32_t processing_num = 0;
 
     // list of primitives that can reuse same memory buffers due to execution order conflicts
-    std::set<primitive_id> memory_dependencies;  
+    std::set<primitive_id> memory_dependencies;
 
-    program_node* dominator = nullptr;
-    program_node* joint = nullptr;
     bool constant = false;
     bool constant_frontier = false;
-
-    bool main_branch = true;
     bool data_flow = false;
 
     bool output = false;
     uint8_t user_mark = 0;
-
     bool optimized = false;
 
     mutable bool has_reused_memory = false;

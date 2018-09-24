@@ -48,10 +48,10 @@ std::string broadcast_inst::to_string(broadcast_node const& node)
     json_composite broadcast_info;
     broadcast_info.add("broadcast sizes", broadcast_sizes.to_string());
 
-    node_info.add("broadcast info", broadcast_info);
+    node_info->add("broadcast info", broadcast_info);
 
     std::stringstream primitive_description;
-    node_info.dump(primitive_description);
+    node_info->dump(primitive_description);
     return primitive_description.str();
 }
 

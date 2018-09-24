@@ -92,8 +92,8 @@ std::string fully_connected_inst::to_string(fully_connected_node const& node)
     fc_info.add("bias id", bias_id);
     fc_info.add("with activation", activation);
 
-    node_info.add("fully connected info", fc_info);
-    node_info.dump(primitive_description);
+    node_info->add("fully connected info", fc_info);
+    node_info->dump(primitive_description);
 
     return primitive_description.str();
 }
@@ -104,7 +104,7 @@ fully_connected_inst::typed_primitive_inst(network_impl& network, fully_connecte
     auto input_layout = node.input().get_output_layout();
     auto output_layout = node.get_output_layout();
 
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_layout.format.value, "expected format", format::yxfb, format::bfyx, format::byxf_af32);
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_layout.format.value, "expected format", format::yxfb, format::bfyx, format::byxf_af32, format::fs_bs_yx_bsv4_fsv32);
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_layout.size.raw.size(), "output size", output_layout.size.raw.size(), "");
 }
 }

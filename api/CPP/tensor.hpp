@@ -102,6 +102,7 @@ struct format
         image_2d_weights_winograd_6x3_s1_xfbyb,      ///< image format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
         os_is_yx_isa8_osv8_isv4,                        /// format for weights for MMAD convolution
         byxf_af32,           /// < \n format for input for primitives using MMAD
+        fs_bs_yx_bsv4_fsv32, /// < \n format for batched input for primitives using MMAD
         format_num = cldnn_format_format_num, ///< number of format types
         any = cldnn_format_any
     };
@@ -129,7 +130,8 @@ struct format
             { image_2d_weights_winograd_6x3_s1_fbxyb,{ 1, 1, 2, "xyfb", "bfxy" } },
             { image_2d_weights_winograd_6x3_s1_xfbyb,{ 1, 1, 2, "xyfb", "bfxy" } },
             { os_is_yx_isa8_osv8_isv4, { 1, 1, 2, "bfyx", "bfxy" } },
-            { byxf_af32, { 1, 1, 2, "byxf", "bfxy" } }
+            { byxf_af32, { 1, 1, 2, "byxf", "bfxy" } },
+            { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, "fbyx", "bfxy" }}
         };
         return traits.at(fmt);
     }
@@ -700,7 +702,13 @@ public:
             my_sizes[1] = align_to(my_sizes[1], 32);
             adjusted_coords[1] = align_to(adjusted_coords[1], 32);
         }
-
+        else if (fmt == cldnn::format::fs_bs_yx_bsv4_fsv32 && (!is_aligned_to(my_sizes[1], 32) || !is_aligned_to(my_sizes[0], 4) ))
+        {
+            my_sizes[1] = align_to(my_sizes[1], 32);
+            my_sizes[0] = align_to(my_sizes[0], 4);
+            adjusted_coords[0] = align_to(adjusted_coords[0], 4);
+            adjusted_coords[1] = align_to(adjusted_coords[1], 32);
+        }
         assert(my_sizes.size() == adjusted_coords.size());
 
         assert(adjusted_coords.size() > 0);

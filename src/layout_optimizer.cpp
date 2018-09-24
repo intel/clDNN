@@ -45,7 +45,7 @@ namespace {
             || (output_size_handling_enabled && prim->with_output_size) //no support for convolutions with user-specified output size
             || (input_layout.count() > 3000000)             //limit max input size as winograd consumes more memory
             || (input_layout.count() < 50000)               //limit min input size as winograd is not effective for small input
-            || (input_layout.size.spatial[0] < 8 && input_layout.size.spatial[0] < 8)) //disable winograd for small spatials as perf is poor
+            || (input_layout.size.spatial[0] < 8 && input_layout.size.spatial[1] < 8)) //disable winograd for small spatials as perf is poor
         {
             return false;
         }
