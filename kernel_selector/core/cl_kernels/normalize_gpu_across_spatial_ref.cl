@@ -14,7 +14,7 @@
 
 #include "include/common.cl"
 #include "include/data_types.cl"
-#include "include/activation_functions.cl"
+
 
 #if FP16_UNIT_USED
     #define UNIT_CVT_FUNC(val) convert_half(val)

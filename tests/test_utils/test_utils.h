@@ -340,8 +340,8 @@ public:
     template<typename Type>
     void compare_buffers(const cldnn::memory& out, const cldnn::memory& ref);
 
-    static size_t get_linear_index(const cldnn::layout & layout, int b, int f, int y, int x, const memory_desc& desc);
-    static size_t get_linear_index_with_broadcast(const cldnn::layout& in_layout, int b, int f, int y, int x, const memory_desc& desc);
+    static size_t get_linear_index(const cldnn::layout & layout, size_t b, size_t f, size_t y, size_t x, const memory_desc& desc);
+    static size_t get_linear_index_with_broadcast(const cldnn::layout& in_layout, size_t b, size_t f, size_t y, size_t x, const memory_desc& desc);
 
     static memory_desc get_linear_memory_desc(const cldnn::layout & layout);
 

@@ -16,7 +16,6 @@
 
 #include "include/common.cl"
 #include "include/data_types.cl"
-#include "include/activation_functions.cl"
 
 KERNEL(activation)(
 #if GRADIENT

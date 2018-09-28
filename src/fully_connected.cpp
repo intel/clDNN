@@ -67,12 +67,12 @@ layout fully_connected_inst::calc_output_layout(fully_connected_node const& node
         (input_layout.format == format::bfyx &&                //this condition tests whether our input is batch>1 in bfyx format, if yes there will be
         input_layout.size.batch[0] > 1))                            //extra reorder between input and this fc from bfyx to yxfb format (so "is_batch_after_spatial" should return true)
     {
-        auto result = layout(input_layout.data_type, format::yxfb, tensor(input_layout.size.batch[0], 1, weights_layout.size.batch[0], 1));
+        auto result = layout(input_layout.data_type, format::yxfb, tensor(input_layout.size.batch[0], weights_layout.size.batch[0], 1, 1));
         return result;
     }
     else
     {
-        auto result = layout(input_layout.data_type, format::bfyx, tensor(input_layout.size.batch[0], 1, weights_layout.size.batch[0], 1));
+        auto result = layout(input_layout.data_type, format::bfyx, tensor(input_layout.size.batch[0], weights_layout.size.batch[0], 1, 1));
         return result;
     }
 }

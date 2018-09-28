@@ -290,6 +290,7 @@ typedef enum /*:int32_t*/
     cldnn_format_byxf_af32,           /// < \n format for input for primitives using MMAD
     cldnn_format_fs_bs_yx_bs4_fs32, /// < \n format for batched input for primitives using MMAD
     cldnn_format_os_is_yx_isa8_osv8_isv4, /// < \n format for weights for MMAD convolutions, stored as ((aligned_to_8(O)/8) * (aligned_to_32(I)/32) * Y * X * ( 8 ) * ( 8 ) * ( 4 )
+    cldnn_format_is_o_yx_isv32, /// < \n format for weights for 1x1 MMAD convolutions 
     cldnn_format_format_num,    ///< number of format types
     cldnn_format_any = -1
 } cldnn_format_type;

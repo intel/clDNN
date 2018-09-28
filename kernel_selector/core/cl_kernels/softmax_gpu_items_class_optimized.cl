@@ -16,7 +16,7 @@
 
 #include "include/common.cl"
 #include "include/data_types.cl"
-#include "include/activation_functions.cl"
+
 
 #define DATA_PER_WORKITEM ( (INPUT0_CLASS_NUM + (WORKITEMS_PER_CLASSES - 1) ) / WORKITEMS_PER_CLASSES)
 #define FULL_ITERATIONS_NUM (INPUT0_CLASS_NUM / WORKITEMS_PER_CLASSES)

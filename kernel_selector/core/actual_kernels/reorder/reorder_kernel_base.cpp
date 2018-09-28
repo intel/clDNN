@@ -69,6 +69,14 @@ namespace kernel_selector
             MakeJitConstant("OUTPUT",           output),
         };
 
+        if (fp16Supported)
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::F16));
+        }
+        else
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::F32));
+        }
         return jit;
     }
 

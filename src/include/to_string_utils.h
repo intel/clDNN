@@ -82,6 +82,7 @@ inline std::string fmt_to_str(format fmt)
     case format::bs_xs_xsv8_bsv16: return "bs_xs_xsv8_bsv16";
     case format::os_iyx_osv16: return "os_iyx_osv16";
     case format::os_is_yx_isa8_osv8_isv4: return "os_is_yx_isa8_osv8_isv4";
+    case format::is_o_yx_isv32: return "is_o_yx_isv32";
     case format::byxf_af32: return "byxf_af32";
     case format::fs_bs_yx_bsv4_fsv32: return "fs_bs_yx_bsv4_fsv32";
     default:

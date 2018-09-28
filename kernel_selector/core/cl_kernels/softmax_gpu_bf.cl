@@ -14,7 +14,7 @@
 
 #include "include/common.cl"
 #include "include/data_types.cl"
-#include "include/activation_functions.cl"
+
 
 __attribute__((reqd_work_group_size(LWS, 1, 1)))
 KERNEL (softmax_gpu_continoues_bfyx)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)

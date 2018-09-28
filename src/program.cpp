@@ -829,34 +829,34 @@ void program_impl::handle_lstm()
             std::vector<primitive_id> output_ids_offsets(directions * sequence_len);
 
             primitive_id hidden_fwd_id = initial_hidden_id;
-            primitive_id hidden_bck_id = initial_hidden_id;
+            primitive_id hidden_bwd_id = initial_hidden_id;
             primitive_id cell_fwd_id = initial_cell_id;
-            primitive_id cell_bck_id = initial_cell_id;
+            primitive_id cell_bwd_id = initial_cell_id;
 
-            auto split_direction = [&](const std::string gate, bool initial_term, primitive_id& fwd_id, primitive_id& bck_id) {
+            auto split_direction = [&](const std::string gate, bool initial_term, primitive_id& fwd_id, primitive_id& bwd_id) {
                 if (initial_term) {
                     primitive_id initial_id = fwd_id;
                     fwd_id = node->id() + ":" + gate + "_fwd";
                     auto fwd_node = std::make_shared<crop>(fwd_id, initial_id, hidden_size, tensor{ 0,0,0,0 });
                     auto &n1 = get_or_create(fwd_node);
                     add_connection(*nodes_map.at(initial_id), n1);
-                    bck_id = node->id() + ":" + gate + "_bck";
-                    auto bck_node = std::make_shared<crop>(bck_id, initial_id, hidden_size, tensor{ 0,1,0,0 });
-                    auto &n2 = get_or_create(bck_node);
+                    bwd_id = node->id() + ":" + gate + "_bwd";
+                    auto bwd_node = std::make_shared<crop>(bwd_id, initial_id, hidden_size, tensor{ 0,1,0,0 });
+                    auto &n2 = get_or_create(bwd_node);
                     add_connection(*nodes_map.at(initial_id), n2);
                 }
             };
 
             //if bidirectional lstm then initial_hidden and initial_cell terms need to be split
             if (directions > 1) {
-                split_direction("hidden", initial_hidden_term, hidden_fwd_id, hidden_bck_id);
-                split_direction("cell", initial_cell_term, cell_fwd_id, cell_bck_id);
+                split_direction("hidden", initial_hidden_term, hidden_fwd_id, hidden_bwd_id);
+                split_direction("cell", initial_cell_term, cell_fwd_id, cell_bwd_id);
             }
 
             //lstm expanding
             for (size_t dir = 0; dir < directions; ++dir) {
-                auto hidden_id = dir == 0 ? hidden_fwd_id : hidden_bck_id;
-                auto cell_id = dir == 0 ? cell_fwd_id : cell_bck_id;
+                auto hidden_id = dir == 0 ? hidden_fwd_id : hidden_bwd_id;
+                auto cell_id = dir == 0 ? cell_fwd_id : cell_bwd_id;
                 for (size_t i = 0; i < sequence_len; ++i) {
                     size_t idx = i + dir * sequence_len;
                     primitive_id lstm_gemm_id = node->id() + ":lstm_gemm" + get_id_string(idx);
@@ -864,10 +864,18 @@ void program_impl::handle_lstm()
                     primitive_id crop_id = node->id() + ":crop" + get_id_string(idx);
 
                     size_t input_idx = i;
-                    //for bidirectional lstms, if first LSTM layer then scrambled the input
-                    //for subsequent stacked layers the input is strided
-                    if (dir > 0) {
-                        input_idx = input_dependencies > sequence_len ? dir * sequence_len + i : sequence_len - i - 1;
+                    //for bidirectional lstms, if first LSTM layer then reverse input
+                    //for subsequent stacked layers the input is strided on the dir dimension
+                    if (directions > 0) {
+                        if (input_dependencies > sequence_len) { // stacked layer
+                            input_idx = dir * sequence_len + i;
+                        }
+                        else
+                        {
+                            if (dir > 0) { // first layer
+                                input_idx = sequence_len - i - 1;
+                            }
+                        }
                     }
                     primitive_id lstm_gemm_input_id = node->get_dependency(input_idx).get_org_primitive_id();
 
@@ -932,20 +940,30 @@ void program_impl::handle_lstm()
                 }
             }
 
-            //if theres no next lstm, concatenation is created
+            //if there is no next lstm, concatenation is created
             if (!has_lstm_children)
             {
                 primitive_id original_id = node->id();
                 primitive_id concatenation_id = original_id + ":concat";
-                auto concatenation_node = std::make_shared<concatenation>(concatenation_id, output_ids_offsets, concatenation::along_f);
-                auto &n5 = get_or_create(concatenation_node);
-                for (auto concat_dependency : concat_depends)
+                auto concatenation_primitive = std::make_shared<concatenation>(concatenation_id, output_ids_offsets, concatenation::along_f);
+                auto &concatenation_node = get_or_create(concatenation_primitive);
+                for (auto sub_dependency : concat_depends)
                 {
-                    add_connection(*concat_dependency, n5);
+                    add_connection(*sub_dependency, concatenation_node);
                 }
-                for (auto& user : node->get_users())
-                {
-                    add_connection(n5, *user);
+                if (directions == 2) {
+                    // bidirectional support requires concatenations along the direction and sequence axis
+                    // instead we can concatenate along the sequence axis and reshape the tensor to the account
+                    // for the direction
+                    tensor output_size {input_size.batch[0], (int32_t)sequence_len, hidden_size.spatial[0], (int32_t)directions};
+                    primitive_id reshape_id = original_id + ":reshape";
+                    auto reshape_primitive = std::make_shared<reshape>(reshape_id, concatenation_id, output_size);
+                    auto &reshape_node = get_or_create(reshape_primitive);
+                    add_connection(concatenation_node, reshape_node);
+                    for (auto& user : node->get_users())
+                    {
+                        add_connection(reshape_node, *user);
+                    }
                 }
             }
 
@@ -1847,51 +1865,82 @@ void program_impl::handle_reshape()
                     reorder_node_to_split.push_back(user);
             }
 
-            if (reorder_node_to_split.empty())
-                continue;
-
-            auto& prim_node = node->as<reshape>();
-            const auto& prim = prim_node.get_primitive();
-            auto output_shape = prim->output_shape;
-
-            //vector for storing reshape nodes to connect to new reorder nodes (if needed)
-            std::vector<program_node*> reorder_reshape_nodes;
-
-            bool skip_first_user = false;
-            auto reshape_users = node->get_users();
-            for (const auto& user : reshape_users)
+            if (!reorder_node_to_split.empty())
             {
-                //reshape node for first user will be the orginal reshape from the graph
-                if (!skip_first_user)
+                auto& prim_node = node->as<reshape>();
+                const auto& prim = prim_node.get_primitive();
+                auto output_shape = prim->output_shape;
+
+                //vector for storing reshape nodes to connect to new reorder nodes (if needed)
+                std::vector<program_node*> reorder_reshape_nodes;
+
+                bool skip_first_user = false;
+                auto reshape_users = node->get_users();
+                for (const auto& user : reshape_users)
                 {
+                    //reshape node for first user will be the orginal reshape from the graph
+                    if (!skip_first_user)
+                    {
+                        if (std::find(reorder_node_to_split.begin(), reorder_node_to_split.end(), user) != reorder_node_to_split.end())
+                            reorder_reshape_nodes.push_back(node);
+                        skip_first_user = true;
+                        continue;
+                    }
+
+                    //other reshapes will be clones of the orginal one connected to reshape->reorder sequences
                     if (std::find(reorder_node_to_split.begin(), reorder_node_to_split.end(), user) != reorder_node_to_split.end())
-                        reorder_reshape_nodes.push_back(node);
-                    skip_first_user = true;
-                    continue;
+                    {
+                        auto new_reshape = std::make_shared<reshape>("_reshape_split_" + user->id() + "_" + node->id(), input_node.id(), output_shape);
+                        auto& new_reshape_node = get_or_create(new_reshape);
+                        add_connection(input_node, new_reshape_node);
+                        user->replace_dependency(0, new_reshape_node);
+                        new_reshape_node.processing_itr = processing_order.insert(std::next(input_node.processing_itr), &new_reshape_node);
+                        reorder_reshape_nodes.push_back(&new_reshape_node);
+                    }
                 }
 
-                //other reshapes will be clones of the orginal one connected to reshape->reorder sequences
-                if (std::find(reorder_node_to_split.begin(), reorder_node_to_split.end(), user) != reorder_node_to_split.end())
+                //add new reorder nodes to proper reshape node
+                auto reshape_reorder_id = 0;
+                for (const auto& reorder_node : reorder_node_to_split)
                 {
-                    auto new_reshape = std::make_shared<reshape>("_reshape_split_" + user->id() + "_" + node->id(), input_node.id(), output_shape);
-                    auto& new_reshape_node = get_or_create(new_reshape);
-                    add_connection(input_node, new_reshape_node);
-                    user->replace_dependency(0, new_reshape_node);
-                    new_reshape_node.processing_itr = processing_order.insert(std::next(input_node.processing_itr), &new_reshape_node);
-                    reorder_reshape_nodes.push_back(&new_reshape_node);
+                    auto& reorder_reshape_node = reorder_reshape_nodes[reshape_reorder_id];
+                    auto reshape_in_layout = reorder_node->get_output_layout();
+                    auto reshape_input = std::make_shared<reorder>("_reshape_input_" + reorder_node->id() + "_" + reorder_reshape_node->id(), input_node.id(), reshape_in_layout.format, reshape_in_layout.data_type);
+                    auto& reshape_input_node = get_or_create(reshape_input);
+                    add_intermediate(reshape_input_node, *reorder_reshape_node, 0, reshape_input_node.dependencies.empty());
+                    reshape_reorder_id++;
                 }
             }
 
-            //add new reorder nodes to proper reshape node
-            auto reshape_reorder_id = 0;
-            for (const auto& reorder_node : reorder_node_to_split)
+            auto reshape_layout = node->get_output_layout();
+            if (!(node->is_output()) && (reshape_layout.format != cldnn::format::bfyx))
             {
-                auto& reorder_reshape_node = reorder_reshape_nodes[reshape_reorder_id];
-                auto reshape_in_layout = reorder_node->get_output_layout();
-                auto reshape_input = std::make_shared<reorder>("_reshape_input_" + reorder_node->id() + "_" + reorder_reshape_node->id(), input_node.id(), reshape_in_layout.format, reshape_in_layout.data_type);
-                auto& reshape_input_node = get_or_create(reshape_input);
-                add_intermediate(reshape_input_node, *reorder_reshape_node, 0, reshape_input_node.dependencies.empty());
-                reshape_reorder_id++;
+                auto bfyx_layout = layout({ reshape_layout.data_type, cldnn::format::bfyx, reshape_layout.size });
+                //when some primitive does an implicit reorder to some other format then we lose the info about pitches in reshape stage
+                //we assume user provides the input vector in bfyx
+                if (!are_layouts_identical(reshape_layout, bfyx_layout).second)
+                {
+                    auto reshape_input = std::make_shared<reorder>("_reshape_input_" + node->id(), input_node.id(), cldnn::format::bfyx, reshape_layout.data_type);
+                    auto& reshape_input_node = get_or_create(reshape_input);
+                    add_intermediate(reshape_input_node, *node, 0, reshape_input_node.dependencies.empty());
+
+                    auto reshape_users = node->get_users();
+                    for (const auto& user : reshape_users)
+                    {
+                        size_t idx = 0;
+                        for (size_t i = 0; i < user->get_dependencies().size(); i++)
+                        {
+                            auto& input = user->get_dependency(i);
+                            if (input.id() == node->id()) {
+                                idx = i;
+                                break;
+                            }
+                        }
+                        auto reshape_output = std::make_shared<reorder>("_reshape_output_" + node->id(), user->id(), reshape_layout.format, reshape_layout.data_type);
+                        auto& reshape_output_node = get_or_create(reshape_output);
+                        add_intermediate(reshape_output_node, *user, idx, reshape_output_node.dependencies.empty());
+                    }
+                }
             }
         }
     }
@@ -2568,8 +2617,8 @@ void program_impl::prepare_primitive_fusing()
             // - primitives input cannot be output
             // - no activation additional input
             // - input was optimized
-            if (node.has_padded_dependency() || (input.is_output() && !is_debug) || node.is_output() || 
-                node.get_dependencies().size() != 1 ||  input.can_be_optimized())
+            if (node.has_padded_dependency() || (input.is_output() && !is_debug) || node.is_output() ||
+                node.get_dependencies().size() != 1 || input.can_be_optimized())
                 return;
 
             // - check if there is no activation fused already
