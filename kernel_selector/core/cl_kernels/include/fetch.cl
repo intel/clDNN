@@ -249,6 +249,23 @@ inline uint FUNC(get_os_is_yx_isa8_osv8_isv4_index)(uint o, uint i, uint y, uint
         CAT(prefix, _OFM_NUM),                                                  \
         CAT(prefix, _OFFSET))
 
+
+inline uint FUNC(get_is_o_yx_isv32_index)(uint o, uint i, uint y, uint x, uint i_size, uint o_size, uint x_size, uint y_size)
+{
+    const uint i_aligned_to_32 = ((i_size + 31) / 32) * 32;
+    const uint i_val = i % 32;
+    const uint i_slice = i / 32;
+    const size_t idx = i_val + 32* (x + x_size * (y + y_size * (o + o_size * i_slice) ) );
+    return idx;
+}
+
+#define GET_FILTER_IS_O_YX_ISV32(prefix, o, i, y, x)\
+    FUNC_CALL(get_is_o_yx_isv32_index)(\
+        o, i, y, x, CAT(prefix, _IFM_NUM),\
+        CAT(prefix, _OFM_NUM),\
+        CAT(prefix, _SIZE_X),\
+        CAT(prefix, _SIZE_Y))
+
 #define DECLARE_SAMPLER const sampler_t imageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST
 
 #if FP16_UNIT_USED

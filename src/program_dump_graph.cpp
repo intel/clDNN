@@ -210,6 +210,7 @@ namespace cldnn
             case format::image_2d_weights_winograd_6x3_s1_fbxyb: out = "image_2d_weights_winograd_6x3_s1_fbxyb"; break;
             case format::image_2d_weights_winograd_6x3_s1_xfbyb: out = "image_2d_weights_winograd_6x3_s1_xfbyb"; break;
             case format::os_is_yx_isa8_osv8_isv4: out = "os_is_yx_isa8_osv8_isv4"; break;
+            case format::is_o_yx_isv32: out = "is_o_yx_isv32"; break;
             case format::byxf_af32: out = "byxf_af32"; break;
             case format::fs_bs_yx_bsv4_fsv32: out = "fs_bs_yx_bsv4_fsv32"; break;
             case format::any: out = "any"; break;

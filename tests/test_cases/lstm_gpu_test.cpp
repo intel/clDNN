@@ -71,33 +71,6 @@ T clip(T val, T threshold) {
     return val;
 }
 
-template <typename T>
-VVVVF<T> lstm_elt_reference(VVVVF<T>& tempGEMM, VVVVF<T>& cell,
-                     bool hasCell = true, float clip_threshold = 0, bool input_forget = false, size_t dir = 0) {
-    size_t hidden_size = tempGEMM[0][0][0].size() / 4;
-    size_t batch_size = tempGEMM.size();
-    VVVVF<T> tempOut(batch_size, VVVF<T>(2, VVF<T>(1, VF<T>(hidden_size))));
-    offset_order off(hidden_size, default_offset_type);
-
-    for (size_t b = 0; b < batch_size; ++b) {
-        T *it = &tempGEMM[b][0][0][off.it];
-        T *ot = &tempGEMM[b][0][0][off.ot];
-        T *ft = &tempGEMM[b][0][0][off.ft];
-        T *zt = &tempGEMM[b][0][0][off.zt];
-        for (size_t h = 0; h < hidden_size; ++h) {
-            T val = sigmoid(clip(it[h], clip_threshold)) * std::tanh((float)clip(zt[h], clip_threshold));
-            if (input_forget) {
-                val *= (1 - ft[h]);
-            }
-            if (hasCell) {
-                val += cell[b][dir][0][h] * sigmoid(clip(ft[h], clip_threshold));
-            }
-            tempOut[b][0][0][h] = std::tanh((float)val) * sigmoid(ot[h]);
-            tempOut[b][1][0][h] = val;
-        }
-    }
-    return tempOut;
-}
 
 template <typename T>
 VVVVF<T> lstm_gemm_reference(VVVVF<T>& input, VVVVF<T>& weights, VVVVF<T>& recurrent, VVVVF<T>& bias, VVVVF<T>& hidden,
@@ -128,6 +101,33 @@ VVVVF<T> lstm_gemm_reference(VVVVF<T>& input, VVVVF<T>& weights, VVVVF<T>& recur
     return tempGEMM;
 }
 
+template <typename T>
+VVVVF<T> lstm_elt_reference(VVVVF<T>& tempGEMM, VVVVF<T>& cell,
+                     bool hasCell = true, float clip_threshold = 0, bool input_forget = false, size_t dir = 0) {
+    size_t hidden_size = tempGEMM[0][0][0].size() / 4;
+    size_t batch_size = tempGEMM.size();
+    VVVVF<T> tempOut(batch_size, VVVF<T>(2, VVF<T>(1, VF<T>(hidden_size))));
+    offset_order off(hidden_size, default_offset_type);
+
+    for (size_t b = 0; b < batch_size; ++b) {
+        T *it = &tempGEMM[b][0][0][off.it];
+        T *ot = &tempGEMM[b][0][0][off.ot];
+        T *ft = &tempGEMM[b][0][0][off.ft];
+        T *zt = &tempGEMM[b][0][0][off.zt];
+        for (size_t h = 0; h < hidden_size; ++h) {
+            T val = sigmoid(clip(it[h], clip_threshold)) * std::tanh((float)clip(zt[h], clip_threshold));
+            if (input_forget) {
+                val *= (1 - ft[h]);
+            }
+            if (hasCell) {
+                val += cell[b][dir][0][h] * sigmoid(clip(ft[h], clip_threshold));
+            }
+            tempOut[b][0][0][h] = std::tanh((float)val) * sigmoid(ot[h]);
+            tempOut[b][1][0][h] = val;
+        }
+    }
+    return tempOut;
+}
 
 template<typename T>
 void print(const std::string& s, VVVVF<T>& input) {
@@ -168,14 +168,12 @@ void lstm_reference(VVVVF<T>& input, VVVVF<T>& hidden, VVVVF<T>& cell, VVVVF<T>&
         bool tempHasInitialCell = hasInitialCell;
         for (size_t seq = 0; seq < sequence_len; ++seq) {
             size_t seq_id = seq;
-            size_t input_direction = 0;
+            size_t input_direction = dir;
             if (scramble_input) {
                 if (dir > 0) {
                     seq_id = input_directions == 1 ? sequence_len - seq - 1 : seq;
                     input_direction = input_directions - 1;
                 }
-            } else {
-                input_direction = dir;
             }
             VVVVF<T> tempGEMM = lstm_gemm_reference(input, weights, recurrent, bias, hidden, seq_id, hasBias, tempHasInitialHidden, dir, input_direction);
             VVVVF<T> tempOutput = lstm_elt_reference(tempGEMM, cell, tempHasInitialCell, clip_threshold, input_forget, dir);
@@ -480,6 +478,7 @@ void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batc
     lstm_reference(ref_input, ref_hidden[0], ref_cell[0], ref_weights[0], ref_recurrent[0], ref_bias[0], ref_output[0],
                    last_hidden, last_cell, hasBias, hasInitialHidden, hasInitialCell,
                    clip_threshold, input_forget, true);
+
     for (int i = 1; i < layers; ++i) {
         lstm_reference(ref_output[i - 1], ref_hidden[i], ref_cell[i], ref_weights[i], ref_recurrent[i],
                         ref_bias[i], ref_output[i],
@@ -569,12 +568,24 @@ void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batc
         ASSERT_EQ(output_size, size_t(hidden_size * sequence_len * batch_size * direction));
 
         auto output = outputs.begin()->second.get_memory();
+        
+        // Get the output tensor
+        cldnn::layout output_layout = output.get_layout();
+        cldnn::tensor output_tensor = output_layout.size; 
+        
+        // Compare the output tensor configuration against the reference value
+        // Output tensor is configured in bfyx format
+        ASSERT_EQ(batch_size, output_tensor.batch[0]);
+        ASSERT_EQ(sequence_len, output_tensor.feature[0]);
+        ASSERT_EQ(direction, output_tensor.spatial[1]);
+        ASSERT_EQ(hidden_size, output_tensor.spatial[0]); 
+
         auto output_ptr = output.pointer<T>();
-        int i = 0;
-        for (int b = 0; b < batch_size; ++b) {
-            for (int s = 0; s < sequence_len; ++s) {
-                for (int d = 0; d < direction; ++d) {
-                    for (int x = 0; x <  hidden_size; ++x) {
+        int32_t i = 0;
+        for (int32_t b = 0; b < batch_size; ++b) {
+            for (int32_t s = 0; s < sequence_len; ++s) {
+                for (int32_t d = 0; d < direction; ++d) {
+                    for (int32_t x = 0; x <  hidden_size; ++x) {
                         ASSERT_NEAR(ref_output[layers-1][b][s][d][x], output_ptr[i++], FERROR);
                     }
                 }
@@ -651,86 +662,94 @@ TEST(lstm_custom_gpu, generic_lstm_custom_no_bias_hidden_cell_f32) {
     generic_lstm_custom_gpu_test<float>(3, 1, 3, 3, 2, false, false, false);
 }
 
+// generic_lstm_gpu_test paramters:
+// layers, sequence, dir, batch, input, hidden, bias, initial_h, initial_cell, threshold, coupled_input_forget
 TEST(lstm_gpu, generic_lstm_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 3, 3, 2, true, true, true);
+    generic_lstm_gpu_test<float>(1, 7, 1, 3, 3, 2, true, true, true);
 }
 
 TEST(lstm_gpu, generic_lstm_no_bias_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 3, 3, 2, false, true, true);
+    generic_lstm_gpu_test<float>(1, 7, 1, 3, 3, 2, false, true, true);
 }
 
 TEST(lstm_gpu, generic_lstm_no_hidden_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 5, 4, 3, true, false, true);
+    generic_lstm_gpu_test<float>(1, 7, 1, 5, 4, 3, true, false, true);
 }
 
 TEST(lstm_gpu, generic_lstm_no_bias_hidden_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 5, 4, 3, false, false, true);
+    generic_lstm_gpu_test<float>(1, 7, 1, 5, 4, 3, false, false, true);
 }
 
 TEST(lstm_gpu, generic_lstm_no_cell_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 5, 4, 3, true, true, false);
+    generic_lstm_gpu_test<float>(1, 7, 1, 5, 4, 3, true, true, false);
 }
 
 TEST(lstm_gpu, generic_lstm_no_bias_cell_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 5, 4, 3, false, true, false);
+    generic_lstm_gpu_test<float>(1, 7, 1, 5, 4, 3, false, true, false);
 }
 
 TEST(lstm_gpu, generic_lstm_no_hidden_cell_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 5, 4, 3, true, false, false);
+    generic_lstm_gpu_test<float>(1, 7, 1, 5, 4, 3, true, false, false);
 }
 
 TEST(lstm_gpu, generic_lstm_no_bias_hidden_cell_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 5, 4, 3, false, false, false);
+    generic_lstm_gpu_test<float>(1, 7, 1, 5, 4, 3, false, false, false);
 }
 
 TEST(lstm_gpu, generic_lstm_clip_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 3, 3, 2, true, true, true, 0.3f, 0);
+    generic_lstm_gpu_test<float>(1, 7, 1, 3, 3, 2, true, true, true, 0.3f, 0);
 }
 
 TEST(lstm_gpu, generic_lstm_input_forget_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 3, 3, 2, true, true, true, 0.f, 1);
+    generic_lstm_gpu_test<float>(1, 7, 1, 3, 3, 2, true, true, true, 0.f, 1);
 }
 
 TEST(lstm_gpu, generic_lstm_clip_input_forget_f32) {
-    generic_lstm_gpu_test<float>(1, 3, 1, 3, 3, 2, true, true, true, 0.3f, 1);
+    generic_lstm_gpu_test<float>(1, 7, 1, 3, 3, 2, true, true, true, 0.3f, 1);
 }
 
 TEST(lstm_gpu, generic_lstm_offset_order_ifoz_f32) {
     default_offset_type = cldnn_lstm_offset_order_ifoz;
-    generic_lstm_gpu_test<float>(1, 3, 1, 3, 3, 2, true, true, true);
+    generic_lstm_gpu_test<float>(1, 7, 1, 3, 3, 2, true, true, true);
     default_offset_type = cldnn_lstm_offset_order_iofz;
 }
 
 TEST(lstm_gpu, generic_lstm_canonical_f32) {
-    generic_lstm_gpu_test<float>(1, 1, 1, 1, 2, 4, true, true, true);
+    generic_lstm_gpu_test<float>(1, 1, 1, 1, 1, 1, true, true, true);
 }
 
+// bidirectional support
 TEST(lstm_gpu, generic_lstm_bi_f32) {
-    generic_lstm_gpu_test<float>(1, 5, 2, 3, 3, 2, true, true, true);
+    generic_lstm_gpu_test<float>(1, 7, 2, 2, 3, 4, false, false, false);
 }
 
 TEST(lstm_gpu, generic_lstm_bi_bias_f32) {
-    generic_lstm_gpu_test<float>(1, 5, 2, 3, 3, 2, true, true, true);
+    generic_lstm_gpu_test<float>(1, 7, 2, 2, 3, 4, true, false, false);
 }
 
 TEST(lstm_gpu, generic_lstm_bi_bias_hidden_f32) {
-    generic_lstm_gpu_test<float>(1, 5, 2, 3, 3, 2, true, true, false);
+    generic_lstm_gpu_test<float>(1, 7, 2, 2, 3, 4, true, true, false);
 }
 
+TEST(lstm_gpu, generic_lstm_bi_bias_hidden_cell_f32) {
+    generic_lstm_gpu_test<float>(1, 7, 2, 2, 3, 4, true, true, true);
+}
+
+// multi-layer support
 TEST(lstm_gpu, generic_lstm_stacked_no_seq_f32) {
     generic_lstm_gpu_test<float>(4, 1, 1, 3, 3, 2, true, true, true);
 }
 
 TEST(lstm_gpu, generic_lstm_stacked_seq_f32) {
-    generic_lstm_gpu_test<float>(4, 3, 1, 3, 3, 2, true, true, true);
+    generic_lstm_gpu_test<float>(4, 7, 1, 3, 3, 2, true, true, true);
 }
 
 TEST(lstm_gpu, generic_lstm_stacked_bi_f32) {
-    generic_lstm_gpu_test<float>(4, 1, 2, 3, 3, 2, true, true, true);
+    generic_lstm_gpu_test<float>(4, 7, 2, 3, 3, 2, true, true, true);
 }
 
 TEST(lstm_gpu, generic_lstm_stacked_seq_bi_f32) {
-    generic_lstm_gpu_test<float>(4, 3, 2, 3, 3, 2, true, true, true);
+    generic_lstm_gpu_test<float>(4, 7, 2, 3, 3, 2, true, true, true);
 }
 
 // TODO: Add tests for the following:

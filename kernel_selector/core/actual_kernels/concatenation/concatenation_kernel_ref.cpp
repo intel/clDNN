@@ -64,10 +64,20 @@ namespace kernel_selector
         //case for input == bfyx, output == yxfb and input == yxfb, output == bfyx
         if (input_format != output_format)
         {
-            dim_index[0] = 3;
-            dim_index[1] = 2;
-            dim_index[2] = 0;
-            dim_index[3] = 1;
+            if (input_format == kernel_selector::Tensor::DataLayout::yxfb)
+            {
+                dim_index[0] = 2;
+                dim_index[1] = 3;
+                dim_index[2] = 1;
+                dim_index[3] = 0;
+            }
+            else
+            {
+                dim_index[0] = 3;
+                dim_index[1] = 2;
+                dim_index[2] = 0;
+                dim_index[3] = 1;
+            }
         }
 
         cldnnJit.AddConstant(MakeJitConstant("INPUT_DIM_0", dim_index[0]));

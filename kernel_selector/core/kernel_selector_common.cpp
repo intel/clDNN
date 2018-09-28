@@ -322,6 +322,7 @@ namespace kernel_selector
         case WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb: return "IMAGE_2D_WEIGHTS_WINOGRAD_6x3_S1_FBXYB";
         case WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb: return "IMAGE_2D_WEIGHTS_WINOGRAD_6x3_S1_XFBYB";
         case WeightsLayout::os_is_yx_isa8_osv8_isv4: return "OS_IS_YX_ISA8_OSV8_ISV4";
+        case WeightsLayout::is_o_yx_isv32: return "IS_O_YX_ISV32";
         default:
             return "";
             break;
@@ -370,6 +371,18 @@ namespace kernel_selector
         case BorderType::MIRROR:     return "BORDER_TYPE_MIRROR";
         case BorderType::MIRROR_101: return "BORDER_TYPE_MIRROR_101";
         default:                     return "";
+        }
+    }
+
+    std::string toString(const IndexSelectAxis& axis)
+    {
+        switch (axis)
+        {
+        case IndexSelectAxis::BATCH:       return "INDEX_SELECT_AXIS_BATCH";
+        case IndexSelectAxis::FEATURE:     return "INDEX_SELECT_AXIS_FEATURE";
+        case IndexSelectAxis::X:           return "INDEX_SELECT_AXIS_X";
+        case IndexSelectAxis::Y:           return "INDEX_SELECT_AXIS_Y";
+        default:                           return "";
         }
     }
 

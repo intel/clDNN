@@ -16,7 +16,6 @@
 
 #include "include/common.cl"
 #include "include/data_types.cl"
-#include "include/activation_functions.cl"
 
 // TODO: move it from layout based to memory based
 KERNEL(activation)(

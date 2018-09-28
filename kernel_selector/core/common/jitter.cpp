@@ -105,7 +105,7 @@ namespace kernel_selector {
         JitDefinitions baseDefinitions = TensorBaseTJitConstant::GetDefinitions(_tensor);
 
         JitDefinitions definitions{
-            { _name + "_SIZE_X",        toCodeString(_tensor.X().v) },
+        { _name + "_SIZE_X",        toCodeString(_tensor.X().v) },
         { _name + "_SIZE_Y",        toCodeString(_tensor.Y().v) },
         { _name + "_IFM_NUM",       toCodeString(_tensor.IFM().v) },
         { _name + "_OFM_NUM",       toCodeString(_tensor.OFM().v) },
@@ -120,6 +120,142 @@ namespace kernel_selector {
         return definitions;
     }
 
+    std::shared_ptr<JitConstant> MakeActivationJitConstants(ActivationFunction activation_function)
+    {
+        // TODO: use native_exp and use cast for APL
+        switch (activation_function)
+        {
+        case ActivationFunction::LOGISTIC:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(UNIT_VAL_ONE/(UNIT_VAL_ONE + exp(-input)))");
+        case ActivationFunction::HYPERBOLIC_TAN:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(tanh(input))");
+        case ActivationFunction::RELU:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(UNIT_MAX_FUNC(UNIT_VAL_ZERO, input))");
+        case ActivationFunction::RELU_NEGATIVE_SLOPE:
+            return MakeJitConstant("ACTIVATION(input, slope, n)", "isinf(TO_UNIT_TYPE(slope)) ? ((input >= UNIT_VAL_ZERO) ? \
+                                                        input : -TO_UNIT_TYPE(slope)) : \
+                                                        (UNIT_MAX_FUNC(input, UNIT_VAL_ZERO) + TO_UNIT_TYPE(slope) * UNIT_MIN_FUNC(input, UNIT_VAL_ZERO))");
+        case ActivationFunction::ELU:
+            return MakeJitConstant("ACTIVATION(input, alpha, n)", "(UNIT_MAX_FUNC(input, UNIT_VAL_ZERO) +  \
+                                                        TO_UNIT_TYPE(alpha) * (exp(UNIT_MIN_FUNC(input, UNIT_VAL_ZERO)) - UNIT_VAL_ONE));");
+        case ActivationFunction::CLAMP:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(UNIT_MAX_FUNC(TO_UNIT_TYPE(m), UNIT_MIN_FUNC(TO_UNIT_TYPE(n), input)))");
+        case ActivationFunction::SOFTRELU:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(log(UNIT_VAL_ONE + exp(input)))");
+        case ActivationFunction::ABS:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(fabs(input))");
+        case ActivationFunction::LINEAR:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(m*input + n)");
+        case ActivationFunction::SQUARE:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(input*input)");
+        case ActivationFunction::SQRT:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(sqrt(input))");
+        case ActivationFunction::SIN:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(sin(input))");
+        case ActivationFunction::ASIN:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(asin(input))");
+        case ActivationFunction::SINH:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(sinh(input))");
+        case ActivationFunction::COS:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(cos(input))");
+        case ActivationFunction::ACOS:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(acos(input))");
+        case ActivationFunction::COSH:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(cosh(input))");
+        case ActivationFunction::LOG:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(log(input))");
+        case ActivationFunction::LOG2:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(log2(input))");
+        case ActivationFunction::EXP:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "(exp(input))");
+        case ActivationFunction::RELU_GRAD:
+            return MakeJitConstant("ACTIVATION(input_grad, input, m, n)", "(input_grad * (input > UNIT_VAL_ZERO ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0)))");
+        case ActivationFunction::RELU_NEGATIVE_SLOPE_GRAD:
+            return MakeJitConstant("ACTIVATION(input_grad, input, slope, n)", "(input_grad * ((input > UNIT_VAL_ZERO ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0)) + TO_UNIT_TYPE(slope) * (input <= 0 ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0))))");
+        case ActivationFunction::NONE_GRAD:
+            return MakeJitConstant("ACTIVATION(input_grad, input, m, n)", "input_grad");
+        case ActivationFunction::NONE:
+        default:
+            return MakeJitConstant("ACTIVATION(input, m, n)", "input");
+        }
+    }
+
+    JitConstants MakeUnitTypeJitConstants(Datatype dataType)
+    {
+        std::string unit_type;
+        std::string unit_max_val;
+        std::string unit_min_val;
+        std::string unit_val_one;
+        std::string unit_val_zero;
+        std::string to_unit_type;
+        std::string unit_max_func;
+        std::string unit_min_func;
+        switch (dataType)
+        {
+        case Datatype::INT8:
+            unit_type = "char";
+            unit_max_val = "CHAR_MAX";
+            unit_min_val = "-UNIT_VAL_MAX";
+            unit_val_one = "(char) 1";
+            unit_val_zero = "(char) 0";
+            to_unit_type = "convert_char(v)";
+            unit_max_func = "max";
+            unit_min_func = "min";
+            break;
+        case Datatype::INT32:
+            unit_type = "int";
+            unit_max_val = "INT_MAX";
+            unit_min_val = "-UNIT_VAL_MAX";
+            unit_val_one = "(int) 1";
+            unit_val_zero = "(int) 0";
+            to_unit_type = "convert_int(v)";
+            unit_max_func = "max";
+            unit_min_func = "min";
+            break;
+        case Datatype::INT64:
+            unit_type = "long";
+            unit_max_val = "LONG_MAX";
+            unit_min_val = "-UNIT_VAL_MAX";
+            unit_val_one = "(long) 1";
+            unit_val_zero = "(long) 0";
+            to_unit_type = "convert_long(v)";
+            unit_max_func = "max";
+            unit_min_func = "min";
+            break;
+        case Datatype::F16:
+            unit_type = "half";
+            unit_max_val = "HALF_MAX";
+            unit_min_val = "-UNIT_VAL_MAX";
+            unit_val_one = "1.0h";
+            unit_val_zero = "0.0h";
+            to_unit_type = "convert_half(v)";
+            unit_max_func = "fmax";
+            unit_min_func = "fmin";
+            break;
+        default:
+            unit_type = "float";
+            unit_max_val = "FLT_MAX";
+            unit_min_val = "-UNIT_VAL_MAX";
+            unit_val_one = "1.0f";
+            unit_val_zero = "0.0f";
+            to_unit_type = "(float)(v)";
+            unit_max_func = "fmax";
+            unit_min_func = "fmin";
+            break;
+        }
+
+        return JitConstants
+        {
+            MakeJitConstant("UNIT_TYPE",            unit_type),
+            MakeJitConstant("UNIT_VAL_MAX",         unit_max_val),
+            MakeJitConstant("UNIT_VAL_MIN",         unit_min_val),
+            MakeJitConstant("UNIT_VAL_ONE",         unit_val_one),
+            MakeJitConstant("UNIT_VAL_ZERO",        unit_val_zero),
+            MakeJitConstant("TO_UNIT_TYPE(v)",      to_unit_type),
+            MakeJitConstant("UNIT_MAX_FUNC",        unit_max_func),
+            MakeJitConstant("UNIT_MIN_FUNC",        unit_min_func),
+        };
+    }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // MakeBaseParamsJitConstants
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,16 +273,6 @@ namespace kernel_selector {
             bInt64Used |= i.GetDType() == Datatype::INT64;
         }
 
-        std::string unit_type = "float";
-        if (bInt8Used)
-            unit_type = "char";
-        else if (bFP16Used)
-            unit_type = "half";
-        else if (bInt32Used)
-            unit_type = "int";
-        else if (bInt64Used)
-            unit_type = "long";
-
         JitConstants jit{
             MakeJitConstant("OUTPUT",               params.output),
             MakeJitConstant("FP64_SUPPORTED",       params.engineInfo.bFP64Support),
@@ -155,12 +281,36 @@ namespace kernel_selector {
             MakeJitConstant("INT8_UNIT_USED",       bInt8Used),
             MakeJitConstant("INT32_UNIT_USED",      bInt32Used),
             MakeJitConstant("INT64_UNIT_USED",      bInt64Used),
-            MakeJitConstant("UNIT_TYPE",            unit_type),
-            MakeJitConstant("NL_M",                 params.activationParams.m),
-            MakeJitConstant("NL_N",                 params.activationParams.n),
-            MakeJitConstant("ACTIVATION_FUNCTION_" + toString(params.activationFunc), ""),
             MakeJitConstant("GRADIENT",             params.gradient),
         };
+
+        // for activation function
+        jit.AddConstants({
+            MakeJitConstant("NL_M",                 params.activationParams.m),
+            MakeJitConstant("NL_N",                 params.activationParams.n),
+            MakeActivationJitConstants(params.activationFunc),
+            });
+
+        if (bInt8Used)
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::INT8));
+        }
+        else if (bFP16Used)
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::F16));
+        }
+        else if (bInt32Used)
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::INT32));
+        }
+        else if (bInt64Used)
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::INT64));
+        }
+        else
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::F32));
+        }
 
         for (size_t i = 0; i < params.inputs.size(); i++)
         {

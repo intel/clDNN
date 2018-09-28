@@ -89,6 +89,13 @@ namespace kernel_selector
 							uint32_t axisBatch : 1;
 							uint32_t axisXYF : 1;
 						} argm;
+                        struct idxsel_t
+                        {
+                            uint32_t axisX : 1;
+                            uint32_t axisY : 1;
+                            uint32_t axisFeature : 1;
+                            uint32_t axisBatch : 1;
+                        } idxsel;
                         struct norm_t
                         {
                             uint32_t across : 1;
@@ -271,6 +278,7 @@ namespace kernel_selector
         void EnableConcatOneKernel() { key.restrict.val.dedicated.concat.oneKernel = 1; }
         void EnableArgMaxMinAxis(ArgMaxMinAxis a);
         void EnableLookUpTableIndicesFormat(Datatype a);
+        void EnableIndexSelectAxis(IndexSelectAxis a);
         bool Support(const ParamsKey& k) const;
         bool TuningSupport() const
         {

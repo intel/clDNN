@@ -608,13 +608,6 @@ foreach(__CLDNN_VarName ${__CLDNN_VarNames})
 endforeach()
 cldnn_dmsg("")
 
-# ======================================================================================================
-
-# Clean-up of helper variables for component paths.
-unset(__CLDNN_TargetOs)
-unset(__CLDNN_TargetCpu)
-unset(__CLDNN_TargetCpuDir)
-unset(__CLDNN_TargetCompilerDir)
 
 # ====================================== Version Calculation ===========================================
 
@@ -872,14 +865,24 @@ foreach(__CLDNN_CompilerFlagName IN ITEMS "CMAKE_CXX_FLAGS" "CMAKE_C_FLAGS")
             "/wd11076"
         )
     else()
-      intel_config_flag_apply_settings(
-          CompilerOptions
-          "${__CLDNN_CompilerFlagName}"
-          ALL_PATTERN ""
-          SET_RAW
+      if(__CLDNN_TargetCpu STREQUAL "32")
+        intel_config_flag_apply_settings(
+            CompilerOptions
+            "${__CLDNN_CompilerFlagName}"
+            ALL_PATTERN ""
+            SET_RAW
             "/arch:SSE2"
             "/sdl"
         )
+      else()
+        intel_config_flag_apply_settings(
+                CompilerOptions
+                "${__CLDNN_CompilerFlagName}"
+                ALL_PATTERN ""
+                SET_RAW
+                "/sdl"
+            )
+      endif()
     endif()
   elseif(CMAKE_COMPILER_IS_INTEL)
     message(FATAL_ERROR "TODO Support native ICC")
@@ -1078,6 +1081,14 @@ endforeach()
 unset(__CLDNN_Flag)
 unset(__CLDNN_CfgType)
 unset(__CLDNN_CfgFlag)
+
+# ======================================================================================================
+
+# Clean-up of helper variables for component paths.
+unset(__CLDNN_TargetOs)
+unset(__CLDNN_TargetCpu)
+unset(__CLDNN_TargetCpuDir)
+unset(__CLDNN_TargetCompilerDir)
 
 # ============================== Generic compiler preprocessor definitions =============================
 

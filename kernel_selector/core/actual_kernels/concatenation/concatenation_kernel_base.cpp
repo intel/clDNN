@@ -71,9 +71,18 @@ namespace kernel_selector
         // Determine global work sizes.
         if (params.inputs[0].GetLayout() != params.output.GetLayout())
         {
-            kd.gws0 = dims.size() < 2 ? 1 : dims[2].v;
-            kd.gws1 = dims.size() < 3 ? 1 : dims[1].v;
-            kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;                         
+            if (params.inputs[0].GetLayout() == kernel_selector::Tensor::DataLayout::yxfb)
+            {
+                kd.gws0 = dims.size() < 2 ? 1 : dims[3].v;
+                kd.gws1 = dims.size() < 3 ? 1 : dims[1].v;
+                kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;
+            }
+            else
+            {
+                kd.gws0 = dims.size() < 2 ? 1 : dims[2].v;
+                kd.gws1 = dims.size() < 3 ? 1 : dims[1].v;
+                kd.gws2 = dims.size() < 4 ? 1 : dims[0].v;
+            }
         }
         else
         {

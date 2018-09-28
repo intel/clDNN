@@ -284,7 +284,7 @@ namespace tests
         return{ p, calc_offfset(layout, p) };
     }
 
-    size_t generic_test::get_linear_index(const layout & layout, int b, int f, int y, int x, const memory_desc& desc)
+    size_t generic_test::get_linear_index(const layout & layout, size_t b, size_t f, size_t y, size_t x, const memory_desc& desc)
     {
         return 
             desc.offset + 
@@ -294,7 +294,7 @@ namespace tests
             x*desc.pitch.x;
     }
 
-    size_t generic_test::get_linear_index_with_broadcast(const layout& in_layout, int b, int f, int y, int x, const memory_desc& desc)
+    size_t generic_test::get_linear_index_with_broadcast(const layout& in_layout, size_t b, size_t f, size_t y, size_t x, const memory_desc& desc)
     {
         return
             desc.offset +

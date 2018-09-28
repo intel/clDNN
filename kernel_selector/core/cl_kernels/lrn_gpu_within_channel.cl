@@ -14,7 +14,7 @@
 
 #include "include/common.cl"
 #include "include/data_types.cl"
-#include "include/activation_functions.cl"
+
 
 KERNEL (lrn_gpu_within_channel)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
 {
