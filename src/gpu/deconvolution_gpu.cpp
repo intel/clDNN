@@ -102,7 +102,7 @@ public:
         if(primitive->with_activation)
             convert_activation_func_params(primitive, deconv_params);
 
-        deconv_params.depthwiseSeparableOpt = depthwise_separable_opt;
+        deconv_params.depthwise_separable_opt = depthwise_separable_opt;
 
         deconv_params.split = split;
         deconv_params.filterSize = {

@@ -53,6 +53,11 @@ namespace kernel_selector
         {
             k.EnableOutputCalibration();
         }
+        
+        if (!stride.empty())
+        {
+            k.EnableEltwiseStride();
+        }
 
         return k;
     }
@@ -140,6 +145,11 @@ namespace kernel_selector
             }
 
             inputs_decls += const_str + " __global " + toCLType(params.inputs[i].GetDType()) + "* input" + std::to_string(i) + ", ";
+            if (!params.stride.empty())
+            {
+                jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_X", params.stride[i].x));
+                jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_Y", params.stride[i].y));
+            }
             if (useVload8)
             {
                 vload_decls += "\\\n\tconst " + toCLType(params.inputs[i].GetDType()) + "8 in" + std::to_string(i);
@@ -272,6 +282,11 @@ namespace kernel_selector
             jit.Merge(GetTensorFriendlyWorkGroupsJit(params.inputs[0]));
         }
 
+        if (!params.stride.empty())
+        {
+            jit.AddConstant(MakeJitConstant("INPUT_STRIDED", 1));
+        }
+
         return jit;
     }
 
@@ -290,6 +305,11 @@ namespace kernel_selector
             kd.gws0 = global[0];
             kd.gws1 = global[1];
             kd.gws2 = global[2];
+            if (!params.stride.empty())
+            {
+                global[0] /= params.stride[0].x;
+                global[0] /= params.stride[0].y;
+            }
         }
         else if (CheckInputsOutputNoPitchSameDims(params))
         {

@@ -90,7 +90,8 @@ namespace kernel_selector
         std::vector<eltwise_params::Node> operations;
         std::vector<float> coefficients;
         std::vector<UpdateInputData> updateInputIds;
- 
+        std::vector<uSize> stride;
+
         bool  layoutBased = false;
         bool  int8_quantization = false;
         bool  output_calibration = false;

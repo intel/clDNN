@@ -31,6 +31,7 @@ namespace kernel_selector {
         k.EnableBatching();
         k.EnableInt8Quantization();
         k.EnableOutputCalibration();
+        k.EnableEltwiseStride();
         return k;
     }
 
@@ -46,6 +47,7 @@ namespace kernel_selector {
         kd.lws1 = 1;
         kd.lws2 = 8;
 
+        kd.effiency = FORCE_PRIORITY_3;
         return kd;
     }
 
@@ -100,6 +102,12 @@ namespace kernel_selector {
             }
 
             inputs_decls += const_str + " __global " + toCLType(params.inputs[i].GetDType()) + "* input" + std::to_string(i) + ", ";
+
+            if (!params.stride.empty())
+            {
+                jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_X", params.stride[i].x));
+                jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_Y", params.stride[i].y));
+            }
         }
 
         jit.AddConstant(MakeJitConstant("INPUTS_DECLS", inputs_decls));
@@ -209,6 +217,11 @@ namespace kernel_selector {
         if (params.layoutBased || params.int8_quantization)
         {
             jit.Merge(GetTensorFriendlyWorkGroupsJit(params.inputs[0]));
+        }
+
+        if (!params.stride.empty())
+        {
+            jit.AddConstant(MakeJitConstant("INPUT_STRIDED", 1));
         }
 
         ///////////////

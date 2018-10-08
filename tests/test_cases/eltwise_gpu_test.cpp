@@ -866,6 +866,95 @@ TEST(eltwise_gpu_f32, max_3inputs_in4x4x4x4_input_padding) {
 }
 
 
+TEST(eltwise_gpu_f32, stride_test_2x2) {
+    //  Input  : 2x2x2x2
+    //  Input2 : 2x2x4x4
+    //  Output : 2x2x2x2
+
+    //  Input:
+    //  f0: b0:  1    2  b1:   0    0       
+    //  f0: b0:  3    4  b1:   0.5 -0.5     
+    //  f1: b0:  5    6  b1:   1.5  5.2     
+    //  f1: b0:  7    8  b1:   12   8       
+    //
+    //  Input2
+    //  f0: b0: 1  2  3  4   b1: 17 18 19 20 
+    //  f0: b0: 5  6  7  8   b1: 21 22 23 24
+    //  f0: b0: 9  10 11 12  b1: 25 26 27 28
+    //  f0: b0: 13 14 15 16  b1: 29 30 31 32
+
+    //  f1: b0: 33 34 35 36  b1: 49 50 51 52 
+    //  f1: b0: 37 38 39 40  b1: 53 54 55 56
+    //  f1: b0: 41 42 43 44  b1: 57 58 59 60
+    //  f1: b0: 45 46 47 48  b1: 61 62 63 64
+
+    //
+    //  Output:
+    //  f0: b0: 1  3    b1:  17  19
+    //  f0: b0: 9  11   b1:  25  27
+    //  f1: b0: 33 35   b1:  49  51
+    //  f1: b0: 41 43   b1:  57  59
+    //
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 4, 4 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(eltwise("eltwise", "input", "input2", { {0,0,1,1}, {0,0,2,2} }, eltwise_mode::max));
+
+    set_values(input, {
+        1.f,   0.f,  5.f,  1.5f,
+        2.f,   0.f,  6.f,  5.2f,
+        3.f,   0.5f, 7.f, 12.f,
+        4.f,  -0.5f, 8.f,  8.f
+        });
+
+    set_values<float>(input2, {
+        1,  17, 33, 49,
+        2,  18, 33, 50,
+        3,  19, 35, 51,
+        4,  20, 36, 52,
+        5,  21, 37, 53,
+        6,  22, 38, 54,
+        7,  23, 39, 55,
+        8,  24, 40, 56,
+        9,  25, 41, 57,
+        10, 26, 42, 58,
+        11, 27, 43, 59,
+        12, 28, 44, 60,
+        13, 29, 45, 61,
+        14, 30, 46, 62,
+        15, 31, 47, 63,
+        16, 32, 48, 64 });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    auto outputs = network.execute();
+
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "eltwise");
+
+    auto output = outputs.at("eltwise").get_memory();
+
+    float answers[16] = {
+        1,  17,  33,  49,
+        3,  19,  35,  51,
+        9,  25,  41,  57,
+        11, 27,  43,  59 };
+
+    auto output_ptr = output.pointer<float>();
+
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
+}
+
 void run_eltwise_generic_test(cldnn::eltwise_mode mode)
 {
     cldnn::format test_inputs_fmt = cldnn::format::bfyx;

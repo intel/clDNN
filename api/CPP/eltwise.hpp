@@ -82,6 +82,38 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(std::vector<float>(0))
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
+        , stride(std::vector<tensor>(0))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
+    {
+    }
+
+    /// @brief Constructs eltwise primitive.
+    /// @param id This primitive id.
+    /// @param input Input primitive id.
+    /// @param input2 Second input primitive id with values needed for eltwise computation.
+    /// @param stride Defines shift in input buffers between adjacent calculations of output values.
+    /// @param mode Eltwise mode.
+    /// @param with_activation Enables Relu activation.
+    /// @param activation_slp Relu activation slope.
+    eltwise(
+        const primitive_id& id,
+        const primitive_id& input,
+        const primitive_id& input2,
+        std::vector<tensor> stride,
+        eltwise_mode mode,
+        bool with_activation = false,
+        float activation_slp = 0.0f,
+        const padding& output_padding = padding()
+    )
+        :primitive_base(id, { input, input2 }, output_padding)
+        , output_calibration_factors("")
+        , output_quantization_factor(1.0f)
+        , mode(mode)
+        , coefficients(std::vector<float>(0))
+        , with_activation(with_activation)
+        , activation_negative_slope(activation_slp)
+        , stride(stride)
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
     }
 
@@ -106,6 +138,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(std::vector<float>(0))
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
+        , stride(std::vector<tensor>(0))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
     }
 
@@ -134,6 +168,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(std::vector<float>(0))
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
+        , stride(std::vector<tensor>(0))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
     }
 
@@ -160,6 +196,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(std::vector<float>(0))
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
+        , stride(std::vector<tensor>(0))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
     }
 
@@ -188,6 +226,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(std::vector<float>(0))
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
+        , stride(std::vector<tensor>(0))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
     }
 
@@ -214,6 +254,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(std::vector<float>(0))
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
+        , stride(std::vector<tensor>(0))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
     }
 
@@ -240,6 +282,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(coefficients)
         , with_activation(with_activation)
         , activation_negative_slope(activation_slp)
+        , stride(std::vector<tensor>(0))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
         if (mode == eltwise_mode::sum && !coefficients.empty() && coefficients.size() != inputs.size())
         {
@@ -260,6 +304,8 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
         , coefficients(float_arr_to_vector(dto->coefficients))
         , with_activation(dto->with_activation != 0)
         , activation_negative_slope(dto->activation_negative_slope)
+        , stride(tensor_arr_to_vector(dto->stride))
+        , _stride(tensor_vector_to_cldnn_vector(stride))
     {
         if (dto->input.size < 2)
             throw std::invalid_argument("eltiwise dto should containt at least two inputs");
@@ -279,8 +325,11 @@ struct eltwise : public primitive_base<eltwise, CLDNN_PRIMITIVE_DESC(eltwise)>
     bool with_activation;
     /// @brief Relu activation slope.
     float activation_negative_slope;
+    /// @brief Defines shift in input buffers between adjacent calculations of output values.
+    std::vector<tensor> stride;
 
 protected:
+    std::vector<cldnn_tensor> _stride;
     std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override
     {
         std::vector<std::reference_wrapper<const primitive_id>> ret;
@@ -298,6 +347,7 @@ protected:
         dto.coefficients = float_vector_to_arr(coefficients);
         dto.with_activation = with_activation;
         dto.activation_negative_slope = activation_negative_slope;
+        dto.stride = tensor_vector_to_arr(_stride);
     }
 };
 /// @}

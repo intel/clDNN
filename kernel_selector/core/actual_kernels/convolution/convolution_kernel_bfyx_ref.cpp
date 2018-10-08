@@ -47,6 +47,7 @@ namespace kernel_selector {
         k.EnableInt8Quantization();
         k.EnableOutputCalibration();
         k.DisableTuning();
+        k.EnableLocalConvolution();
         return k;
     }
 

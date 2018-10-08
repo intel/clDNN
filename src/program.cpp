@@ -247,7 +247,7 @@ namespace {
 }
 
 program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal)
-    : engine(&engine_ref), options(options), output_size_handling_enabled(true)
+    : engine(&engine_ref), options(options), processing_order(* new nodes_ordering), output_size_handling_enabled(true)
 {
     static std::atomic<uint32_t> id_gen{ 0 };
     prog_id = ++id_gen;
@@ -276,6 +276,30 @@ program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topolog
     }
 
     cleanup();
+}
+
+program_node& program_impl::get_node(primitive_id const& id)
+{
+    try
+    {
+        return *nodes_map.at(id);
+    }
+    catch (...)
+    {
+        throw std::runtime_error("Program doesn't contain primtive node: " + id);
+    }
+}
+
+program_node const& program_impl::get_node(primitive_id const& id) const
+{
+    try
+    {
+        return *nodes_map.at(id);
+    }
+    catch (...)
+    {
+        throw std::runtime_error("Program doesn't contain primtive node: " + id);
+    }
 }
 
 // TODO: Remove once we will get full support for input/output padding in all primitive implementations.
@@ -395,7 +419,7 @@ void program_impl::init_graph(topology_impl const& topology)
     replace_nodes_post();
     handle_lstm();
     set_outputs();
-    calc_processing_order();
+    processing_order.calc_processing_order(*this);
 
     dump_program("0_init", true);
 
@@ -408,7 +432,7 @@ void program_impl::init_graph(topology_impl const& topology)
 void program_impl::pre_optimize_graph()
 {
     trim_to_outputs(); dump_program("3_trimmed", true);
-    calculate_BFS_processing_order();
+    processing_order.calculate_BFS_processing_order();
     analyze_output_size_handling_need();
     for (auto& node : processing_order)
     {
@@ -464,7 +488,7 @@ void program_impl::post_optimize_graph()
     remove_redundant_reorders(); dump_program("10_removed_redundant_reorders", true); //TODO: do we need it at this place also?
     propagate_constants(); dump_program("11_propagated_constants", true);
     prep_opt_depthwise_sep_post();
-    update_processing_numbers(); dump_program("12_validated_processing_order", true);
+    processing_order.update_processing_numbers(); dump_program("12_validated_processing_order", true);
     prepare_memory_dependencies();
 }
 
@@ -521,7 +545,6 @@ void program_impl::replace_nodes_pre()
         }
     }
 }
-
 
 void program_impl::replace_nodes_post()
 {
@@ -999,72 +1022,9 @@ void program_impl::set_outputs()
     }
 }
 
-void program_impl::calc_processing_order()
+std::list<program_node*> program_impl::get_processing_order() const
 {
-    processing_order.clear();
-
-    //run dfs to sort nodes topologically
-    for (auto input : inputs)
-    {
-        if (input->is_marked())
-            continue;
-
-        input->mark();
-        std::list<std::pair<program_node*, std::list<program_node*>::const_iterator>> stack = { std::make_pair(input, input->users.begin()) };
-
-        while (!stack.empty()) //imitate call stack
-        {
-        new_frame:
-            auto& frame = stack.back();
-
-            while (frame.second != frame.first->users.end())
-            {
-                auto successor = *frame.second;
-                ++frame.second;
-
-                if (!successor->is_marked())
-                {
-                    successor->mark();
-
-                    //recurrence call
-                    stack.push_back(std::make_pair(successor, successor->users.begin()));
-                    goto new_frame;
-                }
-            }
-
-            //we have finished processing one node so add it to the processing queue
-            processing_order.push_front(frame.first);
-            frame.first->processing_itr = processing_order.begin();
-
-            //return from call
-            stack.pop_back();
-        }
-    }
-
-    uint32_t idx = 0;
-    for (auto& node : processing_order)
-    {
-        node->processing_num = ++idx;
-        node->unmark();
-    }
-}
-
-void program_impl::update_processing_numbers()
-{
-    uint32_t idx = 0;
-    for (auto& node : processing_order)
-    {
-        node->processing_num = ++idx;
-    }
-
-    for (auto& node : processing_order)
-    {
-        if (!processing_order_is_correct(node))
-        {
-            CLDNN_ERROR_MESSAGE(node->id(), "Incorrect processing order");
-            return;
-        }
-    }
+    return processing_order.get_processing_order();
 }
 
 void program_impl::calc_prior_boxes()
@@ -1139,6 +1099,7 @@ void program_impl::mark_data_flow()
         size_t dep_idx = 0;
         size_t inputs_count = (node->is_type<internal_primitive>() ? node->get_dependencies().size() : node->get_primitive()->input.size());
         //TODO: remove this hack after addition of constants propagation pass
+        //LK: constant propagation pass exists, so is it safe to remove it?
         if (node->is_type<detection_output>() || node->is_type<proposal>())
             inputs_count = 2; //ignore third input as it is related to prior boxes (i.e. concat of prior-boxes)
 
@@ -1461,57 +1422,6 @@ void program_impl::remove_redundant_reorders()
     }
 }
 
-/*
-    recalculate processing_order
-    algorithm based on: CLRS 24.5 (critical path in DAG)
-    modifications: adjust for multiple inputs
-    input: any topological order in processing order
-    output: BFS topological order.
-*/
-
-void program_impl::calculate_BFS_processing_order() {
-    std::map<program_node*, int> distances;
-    for (auto itr : processing_order)
-    {
-        distances[itr] = -1;
-    }
-    int max_distance = 0;
-    for (auto itr : processing_order)
-    {
-        //Init
-        if (distances[itr] == -1) {     // this must be an input
-            distances[itr] = 0;         // initialize input
-        }
-        // RELAX
-        for (auto& user : itr->get_users())
-        {
-            distances[user] = std::max(distances[user], distances[itr] + 1);
-            max_distance = std::max(max_distance, distances[user]);
-        }
-    }
-
-    //bucket sort nodes based on their max distance from input
-    std::vector<std::vector<program_node*>> dist_lists;
-    dist_lists.resize(max_distance + 1);
-    for (auto itr : processing_order)
-    {
-        dist_lists[distances[itr]].push_back(itr);
-    }
-
-    //replace the old processing order by the new one, still topological.
-    processing_order.clear();
-    for (auto& dist : dist_lists)
-    {
-        for (auto& node : dist)
-        {
-            processing_order.push_back(node);
-            node->processing_itr = processing_order.end();
-            node->processing_itr--;
-        }
-    }
-    update_processing_numbers();
-    return;
-}
 
 void program_impl::reorder_inputs(layout_optimizer& lo)
 {
@@ -1616,8 +1526,8 @@ void program_impl::reorder_inputs(layout_optimizer& lo)
             auto winograd_output = std::make_shared<reorder>("_winograd_" + conv_node.id(), conv_node.id(), input_layout.format,
                 input_layout.data_type, std::vector<float>{}, cldnn_reorder_mean_mode::mean_subtract, conv_node.output_layout.data_padding);
             conv_node.output_layout.data_padding = padding{};
-            auto& back_node = get_or_create(winograd_output);
-            back_node.processing_itr = processing_order.insert(std::next(conv_node.processing_itr), &back_node);
+            program_node& back_node = get_or_create(winograd_output);
+            processing_order.insert(std::next(processing_order.get_processing_iterator(conv_node)), &back_node);
 
             auto bias_term = conv_node.bias_term();
             //create additional eltwise node after reorder to compute bias
@@ -1630,7 +1540,7 @@ void program_impl::reorder_inputs(layout_optimizer& lo)
                     back_node.output_layout.data_padding);
                 back_node.output_layout.data_padding = padding{};
                 auto& back_bias_node = get_or_create(winograd_output_biases);
-                back_bias_node.processing_itr = processing_order.insert(std::next(back_node.processing_itr), &back_bias_node);
+                processing_order.insert(std::next(processing_order.get_processing_iterator(back_node)), &back_bias_node);
                 replace_all_usages(back_node, back_bias_node);
                 add_connection(back_node, back_bias_node);
                 add_connection(bias_node, back_bias_node);
@@ -1697,8 +1607,7 @@ void program_impl::reorder_inputs(layout_optimizer& lo)
         {
             auto conv1x1_output = std::make_shared<reorder>("_conv1x1_reorder_back_" + conv_node.id(), conv_node.id(), input_layout.format, input_layout.data_type);
             auto& back_node = get_or_create(conv1x1_output);
-            back_node.processing_itr = processing_order.insert(std::next(conv_node.processing_itr), &back_node);
-
+            processing_order.insert(std::next(processing_order.get_processing_iterator(conv_node)), &back_node);
             conv_node.invalidate_users();
             replace_all_usages(conv_node, back_node);
             add_connection(conv_node, back_node);
@@ -1894,7 +1803,7 @@ void program_impl::handle_reshape()
                         auto& new_reshape_node = get_or_create(new_reshape);
                         add_connection(input_node, new_reshape_node);
                         user->replace_dependency(0, new_reshape_node);
-                        new_reshape_node.processing_itr = processing_order.insert(std::next(input_node.processing_itr), &new_reshape_node);
+                        processing_order.insert(std::next(processing_order.get_processing_iterator(input_node)), &new_reshape_node);
                         reorder_reshape_nodes.push_back(&new_reshape_node);
                     }
                 }
@@ -1903,9 +1812,18 @@ void program_impl::handle_reshape()
                 auto reshape_reorder_id = 0;
                 for (const auto& reorder_node : reorder_node_to_split)
                 {
+                    /*
+                    auto new_reshape = std::make_shared<reshape>("_reshape_split_" + user->id() + "_" + node->id(), input_node.id(), output_shape);
+                    auto& new_reshape_node = get_or_create(new_reshape);
+                    add_connection(input_node, new_reshape_node);
+                    user->replace_dependency(0, new_reshape_node);
+                    processing_order.insert(std::next(processing_order.get_processing_iterator(input_node)), &new_reshape_node);
+                    reorder_reshape_nodes.push_back(&new_reshape_node);
+                    */
                     auto& reorder_reshape_node = reorder_reshape_nodes[reshape_reorder_id];
                     auto reshape_in_layout = reorder_node->get_output_layout();
-                    auto reshape_input = std::make_shared<reorder>("_reshape_input_" + reorder_node->id() + "_" + reorder_reshape_node->id(), input_node.id(), reshape_in_layout.format, reshape_in_layout.data_type);
+                    auto reshape_input = std::make_shared<reorder>("_reshape_input_" + reorder_node->id() + "_" + reorder_reshape_node->id(), input_node.id(), 
+                        reshape_in_layout.format, reshape_in_layout.data_type);
                     auto& reshape_input_node = get_or_create(reshape_input);
                     add_intermediate(reshape_input_node, *reorder_reshape_node, 0, reshape_input_node.dependencies.empty());
                     reshape_reorder_id++;
@@ -2573,19 +2491,19 @@ void program_impl::fuse_skip_layers(program_node* node)
         remove_connection(node.input(to_fuse_index), node);
 
         //replace processing_num of the node where fusing take place and eltwise
-        auto new_processing_num = node.processing_num;
-        processing_order.erase(to_fuse_with.processing_itr);
-        to_fuse_with.processing_itr = processing_order.insert(node.processing_itr, &to_fuse_with);
-        to_fuse_with.processing_num = new_processing_num;
+        auto new_processing_num = node.processing_num;      //LK: avoid direct modifications of processing_num
+        processing_order.erase(processing_order.get_processing_iterator(to_fuse_with));
+        processing_order.insert(processing_order.get_processing_iterator(node), &to_fuse_with);
+        to_fuse_with.processing_num = new_processing_num;   //LK: avoid direct modifications of processing_num
 
         //make sure that new fused node's users have higher processing_num than fused node
         for (auto user : to_fuse_with.get_users())
         {
             if (user->processing_num < new_processing_num)
             {
-                processing_order.erase(user->processing_itr);
-                user->processing_itr = processing_order.insert(std::next(to_fuse_with.processing_itr), user);
-                user->processing_num = new_processing_num + 1;
+                processing_order.erase(processing_order.get_processing_iterator(*user));
+                processing_order.insert(std::next(processing_order.get_processing_iterator(to_fuse_with)), user);
+                user->processing_num = new_processing_num + 1; //LK: avoid direct modifications of processing_num
             }
         }
 
@@ -2703,12 +2621,15 @@ void program_impl::add_intermediate(program_node& node, program_node& next, size
     if (connect_int_node_with_old_dep)
     {
         add_connection(prev, node);
-        if (node.processing_itr != processing_order.end())
-            processing_order.erase(node.processing_itr);
-
-        auto itr = prev.processing_itr;
-        node.processing_itr = processing_order.insert(++itr, &node);
-        node.processing_num = prev.processing_num;
+/*   
+        // LK: I assume here that the node which is added does not exist yet, is it true?
+        auto tmp = processing_order.get_processing_iterator(node);
+        if (tmp != processing_order.end())
+            processing_order.erase(tmp);   
+*/
+        auto itr = processing_order.get_processing_iterator(prev);
+        processing_order.insert(std::next(itr), &node);
+        node.processing_num = prev.processing_num;                    //LK: avoid direct manipulation on processing_num
     }
 
     next.replace_dependency(prev_idx, node);
@@ -2823,14 +2744,10 @@ void program_impl::replace(program_node& old_node, program_node& new_node, bool 
     new_node.constant_frontier = old_node.constant_frontier;
     new_node.user_mark = old_node.user_mark;
 
-    auto old_news_pos = new_node.processing_itr;
-    new_node.processing_itr = processing_order.insert(old_node.processing_itr, &new_node);
-    new_node.processing_num = old_node.processing_num;
-    if (old_news_pos != processing_order.end())
-        processing_order.erase(old_news_pos);
-    if (old_node.processing_itr != processing_order.end())
-        processing_order.erase(old_node.processing_itr);
-
+    processing_order.insert(processing_order.get_processing_iterator(old_node), &new_node);
+    new_node.processing_num = old_node.processing_num; //LK : avoid direct manipulation of processing_num
+    if (processing_order.get_processing_iterator(old_node) != processing_order.end())
+        processing_order.erase(processing_order.get_processing_iterator(old_node));
     nodes_map.erase(id);
     rename(new_node, id);
 
@@ -2895,7 +2812,7 @@ bool program_impl::remove_if_dangling(program_node& node, bool detach_whole_bran
                 inputs.remove(rem);
 
             if (std::find(processing_order.begin(), processing_order.end(), rem) != processing_order.end())
-                processing_order.erase(rem->processing_itr);
+                processing_order.erase(processing_order.get_processing_iterator(*rem));
             optimized_out.push_back(rem->id());
             nodes_map.erase(rem->id());
         }

@@ -54,7 +54,9 @@ KERNEL(convolution)(
 #endif
     const uint filter_offset = f*FILTER_OFM_PITCH;
     const uint input_offset = b*INPUT0_BATCH_PITCH + INPUT0_OFFSET + in_split_offset;
-
+#ifdef LOCAL_CONVOLUTION
+    const int local_offset = FILTER_SIZE_X * FILTER_SIZE_Y * (x + OUTPUT_SIZE_X * y);
+#endif
     for (uint k = 0; k < FILTER_IFM_NUM; ++k)
     {
         for (uint j = 0; j < FILTER_SIZE_Y ; ++j)
@@ -72,7 +74,11 @@ KERNEL(convolution)(
                     if(!zero_x)
                     {
                         uint input_idx = input_offset + (uint)input_offset_x*INPUT0_X_PITCH + (uint)input_offset_y*INPUT0_Y_PITCH + k*INPUT0_FEATURE_PITCH;
+#ifdef LOCAL_CONVOLUTION
+                        uint filter_idx = filter_offset + k*FILTER_IFM_PITCH + j*FILTER_Y_PITCH + i*FILTER_X_PITCH + local_offset;
+#else
                         uint filter_idx = filter_offset + k*FILTER_IFM_PITCH + j*FILTER_Y_PITCH + i*FILTER_X_PITCH;
+#endif
 #if QUANTIZATION_TERM
                         dotProd += (int)input[input_idx] * (int)weights[filter_idx];
 #else

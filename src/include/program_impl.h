@@ -23,6 +23,7 @@
 #include "engine_impl.h"
 #include "program_node.h"
 #include "memory_impl.h"
+#include "error_handler.h"
 
 #include <list>
 #include <algorithm>
@@ -40,47 +41,44 @@ class constants_propagator;
 struct program_impl : public refcounted_obj<program_impl>
 {
     friend struct program_node;
-
 public:
+    struct nodes_ordering
+    {
+    public:
+        typedef std::list<program_node*> list_of_nodes;
+        typedef list_of_nodes::const_iterator const_iterator;
+        list_of_nodes get_processing_order() const { return _processing_order; }
+        const_iterator begin() const { return _processing_order.begin(); }
+        const_iterator end() const { return _processing_order.end(); }
+        const_iterator get_processing_iterator(program_node& node);
+        void calc_processing_order_visit(program_node* node);
+        void calc_processing_order(program_impl &p);
+        void update_processing_numbers();
+        void calculate_BFS_processing_order();
+        auto size() { return _processing_order.size(); }
+        bool is_correct(program_node* node);
+        void clear();
+        void erase(const_iterator i);
+        program_impl::nodes_ordering::const_iterator insert(const_iterator i, program_node* node);
+
+    private:
+        list_of_nodes _processing_order;
+        std::map<program_node*, const_iterator> processing_order_iterators;
+    };
+
     program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal);
-
-    void dump_memory_pool() const;
-
     auto& get_engine() const { return *engine; }
     auto get_options() const { return options; }
+    auto get_inputs() const { return inputs; }
+    auto get_outputs() const { return outputs; }
     bool is_debug_build() const { return options.get<build_option_type::debug>()->enabled(); }
-
     std::list<std::shared_ptr<program_node>> get_nodes() const;
-    auto get_processing_order() const { return processing_order; }
+    std::list<program_node*> get_processing_order() const;
     auto get_optimized_out() const { return optimized_out; }
-    auto& get_node(primitive_id const& id) 
-    {
-        try 
-        {
-            return *nodes_map.at(id);
-        }
-        catch (...)
-        {
-            throw std::runtime_error("Program doesn't contain primtive node: " + id);
-        }
-    }
-
-    bool has_node(const primitive_id& prim) const
-    {
-        return nodes_map.count(prim) > 0;
-    }
-
-    auto const& get_node(primitive_id const& id) const
-    {
-        try
-        {
-            return *nodes_map.at(id);
-        }
-        catch (...)
-        {
-            throw std::runtime_error("Program doesn't contain primtive node: " + id);
-        }
-    }
+    bool has_node(const primitive_id& prim) const { return nodes_map.count(prim) > 0; }
+    program_node& get_node(primitive_id const& id);
+    program_node const& get_node(primitive_id const& id) const;
+    void dump_memory_pool() const;
 
 private:
     uint32_t prog_id = 0;
@@ -90,7 +88,7 @@ private:
 
     std::list<program_node*> inputs;
     std::vector<program_node*> outputs;
-    std::list<program_node*> processing_order;
+    nodes_ordering processing_order;
 
     std::map<primitive_id, std::shared_ptr<program_node>> nodes_map;
 
@@ -112,7 +110,6 @@ private:
     ** Initialization functions
     */
     void set_outputs();
-    void calc_processing_order();
     void calc_prior_boxes();
 
     /*
@@ -132,7 +129,6 @@ private:
     */
     void trim_to_outputs();
     void remove_redundant_reorders();
-    void calculate_BFS_processing_order();
     void reorder_inputs(layout_optimizer& lo);
     void pre_optimize_bias(layout_optimizer& lo);
     void post_optimize_weights(layout_optimizer& lo);
@@ -144,7 +140,6 @@ private:
     void prepare_primitive_fusing();
     void prepare_depthwise_sep_opt();
     void prep_opt_depthwise_sep_post();
-    void update_processing_numbers();
 
     /*
     ** Memory pool functions
@@ -198,18 +193,6 @@ private:
 		node.users.clear();
     }
 
-    bool processing_order_is_correct(program_node* node)
-    {
-        for (auto& dep : node->get_dependencies())
-        {
-            if (node->processing_num < dep->processing_num)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
     void rename(program_node & node, primitive_id const & new_id);
     void swap_names(program_node& node1, program_node& node2);
     void replace_all_usages(program_node& old_node, program_node& new_node);
@@ -234,8 +217,8 @@ private:
     //Makes serialization with given name.
     //Placeholder, not working yet, in progress.
     void serialize(std::string network_name, std::function<bool(program_node const&)> const& filter = nullptr) const;
-
 };
+
 }
 
 API_CAST(::cldnn_program, cldnn::program_impl)

@@ -28,8 +28,6 @@ program_node::program_node(std::shared_ptr<primitive> prim, program_impl & prog)
 {
     if (prim)
         output_layout.data_padding = prim->output_padding;
-
-    processing_itr = prog.processing_order.end();
 }
 
 void program_node::replace_dependency(size_t idx, program_node& new_dep, bool detach_whole_branch)

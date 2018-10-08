@@ -229,12 +229,12 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
                 case activation_exp:
                     EXPECT_FLOAT_EQ(std::exp((float)input_ptr[i]), output_ptr[i]);
                     break;
-                case activation_log2:
-                    if (input_ptr[i] > 0) //logarithm exist only for positive real values
+				case activation_log2:
+					if (input_ptr[i] > 0) //logarithm exist only for positive real values
                     {
-                        EXPECT_FLOAT_EQ(std::log2((float)input_ptr[i]), output_ptr[i]);
+						EXPECT_FLOAT_EQ(std::log2((float)input_ptr[i]), output_ptr[i]);
                     }
-                    break;
+					break;
                 default:
                     break;
                 }

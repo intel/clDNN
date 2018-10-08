@@ -102,7 +102,7 @@ public:
         auto conv_grad_weights_params = get_default_learning_params<kernel_selector::convolution_grad_weights_params>(arg, depthwise_separable_opt ? 1 : split);
         auto conv_grad_weights_optional_params = get_default_learning_optional_params<kernel_selector::convolution_grad_weights_optional_params>(arg.get_program());
 
-        conv_grad_weights_params.depthwiseSeparableOpt = depthwise_separable_opt;
+        conv_grad_weights_params.depthwise_separable_opt = depthwise_separable_opt;
 
         conv_grad_weights_params.gradient = true;
         conv_grad_weights_params.inputs.push_back(convert_data_tensor(arg.get_dependency(1).get_output_layout()));

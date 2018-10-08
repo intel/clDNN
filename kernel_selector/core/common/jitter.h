@@ -18,7 +18,6 @@
 #pragma once
 
 #include "kernel_selector_common.h"
-#include "kernel_selector_params.h"
 #include "tensor_type.h"
 
 #include <sstream>
@@ -26,6 +25,8 @@
 
 
 namespace kernel_selector {
+
+struct base_params;
 
 using JitDefinitions = std::vector<std::pair<std::string, std::string>>;
 
@@ -76,20 +77,10 @@ template<>
 inline std::string toCodeString<char*>(char* val) { return val; }
 
 template<>
-inline std::string toCodeString<bool>(bool val)
-{
-    std::stringstream ss;
-    ss << static_cast<int>(val);
-    return ss.str();
-}
+inline std::string toCodeString<bool>(bool val) { return val ? "1" : "0"; }
 
 template<>
-inline std::string toCodeString<const bool>(const bool val)
-{
-    std::stringstream ss;
-    ss << static_cast<int>(val);
-    return ss.str();
-}
+inline std::string toCodeString<const bool>(const bool val) { return val ? "1" : "0"; }
 
 template<>
 inline std::string toCodeString<float>(float val) {

@@ -63,7 +63,7 @@ namespace kernel_selector
             MakeJitConstant("DILATION",                     params.dilation),
             MakeJitConstant("FILTER_ARRAY_NUM",             params.split),
             MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
-            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      params.depthwiseSeparableOpt),
+            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      params.depthwise_separable_opt),
             MakeJitConstant("QUANTIZATION_TERM",            params.int8_quantization),
         });
 
@@ -80,6 +80,11 @@ namespace kernel_selector
             }
             else
                 mem_consts.AddConstants({ MakeJitConstant("O_QF", params.output_quantization_factor) });
+        }
+
+        if (params.local_convolution)
+        {
+            mem_consts.AddConstants({ MakeJitConstant("LOCAL_CONVOLUTION", params.local_convolution) });
         }
 
         std::vector<uint32_t> unrollLoopParams{

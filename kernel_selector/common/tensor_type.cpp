@@ -43,32 +43,33 @@ namespace kernel_selector
             { 0, 1, 3,-1, 2 },  // DataLayout::fs_bs_yx_bsv4_fsv32
         } };
 
-        std::array<std::array<int, 4>, WeightsLayout::WeightsLayoutCount> WeightsTensor::weightsChannelArray
+        std::array<std::array<int, 6>, WeightsLayout::WeightsLayoutCount> WeightsTensor::weightsChannelArray
         { {
-            //X, Y, I, O
-            {-1,-1, 0, 1 },  // WeightsLayout::oi
-            {-1,-1, 1, 0 },  // WeightsLayout::io
-            { 0, 1, 2, 3 },  // WeightsLayout::oiyx
-            { 1, 2, 0, 3 },  // WeightsLayout::oyxi
-            { 1, 2, 3, 0 },  // WeightsLayout::iyxo
-            { 2, 3, 1, 0 },  // WeightsLayout::yxio
-            { 0, 1, 2, 3 },  // WeightsLayout::os_iyx_osv16
-            { 0, 1, 2, 3 },  // WeightsLayout::os_iyx_osv16_rotate_180
-            {-1,-1, 0, 1 },  // WeightsLayout::os_i_osv8__ai8
-            {-1,-1, 0, 1 },  // WeightsLayout::os_i_osv16__ai8
-            {-1,-1, 0, 1 },  // WeightsLayout::os_i_osv16            
-            { 1, 2, 3, 0 },  // WeightsLayout::i_yxs_os_yxsv2_osv16
-            { 1, 2, 3, 0 },  // WeightsLayout::iy_xs_os_xsv2_osv16__ao32
-            { 1, 2, 3, 0 },  // WeightsLayout::iy_xs_os_xsv2_osv8__ao32
-            { 0, 1, 2, 3 },  // WeightsLayout::image_2d_weights_c4_fyx_b
-            { 0, 1, 2, 3 },  // WeightsLayout::image_2d_weights_c1_b_fyx
-            { 3, 2, 1, 0 },  // WeightsLayout::winograd_2x3_s1_weights
-            { 0, 1, 2, 3 },  // WeightsLayout::winograd_2x3_s1_fused_weights
-            { 0, 1, 2, 3 },  // WeightsLayout::winograd_6x3_s1_fused_weights
-            { 0, 1, 2, 3 },  // WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb
-            { 0, 1, 2, 3 },  // WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb
-            { 0, 1, 2, 3 },  // WeightsLayout::os_is_yx_isa8_osv8_isv4
-            { 1, 2, 0, 3 },  // WeightsLayout::is_o_yx_isv32
+            // X, Y,   I,  O, LX, LY,
+            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::oi
+            { -1, -1,  1,  0, -1, -1 }, // WeightsLayout::io
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::oiyx
+            {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::oyxi
+            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::iyxo
+            {  2,  3,  1,  0, -1, -1 }, // WeightsLayout::yxio
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv16
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv16_rotate_180
+            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv8__ai8
+            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv16__ai8
+            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv16            
+            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::i_yxs_os_yxsv2_osv16
+            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::iy_xs_os_xsv2_osv16__ao32
+            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::iy_xs_os_xsv2_osv8__ao32
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_c4_fyx_b
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_c1_b_fyx
+            {  3,  2,  1,  0, -1, -1 }, // WeightsLayout::winograd_2x3_s1_weights
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::winograd_2x3_s1_fused_weights
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::winograd_6x3_s1_fused_weights
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4
+            {  1,  2,  0,  3, -1, -1 },  // WeightsLayout::is_o_yx_isv32
+            {  0,  1,  2,  3,  4,  5 },  // WeightsLayout::bf_lyx_yx 
         } };
 
         NDims DataTensor::GetSimpleDims(const std::vector<size_t>& d, DataLayout l)
@@ -331,6 +332,11 @@ namespace kernel_selector
                 ret[0].pitch = 256;
                 ret[1].pitch = ret[0].pitch * ret[0].v;
             }
+            else if (l == bf_lyx_yx)
+            {
+                ret[2].pitch = ret[0].v * ret[1].v * ret[2].v * ret[3].v;
+                ret[3].pitch = ret[2].pitch * ret[5].v;
+            }
 
             return ret;
         }
@@ -384,6 +390,15 @@ namespace kernel_selector
                 const size_t dst_ifm = IFM().v * src_x * src_y;
                 vec[Channelndex(l, WeightsChannelName::IFM)] = dst_ifm;
                 vec[Channelndex(l, WeightsChannelName::OFM)] = OFM().v;
+            }
+            else if (src_channels == 6 && dst_channels == 6)
+            {
+                vec[Channelndex(l, WeightsChannelName::X)] = IFM().v;
+                vec[Channelndex(l, WeightsChannelName::Y)] = OFM().v;
+                vec[Channelndex(l, WeightsChannelName::IFM)] = LX().v;
+                vec[Channelndex(l, WeightsChannelName::OFM)] = LY().v;
+                vec[Channelndex(l, WeightsChannelName::LX)] = X().v;
+                vec[Channelndex(l, WeightsChannelName::LY)] = Y().v;
             }
             else
             {

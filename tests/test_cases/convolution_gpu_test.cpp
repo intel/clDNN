@@ -2811,13 +2811,374 @@ TEST(convolution_f32_fw_gpu, calibration_advance) {
     auto o_qf = output_calibrations_2.pointer<float>();
 
     for (int f = 0; f < out_size.feature[0]; f++)
-        for (int y = 0; y < out_size.spatial[1]; ++y) {
-            for (int x = 0; x < out_size.spatial[0]; ++x) {
-                EXPECT_NEAR(ref_ptr[x + out_size.spatial[0] * (y + out_size.spatial[1]*f)], ((float)test_ptr[x + out_size.spatial[0] * (y + out_size.spatial[1] * f)]) / o_qf[f], 3.0f);
+    {
+        for (int y = 0; y < out_size.spatial[1]; ++y)
+        {
+            for (int x = 0; x < out_size.spatial[0]; ++x)
+            {
+                EXPECT_NEAR(ref_ptr[x + out_size.spatial[0]
+                    * (y + out_size.spatial[1] * f)], ((float)test_ptr[x + out_size.spatial[0]
+                        * (y + out_size.spatial[1] * f)]) / o_qf[f], 3.0f);
             }
         }
+    }
 
 }
+TEST(convolution_f32_fw_gpu, local_basic) {
+    //  Filter : 3x3x2x2 - local sizes
+    //  Stride : 1x1
+    //  Input  : 4x4
+    //  Output : 3x3 
+    //
+    //  Input:
+    //  1  1  1  1
+    //  1  1  1  1
+    //  2  2  2  2
+    //  2  2  2  2
+    //    
+    //
+    //  Filter:
+    //  0 0  1 1  2 2
+    //  0 0  1 1  2 2
+    //
+    //  3 3  4 4  5 5  
+    //  3 3  4 4  5 5
+    //
+    //  6 6  7 7  8 8
+    //  6 6  7 7  8 8
+    //
+    //  Output:
+    //  0  4  8
+    // 18 24 30
+    // 48 56 64
+    //
+
+    engine engine;
+    tensor local_size = tensor(1,1,2,2,3,3);
+    auto input_f = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 4 } });
+    auto weights_f = memory::allocate(engine, { data_types::f32, format::bf_lyx_yx, local_size });
+    cldnn::memory biases = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+
+    std::vector<float> weights_values_f = {
+        0.0, 0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0, 1.0,
+        2.0, 2.0, 2.0, 2.0,
+
+        3.0, 3.0, 3.0, 3.0,
+        4.0, 4.0, 4.0, 4.0,
+        5.0, 5.0, 5.0, 5.0,
+
+        6.0, 6.0, 6.0, 6.0,
+        7.0, 7.0, 7.0, 7.0,
+        8.0, 8.0, 8.0, 8.0,
+    };
+    set_values<float>(input_f, { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 });
+    set_values<float>(weights_f, weights_values_f);
+    set_values(biases, { 0.0f });
+    std::vector<float> output_vec =
+    {
+        0.0f, 4.0f, 8.0f,
+        18.0f, 24.0f, 30.0f,
+        48.0f, 56.0f, 64.0f
+    };
+
+    topology topology_f(
+        input_layout("input_f", input_f.get_layout()),
+        data("weights_f", weights_f),
+        data("biases", biases),
+        convolution("conv_f", "input_f", { "weights_f" }, { "biases" }, { 0, 0, 1, 1 }));
+
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+    network network_f(engine, topology_f, opts);
+    network_f.set_input_data("input_f", input_f);
+
+    auto outputs_f = network_f.execute();
+    EXPECT_EQ(outputs_f.begin()->first, "conv_f");
+
+    auto output_memory_f = outputs_f.at("conv_f").get_memory();
+    auto output_ptr_f = output_memory_f.pointer<float>();
+    unsigned int cntr = 0;
+    for (auto fl : output_ptr_f)
+        EXPECT_FLOAT_EQ(fl, output_vec[cntr++]);
+}
+
+
+TEST(convolution_f32_fw_gpu, local_multi_out_features) {
+    //  Filter : 3x1x3x3x2x2 - local sizes
+    //  Stride : 1x1
+    //  Input  : 4x4
+    //  Output : 3x3x3 
+    //
+    //  Input:
+    //  1  1  1  1
+    //  1  1  1  1
+    //  2  2  2  2
+    //  2  2  2  2
+    //    
+    //
+    //  Filter:
+    //  0 0  1 1  2 2  --- 1 ofm
+    //  0 0  1 1  2 2
+    //
+    //  3 3  4 4  5 5  
+    //  3 3  4 4  5 5
+    //
+    //  6 6  7 7  8 8
+    //  6 6  7 7  8 8
+    //
+    //  0 0  0 0  0 0  --- 2 ofm 
+    //  0 0  0 0  0 0
+    //
+    //  0 0  0 0  0 0
+    //  0 0  0 0  0 0
+    //
+    //  0 0  0 0  0 0
+    //  0 0  0 0  0 0
+    //
+    //  0 0  2 2  4 4 --- 3 ofm
+    //  0 0  2 2  4 4 
+    //
+    //  6 6  8 8  1 1 
+    //  6 6  8 8  1 1 
+    //       
+    //  3 3  5 5  7 7 
+    //  3 3  5 5  7 7 
+    //
+
+    //
+    //  Output:
+    //  0  4  8
+    // 18 24 30
+    // 48 56 64
+    //
+    //  0  0  0
+    //  0  0  0
+    //  0  0  0
+    //
+    //  0  8 16
+    // 36 48  6
+    // 24 40 56
+    //
+
+    engine engine;
+    tensor local_size = tensor(3,1,2,2,3,3);
+    auto input_f = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 4 } });
+    auto weights_f = memory::allocate(engine, { data_types::f32, format::bf_lyx_yx, local_size });
+    cldnn::memory biases = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 1 } });
+
+    std::vector<float> weights_values_f = {
+        0.0, 0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0, 1.0,
+        2.0, 2.0, 2.0, 2.0,
+
+        3.0, 3.0, 3.0, 3.0,
+        4.0, 4.0, 4.0, 4.0,
+        5.0, 5.0, 5.0, 5.0,
+
+        6.0, 6.0, 6.0, 6.0,
+        7.0, 7.0, 7.0, 7.0,
+        8.0, 8.0, 8.0, 8.0,
+
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,
+
+        0.0, 0.0, 0.0, 0.0,
+        2.0, 2.0, 2.0, 2.0,
+        4.0, 4.0, 4.0, 4.0,
+
+        6.0, 6.0, 6.0, 6.0,
+        8.0, 8.0, 8.0, 8.0,
+        1.0, 1.0, 1.0, 1.0,
+
+        3.0, 3.0, 3.0, 3.0,
+        5.0, 5.0, 5.0, 5.0,
+        7.0, 7.0, 7.0, 7.0,
+    };
+    set_values<float>(input_f, { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 });
+    set_values<float>(weights_f, weights_values_f);
+    set_values(biases, { 0.0f, 0.0f, 0.0f });
+    std::vector<float> output_vec =
+    {
+        0.0f,  4.0f,  8.0f,
+        18.0f, 24.0f, 30.0f,
+        48.0f, 56.0f, 64.0f,
+
+        0.0f,  0.0f, 0.0f,
+        0.0f,  0.0f, 0.0f,
+        0.0f,  0.0f, 0.0f,
+
+        0.0f,  8.0f, 16.0f,
+        36.0f, 48.0f,  6.0f,
+        24.0f, 40.0f, 56.0f,
+    };
+
+    topology topology_f(
+        input_layout("input_f", input_f.get_layout()),
+        data("weights_f", weights_f),
+        data("biases", biases),
+        convolution("conv_f", "input_f", { "weights_f" }, { "biases" }, { 0, 0, 1, 1 }));
+
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+    network network_f(engine, topology_f, opts);
+    network_f.set_input_data("input_f", input_f);
+
+    auto outputs_f = network_f.execute();
+    EXPECT_EQ(outputs_f.begin()->first, "conv_f");
+
+    auto output_memory_f = outputs_f.at("conv_f").get_memory();
+    auto output_ptr_f = output_memory_f.pointer<float>();
+    unsigned int cntr = 0;
+    for (auto fl : output_ptr_f)
+    {
+        EXPECT_FLOAT_EQ(fl, output_vec[cntr++]);
+    }
+}
+
+TEST(convolution_f32_fw_gpu, local_multi_input_features) {
+    //  Filter : 1x3x3x3x2x2 - local sizes
+    //  Stride : 1x1
+    //  Input  : 3x4x4
+    //  Output : 3x3 
+    //
+    //  Input:
+    //  0  0  0  0
+    //  0  0  0  0
+    //  0  0  0  0
+    //  0  0  0  0
+    //
+    //  1  1  1  1
+    //  1  1  1  1
+    //  1  1  1  1
+    //  1  1  1  1
+    //
+    //  2  2  2  2
+    //  2  2  2  2
+    //  2  2  2  2
+    //  2  2  2  2
+    //    
+    //
+    //  Filter:
+    //  0 0  1 1  2 2
+    //  0 0  1 1  2 2
+    //
+    //  3 3  4 4  5 5  
+    //  3 3  4 4  5 5
+    //
+    //  6 6  7 7  8 8
+    //  6 6  7 7  8 8
+    //
+    //  0 0  1 1  2 2
+    //  0 0  1 1  2 2
+    //
+    //  3 3  4 4  5 5  
+    //  3 3  4 4  5 5
+    //
+    //  6 6  7 7  8 8
+    //  6 6  7 7  8 8
+    //
+    //  0 0  1 1  2 2
+    //  0 0  1 1  2 2
+    //
+    //  3 3  4 4  5 5  
+    //  3 3  4 4  5 5
+    //
+    //  6 6  7 7  8 8
+    //  6 6  7 7  8 8
+    //
+    //  Output:
+    //  0  4  8
+    // 18 24 30
+    // 48 56 64
+    //
+
+    engine engine;
+    tensor local_size = tensor(1,3,2,2,3,3);
+    auto input_f = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 3, 4, 4 } });
+    auto weights_f = memory::allocate(engine, { data_types::f32, format::bf_lyx_yx, local_size });
+    cldnn::memory biases = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+
+    std::vector<float> weights_values_f = {
+        0.0, 0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0, 1.0,
+        2.0, 2.0, 2.0, 2.0,
+
+        3.0, 3.0, 3.0, 3.0,
+        4.0, 4.0, 4.0, 4.0,
+        5.0, 5.0, 5.0, 5.0,
+
+        6.0, 6.0, 6.0, 6.0,
+        7.0, 7.0, 7.0, 7.0,
+        8.0, 8.0, 8.0, 8.0,
+
+        0.0, 0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0, 1.0,
+        2.0, 2.0, 2.0, 2.0,
+
+        3.0, 3.0, 3.0, 3.0,
+        4.0, 4.0, 4.0, 4.0,
+        5.0, 5.0, 5.0, 5.0,
+
+        6.0, 6.0, 6.0, 6.0,
+        7.0, 7.0, 7.0, 7.0,
+        8.0, 8.0, 8.0, 8.0,
+
+        0.0, 0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0, 1.0,
+        2.0, 2.0, 2.0, 2.0,
+
+        3.0, 3.0, 3.0, 3.0,
+        4.0, 4.0, 4.0, 4.0,
+        5.0, 5.0, 5.0, 5.0,
+
+        6.0, 6.0, 6.0, 6.0,
+        7.0, 7.0, 7.0, 7.0,
+        8.0, 8.0, 8.0, 8.0,
+    };
+    set_values<float>(input_f, {
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 });
+    set_values<float>(weights_f, weights_values_f);
+    set_values(biases, { 0.0f });
+    std::vector<float> output_vec =
+    {
+        60.0f, 72.0f, 84.0f,
+        24.0f, 36.0f, 48.0f,
+        24.0f, 36.0f, 48.0f
+    };
+
+    topology topology_f(
+        input_layout("input_f", input_f.get_layout()),
+        data("weights_f", weights_f),
+        data("biases", biases),
+        convolution("conv_f", "input_f", { "weights_f" }, { "biases" }, { 0, 0, 1, 1 }));
+
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+    network network_f(engine, topology_f, opts);
+    network_f.set_input_data("input_f", input_f);
+
+    auto outputs_f = network_f.execute();
+    EXPECT_EQ(outputs_f.begin()->first, "conv_f");
+
+    auto output_memory_f = outputs_f.at("conv_f").get_memory();
+    auto output_ptr_f = output_memory_f.pointer<float>();
+    unsigned int cntr = 0;
+    for (auto fl : output_ptr_f)
+        EXPECT_FLOAT_EQ(fl, output_vec[cntr++]);
+}
+
 
 TEST(convolution_gpu, basic_yxfb_4_4_yxfb_2_2_b16_if2_of16_st2_2_p0_sp1_fp16)
 {

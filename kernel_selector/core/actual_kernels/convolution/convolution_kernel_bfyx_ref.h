@@ -37,6 +37,7 @@ namespace kernel_selector {
                 WeightsLayout::yxio,
                 WeightsLayout::iyxo,
                 WeightsLayout::oyxi,
+                WeightsLayout::bf_lyx_yx,
             };
         }
     };

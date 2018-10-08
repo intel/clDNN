@@ -51,7 +51,7 @@ namespace kernel_selector
         }
 
        const convolution_params& cp = static_cast<const convolution_params&>(p);
-       if (!cp.depthwiseSeparableOpt)
+       if (!cp.depthwise_separable_opt)
            return false;
 
        if ((cp.filterSize.x > 4) ||

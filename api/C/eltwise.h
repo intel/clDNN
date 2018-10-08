@@ -70,6 +70,9 @@ cldnn_float_arr coefficients;
 uint32_t with_activation;
 /// @brief Relu activation slope.
 float activation_negative_slope;
+/// @brief Defines shift in input buffers between adjacent calculations of output values.
+cldnn_tensor_arr stride;
+
 CLDNN_END_PRIMITIVE_DESC(eltwise)
 
 CLDNN_DECLARE_PRIMITIVE_TYPE_ID(eltwise);

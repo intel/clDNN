@@ -33,9 +33,32 @@ public:
     decltype(auto) input() const { return get_dependency(0); }
     decltype(auto) mean() const { return get_dependency(1); }
     decltype(auto) variance() const { return get_dependency(2); }
-    decltype(auto) inv_variance() const { return get_dependency(1); };
+    decltype(auto) scale() const 
+	{ 
+		if(get_dependencies().size() >= 5)
+			return get_dependency(3); 
+		else
+			return get_dependency(1);
+	}
+    decltype(auto) shift() const 
+	{ 
+		if (get_dependencies().size() >= 5)
+			return get_dependency(4); 
+		else
+			return get_dependency(2);
+	}
+    decltype(auto) inv_variance() const 
+	{ 
+		if (get_dependencies().size() == 2)
+			return get_dependency(1);
+		else if (get_dependencies().size() == 6)
+			return get_dependency(5);
+		else
+			return get_dependency(3);
+	};
     bool variance_term() const { return !get_primitive()->variance.empty(); }
     bool use_global_stats() const { return !get_primitive()->mean.empty() && !get_primitive()->variance.empty(); };
+    bool use_scale_shift() const { return !get_primitive()->scale.empty() && !get_primitive()->shift.empty(); };
     bool forwad_pass() const { return !get_primitive()->inv_variance.empty(); };
 
 };
@@ -56,8 +79,31 @@ public:
 
     decltype(auto) mean_memory() const { return dep_memory(1); }
     decltype(auto) variance_memory() const { return dep_memory(2); }
-    decltype(auto) inv_variance_memory() const { return dep_memory(1); };
+    decltype(auto) scale_memory() const 
+	{
+		if (dependencies().size() >= 5)
+			return dep_memory(3);
+		else
+			return dep_memory(1);
+	}
+    decltype(auto) shift_memory() const 
+	{
+		if (dependencies().size() >= 5)
+			return dep_memory(4);
+		else
+			return dep_memory(2);
+	}
+    decltype(auto) inv_variance_memory() const
+	{
+		if (dependencies().size() == 2)
+			return dep_memory(1);
+		else if (dependencies().size() == 6)
+			return dep_memory(5);
+		else
+			return dep_memory(3);
+	};
     bool use_global_stats() const { return !argument.mean.empty() && !argument.variance.empty(); };
+    bool use_scale_shift() const { return !argument.scale.empty() && !argument.scale.empty(); };
     bool forwad_pass() const { return !argument.inv_variance.empty(); };
 };
 

@@ -18,6 +18,7 @@
 #include "primitive_type_base.h"
 #include "error_handler.h"
 #include "json_object.h"
+#include "mutable_data_inst.h"
 
 namespace cldnn
 {
@@ -37,6 +38,8 @@ std::string batch_norm_inst::to_string(batch_norm_node const& node)
     auto desc      = node.get_primitive();
     auto node_info = node.desc_to_json();
     auto& mean     = node.mean();
+	auto& scale = node.scale();
+	auto& shift = node.shift();
     bool variance_term = node.variance_term();
     auto& inv_var  = node.inv_variance();
 
@@ -51,6 +54,11 @@ std::string batch_norm_inst::to_string(batch_norm_node const& node)
             batch_norm_info.add("variance_id", node.variance().id());
         }
     }
+	if (node.use_scale_shift())
+	{
+		batch_norm_info.add("scale_id", scale.id());
+		batch_norm_info.add("shift_id", shift.id());
+	}
     if (node.forwad_pass())
     {
         batch_norm_info.add("inv_var", inv_var.id());
@@ -73,6 +81,29 @@ batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node con
 
         CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Mean format", mean_format.value, "supported mean formats", format::yxfb, format::bfyx);
         CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Variance format", variance_format.value, "supported variance formats", format::yxfb, format::bfyx);
+
+		if (forwad_pass())
+		{
+			auto is_mean_mutable_data = node.mean().is_type<mutable_data>();
+			auto is_var_mutable_data = node.variance().is_type<mutable_data>();
+
+			CLDNN_ERROR_BOOL(node.id(), "mean_out is not mutable_data type", !is_mean_mutable_data, "");
+			CLDNN_ERROR_BOOL(node.id(), "variance_out is not mutable_data type", !is_var_mutable_data, "");
+		}
     }
+
+	if (use_scale_shift()) {
+		auto scale_format = node.scale().get_output_layout().format;
+		auto shift_format = node.shift().get_output_layout().format;
+
+		CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Scale format", scale_format.value, "supported scale formats", format::yxfb, format::bfyx);
+		CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Shift format", shift_format.value, "supported shift formats", format::yxfb, format::bfyx);
+	}
+
+	if (forwad_pass())
+	{
+		auto is_inv_var_mutable_data = node.inv_variance().is_type<mutable_data>();
+		CLDNN_ERROR_BOOL(node.id(), "inv_variance is not mutable_data type", !is_inv_var_mutable_data, "");
+	}
 }
 }

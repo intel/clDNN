@@ -16,13 +16,25 @@
 
 #include "include/include_all.cl"
 
+
+#ifdef INPUT_STRIDED
+
+#define GET_INDEX(prefix, num) \
+    CAT(CAT(prefix, num), _OFFSET) + \
+    ((d1 * CAT(CAT(prefix, num), _STRIDE_X)) % CAT(CAT(prefix, num), _SIZE_X))*CAT(CAT(prefix, num), _X_PITCH) +\
+    ((d2 * CAT(CAT(prefix, num), _STRIDE_Y)) % CAT(CAT(prefix, num), _SIZE_Y))*CAT(CAT(prefix, num), _Y_PITCH) +\
+    (d3 % CAT(CAT(prefix, num), _FEATURE_NUM))*CAT(CAT(prefix, num), _FEATURE_PITCH) + \
+    (d4 % CAT(CAT(prefix, num), _BATCH_NUM  ))*CAT(CAT(prefix, num), _BATCH_PITCH)
+
+#else
+
 #if ELTWISE_LAYOUT_BASED || QUANTIZATION_TERM
 
 #define GET_INDEX(prefix, num)                                                          \
     CAT(CAT(prefix, num), _OFFSET) +                                                    \
-    (d1 % CAT(CAT(prefix, num), _SIZE_X     ))*CAT(CAT(prefix, num), _X_PITCH) +         \
-    (d2 % CAT(CAT(prefix, num), _SIZE_Y     ))*CAT(CAT(prefix, num), _Y_PITCH) +         \
-    (d3 % CAT(CAT(prefix, num), _FEATURE_NUM))*CAT(CAT(prefix, num), _FEATURE_PITCH) +   \
+    (d1 % CAT(CAT(prefix, num), _SIZE_X     ))*CAT(CAT(prefix, num), _X_PITCH) +        \
+    (d2 % CAT(CAT(prefix, num), _SIZE_Y     ))*CAT(CAT(prefix, num), _Y_PITCH) +        \
+    (d3 % CAT(CAT(prefix, num), _FEATURE_NUM))*CAT(CAT(prefix, num), _FEATURE_PITCH) +  \
     (d4 % CAT(CAT(prefix, num), _BATCH_NUM  ))*CAT(CAT(prefix, num), _BATCH_PITCH)
 
 #elif ELTWISE_NO_PITCH_SAME_DIMS
@@ -40,6 +52,8 @@
 
 #endif
 
+#endif
+
 KERNEL(eltwise)(
     INPUTS_DECLS
     __global UNIT_TYPE* output
@@ -49,8 +63,8 @@ KERNEL(eltwise)(
     )
 {
 #if ELTWISE_LAYOUT_BASED || QUANTIZATION_TERM
-    const uint d1 = get_global_id(GWS_YX) % INPUT0_SIZE_X;   // X
-    const uint d2 = get_global_id(GWS_YX) / INPUT0_SIZE_X;   // Y
+    const uint d1 = get_global_id(GWS_YX) % OUTPUT_SIZE_X;  // X
+    const uint d2 = get_global_id(GWS_YX) / OUTPUT_SIZE_X;  // Y
     const uint d3 = get_global_id(GWS_FEATURE);             // Feature
     const uint d4 = get_global_id(GWS_BATCH);               // Batch
 

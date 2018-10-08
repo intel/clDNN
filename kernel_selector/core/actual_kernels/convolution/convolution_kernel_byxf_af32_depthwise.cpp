@@ -52,7 +52,7 @@ namespace kernel_selector {
         const convolution_params& params = static_cast<const convolution_params&>(p);
 
         // this kernel is designed for quantization use case
-        if (!params.depthwiseSeparableOpt)
+        if (!params.depthwise_separable_opt)
             return false;
 
         return true;

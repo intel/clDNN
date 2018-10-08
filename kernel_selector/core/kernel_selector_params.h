@@ -124,10 +124,11 @@ namespace kernel_selector
                         {
                             uint32_t split : 1;
                             uint32_t dilation : 1;
-                            uint32_t depthwiseSeparableOpt : 1;
+                            uint32_t depthwise_separable_opt : 1;
                             uint32_t transposed : 1;
                             uint32_t quantization : 1;
                             uint32_t calibration : 1;
+                            uint32_t local : 1;
                         } conv;
                         struct fc_t {} fc;
                         struct softmax_t 
@@ -170,6 +171,10 @@ namespace kernel_selector
                         {
                             uint32_t winograd : 1;
                         } reorder;
+                        struct eltwise_t
+                        {
+                            uint32_t stride : 1;
+                        } eltwise;
                         struct lstm_gemm_t {
                             uint32_t bias : 1;
                             uint32_t hidden : 1;
@@ -262,7 +267,8 @@ namespace kernel_selector
         void EnablePoolRemainder(PoolRemainder r);
         void EnableSplitSupport() { key.restrict.val.dedicated.conv.split = 1; }
         void EnableDilation() { key.restrict.val.dedicated.conv.dilation = 1; }
-        void EnableDepthwiseSeparableOpt() { key.restrict.val.dedicated.conv.depthwiseSeparableOpt = 1; }
+        void EnableDepthwiseSeparableOpt() { key.restrict.val.dedicated.conv.depthwise_separable_opt = 1; }
+        void EnableLocalConvolution() { key.restrict.val.dedicated.conv.local = 1; }
         void EnableTranspose() { key.restrict.val.dedicated.conv.transposed = 1; }
         void EnableInt8Quantization() { key.restrict.val.dedicated.conv.quantization = 1; }
         void EnableOutputCalibration() { key.restrict.val.dedicated.conv.calibration = 1; }
@@ -270,6 +276,7 @@ namespace kernel_selector
         void EnableSoftmaxDim(SoftmaxDim d);
         void EnableConcatAxis(ConcatAxis a);
         void EnableUpSamplingSampleType(SampleType a);
+        void EnableEltwiseStride();
         void EnableLSTMGEMMBias() { key.restrict.val.dedicated.lstm_gemm.bias = 1; }
         void EnableLSTMGEMMHidden() { key.restrict.val.dedicated.lstm_gemm.hidden = 1; }
         void EnableLSTMEltCell() { key.restrict.val.dedicated.lstm_elt.cell = 1; }

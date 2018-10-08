@@ -135,8 +135,9 @@ kernel_selector::weights_layout to_weights_layout(format f)
     case format::winograd_6x3_s1_fused_weights: return kernel_selector::weights_layout::winograd_6x3_s1_fused_weights;
     case format::image_2d_weights_winograd_6x3_s1_fbxyb:     return kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_fbxyb;
     case format::image_2d_weights_winograd_6x3_s1_xfbyb:     return kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_xfbyb;
-    case format::os_is_yx_isa8_osv8_isv4: return kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4;
+    case format::os_is_yx_isa8_osv8_isv4:                    return kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4;
     case format::is_o_yx_isv32: return kernel_selector::weights_layout::is_o_yx_isv32;
+    case format::bf_lyx_yx:                                  return kernel_selector::weights_layout::bf_lyx_yx;
     default:
         return kernel_selector::weights_layout::oi;
     }
@@ -147,24 +148,25 @@ cldnn::format::type from_weights_layout(kernel_selector::weights_layout l)
     switch (l)
     {
     case kernel_selector::weights_layout::oi:
-    case kernel_selector::weights_layout::oiyx:               return cldnn::format::bfyx;
-    case kernel_selector::weights_layout::oyxi:               return cldnn::format::byxf;
+    case kernel_selector::weights_layout::oiyx:            return cldnn::format::bfyx;
+    case kernel_selector::weights_layout::oyxi:            return cldnn::format::byxf;
     case kernel_selector::weights_layout::io:
-    case kernel_selector::weights_layout::iyxo:               return cldnn::format::fyxb;
-    case kernel_selector::weights_layout::yxio:               return cldnn::format::yxfb;
-    case kernel_selector::weights_layout::os_iyx_osv16:       return cldnn::format::os_iyx_osv16;
-    case kernel_selector::weights_layout::os_i_osv16:         return cldnn::format::bs_x_bsv16;
-    case kernel_selector::weights_layout::os_i_osv8__ai8:     return cldnn::format::bs_xs_xsv8_bsv8;
-    case kernel_selector::weights_layout::os_i_osv16__ai8:    return cldnn::format::bs_xs_xsv8_bsv16;
-    case kernel_selector::weights_layout::image_2d_weights_c4_fyx_b:        return cldnn::format::image_2d_weights_c4_fyx_b;
-    case kernel_selector::weights_layout::image_2d_weights_c1_b_fyx:        return cldnn::format::image_2d_weights_c1_b_fyx;
-    case kernel_selector::weights_layout::winograd_2x3_s1_weights:          return cldnn::format::winograd_2x3_s1_weights;
-    case kernel_selector::weights_layout::winograd_2x3_s1_fused_weights:    return cldnn::format::winograd_2x3_s1_fused_weights;
-    case kernel_selector::weights_layout::winograd_6x3_s1_fused_weights:    return cldnn::format::winograd_6x3_s1_fused_weights;
-    case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_fbxyb:        return cldnn::format::image_2d_weights_winograd_6x3_s1_fbxyb;
-    case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_xfbyb:        return cldnn::format::image_2d_weights_winograd_6x3_s1_xfbyb;
-    case kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4: return cldnn::format::os_is_yx_isa8_osv8_isv4;
-    case kernel_selector::weights_layout::is_o_yx_isv32: return cldnn::format::is_o_yx_isv32;
+    case kernel_selector::weights_layout::iyxo:            return cldnn::format::fyxb;
+    case kernel_selector::weights_layout::yxio:            return cldnn::format::yxfb;
+    case kernel_selector::weights_layout::os_iyx_osv16:    return cldnn::format::os_iyx_osv16;
+    case kernel_selector::weights_layout::os_i_osv16:      return cldnn::format::bs_x_bsv16;
+    case kernel_selector::weights_layout::os_i_osv8__ai8:  return cldnn::format::bs_xs_xsv8_bsv8;
+    case kernel_selector::weights_layout::os_i_osv16__ai8: return cldnn::format::bs_xs_xsv8_bsv16;
+    case kernel_selector::weights_layout::image_2d_weights_c4_fyx_b:     return cldnn::format::image_2d_weights_c4_fyx_b;
+    case kernel_selector::weights_layout::image_2d_weights_c1_b_fyx:     return cldnn::format::image_2d_weights_c1_b_fyx;
+    case kernel_selector::weights_layout::winograd_2x3_s1_weights:       return cldnn::format::winograd_2x3_s1_weights;
+    case kernel_selector::weights_layout::winograd_2x3_s1_fused_weights: return cldnn::format::winograd_2x3_s1_fused_weights;
+    case kernel_selector::weights_layout::winograd_6x3_s1_fused_weights: return cldnn::format::winograd_6x3_s1_fused_weights;
+    case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_fbxyb: return cldnn::format::image_2d_weights_winograd_6x3_s1_fbxyb;
+    case kernel_selector::weights_layout::image_2d_weights_winograd_6x3_s1_xfbyb: return cldnn::format::image_2d_weights_winograd_6x3_s1_xfbyb;
+    case kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4:                return cldnn::format::os_is_yx_isa8_osv8_isv4;
+    case kernel_selector::weights_layout::is_o_yx_isv32:                          return cldnn::format::is_o_yx_isv32;
+    case kernel_selector::weights_layout::bf_lyx_yx:                              return cldnn::format::bf_lyx_yx;
     default:
         return cldnn::format::bfyx;
     }
@@ -245,9 +247,8 @@ kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_t split
 
 kernel_selector::weights_tensor convert_weights_tensor(const layout& l)
 {
-    assert(l.format.dimension() == 4);
-    const auto& t = l.size.sizes(format::bfyx);
-    const auto base_layout = kernel_selector::weights_layout::oiyx;
+    const auto& t = l.size.sizes(l.format);
+    const auto base_layout = to_weights_layout(l.format);
     const auto ks_type = to_weights_type(l.data_type);
     const auto ks_layout = to_weights_layout(l.format);
     std::vector<size_t> vec(kernel_selector::WeightsTensor::ChannelsCount(base_layout));

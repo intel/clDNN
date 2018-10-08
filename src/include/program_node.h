@@ -246,7 +246,6 @@ protected:
     std::vector<program_node*> dependencies;
     std::list<program_node*> users;
 
-    std::list<program_node*>::const_iterator processing_itr;
     uint32_t processing_num = 0;
 
     // list of primitives that can reuse same memory buffers due to execution order conflicts

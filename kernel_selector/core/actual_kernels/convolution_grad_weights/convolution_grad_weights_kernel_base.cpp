@@ -56,7 +56,7 @@ namespace kernel_selector
             MakeJitConstant("DILATION",                     cp.dilation),
             MakeJitConstant("FILTER_ARRAY_NUM",             cp.split),
             MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
-            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      cp.depthwiseSeparableOpt),
+            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      cp.depthwise_separable_opt),
         });
 
         return jit;

@@ -44,6 +44,11 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 9.2
+	New features
+	- local convolution
+	- eltwise with strie
+
 ### Drop 9.1
     New features:
     - select index primitive

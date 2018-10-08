@@ -56,7 +56,7 @@ namespace kernel_selector
             MakeJitConstant("DILATION",                     dp.dilation),
             MakeJitConstant("FILTER_ARRAY_NUM",             dp.split),
             MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
-            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      dp.depthwiseSeparableOpt),
+            MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      dp.depthwise_separable_opt),
             MakeJitConstant("FUSED_ELTWISE",                dp.fused_eltwise)
         });
 

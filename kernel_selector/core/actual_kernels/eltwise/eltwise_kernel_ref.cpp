@@ -40,6 +40,7 @@ namespace kernel_selector {
         k.EnableBatching();
         k.EnableInt8Quantization();
         k.EnableOutputCalibration();
+        k.EnableEltwiseStride();
         return k;
     }
 

@@ -287,10 +287,17 @@ typedef enum /*:int32_t*/
                                       ///< \n \image html image_2d_weights_c4_fyx_b.jpg
     cldnn_format_image_2d_weights_c1_b_fyx, ///< image format for weights, image 2d, single channel, width size is b, height is f*y*x
                                       ///< \n \image html image_2d_weights_c1_b_fyx.jpg
-    cldnn_format_byxf_af32,           /// < \n format for input for primitives using MMAD
-    cldnn_format_fs_bs_yx_bs4_fs32, /// < \n format for batched input for primitives using MMAD
+    cldnn_format_winograd_2x3_s1_data,       ///< format used for input for winograd convolution, F(2,3) -- filter 3x3 with stride 1
+    cldnn_format_winograd_2x3_s1_weights,    ///< format used for weights for winograd non-fused convolution, F(2,3) -- filter 3x3 with stride 1
+    cldnn_format_winograd_2x3_s1_fused_weights,    ///< format used for weights for winograd fused convolution, F(2,3) -- filter 3x3 with stride 1
+    cldnn_format_winograd_6x3_s1_fused_weights,    ///< format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
+    cldnn_format_image_2d_weights_winograd_6x3_s1_fbxyb, ///< image format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
+    cldnn_format_image_2d_weights_winograd_6x3_s1_xfbyb, ///< image format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
+    cldnn_format_byxf_af32,               /// < \n format for input for primitives using MMAD
+    cldnn_format_fs_bs_yx_bs4_fs32,       /// < \n format for batched input for primitives using MMAD
     cldnn_format_os_is_yx_isa8_osv8_isv4, /// < \n format for weights for MMAD convolutions, stored as ((aligned_to_8(O)/8) * (aligned_to_32(I)/32) * Y * X * ( 8 ) * ( 8 ) * ( 4 )
     cldnn_format_is_o_yx_isv32, /// < \n format for weights for 1x1 MMAD convolutions 
+    cldnn_bf_lyx_yx,                      /// < \n format for local convolution weights
     cldnn_format_format_num,    ///< number of format types
     cldnn_format_any = -1
 } cldnn_format_type;
@@ -301,6 +308,7 @@ typedef enum /*:int32_t*/
 #define CLDNN_TENSOR_BATCH_DIM_MAX 1
 #define CLDNN_TENSOR_FEATURE_DIM_MAX 1
 #define CLDNN_TENSOR_SPATIAL_DIM_MAX 2
+#define CLDNN_TENSOR_LOCAL_DIM_MAX 2
 #define CLDNN_TENSOR_DIM_MAX 8
 
 /// @brief N-dimensional vector. Mostly used to represent memory size.
@@ -309,6 +317,7 @@ typedef struct
     size_t batch_num;
     size_t feature_num;
     size_t spatial_num;
+    size_t local_num;
     int32_t sizes[CLDNN_TENSOR_DIM_MAX];
 } cldnn_tensor;
 

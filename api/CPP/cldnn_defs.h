@@ -374,6 +374,18 @@ inline cldnn_tensor_arr tensor_vector_to_arr(const std::vector<cldnn_tensor>& st
     return cldnn_tensor_arr{ stor.data(), stor.size() };
 }
 
+///
+/// \brief Converts C API tensor_array to std::vector of C API tensor
+///
+inline std::vector<cldnn_tensor> tensor_arr_to_cldnn_vector(const cldnn_tensor_arr& arr)
+{
+    std::vector<cldnn_tensor> result(arr.size);
+    for (size_t i = 0; i < arr.size; i++)
+        result[i] = arr.data[i];
+
+    return result;
+}
+
 /// @}
 
 /// @endcond

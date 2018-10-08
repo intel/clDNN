@@ -148,8 +148,8 @@ convolution_inst::typed_primitive_inst(network_impl& network, convolution_node c
     auto output_inst = node.get_output_layout();
     auto output_size = output_inst.size;
 
-    CLDNN_ERROR_NOT_EQUAL(node.id(), "Input number of dimensions", input_inst.size.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "Input/output dims mismtach");
-    CLDNN_ERROR_NOT_EQUAL(node.id(), "Stride number of dimensions", stride.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "stride/output dims mismtach");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Input number of dimensions", input_inst.size.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "Input/output dims mismatch");
+    CLDNN_ERROR_NOT_EQUAL(node.id(), "Stride number of dimensions", stride.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "stride/output dims mismatch");
 
     auto split = node.get_split();
     for (decltype(split) j = 0; j < split; j++)
@@ -162,18 +162,24 @@ convolution_inst::typed_primitive_inst(network_impl& network, convolution_node c
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias feature[0]", bias_inst.size.feature[0], "expected size of feature", 1, "Biases isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[1]", bias_inst.size.spatial[1], "expected size of spatial[1]", 1, "Biases isn't 1D vector.");
           
-            CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[0]", bias_inst.size.spatial[0], "expected feature map number", output_size.feature[0] / split, "Bias/fm mismtach");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[0]", bias_inst.size.spatial[0], "expected feature map number", output_size.feature[0] / split, "Bias/fm mismatch");
         }
 
         auto input_offset = argument.input_offset;
 
-        CLDNN_ERROR_NOT_EQUAL(node.id(), "Weights number of dimensions", filter_inst.size.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "Weights/output dims mismtach");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Weights number of dimensions", filter_inst.size.raw.size(), "output number of dimensions", output_inst.size.raw.size(), "Weights/output dims mismatch");
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Convolution padding mode", node.get_output_layout().data_padding.filling_value(), "padding value", 0.0f, "Unknown padding mode.");
-        CLDNN_ERROR_NOT_EQUAL(node.id(), "Input offset number of dimensions", input_offset.raw.size(), "input number of dimensions", input_inst.size.raw.size(), "Input offset/ input size mismtach");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Input offset number of dimensions", input_offset.raw.size(), "input number of dimensions", input_inst.size.raw.size(), "Input offset/ input size mismatch");
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Output feature size", output_size.feature.size(), "expected feature size", 1, "Only one-dimensional features are supported");
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Output batch size", output_size.batch.size(), "expected output size", 1, "Only one-dimensional batch size are supported");
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Weights spatial size", filter_inst.size.spatial.size(), "expected weights spatial size", 2, "Weights have to have 2 dimensions in spatial domain.");
-        CLDNN_ERROR_LESS_THAN(node.id(), "Weights feature maps number", (input_inst.size.feature[0] - input_offset.feature[0]) / split, "input feature maps number", filter_inst.size.feature[0], "Weights/ifm mismtach");
+        CLDNN_ERROR_LESS_THAN(node.id(), "Weights feature maps number", (input_inst.size.feature[0] - input_offset.feature[0]) / split, "input feature maps number", filter_inst.size.feature[0], "Weights/ifm mismatch");
+        if (filter_inst.format == format::bf_lyx_yx) // local convolution
+        {
+            auto local = filter_inst.size.local;
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Number of local x dimension", local[0], "output x dimension", output_inst.size.spatial[0], "Weights/output dims mismatch");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Number of local y dimension", local[1], "output y dimension", output_inst.size.spatial[1], "Weights/output dims mismatch");
+        }
     }
 }
 }

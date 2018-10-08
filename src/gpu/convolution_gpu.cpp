@@ -92,9 +92,10 @@ public:
         if(primitive->with_activation)
             convert_activation_func_params(primitive, conv_params);
 
-        conv_params.depthwiseSeparableOpt = depthwise_separable_opt;
+        conv_params.depthwise_separable_opt = depthwise_separable_opt;
         conv_params.transposed = transposed;
 
+        conv_params.local_convolution = weights_size.local[0] > 1 || weights_size.local[1] > 1;
         conv_params.split = split;
         conv_params.filterSize = {
             (uint32_t)weights_size.spatial[0],

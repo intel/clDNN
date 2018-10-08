@@ -45,6 +45,8 @@ struct format_traits
     size_t feature_num;
     /// @brief Number of spatial (x,y) dimensions in a format.
     size_t spatial_num;
+    /// @brief Number of local (x,y) dimensions in a format.
+    size_t local_num;
     /// @brief Dimensions changing order from rare to often.
     std::string order;
     /// @brief Dimensions order for internal storage.
@@ -55,12 +57,16 @@ struct format_traits
     static const char* feature_chars() { return "fioc"; }
     /// @brief Characters representing spatial dimensions in an order.
     static const char* spatial_chars() { return "xyzhsw"; }
+    /// @brief Characters representing local dimensions in an order.
+    static const char* local_chars() { return "kl"; }
     /// @brief Checks if @p c represents batch dimension.
     static bool is_batch_char(char c) { return std::string(batch_chars()).find_first_of(c) != std::string::npos; }
     /// @brief Checks if @p c represents feature map/channel dimension.
     static bool is_feature_char(char c) { return std::string(feature_chars()).find_first_of(c) != std::string::npos; }
     /// @brief Checks if @p c represents spatial dimension.
     static bool is_spatial_char(char c) { return std::string(spatial_chars()).find_first_of(c) != std::string::npos; }
+    /// @brief Checks if @p c represents local dimensions.
+    static bool is_local_char(char c) { return std::string(local_chars()).find_first_of(c) != std::string::npos; }
 };
 
 /// @brief Represents memory formats (orders).
@@ -104,6 +110,7 @@ struct format
         is_o_yx_isv32, /// format for weights for 1x1 MMAD convolutions
         byxf_af32,           /// < \n format for input for primitives using MMAD
         fs_bs_yx_bsv4_fsv32, /// < \n format for batched input for primitives using MMAD
+        bf_lyx_yx = cldnn_bf_lyx_yx,            /// < \n format for local convolution weights
         format_num = cldnn_format_format_num, ///< number of format types
         any = cldnn_format_any
     };
@@ -113,27 +120,28 @@ struct format
     {
         static const std::map<type, format_traits> traits
         {
-            { yxfb,{ 1, 1, 2, "yxfb", "bfxy" } },
-            { byxf,{ 1, 1, 2, "byxf", "bfxy" } },
-            { bfyx,{ 1, 1, 2, "bfyx", "bfxy" } },
-            { fyxb,{ 1, 1, 2, "fyxb", "bfxy" } },
-            { os_iyx_osv16, { 1, 1, 2, "bfyx", "bfxy" } },
-            { bs_xs_xsv8_bsv8, { 1, 1, 1, "bx", "b?x?" } },
-            { bs_xs_xsv8_bsv16,{ 1, 1, 1, "bx", "b?x?" } },
-            { bs_x_bsv16, { 1, 1, 1, "bx", "b?x?" } },
-            { bf8_xy16, { 1, 1, 2, "bfyx", "bfxy" }},
-            { image_2d_weights_c4_fyx_b, { 1, 1, 2, "bfyx", "bfxy" } },
-            { image_2d_weights_c1_b_fyx, { 1, 1, 2, "bfyx", "bfxy" } },
-            { winograd_2x3_s1_data, { 1, 1, 2, "bxyf", "bfxy" } },
-            { winograd_2x3_s1_weights, { 1, 1, 2, "bfyx", "bfxy" } },
-            { winograd_2x3_s1_fused_weights, { 1, 1, 2, "xyfb", "bfxy" } },
-            { winograd_6x3_s1_fused_weights,{ 1, 1, 2, "xyfb", "bfxy" } },
-            { image_2d_weights_winograd_6x3_s1_fbxyb,{ 1, 1, 2, "xyfb", "bfxy" } },
-            { image_2d_weights_winograd_6x3_s1_xfbyb,{ 1, 1, 2, "xyfb", "bfxy" } },
-            { os_is_yx_isa8_osv8_isv4, { 1, 1, 2, "bfyx", "bfxy" } },
-            { is_o_yx_isv32 , {1, 1, 2, "byxf", "bfxy" } },
-            { byxf_af32, { 1, 1, 2, "byxf", "bfxy" } },
-            { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, "fbyx", "bfxy" }}
+            { yxfb,{ 1, 1, 2, 0, "yxfb", "bfxy" } },
+            { byxf,{ 1, 1, 2, 0, "byxf", "bfxy" } },
+            { bfyx,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { fyxb,{ 1, 1, 2, 0, "fyxb", "bfxy" } },
+            { os_iyx_osv16, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { bs_xs_xsv8_bsv8, { 1, 1, 1, 0, "bx", "b?x?" } },
+            { bs_xs_xsv8_bsv16,{ 1, 1, 1, 0, "bx", "b?x?" } },
+            { bs_x_bsv16, { 1, 1, 1, 0, "bx", "b?x?" } },
+            { bf8_xy16, { 1, 1, 2, 0, "bfyx", "bfxy" }},
+            { image_2d_weights_c4_fyx_b, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { image_2d_weights_c1_b_fyx, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { winograd_2x3_s1_data, { 1, 1, 2, 0, "bxyf", "bfxy" } },
+            { winograd_2x3_s1_weights, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { winograd_2x3_s1_fused_weights, { 1, 1, 2, 0, "xyfb", "bfxy" } },
+            { winograd_6x3_s1_fused_weights,{ 1, 1, 2, 0, "xyfb", "bfxy" } },
+            { image_2d_weights_winograd_6x3_s1_fbxyb,{ 1, 1, 2, 0, "xyfb", "bfxy" } },
+            { image_2d_weights_winograd_6x3_s1_xfbyb,{ 1, 1, 2, 0, "xyfb", "bfxy" } },
+            { os_is_yx_isa8_osv8_isv4, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { byxf_af32, { 1, 1, 2, 0, "byxf", "bfxy" } },
+            { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, 0, "fbyx", "bfxy" }},
+            { is_o_yx_isv32 , {1, 1, 2, 0, "byxf", "bfxy" } },
+            { bf_lyx_yx,{ 1, 1, 2, 2, "bfklyx", "bfklxy" } }
         };
         return traits.at(fmt);
     }
@@ -144,6 +152,8 @@ struct format
     static size_t feature_num(type fmt) { return traits(fmt).feature_num; }
     /// @brief Returns number of spatial dimensions for a @p format.
     static size_t spatial_num(type fmt) { return traits(fmt).spatial_num; }
+    /// @brief Returns number of local dimensions for a @p format.
+    static size_t local_num(type fmt) { return traits(fmt).local_num; }
     /// @brief Returns an order of dimensions for a @ format.
     static const std::string& order(type fmt) { return traits(fmt).order; }
     /// @brief Returns an internal orders of dimensions for a @p format.
@@ -163,6 +173,8 @@ struct format
     size_t feature_num() const { return traits(value).feature_num; }
     /// @brief Returns number of spatial dimensions.
     size_t spatial_num() const { return traits(value).spatial_num; }
+    /// @brief Returns number of local dimensions.
+    size_t local_num() const { return traits(value).local_num; }
     /// @brief Returns an order of dimensions in form of string.
     const std::string& order() const { return traits(value).order; }
     /// @brief Returns an internal orders of dimensions form of string.
@@ -197,7 +209,8 @@ enum class dim_vec_kind
 {
     batch,
     feature,
-    spatial
+    spatial,
+    local
 };
 
 /// @brief template class with max_dimensionalities and dimension offset for dimension kinds
@@ -226,6 +239,13 @@ struct dim_vec_limits<dim_vec_kind::spatial>
 {
     static constexpr int32_t max_dimentionality = CLDNN_TENSOR_SPATIAL_DIM_MAX;
     static constexpr int32_t dim_offset = CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX;
+};
+
+template <>
+struct dim_vec_limits<dim_vec_kind::local>
+{
+    static constexpr int32_t max_dimentionality = CLDNN_TENSOR_LOCAL_DIM_MAX;
+    static constexpr int32_t dim_offset = CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX;
 };
 
 /// @brief Template class used in tensor constructor using dim_vec_kinds
@@ -267,12 +287,19 @@ details::dim_vec_kind_init<details::dim_vec_kind::spatial> spatial(InitTys&& ...
     return details::dim_vec_kind_init<details::dim_vec_kind::spatial>(std::forward<InitTys>(inits) ...);
 }
 
+template <typename ... InitTys>
+details::dim_vec_kind_init<details::dim_vec_kind::local> local(InitTys&& ... inits)
+{
+    return details::dim_vec_kind_init<details::dim_vec_kind::local>(std::forward<InitTys>(inits) ...);
+}
+
 /// @brief N-dimensional vector. Mostly used to represent memory size.
 struct tensor
 {
     friend class details::dim_vec_kind_init<details::dim_vec_kind::batch>;
     friend class details::dim_vec_kind_init<details::dim_vec_kind::feature>;
     friend class details::dim_vec_kind_init<details::dim_vec_kind::spatial>;
+    friend class details::dim_vec_kind_init<details::dim_vec_kind::local>;
 
     typedef int32_t value_type;     ///< Values type stored in tensor.
     //TODO find the way to prevent direct change of following fields.
@@ -280,6 +307,7 @@ struct tensor
     mutable_array_ref<value_type> batch;    ///< Batch dimensions.
     mutable_array_ref<value_type> feature;  ///< Feature maps.
     mutable_array_ref<value_type> spatial;  ///< Spatial dimensions.
+    mutable_array_ref<value_type> local;    ///< Local dimensions.
 
 private:
     value_type _sizes[CLDNN_TENSOR_DIM_MAX];
@@ -292,6 +320,8 @@ public:
         , batch(_sizes, CLDNN_TENSOR_BATCH_DIM_MAX)
         , feature(_sizes + CLDNN_TENSOR_BATCH_DIM_MAX, CLDNN_TENSOR_FEATURE_DIM_MAX)
         , spatial(_sizes + CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX, CLDNN_TENSOR_SPATIAL_DIM_MAX)
+        , local(_sizes + CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX +
+            CLDNN_TENSOR_SPATIAL_DIM_MAX, CLDNN_TENSOR_LOCAL_DIM_MAX)
     {
         std::fill_n(_sizes, CLDNN_TENSOR_DIM_MAX, default_size);
     }
@@ -345,6 +375,32 @@ public:
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1] = height;
     }
 
+    /// @brief Constructs @p tensor.
+    /// @details Example:
+    /*! @code
+    *
+    tensor my_tensor( 2, 3, 4, 5, 6, 7 );   // b=2, f=3, x=4, y=5, lx= 6, ly =7
+    cout << my_tensor.batch[0] << endl;           // 2
+    cout << my_tensor.feature[0] << endl;         // 3
+    cout << "x=" << my_tensor.spatial[0] << endl; // x=4
+    cout << "y=" << my_tensor.spatial[1] << endl; // y=5
+	cout << "local x=" << my_tensor.local[0] << endl; // local x=6
+	cout << "loxal y=" << my_tensor.local[1] << endl; // local y=7
+    *
+    * @endcode
+    */
+    tensor(value_type batch_num, value_type feature_num, value_type width,
+        value_type height, value_type local_x, value_type local_y)
+        : tensor(1)
+    {
+        _sizes[0] = batch_num;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX] = feature_num;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX] = width;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1] = height;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX] = local_x;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX + 1] = local_y;
+    }
+
     /// @brief Constructs @p tensor using vector of sizes.
     /// @param[in] sizes dimensions need to be provided in the following order {batch, feature, spatial_x, spatial_y}.
     /// @param[in] default_size default_size for tensor dimensions.
@@ -366,6 +422,13 @@ public:
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX] = sizes[CLDNN_TENSOR_BATCH_DIM_MAX];
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX] = sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX];
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1] = sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1];
+        if (sizes.size() == 6)
+        {
+            _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX] =
+                sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX];
+            _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX + 1] =
+                sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX + 1];
+        }
     }
 
     tensor(format fmt, const std::vector<value_type>& sizes, value_type default_size = 1)
@@ -404,6 +467,7 @@ public:
         result.batch_num = batch.size();
         result.feature_num = feature.size();
         result.spatial_num = spatial.size();
+        result.local_num = local.size();
         std::copy_n(_sizes, CLDNN_TENSOR_DIM_MAX, result.sizes);
         return result;
     }
@@ -780,6 +844,26 @@ inline tensor operator-(const tensor& lhs, const tensor& rhs) { return lhs.sub(r
 inline tensor operator*(const tensor& lhs, tensor::value_type rhs) { return lhs.mul(rhs); }
 /// @brief Divides a @p tensor by a @p scalar
 inline tensor operator/(const tensor& lhs, tensor::value_type rhs) { return lhs.div(rhs); }
+
+///
+/// \brief Converts C API tensor_array to std::vector<tensor>
+///
+inline std::vector<tensor> tensor_arr_to_vector(const cldnn_tensor_arr& arr)
+{
+    std::vector<tensor> result(arr.size);
+    for (size_t i = 0; i < arr.size; i++)
+        result[i] = arr.data[i];
+
+    return result;
+}
+
+///
+/// \brief Converts std::vector<tensor> to std::vector of C API tensor
+///
+inline std::vector<cldnn_tensor> tensor_vector_to_cldnn_vector(const std::vector<tensor>& stor)
+{
+    return std::vector<cldnn_tensor>(stor.begin(), stor.end());
+}
 
 /// @}
 /// @}
