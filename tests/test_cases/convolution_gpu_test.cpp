@@ -261,6 +261,30 @@ TEST(convolution_f32_fw_gpu, basic_convolution_int8_no_bias) {
     }
 }
 
+TEST(convolution_f32_fw_gpu, with_output_size_same_input) {
+
+    engine engine;
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 4, 320, 320 } });
+    auto weights = memory::allocate(engine, { data_types::f32, format::bfyx, { 64, 4, 7, 7 } });
+    auto weights2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 64, 4, 7, 7 } });
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        data("weights", weights),
+        data("weights2", weights2),
+        convolution::create_with_output_size("conv1", "input", { "weights" }, {1, 64, 160, 160}, {1, 1, 2, 2}, {0, 0, -3, -3}),
+        convolution::create_with_output_size("conv2", "input", { "weights2" }, {1, 64, 320, 320}, {1, 1, 1, 1}, {0, 0, -3, -3})
+        );
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(2));
+    EXPECT_EQ(outputs.begin()->first, "conv1");
+    EXPECT_EQ(outputs.rbegin()->first, "conv2");
+}
 
 TEST(convolution_f32_fw_gpu, three_convolutions_same_weights) {
     //  Filter : 1x1

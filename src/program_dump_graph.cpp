@@ -19,6 +19,11 @@
 #include "program_dump_graph.h"
 #include "to_string_utils.h"
 #include "xml_object.h"
+#include "data_inst.h"
+#include "condition_inst.h"
+
+#include "gpu/ocl_toolkit.h"
+
 #include <algorithm>
 #include <vector>
 
@@ -285,10 +290,19 @@ namespace cldnn
                 #pragma clang diagnostic pop
             #endif
 
+            if (node->is_type<condition>())
+            {
+                graph << ", shape=diamond";
+            }
             if (node->is_type<data>() || node->is_constant())
+            {
                 graph << ", shape=box";
+            }
             if (node->is_type<internal_primitive>())
+            {
                 graph << ", color=blue";
+            }
+
             if (node->is_reusing_memory())
             {
                 graph << ", fillcolor=\"" << colors[node->get_reused_memory_color() % colors.size()] << "\" ";
@@ -423,7 +437,7 @@ namespace cldnn
     }
 
     //Function used by serialization. Not working yet, in progress.
-    void dump_kernels(kernels_binaries_container program_binaries, std::vector<unsigned long long>& offsets, std::vector<std::string>& data_names, std::ofstream& file_stream)
+    void dump_kernels(const kernels_binaries_container& program_binaries, std::vector<unsigned long long>& offsets, std::vector<std::string>& data_names, std::ofstream& file_stream)
     {
         auto offset_temp = 0ull;
         for (unsigned int i = 0; i < (unsigned int)program_binaries.size(); i++)

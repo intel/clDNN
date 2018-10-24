@@ -26,7 +26,7 @@ public:
     base_event(std::shared_ptr<gpu_toolkit> ctx, cl::Event const& ev, uint64_t queue_stamp = 0) : ocl_base_event(queue_stamp), _ctx(ctx), _event(ev)
     {}
 
-    auto get_context() const { return _ctx; }
+    std::shared_ptr<gpu_toolkit> get_context() const { return _ctx; }
     cl::Event get() { return _event; }
 
 
@@ -63,7 +63,7 @@ public:
         _queue_stamp = _queue_stamp_max;
     }
 
-    auto get_context() const { return _ctx; }
+    std::shared_ptr<gpu_toolkit> get_context() const { return _ctx; }
 
 private:
     void wait_impl() override;

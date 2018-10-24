@@ -68,4 +68,9 @@ namespace kernel_selector
         static bool CheckPitchForSplitOnly(const convolution_params& params);
         KernelsData GetCommonKernelsData(const Params& params, const optional_params& options, const std::string exeMode = ROUND_ROBIN, int autoTuneIndex = -1) const;
     };
+
+    bool CovolutionCheckInput(const Params& p, const optional_params& o);
+    bool CheckConvolutionPaddedInputDesc(const convolution_params& params, const DataTensor& reqDesc);
+    bool CovolutionUpdateInputParams(convolution_params& params);
+
 }

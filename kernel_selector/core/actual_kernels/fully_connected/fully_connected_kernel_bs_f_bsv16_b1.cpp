@@ -15,7 +15,7 @@
 */
 
 #include "fully_connected_kernel_bs_f_bsv16_b1.h"
-#include "kernel_selector_utils.h"
+#include "boost/make_unique.hpp"
 
 namespace kernel_selector 
 {
@@ -60,7 +60,7 @@ namespace kernel_selector
 
     std::unique_ptr<FullyConnected_bs_f_bsv16_b1::FullyConnectedKernelBase::DispatchData> FullyConnected_bs_f_bsv16_b1::SetDefault(const fully_connected_params& arg) const
     {
-        auto run_info = std::make_unique<DispatchData>(*FullyConnectedKernelBase::SetDefault(arg).get());
+        auto run_info = boost::make_unique<DispatchData>(*FullyConnectedKernelBase::SetDefault(arg));
 
         // Properties of chunk and unit.
         const     char*    chunk_type           = "uint";

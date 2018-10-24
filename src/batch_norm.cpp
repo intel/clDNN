@@ -49,6 +49,7 @@ std::string batch_norm_inst::to_string(batch_norm_node const& node)
     if (node.use_global_stats())
     {
         batch_norm_info.add("mean_id", mean.id());
+
         if (variance_term)
         {
             batch_norm_info.add("variance_id", node.variance().id());
@@ -82,14 +83,10 @@ batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node con
         CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Mean format", mean_format.value, "supported mean formats", format::yxfb, format::bfyx);
         CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Variance format", variance_format.value, "supported variance formats", format::yxfb, format::bfyx);
 
-		if (forwad_pass())
-		{
-			auto is_mean_mutable_data = node.mean().is_type<mutable_data>();
-			auto is_var_mutable_data = node.variance().is_type<mutable_data>();
+		auto is_mean_mutable_data = node.mean().is_type<mutable_data>();
+		auto is_var_mutable_data = node.variance().is_type<mutable_data>();
 
-			CLDNN_ERROR_BOOL(node.id(), "mean_out is not mutable_data type", !is_mean_mutable_data, "");
-			CLDNN_ERROR_BOOL(node.id(), "variance_out is not mutable_data type", !is_var_mutable_data, "");
-		}
+		CLDNN_ERROR_BOOL(node.id(), "mean and variance are not the same type", (is_mean_mutable_data != is_var_mutable_data), "");
     }
 
 	if (use_scale_shift()) {

@@ -63,7 +63,7 @@ public:
     refcounted_obj_ptr<program_impl> build_program(const topology_impl& topology, const build_options& options, bool is_internal = false);
     void compile_program(program_impl& prog);
 
-    refcounted_obj_ptr<network_impl> allocate_network(const program_impl& program);
+    refcounted_obj_ptr<network_impl> allocate_network(const program_impl& program, bool internal_network = false);
     refcounted_obj_ptr<network_impl> build_network(const topology_impl& topology, const build_options& options, bool internal_network = false);
     void flush_network();
     void release_pending_memory();

@@ -15,7 +15,6 @@
 */
 
 #include "convolution_kernel_winograd_2x3_s1_fused.h"
-#include "kernel_selector_utils.h"
 
 namespace kernel_selector {
 

@@ -39,9 +39,6 @@ KERNEL(convolution_depthwise_weights_lwg)(
     const uint f = get_global_id(1);
     const uint b = get_global_id(2);
 
-    if(yx >= OUTPUT_SIZE_X * OUTPUT_SIZE_Y)
-        return;
-
     UNIT_TYPE dotProd = UNIT_VAL_ZERO;
 
     const int input_x = x * STRIDE_SIZE_X - PADDING_SIZE_X;
@@ -89,6 +86,9 @@ KERNEL(convolution_depthwise_weights_lwg)(
         }
     }
 #endif
+
+    if(yx >= OUTPUT_SIZE_X * OUTPUT_SIZE_Y)
+        return;
 
 #if BIAS_TERM
 #if   BIAS_PER_OUTPUT

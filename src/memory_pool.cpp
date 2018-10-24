@@ -24,6 +24,8 @@
 #include "memory_impl.h"
 #include "program_impl.h"
 
+#include "program_node.h"
+
 #include "gpu/memory_gpu.h"
 namespace cldnn
 {

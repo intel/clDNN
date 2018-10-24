@@ -13,6 +13,14 @@
 // limitations under the License.
 
 #include "kernel_selector_helper.h"
+#include "kernel_selector_params.h"
+
+#include "gpu/ocl_toolkit.h"
+
+#include "program_node.h"
+#include "program_impl.h"
+
+#include "training_params.h"
 
 kernel_selector::data_type to_data_type(data_types dt)
 {
@@ -332,4 +340,52 @@ kernel_selector::activation_function get_kernel_selector_activation_grad_param(c
         throw std::runtime_error("Unknown activation_grad function");
         break;
     }
+}
+
+void set_params(const program_node& node, kernel_selector::params& params)
+{
+    const auto& context = node.get_program().get_engine().get_context();
+    const auto& engine_info = context->get_engine_info();
+
+    params.engineInfo.bSubGroupSupport = context->extension_supported("cl_intel_subgroups");
+    params.engineInfo.bSubGroupShortSupport = context->extension_supported("cl_intel_subgroups_short");
+    params.engineInfo.bFP16Support = context->extension_supported("cl_khr_fp16");
+    params.engineInfo.bFP64Support = context->extension_supported("cl_khr_fp64");
+    params.engineInfo.bIMADSupport = engine_info.supports_imad != 0;
+    params.engineInfo.bIMMADSupport = engine_info.supports_immad != 0;
+    params.engineInfo.bImageSupport = engine_info.supports_image != 0;
+    params.engineInfo.maxWorkGroupSize = engine_info.max_work_group_size;
+    params.engineInfo.maxLocalMemSize = engine_info.max_local_mem_size;
+    params.engineInfo.maxImage2dWidth = engine_info.max_image2d_width;
+    params.engineInfo.maxImage2dHeight = engine_info.max_image2d_height;
+    params.engineInfo.deviceId = engine_info.dev_id;
+    params.engineInfo.driverVersion = engine_info.driver_version;
+    params.engineInfo.hostVersion = to_host_version(cldnn::get_version());
+}
+
+void set_learning_params(const program_node& node, kernel_selector::training_params& params, bool use_momentum)
+{
+    const auto learning_params = node.get_program().get_options().template get<build_option_type::learning_config>()->params;
+
+    if (use_momentum)
+    {
+        params.use_momentum = true;
+    }
+
+    params.momentum_factor = learning_params.momentum;
+    params.weights_decay = learning_params.weights_decay;
+}
+
+void set_optional_params(const program_impl& program, kernel_selector::optional_params& params)
+{
+    const auto& context = program.get_engine().get_context();
+
+    params.meaningfulKernelsNames = context->get_configuration().meaningful_kernels_names;
+    params.allowStaticInputReordering = program.get_options().get<build_option_type::optimize_data>()->enabled();
+    params.allowInputReordering = false;
+    params.allowOutputReordering = false;
+
+    const auto& tuning_config = program.get_options().get<build_option_type::tuning_config>();
+    params.tuningParams.mode = to_tuning_mode(tuning_config->config.mode);
+    params.tuningParams.cacheFilePath = tuning_config->config.cache_file_path;
 }

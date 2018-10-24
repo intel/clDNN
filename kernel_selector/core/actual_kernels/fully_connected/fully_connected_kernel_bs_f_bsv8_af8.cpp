@@ -15,7 +15,6 @@
 */
 
 #include "fully_connected_kernel_bs_f_bsv8_af8.h"
-#include "kernel_selector_utils.h"
 
 namespace kernel_selector 
 {

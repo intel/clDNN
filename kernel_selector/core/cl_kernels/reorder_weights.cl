@@ -13,7 +13,9 @@
 // limitations under the License.
 
 
-#include "include/include_all.cl"
+#include "include/fetch.cl"
+#include "include/reshape_dims.cl"
+#include "include/data_types.cl"
 
 
 ///////////////////////// Input Index /////////////////////////

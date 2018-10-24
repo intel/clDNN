@@ -38,8 +38,6 @@
 #include "convolution_kernel_mmad_batched.h"
 #include "convolution_kernel_bfyx_depthwise_weights_lwg.h"
 
-#include <iostream>
- 
 namespace kernel_selector 
 {
     convolution_kernel_selector::convolution_kernel_selector()
@@ -70,8 +68,6 @@ namespace kernel_selector
 
     KernelsData convolution_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const
     {
-        //const ConvolutionParams& orgParams = static_cast<const ConvolutionParams&>(params);
-        //std::cout << orgParams.to_string() << std::endl;
         return GetAutoTuneBestKernel(params, options, KernelType::CONVOLUTION);
     }
 }

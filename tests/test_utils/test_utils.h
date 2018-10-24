@@ -184,7 +184,7 @@ void set_values(const cldnn::memory& mem, std::vector<T> args) {
 }
 
 template<typename T>
-void set_values_per_batch_and_feature(const cldnn::memory& mem, const cldnn::layout& layout, std::vector<T> args)
+void set_values_per_batch_and_feature(const cldnn::memory& mem, std::vector<T> args)
 {
     auto mem_ptr = mem.pointer<T>();
     auto&& pitches = mem.get_layout().get_pitches();

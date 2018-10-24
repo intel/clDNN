@@ -34,8 +34,8 @@ layout border_inst::calc_output_layout(border_node const& node)
     auto desc         = node.get_primitive();
 
     auto&& new_size = input_layout.size;
-    new_size += desc->left_top_sizes;
-    new_size += desc->right_bottom_sizes;
+    new_size += desc->left_top_sizes.sub({0, 0, 0, 0});
+    new_size += desc->right_bottom_sizes.sub({0, 0, 0, 0});
 
     return {input_layout.data_type, input_layout.format, new_size};
 }
@@ -44,8 +44,8 @@ std::string border_inst::to_string(border_node const& node)
 {
     auto desc = node.get_primitive();
 
-    const auto& left_top_sizes     = desc->left_top_sizes;
-    const auto& right_bottom_sizes = desc->right_bottom_sizes;
+    const auto& left_top_sizes     = desc->left_top_sizes.sub({0, 0, 0, 0});
+    const auto& right_bottom_sizes = desc->right_bottom_sizes.sub({0, 0, 0, 0});
 
     const char* border_type_str = "unknown";
     switch (desc->type)
@@ -77,8 +77,8 @@ border_inst::typed_primitive_inst(network_impl& network, border_node const& node
     const auto input_format = input_layout.format;
     const auto& input_sizes = input_layout.size;
 
-    auto lt_sizes = argument.left_top_sizes;
-    auto rb_sizes = argument.right_bottom_sizes;
+    auto lt_sizes = argument.left_top_sizes.sub({0, 0, 0, 0});
+    auto rb_sizes = argument.right_bottom_sizes.sub({0, 0, 0, 0});
     auto b_type   = argument.type;
 
     CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input format", input_format.value, "supported border primitive input formats",

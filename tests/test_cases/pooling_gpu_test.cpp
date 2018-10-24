@@ -122,6 +122,44 @@ TEST(pooling_forward_gpu, basic_max_yxfb_f32_wsiz3x3_wstr1x1_i3x3x1x1_nopad) {
     EXPECT_EQ(2.0f, output_ptr[0]);
 }
 
+TEST(pooling_forward_gpu, basic_max_yxfb_f32_global_i3x3x1x1_nopad) {
+    //  Brief test description.
+    //
+    //  Pool mode: max
+    //  Global pooling: true
+    //  Padding: none
+    //
+    //  Input data:
+    //  [-0.5,  1.0,  0.5]
+    //  [ 2.0,  1.5, -0.5]
+    //  [ 0.0, -1.0,  0.5]
+    //
+    //  Expected output:
+    //  [ 2.0]
+
+    engine engine;
+
+    auto input_prim = memory::allocate(engine, { data_types::f32,  format::yxfb,{ 1, 1, 3, 3 } });
+
+    topology topology;
+    topology.add(input_layout("input_prim", input_prim.get_layout()));
+    topology.add(pooling("pool_prim", "input_prim", pooling_mode::max));
+
+    network network(engine, topology);
+    set_values(input_prim, { -0.5f, 1.0f, 0.5f, 2.0f, 1.5f, -0.5f, 0.0f, -1.0f, 0.5f });
+    network.set_input_data("input_prim", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "pool_prim");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<float>();
+
+    EXPECT_EQ(2.0f, output_ptr[0]);
+}
+
 TEST(pooling_forward_gpu, basic_max_pooling_int8) {
 
     engine engine;

@@ -307,8 +307,8 @@ namespace kernel_selector
             kd.gws2 = global[2];
             if (!params.stride.empty())
             {
-                global[0] /= params.stride[0].x;
-                global[0] /= params.stride[0].y;
+                kd.gws0 /= params.stride[0].x;
+                kd.gws0 /= params.stride[0].y;
             }
         }
         else if (CheckInputsOutputNoPitchSameDims(params))

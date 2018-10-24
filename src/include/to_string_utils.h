@@ -65,7 +65,7 @@ inline std::string dt_to_str(data_types dt)
     case data_types::f16: return "f16";
     case data_types::f32: return "f32";
     default:
-        return "unknown (" + std::to_string(std::underlying_type_t<data_types>(dt)) + ")";
+        return "unknown (" + std::to_string(typename std::underlying_type<data_types>::type(dt)) + ")";
     }
 }
 

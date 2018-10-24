@@ -30,7 +30,7 @@ namespace cldnn
 	public:
 		using parent::parent;
 
-		decltype(auto) input(size_t idx = 0) const { return get_dependency(idx); }
+        program_node& input(size_t idx = 0) const { return get_dependency(idx); }
 		size_t inputs_count() const { return get_dependencies().size(); }
 	};
 

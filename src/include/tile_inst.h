@@ -30,7 +30,7 @@ struct typed_program_node<tile> : public typed_program_node_base<tile>
 public:
     using parent::parent;
 
-    decltype(auto) input() const { return get_dependency(0); }
+    program_node& input() const { return get_dependency(0); }
 };
 
 using tile_node = typed_program_node<tile>;

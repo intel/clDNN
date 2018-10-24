@@ -27,6 +27,9 @@ namespace kernel_selector {
         k.EnableOutputDataType(Datatype::F32);
         k.EnableInputLayout(DataLayout::bfyx);
         k.EnableOutputLayout(DataLayout::brfyx);
+        k.EnablePoolType(PoolType::MAX);
+        k.EnablePoolType(PoolType::AVG);
+        k.EnablePoolType(PoolType::BILINEAR);
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBatching();
@@ -69,7 +72,6 @@ namespace kernel_selector {
         });
 
         jit.AddConstants({
-            MakeJitConstant("MAX_POOL",                     rp.mode == PoolType::MAX),
             MakeJitConstant("USE_OLD_SCALE_AND_ROUNDING",   rp.groupSize == 0)
         });
 

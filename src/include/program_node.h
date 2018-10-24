@@ -22,10 +22,12 @@
 
 #include "meta_utils.h"
 
+
 namespace cldnn
 {
 
 struct program_impl;
+class reorder_inputs;
 
 template <class T>
 struct typed_program_node;
@@ -51,6 +53,17 @@ struct program_node
 {
     friend struct program_impl;
     friend class constants_propagator;
+    friend class trim_to_outputs;      //to be removed
+    friend class prepare_buffer_fusing; // to be removed when possible
+    friend class prepare_primitive_fusing; // to be removed when possible
+    friend class propagate_constants; // to be removed
+    friend class reorder_inputs;  // to be removed
+    friend class post_optimize_weights; // to be removed when possible - requires an access to selected_impl
+    friend class pre_optimize_bias; // to be removed when possible
+    friend class prepare_depthwise_sep_opt; // to be removed when possible
+    friend class prep_opt_depthwise_sep_post; // to be removed when possible
+    friend class eltwise_shrinking; // to be removed when possible
+    friend class eltwise_remove_stride; // to be removed when possible
 
     template <class PType>
     friend struct typed_program_node;
@@ -68,17 +81,17 @@ public:
     template <class PType>
     bool is_type() const
     {
-        static_assert(meta::is_primitive_v<PType>, "Type argument for program_node::is_type should be a non-const, non-volatile type derived from primitive");
+        static_assert(meta::is_primitive<PType>::value, "Type argument for program_node::is_type should be a non-const, non-volatile type derived from primitive");
         return type() == PType::type_id();
     }
 
-    auto& get_program() { return myprog; }
-    auto const& get_program() const { return myprog; }
+    program_impl& get_program() { return myprog; }
+    program_impl const& get_program() const { return myprog; }
 
-    auto get_selected_impl() const { return selected_impl; }
+    std::shared_ptr<primitive_impl> get_selected_impl() const { return selected_impl; }
 
-    auto const& get_dependencies() const { return dependencies; }
-    auto& get_dependency(size_t idx) const { return *dependencies.at(idx); }
+    std::vector<program_node*> const& get_dependencies() const { return dependencies; }
+    program_node& get_dependency(size_t idx) const { return *dependencies.at(idx); }
 
     //replaces idx-th dependency of 'this' with 'new_dep', calls program::remove_if_dangling(old_dep, detach_whole_branch)
     void replace_dependency(size_t idx, program_node& new_dep, bool detach_whole_branch = false);
@@ -106,9 +119,9 @@ public:
 
     bool is_detached(bool whole_branch = false);
 
-    auto const& get_users() { return users; }
+    std::list<program_node*> const& get_users() { return users; }
     // for const method, add const to stored successors/predecessors
-    auto const& get_users() const { return reinterpret_cast<const std::list<const program_node*>&>(users); }
+    std::list<const program_node*> const& get_users() const { return reinterpret_cast<const std::list<const program_node*>&>(users); }
 
     std::unique_ptr<json_composite> desc_to_json() const;
 	std::unique_ptr<xml_composite> desc_to_xml() const;
@@ -151,18 +164,18 @@ public:
     bool has_padded_dependency();
     bool has_padded_dependency() const;
 
-    auto is_input() const { return dependencies.empty(); }
-    auto is_endpoint() const { return users.empty(); }
-    auto set_output(bool out) { output = out; }
-    auto is_output() const { return output; }
+    bool is_input() const { return dependencies.empty(); }
+    bool is_endpoint() const { return users.empty(); }
+    void set_output(bool out) { output = out; }
+    bool is_output() const { return output; }
 
-    auto is_valid_output_layout() const { return valid_output_layout; }
-    auto get_processing_num() const { return processing_num; }
+    bool is_valid_output_layout() const { return valid_output_layout; }
+    uint32_t get_processing_num() const { return processing_num; }
 
     uint8_t mark(uint8_t val = 1) { uint8_t ret = user_mark; user_mark = val; return ret; }
     void unmark() { user_mark = 0; }
-    auto is_marked() const { return user_mark != 0; }
-    auto is_marked(uint8_t val) const { return user_mark == val; }
+    bool is_marked() const { return user_mark != 0; }
+    bool is_marked(uint8_t val) const { return user_mark == val; }
     uint8_t get_user_mark() const { return user_mark; }
 
     void set_fused_activation(cldnn_activation_func activation_func, cldnn_activation_additional_params additional_params)
@@ -181,7 +194,7 @@ public:
         return fused_activation.additional_params;
     }
 
-    auto can_be_optimized() const { return optimized; }
+    bool can_be_optimized() const { return optimized; }
     void can_be_optimized(bool opt) { optimized = opt; }
 
     primitive_id get_org_primitive_id() const { return org_id; }
@@ -195,7 +208,7 @@ public:
     //returns true if this node is within main data flow of the network (i.e. it does not describe helper data like convolution's weights etc.)
     bool is_in_data_flow() const { return data_flow; }
     //conversion from generic to specific
-    template <class To, class..., class = std::enable_if_t<!std::is_same<To, primitive>::value>>
+    template <class To, class..., class = typename std::enable_if<!std::is_same<To, primitive>::value>::type>
     typed_program_node<To>& as()
     {
         if (type() != To::type_id())
@@ -204,7 +217,7 @@ public:
         return reinterpret_cast<typed_program_node<To>&>(*this);
     }
 
-    template <class To, class..., class = std::enable_if_t<!std::is_same<To, primitive>::value>>
+    template <class To, class..., class = typename std::enable_if<!std::is_same<To, primitive>::value>::type>
     typed_program_node<To> const& as() const
     {
         if (type() != To::type_id())
@@ -246,6 +259,7 @@ protected:
     std::vector<program_node*> dependencies;
     std::list<program_node*> users;
 
+    std::list<program_node*>::const_iterator processing_itr;
     uint32_t processing_num = 0;
 
     // list of primitives that can reuse same memory buffers due to execution order conflicts
@@ -280,9 +294,9 @@ namespace details
     template <class PType>
     struct api_typed_program_node_base : public program_node
     {
-        static_assert(meta::is_api_primitive_v<PType>, "PType should name a non-const, non-volatile type derived from cldnn::primitive but not from cldnn::internal_primitive");
+        static_assert(meta::is_api_primitive<PType>::value, "PType should name a non-const, non-volatile type derived from cldnn::primitive but not from cldnn::internal_primitive");
         friend struct cldnn::program_impl;
-
+        friend class cldnn::reorder_inputs;
     public:
         using program_node::program_node;
 
@@ -311,7 +325,7 @@ namespace details
     template <class PType>
     struct internal_typed_program_node_base : public internal_program_node_base
     {
-        static_assert(meta::is_internal_primitive_v<PType>, "PType should name a non-const, non-volatile type derived from cldnn::internal_primitive");
+        static_assert(meta::is_internal_primitive<PType>::value, "PType should name a non-const, non-volatile type derived from cldnn::internal_primitive");
 
     public:
         using internal_program_node_base::internal_program_node_base;
@@ -322,7 +336,7 @@ namespace details
         [[noreturn]]
         void get_primitive(Guard&&...)
         {
-            static_assert(meta::always_false_v<meta::pack<Guard...>>, "Trying to get primitive from internal node");
+            static_assert(meta::always_false<meta::pack<Guard...>>::value, "Trying to get primitive from internal node");
         }
 
 
@@ -331,7 +345,7 @@ namespace details
         [[noreturn]]
         void typed_desc(Guard&&...)
         {
-            static_assert(meta::always_false_v<meta::pack<Guard...>>, "Trying to get primitive from internal node");
+            static_assert(meta::always_false<meta::pack<Guard...>>::value, "Trying to get primitive from internal node");
         }
     };
 }
@@ -345,7 +359,7 @@ This class shadows 'get_primitive' method from base class which now returns poin
 type.
 */
 template <class PType>
-using typed_program_node_base = std::conditional_t<meta::is_api_primitive_v<PType>, details::api_typed_program_node_base<PType>, details::internal_typed_program_node_base<PType>>;
+using typed_program_node_base = typename std::conditional<meta::is_api_primitive<PType>::value, details::api_typed_program_node_base<PType>, details::internal_typed_program_node_base<PType>>::type;
 
 /*
     Actual template class used in context which requires 'program_node' to wrap
@@ -359,7 +373,7 @@ struct typed_program_node : public typed_program_node_base<PType>
 {
     using typed_program_node_base<PType>::typed_program_node_base;
 
-    decltype(auto) input() const { return program_node::get_dependency(0); }
+    program_node& input() const { return program_node::get_dependency(0); }
 };
 
 }

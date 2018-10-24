@@ -40,6 +40,7 @@ namespace kernel_selector
         ACTIVATION,
         SOFT_MAX,
         ELTWISE,
+        FUSED_CONV_BN_SCALE,
         TABLE_LOOKUP,
         REORDER,
         RESHAPE,
@@ -132,7 +133,8 @@ namespace kernel_selector
     {
         MAX,
         AVG,
-        MAX_WITH_ARGMAX
+        MAX_WITH_ARGMAX,
+        BILINEAR
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -15,7 +15,6 @@
 */
 
 #include "fully_connected_kernel_fb_oi_ref.h"
-#include "kernel_selector_utils.h"
 
 namespace kernel_selector 
 {

@@ -46,6 +46,20 @@ inline void error_on_not_equal(const std::string& file, int line, const std::str
 #define CLDNN_ERROR_NOT_EQUAL(instance_id, number_id, number, compare_to_id, number_to_compare_to, add_msg) error_on_not_equal(__FILE__, __LINE__, instance_id, number_id, number, compare_to_id, number_to_compare_to, add_msg)
 
 template<typename N1, typename N2>
+inline void error_on_equal(const std::string& file, int line, const std::string& instance_id, const std::string& number_id, N1 number, const std::string& compare_to_id, N2 number_to_compare_to, const std::string& additional_message = "")
+{
+    std::stringstream error_msg;
+    {
+        if (number == static_cast<decltype(number)>(number_to_compare_to))
+        {
+            error_msg << number_id << "(=" << number << ") is equal to: " << compare_to_id << "(=" << number_to_compare_to << ")" << std::endl;
+            err_details::cldnn_print_error_message(file, line, instance_id, error_msg, additional_message);
+        }
+    }
+}
+#define CLDNN_ERROR_EQUAL(instance_id, number_id, number, compare_to_id, number_to_compare_to, add_msg) error_on_equal(__FILE__, __LINE__, instance_id, number_id, number, compare_to_id, number_to_compare_to, add_msg)
+
+template<typename N1, typename N2>
 inline void error_on_greater_than(const std::string& file, int line, const std::string& instance_id, const std::string& number_id, N1 number, const std::string& compare_to_id, N2 number_to_compare_to, const std::string& additional_message = "")
 {
     std::stringstream error_msg;

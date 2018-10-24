@@ -64,11 +64,16 @@ public:
         {
             const auto& cell_layout = arg.cell().get_output_layout();
             lstm_elt_params.SetCell(convert_data_tensor(cell_layout));
+            // TODO: make a generic function to get the direction
+            if (cell_layout.size.spatial[1] > 1) {
+                lstm_elt_params.cell_direction = arg.direction();
+            }
         }
 
         lstm_elt_params.SetOffsetOrder(arg.offset_order());
         lstm_elt_params.clip = arg.clip();
         lstm_elt_params.input_forget = arg.input_forget();
+        lstm_elt_params.direction = arg.direction();
 
         auto& kernel_selector = kernel_selector::lstm_elt_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(lstm_elt_params, lstm_elt_optional_params);

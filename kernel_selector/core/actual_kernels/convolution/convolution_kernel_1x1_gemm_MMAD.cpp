@@ -15,7 +15,6 @@
 */
 
 #include "convolution_kernel_1x1_gemm_MMAD.h"
-#include "kernel_selector_utils.h"
 
 namespace kernel_selector {
     

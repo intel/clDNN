@@ -100,11 +100,6 @@ void generic_reshape_test(format fmt, tensor const& input_size, tensor const& re
     ASSERT_TRUE(output.get_layout().size == reshape_size);
     ASSERT_TRUE(output.get_layout().get_buffer_size() == reshape_size.add(output_padd.lower_size()).add(output_padd.upper_size()));
 
-    if (in_place)
-        EXPECT_TRUE(output.is_the_same_buffer(net_input)); //if reshape should operate in place both memories should refer to the same underlaying cl::Buffer
-    else
-        EXPECT_TRUE(!output.is_the_same_buffer(net_input)); //otherwise they should not
-
     {
         auto output_ptr = output.pointer<const ElemType>();
         auto output_itr = output_ptr.begin();

@@ -17,7 +17,9 @@
 
 KERNEL(index_select_gpu_ref)(
     const __global UNIT_TYPE* input,
+    #ifndef REVERSE
     const __global int* indices,
+    #endif
     __global UNIT_TYPE* output)
 {
     // [CONSTEXPR]:
@@ -29,7 +31,11 @@ KERNEL(index_select_gpu_ref)(
     const uint out_b         = (uint) get_global_id(0);
     const uint indices_idx   = (uint) get_global_id(1);
     const uint feature_idx   = (uint) get_global_id(2);
+    #ifdef REVERSE
+    const uint indices_value = REVERSE_AXIS_SIZE - 1 - indices_idx;
+    #else
     const uint indices_value = indices[indices_idx];
+    #endif
 
     // [LOGIC]:
 #ifdef INDEX_SELECT_AXIS_BATCH

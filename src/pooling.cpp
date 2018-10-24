@@ -50,6 +50,11 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
         CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input_layout.format", input_layout.format.value, "argmax_layout.format", argmax_layout.format);
     }
 
+    if (desc->global_pooling) {
+        window_size.spatial[0] = input_layout.size.spatial[0];
+        window_size.spatial[1] = input_layout.size.spatial[1];	
+    }
+
     // TODO: Consider moving general parameter verification to arguments constructor.
     CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "stride spatial X", stride.spatial[0], "", 0, "Stride spatial X must be positive (>= 1)");
     CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "stride spatial Y", stride.spatial[1], "", 0, "Stride spatial Y must be positive (>= 1)");

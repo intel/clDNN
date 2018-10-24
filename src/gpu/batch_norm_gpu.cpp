@@ -62,7 +62,7 @@ public:
     static primitive_impl* create(const batch_norm_node &arg) 
     { 
         if (!arg.use_global_stats()
-			|| (arg.use_global_stats() && arg.forwad_pass()) )
+			|| arg.calc_mean_var() )
         {
             auto norm_params = get_default_params<kernel_selector::batch_norm_params>(arg);
             auto norm_optional_params = get_default_optional_params<kernel_selector::batch_norm_optional_params>(arg.get_program());
@@ -70,7 +70,8 @@ public:
             norm_params.batchNormParams.epsilon = arg.get_primitive()->epsilon;
             norm_params.batchNormParams.with_inv_var = arg.forwad_pass();
 			norm_params.batchNormParams.with_scale_shift = arg.use_scale_shift();
-			norm_params.batchNormParams.with_mean_var_out = (arg.use_global_stats() && arg.forwad_pass());
+            if (arg.calc_mean_var())
+			    norm_params.batchNormParams.with_mean_var_out = arg.calc_mean_var();
 
             auto& kernel_selector = kernel_selector::batch_norm_kernel_selector::Instance();
             auto best_kernels = kernel_selector.GetBestKernels(norm_params, norm_optional_params);

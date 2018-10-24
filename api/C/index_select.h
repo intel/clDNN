@@ -66,6 +66,8 @@ CLDNN_BEGIN_PRIMITIVE_DESC(index_select)
 
 /// @brief Axis of index selecting.
 cldnn_index_select_axis axis;
+/// @brief Do index_select in reverse order on axis.
+bool reverse;
 
 CLDNN_END_PRIMITIVE_DESC(index_select)
 

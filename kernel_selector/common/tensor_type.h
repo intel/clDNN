@@ -17,6 +17,7 @@
 #pragma once
 
 #include "common_types.h"
+#include "common_tools.h"
 #include <vector>
 #include <assert.h>
 #include <numeric>

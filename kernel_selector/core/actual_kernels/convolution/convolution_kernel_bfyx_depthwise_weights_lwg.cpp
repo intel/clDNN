@@ -15,7 +15,6 @@
 */
 
 #include "convolution_kernel_bfyx_depthwise_weights_lwg.h"
-#include "kernel_selector_utils.h"
  
 namespace kernel_selector 
 {

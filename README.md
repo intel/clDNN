@@ -44,6 +44,22 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 10.0
+    New features:
+    - condition primitive
+	- fused convolution with bn and scale (backprop)
+	- scale/shit and mean/var as an output in batch norm
+	- add LSTM output selection
+    Bug fixes:
+    - memory pool fixes 
+    UX:
+    - downgrade to cxx11
+	- add support for u8 data type in custom primitive 
+	- library size optimizations
+    Performance:
+    - in place concatenation optimization 
+	- conv1x1 with stride >1 into eltwise optimization 
+
 ### Drop 9.2
 	New features
 	- local convolution
@@ -247,9 +263,8 @@ on version of CMake, we strongly recommend 3.9+)
     module. You can do that by downloading *FindBoost.cmake* file from newer version of CMake (e.g. from [here](https://gitlab.kitware.com/cmake/cmake/blob/master/Modules/FindBoost.cmake))
     and putting the file into *common/boost/cmake/modules* directory (create it if necessary). This directory will be attached
     to the list of modules if your CMake version is lower than 3.9.
-- C++ compiler with partiall or full C++14 standard support compatible with:
-    * GNU\* Compiler Collection 5.2 or later  
-    (Due to bugs in GCC 5 connected to large list initializers we strongly recommend using at least GCC 6.)
+- C++ compiler with partial or full C++11 standard support compatible with:
+    * GNU\* Compiler Collection 4.8.2
     * clang 3.5 or later
     * [Intel® C++ Compiler](https://software.intel.com/en-us/intel-parallel-studio-xe) 17.0 or later
     * Visual C++ 2015 (MSVC++ 19.0) or later

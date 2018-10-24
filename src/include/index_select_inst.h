@@ -34,9 +34,10 @@ namespace cldnn
 			: parent(prim, prog)
 		{
 		}
-		decltype(auto) input() const { return get_dependency(0); }
-        decltype(auto) indices() const { return get_dependency(1); }
-        decltype(auto) get_axis() const { return get_primitive()->axis; }
+		program_node& input() const { return get_dependency(0); }
+        program_node& indices() const { return get_dependency(1); }
+        bool get_reverse() const { return get_primitive()->reverse; }
+        index_select_axis_name get_axis() const { return get_primitive()->axis; }
 	};
 
 	using index_select_node = typed_program_node<index_select>;
@@ -51,9 +52,10 @@ namespace cldnn
 		static std::string to_string(index_select_node const& node);
 		typed_primitive_inst(network_impl& network, index_select_node const& node);
 
-        decltype(auto) input() const { return dep_memory(0); }
-        decltype(auto) indices() const { return dep_memory(1); }
-        decltype(auto) get_axis() const { return node.get_axis(); }
+        memory_impl& input() const { return dep_memory(0); }
+        memory_impl& indices() const { return dep_memory(1); }
+        bool get_reverse() const { return node.get_reverse(); }
+        index_select_axis_name get_axis() const { return node.get_axis(); }
 	};
 
 	using index_select_inst = typed_primitive_inst<index_select>;

@@ -106,7 +106,7 @@ namespace {
         if (config.host_out_of_order)
         {
             auto queue_properties = dev.getInfo<CL_DEVICE_QUEUE_PROPERTIES>();
-            using cmp_t = std::common_type_t<decltype(queue_properties), std::underlying_type_t<cl::QueueProperties>>;
+            using cmp_t = std::common_type<decltype(queue_properties), typename std::underlying_type<cl::QueueProperties>::type>::type;
             if (!(static_cast<cmp_t>(queue_properties) & static_cast<cmp_t>(cl::QueueProperties::OutOfOrder)))
             {
                 reasons.push_back(dev_name + ": missing out of order support");
@@ -279,7 +279,7 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
         }
     }
 
-    _logger = std::make_unique<ocl_logger>(ocl_logger());
+    _logger = std::unique_ptr<ocl_logger>(new ocl_logger());
 
     if (logging_enabled())
     {

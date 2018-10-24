@@ -21,7 +21,6 @@
 #include "api/CPP/concatenation.hpp"
 
 #include "event_impl.h"
-#include "program_impl.h"
 #include "memory_impl.h"
 #include "meta_utils.h"
 #include "kernel_selector_helper.h"
@@ -92,12 +91,12 @@ public:
     primitive_id id() const { return _node.id(); }
     primitive_id org_id() const { return _node.get_org_primitive_id(); }
     bool can_be_optimized() const { return _node.can_be_optimized(); }
-    const auto desc() const { return _node.get_primitive(); }
+    std::shared_ptr<const primitive> desc() const { return _node.get_primitive(); }
     network_impl& get_network() const { return _network; }
     uint32_t get_network_id() const;
 
     //return pointer to const to prevent arbitrary 'execute' call -> use primitive_inst.execute() instead
-    const auto get_impl() const { return _impl.get(); }
+    primitive_impl* get_impl() const { return _impl.get(); }
 
     memory_impl& input_memory(size_t index = 0)  const 
     { 
@@ -108,7 +107,7 @@ public:
 
     event_impl::ptr execute(const std::vector<event_impl::ptr>& events);
 
-    auto output_changed() const { return _output_changed; }
+    bool output_changed() const { return _output_changed; }
     void reset_output_change() { _output_changed = false; }
 
     void build_deps();
@@ -155,7 +154,7 @@ For example, all convolution implementations should derive from typed_primitive_
 template <class PType>
 struct typed_primitive_impl : public primitive_impl
 {
-    static_assert(meta::is_primitive_v<PType>, "PType should be a non-const, non-volatile class derived from primitive");
+    static_assert(meta::is_primitive<PType>::value, "PType should be a non-const, non-volatile class derived from primitive");
 
     using primitive_impl::primitive_impl;
 
@@ -178,7 +177,7 @@ namespace details
     template<class PType>
     class api_typed_primitive_inst_base : public primitive_inst
     {
-        static_assert(meta::is_api_primitive_v<PType>, "PType should name a non-const, non-volatile type derived from cldnn::primitive but not from cldnn::internal_primitive");
+        static_assert(meta::is_api_primitive<PType>::value, "PType should name a non-const, non-volatile type derived from cldnn::primitive but not from cldnn::internal_primitive");
 
     public:
         using typed_node = typed_program_node<PType>;
@@ -220,7 +219,7 @@ namespace details
     template<class PType>
     class internal_typed_primitive_inst_base : public primitive_inst
     {
-        static_assert(meta::is_internal_primitive_v<PType>, "PType should name a non-const, non-volatile type derived from cldnn::internal_primitive");
+        static_assert(meta::is_internal_primitive<PType>::value, "PType should name a non-const, non-volatile type derived from cldnn::internal_primitive");
 
     public:
         using typed_node = typed_program_node<PType>;
@@ -236,7 +235,7 @@ namespace details
         [[noreturn]]
         void desc(Guard&&...) const
         {
-            static_assert(meta::always_false_v<meta::pack<Guard...>>, "Trying to get primitive from internal node");
+            static_assert(meta::always_false<meta::pack<Guard...>>::value, "Trying to get primitive from internal node");
         }
 
     protected:
@@ -257,7 +256,7 @@ namespace details
     Base class for all concrete primitive instances.
 */
 template <class PType>
-using typed_primitive_inst_base = std::conditional_t<meta::is_api_primitive_v<PType>, details::api_typed_primitive_inst_base<PType>, details::internal_typed_primitive_inst_base<PType>>;
+using typed_primitive_inst_base = typename std::conditional<meta::is_api_primitive<PType>::value, details::api_typed_primitive_inst_base<PType>, details::internal_typed_primitive_inst_base<PType>>::type;
 
 /*
     Template class which represents instance of primitive 'PType'.
@@ -276,7 +275,7 @@ using typed_primitive_inst_base = std::conditional_t<meta::is_api_primitive_v<PT
 template <class PType>
 class typed_primitive_inst : public typed_primitive_inst_base<PType>
 { 
-    static_assert(meta::always_false_v<PType>, "Missing typed_primitive_inst specialization");
+    static_assert(meta::always_false<PType>::value, "Missing typed_primitive_inst specialization");
 };
 
 #define CLDNN_DEFINE_SIMPLE_PRIM_INST(PType) \

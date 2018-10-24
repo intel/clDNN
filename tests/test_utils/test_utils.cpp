@@ -85,7 +85,7 @@ namespace tests
                     {
                         values.push_back(static_cast<float>(multipler + j));
                     }
-                    tests::set_values_per_batch_and_feature<float>(input_mems[i], generic_params->input_layouts[i], values);
+                    tests::set_values_per_batch_and_feature<float>(input_mems[i], values);
                     multipler = values.size();
                 }
                 else
@@ -95,7 +95,7 @@ namespace tests
                     {
                         values.push_back(FLOAT16(static_cast<float>(multipler + j)));
                     }
-                    tests::set_values_per_batch_and_feature<FLOAT16>(input_mems[i], generic_params->input_layouts[i], values);
+                    tests::set_values_per_batch_and_feature<FLOAT16>(input_mems[i], values);
                     multipler = values.size();
                 }        
             }                        
@@ -284,7 +284,7 @@ namespace tests
         return{ p, calc_offfset(layout, p) };
     }
 
-    size_t generic_test::get_linear_index(const layout & layout, size_t b, size_t f, size_t y, size_t x, const memory_desc& desc)
+    size_t generic_test::get_linear_index(const layout&, size_t b, size_t f, size_t y, size_t x, const memory_desc& desc)
     {
         return 
             desc.offset + 

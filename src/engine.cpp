@@ -123,9 +123,9 @@ network_impl::ptr engine_impl::build_network(const topology_impl& topology, cons
     return{ new network_impl(*this, topology, options, internal_network), false };
 }
 
-network_impl::ptr engine_impl::allocate_network(const program_impl& program)
+network_impl::ptr engine_impl::allocate_network(const program_impl& program, bool internal_network)
 {
-    return{ new network_impl(program), false };
+    return{ new network_impl(program, internal_network), false };
 }
 
 void engine_impl::wait_for_events(std::vector<event_impl::ptr> const & events)

@@ -40,6 +40,8 @@ namespace kernel_selector
         order_type gate_order = offset_iofz;
         float clip = 0;
         bool input_forget = false;
+        uint32_t direction = 0;
+        uint32_t cell_direction = 0;
 
         size_t GetOffsetIndex(order_type type, size_t idx) const {
             static const std::map<order_type, std::vector<size_t>> offset_map {

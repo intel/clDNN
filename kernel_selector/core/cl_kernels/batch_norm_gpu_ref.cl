@@ -117,3 +117,5 @@ KERNEL(batch_norm_gpu)(
         out_idx += OUTPUT_Y_PITCH - OUTPUT_SIZE_X * OUTPUT_X_PITCH;
     }
 }
+
+#undef LOCAL_SIZE

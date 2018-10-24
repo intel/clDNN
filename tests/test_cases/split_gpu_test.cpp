@@ -143,7 +143,7 @@ TEST(split_gpu, basic_in2x3x2x2_split_scale_feature_bfyx) {
     set_values(scale_input1, scale_input_vec1);
     std::vector<float> scale_input_vec2 = { 3.f };
     set_values(scale_input2, scale_input_vec2);
-
+   
     std::vector<float> input_vec = generate_random_input<float>(batch_num, feature_num, y_size, x_size, -10, 10);
     set_values(input, input_vec);
 

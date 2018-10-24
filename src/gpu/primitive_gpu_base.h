@@ -18,6 +18,7 @@
 #pragma once
 
 #include "primitive_inst.h"
+#include "program_impl.h"
 #include "kernel.h"
 #include "events_waiter.h"
 #include "error_handler.h"

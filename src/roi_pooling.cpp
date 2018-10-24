@@ -56,7 +56,7 @@ layout roi_pooling_inst::calc_output_layout(roi_pooling_node const& node)
 std::string roi_pooling_inst::to_string(roi_pooling_node const& node)
 {
     auto desc      = node.get_primitive();
-    auto mode      = desc->mode == pooling_mode::max ? "max" : "average";
+    auto mode      = desc->mode == pooling_mode::max ? "max" : desc->mode == pooling_mode::bilinear ? "bilinear" : "average";
     auto node_info = node.desc_to_json();
 
     std::stringstream primitive_description;

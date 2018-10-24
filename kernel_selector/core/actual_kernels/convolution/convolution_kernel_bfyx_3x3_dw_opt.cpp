@@ -15,7 +15,6 @@
 */
 
 #include "convolution_kernel_bfyx_3x3_dw_opt.h"
-#include "kernel_selector_utils.h"
  
 namespace kernel_selector 
 {

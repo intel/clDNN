@@ -17,19 +17,13 @@
 #pragma once
 
 #include "jitter.h"
-#include "tensor_type.h"
 
 namespace kernel_selector {
 
     struct weight_bias_params;
-    struct convolution_params;
+    struct optional_params;
+    struct WeightsReorderParams;
 
-    bool CheckConvolutionPaddedInputDesc(const convolution_params& params, const DataTensor& reqDesc);
-    DataTensor GetConvolutionBFYXPaddedTensor(const convolution_params& cp);
-    bool CovolutionCheckInput(const Params& p, const optional_params& o);
-    bool CovolutionUpdateInputParams(convolution_params& params);
-    WeightsType DataTypeToWeightsType(Datatype t);
-    bool CheckWeights(const WeightsTensor& tensor, WeightsType reqType, std::vector<WeightsLayout> reqLayouts);
     std::vector<size_t> GetImageSizes(const kernel_selector::WeightsTensor& dimensions, const WeightsLayout layout);
     bool CheckImageSize(const weight_bias_params& newParams, const WeightsLayout layout);
     bool UpdateWeightsParams(weight_bias_params& newParams, const optional_params& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams);

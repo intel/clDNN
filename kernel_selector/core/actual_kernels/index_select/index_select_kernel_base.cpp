@@ -25,6 +25,25 @@ namespace kernel_selector
         JitConstants jit = MakeBaseParamsJitConstants(params);
 
         jit.AddConstant(MakeJitConstant(toString(params.axis), ""));
+        if (params.reverse) {
+            jit.AddConstant(MakeJitConstant("REVERSE", 1));
+            if (params.axis == IndexSelectAxis::BATCH)
+            {
+                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).Batch().v));
+            }
+            else if (params.axis == IndexSelectAxis::X)
+            {
+                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).X().v));
+            }
+            else if (params.axis == IndexSelectAxis::Y)
+            {
+                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).Y().v));
+            }
+            else if (params.axis == IndexSelectAxis::FEATURE)
+            {
+                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).Feature().v));
+            }
+        }
 
         return jit;
     }
@@ -32,24 +51,49 @@ namespace kernel_selector
     IndexSelectKernelBase::DispatchData IndexSelectKernelBase::SetDefault(const index_select_params& params)
     {
         const auto& output = params.output;
-        const auto& indices = params.inputs.at(1);
         DispatchData kd;
 
         kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
         std::vector<size_t> global;
-        if (params.axis == IndexSelectAxis::BATCH)
+        
+        if (params.reverse) 
         {
-            global = { 1, indices.X().v, output.Feature().v };
+            if (params.axis == IndexSelectAxis::BATCH)
+            {
+                global = { 1, params.inputs.at(0).Batch().v, output.Feature().v };
+            }
+            else if (params.axis == IndexSelectAxis::X)
+            {
+                global = { output.Batch().v, params.inputs.at(0).X().v, output.Feature().v };
+            }
+            else if (params.axis == IndexSelectAxis::Y)
+            {
+                global = { output.Batch().v, params.inputs.at(0).Y().v, output.Feature().v };
+            }
+            else if (params.axis == IndexSelectAxis::FEATURE)
+            {
+                global = { output.Batch().v, params.inputs.at(0).Feature().v, output.Y().v };
+            }
         }
-        else if (params.axis == IndexSelectAxis::X || params.axis == IndexSelectAxis::Y)
+        else 
         {
-            global = { output.Batch().v, indices.X().v, output.Feature().v };
+            const auto indices = params.inputs.at(1).X().v;
+
+            if (params.axis == IndexSelectAxis::BATCH)
+            {
+                global = { 1, indices, output.Feature().v };
+            }
+            else if (params.axis == IndexSelectAxis::X || params.axis == IndexSelectAxis::Y)
+            {
+                global = { output.Batch().v, indices, output.Feature().v };
+            }
+            else if (params.axis == IndexSelectAxis::FEATURE)
+            {
+                global = { output.Batch().v, indices, output.Y().v };
+            }
         }
-        else if(params.axis == IndexSelectAxis::FEATURE)
-        {
-            global = { output.Batch().v, indices.X().v, output.Y().v };
-        }
+
         const auto& local = GetOptimalLocalWorkGroupSizes(global);
 
         kd.gws0 = global[0];

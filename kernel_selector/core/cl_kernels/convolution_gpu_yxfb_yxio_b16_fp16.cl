@@ -14,6 +14,7 @@
 
 
 #include "include/include_all.cl"
+#include "include/sub_group.cl"
 
 __attribute__((intel_reqd_sub_group_size(16)))
 __attribute__((reqd_work_group_size(16, 1, 1)))

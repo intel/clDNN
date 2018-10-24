@@ -15,7 +15,6 @@
 */
 
 #include "fully_connected_kernel_fb_io_b8_f8.h"
-#include "kernel_selector_utils.h"
 
 namespace kernel_selector 
 {

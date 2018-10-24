@@ -20,7 +20,6 @@
 #include <memory>
 #include <cstddef>
 #include "common_types.h"
-#include "common_tools.h"
 #include "tensor_type.h"
 
 namespace kernel_selector

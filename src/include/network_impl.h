@@ -49,7 +49,7 @@ public:
     void set_learning_rate(const float lr);
     float get_learning_rate();
 
-    auto const& get_outputs() { return _outputs; }
+    std::vector<std::shared_ptr<primitive_inst>> const& get_outputs() { return _outputs; }
 
     const std::vector<std::shared_ptr<const primitive_inst>>& get_outputs() const
     {
@@ -71,9 +71,9 @@ public:
     event_impl::ptr execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<event_impl::ptr>& events);
     void allocate_primitives();
     void build_insts_deps();
-    auto get_id() const { return net_id; }
+    uint32_t get_id() const { return net_id; }
+    void build_exec_order();    
     bool is_internal() const { return _internal; }
-
 private:
     uint32_t net_id = 0; 
     const program_impl::cptr _program;
@@ -89,6 +89,10 @@ private:
     std::unordered_map<primitive_id, event_impl::ptr> _events;
 
     void allocate_primitive_instance(program_node const& node);
+    void add_to_exec_order(const primitive_id& id);
+    std::shared_ptr<primitive_inst> find_in_internal_networks(const primitive_id& id);
+    std::shared_ptr<primitive_inst> find_primitive(const primitive_id& id);
+    void check_names();
 };
 }
 

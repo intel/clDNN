@@ -17,7 +17,6 @@
 #pragma once
 
 #include "kernel_selector_params.h"
-#include "primitive_db.h"
 
 #include <cfloat>
 #include <cstdint>
@@ -285,6 +284,7 @@ namespace kernel_selector {
     std::string toString(const Tensor::Dim& dim);
     std::string toString(const DataTensor& tensor);
     std::string toString(const IndexSelectAxis& axis);
+
     inline std::uint64_t create_hash(const unsigned char* begin, const unsigned char* end)
     {
         // Compatible with VS std::hash.

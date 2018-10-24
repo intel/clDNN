@@ -78,8 +78,14 @@ public:
 
             const auto& hidden_layout = arg.hidden().get_output_layout();
             lstm_gemm_params.SetHidden(convert_data_tensor(hidden_layout));
+            // TODO: make a generic function to get the direction
+            if (hidden_layout.size.spatial[1] > 1) {
+                lstm_gemm_params.hidden_direction = arg.direction();
+            }
         }
         lstm_gemm_params.direction = arg.direction();
+        // for future handling bidirectional inputs directly in stacked topologies
+        lstm_gemm_params.input_direction = 0;
 
         auto lstm_gemm_optional_params = get_default_optional_params<kernel_selector::lstm_gemm_optional_params>(arg.get_program());
 

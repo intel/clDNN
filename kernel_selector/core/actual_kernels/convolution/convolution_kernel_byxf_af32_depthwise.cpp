@@ -15,7 +15,6 @@
 */
 
 #include "convolution_kernel_byxf_af32_depthwise.h"
-#include "kernel_selector_utils.h"
 
 namespace kernel_selector {
     
