@@ -91,6 +91,25 @@ public:
                 std::max(0.00007f, arg.get_primitive()->epsilon) : // prevent underflow if the epsilon is too small for fp16
                 arg.get_primitive()->epsilon;
 
+            // Reshape mean
+            auto mean_output_layout = arg.mean().get_output_layout();
+            auto mean_data_type = mean_output_layout.data_type;
+            auto mean_format = mean_output_layout.format;
+            std::vector<int32_t> mean_sizes = mean_output_layout.size.sizes();
+            int32_t mean_max_size = *std::max_element(std::begin(mean_sizes), std::end(mean_sizes));
+
+            arg.mean().set_output_layout({ mean_data_type, mean_format, tensor ( 1, mean_max_size, 1, 1 ) });
+
+            // Reshape variance
+            auto variance_output_layout = arg.variance().get_output_layout();
+            auto variance_data_type = variance_output_layout.data_type;
+            auto variance_format = variance_output_layout.format;
+            std::vector<int32_t> variance_sizes = variance_output_layout.size.sizes();
+            int32_t variance_max_size = *std::max_element(std::begin(variance_sizes), std::end(variance_sizes));
+
+            arg.variance().set_output_layout({ variance_data_type, variance_format, tensor(1, variance_max_size, 1, 1) });
+
+
             ew_params.inputs.push_back(convert_data_tensor(arg.mean().get_output_layout()));
             ew_params.inputs.push_back(convert_data_tensor(arg.variance().get_output_layout()));
 			
@@ -111,6 +130,24 @@ public:
                 kernel_selector::eltwise_mode::MUL });
 
 			if (arg.use_scale_shift()) {
+                // Reshape scale
+                auto scale_output_layout = arg.scale().get_output_layout();
+                auto scale_data_type = scale_output_layout.data_type;
+                auto scale_format = scale_output_layout.format;
+                std::vector<int32_t> scale_sizes = scale_output_layout.size.sizes();
+                int32_t scale_max_size = *std::max_element(std::begin(scale_sizes), std::end(scale_sizes));
+
+                arg.scale().set_output_layout({ scale_data_type, scale_format, tensor(1, scale_max_size, 1, 1) });
+
+                // Reshape shift
+                auto shift_output_layout = arg.shift().get_output_layout();
+                auto shift_data_type = shift_output_layout.data_type;
+                auto shift_format = shift_output_layout.format;
+                std::vector<int32_t> shift_sizes = shift_output_layout.size.sizes();
+                int32_t shift_max_size = *std::max_element(std::begin(shift_sizes), std::end(shift_sizes));
+
+                arg.shift().set_output_layout({ shift_data_type, shift_format, tensor(1, shift_max_size, 1, 1) });
+
 				ew_params.inputs.push_back(convert_data_tensor(arg.scale().get_output_layout()));
 				ew_params.inputs.push_back(convert_data_tensor(arg.shift().get_output_layout()));
 

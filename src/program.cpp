@@ -434,13 +434,24 @@ void program_impl::replace_nodes_post()
                 //calculate crop reference input size
                 tensor reference_input_size;
 
-                for (decltype(split_num) j = 0; j < i; j++)
-                    reference_input_size += split_prim->output_offsets[j + 1] - split_prim->output_offsets[j];
+				// For all the split offsets before the last split offset, the size can be calculated
+				// size_of_offset[n] = offset[n + 1] - offset[n];
+				if (i != (split_num - 1))
+				{
+					reference_input_size += split_prim->output_offsets[i + 1] - split_prim->output_offsets[i];
+				}
+				// For the last split i.e. size[split_num - 1] = split_input.size - offsets[n];
+				else
+				{
+					reference_input_size += output_layout_size - split_prim->output_offsets[i];
+				}
 
-                for (decltype(split_num) j = i; j < split_num - 1; j++)
-                    reference_input_size += split_prim->output_offsets[j + 1] - split_prim->output_offsets[j];
-
-                reference_input_size = output_layout_size - reference_input_size;
+				// For all the other dimensions, copy from the split_input
+				for (int dimension = 0; dimension < CLDNN_TENSOR_DIM_MAX; dimension++)
+				{
+					reference_input_size.raw[dimension]
+						= (reference_input_size.raw[dimension] == 0) ? output_layout_size.raw[dimension] : reference_input_size.raw[dimension];
+				}
 
                 //update crop primitive and add connections
                 node_ptr->set_output_padding(output_layout.data_padding);
@@ -669,7 +680,8 @@ void program_impl::handle_lstm()
             primitive_id bias_id = bias_term ? lstm_prim->bias : "";
             primitive_id initial_hidden_id = initial_hidden_term ? lstm_prim->initial_hidden : "";
             primitive_id initial_cell_id = initial_cell_term ? lstm_prim->initial_cell : "";
-            //removing connection with weights to get proper dependency order for next operations
+
+			//removing connection with weights to get proper dependency order for next operations
             remove_connection(*nodes_map.at(weights_id), *node);
             remove_connection(*nodes_map.at(recurrent_id), *node);
             if (bias_term)

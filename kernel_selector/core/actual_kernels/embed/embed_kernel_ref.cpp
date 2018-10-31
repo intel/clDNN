@@ -40,6 +40,7 @@ namespace kernel_selector
 		k.EnableTensorOffset();
 		k.EnableTensorPitches();
 		k.EnableBatching();
+        k.EnableNonBiasTerm();
 		return k;
 	}
 
@@ -58,7 +59,7 @@ namespace kernel_selector
 	EmbedKernelRef::DispatchData EmbedKernelRef::SetDefault(const embed_params& params) const
 	{
 		DispatchData kd;
-		std::vector<size_t> global = { params.inputs[0].Y().v , params.weights.OFM().v, params.inputs[0].Batch().v };
+		std::vector<size_t> global = { params.inputs[0].X().v , params.weights.OFM().v, params.inputs[0].Batch().v };
 		std::vector<size_t> local = GetOptimalLocalWorkGroupSizes(global);
 
 		kd.gws0 = global[0];

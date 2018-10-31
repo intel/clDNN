@@ -196,6 +196,7 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
             //TODO: remove this condition when yxfb optimizations will be disabled
             current_layout.format != cldnn::format::yxfb &&
             current_layout.size.batch[0] == 1 &&
+            prim->dilation == tensor{ 1 } &&
             !node.get_transposed())
         {
             expected_tensor = current_layout.size;

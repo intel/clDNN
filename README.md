@@ -44,22 +44,6 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
-### Drop 10.0
-    New features:
-    - condition primitive
-	- fused convolution with bn and scale (backprop)
-	- scale/shit and mean/var as an output in batch norm
-	- add LSTM output selection
-    Bug fixes:
-    - memory pool fixes 
-    UX:
-    - downgrade to cxx11
-	- add support for u8 data type in custom primitive 
-	- library size optimizations
-    Performance:
-    - in place concatenation optimization 
-	- conv1x1 with stride >1 into eltwise optimization 
-
 ### Drop 9.2
 	New features
 	- local convolution

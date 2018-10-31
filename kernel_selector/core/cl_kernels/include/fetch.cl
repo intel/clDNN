@@ -72,6 +72,27 @@ inline uint FUNC(get_byxf_af32_index)(uint b, uint f, uint y, uint x, uint y_pit
 		CAT(prefix, _FEATURE_NUM),                 \
 		CAT(prefix, _OFFSET))
 
+inline uint FUNC(get_byx8_f4_index)(uint b, uint f, uint y, uint x,
+    uint x_pitch, uint y_pitch, uint b_pitch, uint f_size, uint x_size, uint offset)
+{
+    const uint f_aligned_to_4 = ((f_size + 3) / 4) * 4;
+    const uint x_aligned_to_8 = ((x_size + 7) / 8) * 8;
+    const uint b_offset = b * b_pitch;
+    const uint xy_offset = x * x_pitch + y * y_pitch;
+    const uint f_offset = f;
+    const size_t idx = offset + xy_offset + b_offset + f_offset;
+    return idx;
+}
+
+#define GET_DATA_BYX8_F4_INDEX(prefix, b, f, y, x)\
+	FUNC_CALL(get_byx8_f4_index)(                 \
+		b, f, y, x, CAT(prefix, _X_PITCH),          \
+		CAT(prefix, _Y_PITCH),                      \
+		CAT(prefix, _BATCH_PITCH),                      \
+		CAT(prefix, _FEATURE_NUM),                 \
+		CAT(prefix, _SIZE_X),                 \
+		CAT(prefix, _OFFSET))
+
 #define GET_DATA_BF8_XY16_INDEX(prefix, b, f, y, x)     \
     FUNC_CALL(get_bf8_xy16_index)(                      \
         b, f, y, x, CAT(prefix, _SIZE_X ),              \
@@ -261,6 +282,26 @@ inline uint FUNC(get_is_o_yx_isv32_index)(uint o, uint i, uint y, uint x, uint i
 
 #define GET_FILTER_IS_O_YX_ISV32(prefix, o, i, y, x)\
     FUNC_CALL(get_is_o_yx_isv32_index)(\
+        o, i, y, x, CAT(prefix, _IFM_NUM),\
+        CAT(prefix, _OFM_NUM),\
+        CAT(prefix, _SIZE_X),\
+        CAT(prefix, _SIZE_Y))
+
+inline uint FUNC(get_os_is_y_x8_osv8_isv4_index)(uint o, uint i, uint y, uint x, uint i_size, uint o_size, uint x_size, uint y_size)
+{
+    const uint i_aligned_to_4 = ((i_size + 3) / 4) * 4;
+    const uint o_aligned_to_8 = ((o_size + 7) / 8) * 8;
+    const uint x_aligned_to_8 = ((x_size + 7) / 8) * 8;
+    const uint i_val = i % 4;
+    const uint i_slice = i / 4;
+    const uint o_val = o % 8;
+    const uint o_slice = o / 8;
+    const size_t idx = i_val + 4 * (o_val + 8 * ( x + x_aligned_to_8 * (y + y_size * (i_slice + (i_aligned_to_4/4) * (o_slice)))));
+    return idx;
+}
+
+#define GET_FILTER_OS_IS_Y_X8_OSV8_ISV4(prefix, o, i, y, x)\
+    FUNC_CALL(get_os_is_y_x8_osv8_isv4_index)(\
         o, i, y, x, CAT(prefix, _IFM_NUM),\
         CAT(prefix, _OFM_NUM),\
         CAT(prefix, _SIZE_X),\

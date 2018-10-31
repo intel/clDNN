@@ -105,6 +105,14 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
 
     tensor output_size(input_layout.size.batch[0], number_of_features,
                        output_range.spatial[0], output_range.spatial[1]);
+
+    
+    // due to performance reason for using fs_bs_yx_bsv4_fsv32 first convolution have 3 features, so first conv layer will take byxf and return fs_bs_yx_bsv4_fsv32
+    if (input_layout.data_type == data_types::i8 && input_layout.format == format::byx8_f4 && input_layout.size.batch[0] % 4 == 0 && input_layout.size.feature[0] == 3)
+    {
+        return layout{ input_layout.data_type, cldnn::format::fs_bs_yx_bsv4_fsv32, output_size };
+    }
+
     return { input_layout.data_type, input_layout.format, output_size };
 }
 

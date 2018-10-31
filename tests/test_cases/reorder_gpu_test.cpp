@@ -910,7 +910,7 @@ TEST(reorder_gpu_opt, basic_remove_redundant)
     EXPECT_TRUE(outputs.at("r2").get_memory().get_layout().format == format::yxfb);
 }
 
-TEST(reorder_gpu_opt, basic_remove_redundant_due_to_implicit_reorders)
+TEST(reorder_gpu_opt, basic_do_not_remove_redundant_due_it_is_output)
 {
     engine eng;
 
@@ -920,7 +920,7 @@ TEST(reorder_gpu_opt, basic_remove_redundant_due_to_implicit_reorders)
         input_layout("in", in.get_layout()),
         convolution("conv", "in", { "weights" }),
         data("weights", weights),
-        reorder("r1", "conv", format::bfyx, data_types::f32) //optimize data should add conversion from yxfb to bfyx and 'conv' should output data in bfyx as well (IE case)
+        reorder("r1", "conv", format::bfyx, data_types::f32) //reoder is output - do not optimize
     };
 
     build_options opts;
@@ -931,8 +931,10 @@ TEST(reorder_gpu_opt, basic_remove_redundant_due_to_implicit_reorders)
     auto outputs = net.execute();
     auto executed_primitives = net.get_executed_primitives();
 
-    //remove redundant reorder optimization should replace redundant reorder node with convolution
-    EXPECT_TRUE(executed_primitives.count("conv") == 0);
+    //all pirmitives in this test needs to be executed
+    EXPECT_TRUE(executed_primitives.count("conv") == 1);
+    EXPECT_TRUE(executed_primitives.count("in") == 1);
+    EXPECT_TRUE(executed_primitives.count("r1") == 1);
     ASSERT_TRUE(outputs.count("r1") == 1);
     EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
 }
@@ -965,6 +967,35 @@ TEST(reorder_gpu_opt, basic_remove_redundant_output_due_to_implicit_reorders)
     EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
 }
 
+TEST(reorder_gpu_opt, basic_remove_redundant_due_to_implicit_reorders)
+{
+    engine eng;
+
+    memory in = memory::allocate(eng, { data_types::f32, format::yxfb, tensor{ 1, 2, 2, 1 } });
+    memory weights = memory::allocate(eng, { data_types::f32, format::bfyx, tensor{ 1, 2, 2, 1 } });
+    topology tpl{
+        input_layout("in", in.get_layout()),
+        convolution("conv", "in",{ "weights" }),
+        data("weights", weights),
+        reorder("r1", "conv", format::bfyx, data_types::f32), //optimize data should add conversion from yxfb to bfyx and 'conv' should output data in bfyx as well (IE case)
+        softmax("output", "r1")
+    };
+
+    build_options opts;
+    opts.set_option(build_option::optimize_data(true));
+
+    network net(eng, tpl, opts);
+    net.set_input_data("in", in);
+    auto outputs = net.execute();
+    auto executed_primitives = net.get_executed_primitives();
+
+    //remove redundant reorder optimization should remove r1 node
+    EXPECT_TRUE(executed_primitives.count("r1") == 0);
+    //all pirmitives in this test needs to be executed
+    ASSERT_TRUE(outputs.count("output") == 1);
+    EXPECT_TRUE(outputs.at("output").get_memory().get_layout().format == format::bfyx);
+}
+
 TEST(reorder_gpu_opt, non_trivial_remove_redundant)
 {
     engine eng;
@@ -987,7 +1018,7 @@ TEST(reorder_gpu_opt, non_trivial_remove_redundant)
 
     ASSERT_TRUE(executed_primitives.count("in") == 1);
     //ASSERT_TRUE(all_primitives.at("r1") == "_optimized_");
-    EXPECT_TRUE(executed_primitives.at("in") == outputs.at("r1").get_event());
+    EXPECT_TRUE(executed_primitives.at("in") != outputs.at("r1").get_event());
     ASSERT_TRUE(outputs.count("r1") == 1);
     EXPECT_TRUE(outputs.at("r1").get_memory().get_layout().format == format::bfyx);
 }

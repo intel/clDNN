@@ -95,6 +95,7 @@ namespace kernel_selector
         case kernel_selector::DataLayout::brfyx:             return "BRFYX";
         case kernel_selector::DataLayout::winograd_2x3_s1_data: return "WINOGRAD_2x3_S1_DATA";
         case kernel_selector::DataLayout::byxf_af32: return "BYXF_AF32";
+        case kernel_selector::DataLayout::byx8_f4: return "BYX8_F4";
         case kernel_selector::DataLayout::fs_bs_yx_bsv4_fsv32: return "FS_BS_YX_BSV4_FSV32";
         default: return "";
         }
@@ -323,6 +324,7 @@ namespace kernel_selector
         case WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb: return "IMAGE_2D_WEIGHTS_WINOGRAD_6x3_S1_XFBYB";
         case WeightsLayout::os_is_yx_isa8_osv8_isv4: return "OS_IS_YX_ISA8_OSV8_ISV4";
         case WeightsLayout::is_o_yx_isv32: return "IS_O_YX_ISV32";
+        case WeightsLayout::os_is_y_x8_osv8_isv4: return "OS_IS_Y_X8_OSV8_ISV4";
         default:
             return "";
             break;

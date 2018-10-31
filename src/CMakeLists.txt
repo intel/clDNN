@@ -104,6 +104,14 @@ file(GLOB __CLDNN_Sources__main
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
   )
 
+set(__CLDNN_Directory__graph_opt       "${CMAKE_CURRENT_SOURCE_DIR}/graph_optimizer")
+set(__CLDNN_Label__graph_opt           "graph_optimizer")
+file(GLOB __CLDNN_Sources__graph_opt
+    "${__CLDNN_Directory__graph_opt}/*.h"
+    "${__CLDNN_Directory__graph_opt}/*.hpp"
+    "${__CLDNN_Directory__graph_opt}/*.cpp"
+  )
+
 set(__CLDNN_Directory__include         "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(__CLDNN_Label__include             "include")
 file(GLOB __CLDNN_Headers__include
@@ -166,6 +174,7 @@ set(__CLDNN_Directory__ks_cache          "${__CLDNN_Directory__ks_core}/cache")
 
 set(__CLDNN_AllSources
     ${__CLDNN_Headers__api}
+    ${__CLDNN_Sources__graph_opt}
     ${__CLDNN_Headers__include}
     ${__CLDNN_Sources__caps}
     ${__CLDNN_Headers__api__cpp}
@@ -191,6 +200,7 @@ source_group("${__CLDNN_Label__api_extension}"        FILES ${__CLDNN_Headers__a
 source_group("${__CLDNN_Label__api_extension__cpp}"   FILES ${__CLDNN_Headers__api_extension__cpp})
 source_group("${__CLDNN_Label__api_extension__c}"     FILES ${__CLDNN_Headers__api_extension__c})
 source_group("${__CLDNN_Label__include}"              FILES ${__CLDNN_Headers__include})
+source_group("${__CLDNN_Label__graph_opt}"            FILES ${__CLDNN_Sources__graph_opt})
 source_group("${__CLDNN_Label__caps}"                 FILES ${__CLDNN_Sources__caps})
 source_group("${__CLDNN_Label__main}"                 FILES ${__CLDNN_Sources__main})
 source_group("${__CLDNN_Label__gpu}"                  FILES ${__CLDNN_Sources__gpu})

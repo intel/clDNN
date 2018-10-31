@@ -30,17 +30,18 @@ namespace kernel_selector
             //X, Y, F, R, B
             {-1,-1, 0,-1, 1 }, // DataLayout::bf
             {-1,-1, 1,-1, 0 }, // DataLayout::fb
-            { 0, 1, 2,-1, 3 },  // DataLayout::bfyx
-            { 2, 3, 1,-1, 0 },  // DataLayout::yxfb
-            { 1, 2, 0,-1, 3 },  // DataLayout::byxf
-            { 1, 2, 3,-1, 0 },  // DataLayout::fyxb
-            {-1,-1, 0,-1, 1 },  // DataLayout::bs_f_bsv8__af8
-            {-1,-1, 0,-1, 1 },  // DataLayout::bs_f_bsv16__af8
-            { 0, 1, 2,-1, 3 },  // DataLayout::bf8_xy16
-            { 0, 1, 2, 3, 4 },  // DataLayout::brfyx
-            { 2, 1, 0,-1, 3 },  // DataLayout::winograd_2x3_s1_data
-            { 1, 2, 0,-1, 3 },  // DataLayout::byxf_af32
-            { 0, 1, 3,-1, 2 },  // DataLayout::fs_bs_yx_bsv4_fsv32
+            { 0, 1, 2,-1, 3 }, // DataLayout::bfyx
+            { 2, 3, 1,-1, 0 }, // DataLayout::yxfb
+            { 1, 2, 0,-1, 3 }, // DataLayout::byxf
+            { 1, 2, 3,-1, 0 }, // DataLayout::fyxb
+            {-1,-1, 0,-1, 1 }, // DataLayout::bs_f_bsv8__af8
+            {-1,-1, 0,-1, 1 }, // DataLayout::bs_f_bsv16__af8
+            { 0, 1, 2,-1, 3 }, // DataLayout::bf8_xy16
+            { 0, 1, 2, 3, 4 }, // DataLayout::brfyx
+            { 2, 1, 0,-1, 3 }, // DataLayout::winograd_2x3_s1_data
+            { 1, 2, 0,-1, 3 }, // DataLayout::byxf_af32
+            { 1, 2, 0,-1, 3 }, // DataLayout::byx8_f8
+            { 0, 1, 3,-1, 2 }, // DataLayout::fs_bs_yx_bsv4_fsv32
         } };
 
         std::array<std::array<int, 6>, WeightsLayout::WeightsLayoutCount> WeightsTensor::weightsChannelArray
@@ -68,8 +69,9 @@ namespace kernel_selector
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4
-            {  1,  2,  0,  3, -1, -1 },  // WeightsLayout::is_o_yx_isv32
-            {  0,  1,  2,  3,  4,  5 },  // WeightsLayout::bf_lyx_yx 
+            {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::is_o_yx_isv32
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_y_x8_osv8_isv4
+            {  0,  1,  2,  3,  4,  5 }, // WeightsLayout::bf_lyx_yx 
         } };
 
         NDims DataTensor::GetSimpleDims(const std::vector<size_t>& d, DataLayout l)
@@ -99,6 +101,10 @@ namespace kernel_selector
                 assert(newDims.size() == 4);
                 newDims[0] = RoundUp(newDims[0], 32);
                 break;
+            case byx8_f4:
+                assert(newDims.size() == 4);
+                newDims[0] = RoundUp(newDims[0], 4);
+                newDims[1] = RoundUp(newDims[1], 8);
             case fs_bs_yx_bsv4_fsv32:
                 assert(newDims.size() == 4);
                 newDims[3] = RoundUp(newDims[3], 32);
@@ -118,7 +124,7 @@ namespace kernel_selector
                 pitch *= newDims[i];
             }
 
-            if (l == byxf_af32 || l == fs_bs_yx_bsv4_fsv32)
+            if (l == byxf_af32 || l == fs_bs_yx_bsv4_fsv32 || l == byx8_f4)
             {
                 ret[0].pitch = 1;
                 ret[1].pitch = ret[0].pitch * newDims[0];
@@ -299,6 +305,11 @@ namespace kernel_selector
                 assert(newDims.size() == 4);
                 newDims[0] = RoundUp(newDims[0], 32);
                 break;
+            case os_is_y_x8_osv8_isv4:
+                assert(newDims.size() == 4);
+                newDims[2] = RoundUp(newDims[2], 4);
+                newDims[3] = RoundUp(newDims[3], 8);
+                newDims[0] = RoundUp(newDims[0], 8);
             default:
                 break;
             }

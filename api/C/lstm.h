@@ -36,10 +36,12 @@ extern "C" {
 /// e.g. [i, o, f, z] : [input, output, forget, block]
 /// ONNX order: iofz
 /// Caffe order: ifoz
+/// pyTorch order: izof
 typedef enum /*:int32_t*/
 {
     cldnn_lstm_offset_order_iofz = 0,
-    cldnn_lstm_offset_order_ifoz
+    cldnn_lstm_offset_order_ifoz,
+    cldnn_lstm_offset_order_izof  
 } cldnn_lstm_offset_order;
 
 /// @brief LSTM Output selection

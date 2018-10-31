@@ -80,8 +80,8 @@ batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node con
         auto mean_format = node.mean().get_output_layout().format;
         auto variance_format = node.variance().get_output_layout().format;
 
-        CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Mean format", mean_format.value, "supported mean formats", format::yxfb, format::bfyx);
-        CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Variance format", variance_format.value, "supported variance formats", format::yxfb, format::bfyx);
+        CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Mean format", mean_format.value, "supported mean formats", format::yxfb, format::bfyx, format::byxf);
+        CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Variance format", variance_format.value, "supported variance formats", format::yxfb, format::bfyx, format::byxf);
 
 		auto is_mean_mutable_data = node.mean().is_type<mutable_data>();
 		auto is_var_mutable_data = node.variance().is_type<mutable_data>();
@@ -93,8 +93,8 @@ batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node con
 		auto scale_format = node.scale().get_output_layout().format;
 		auto shift_format = node.shift().get_output_layout().format;
 
-		CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Scale format", scale_format.value, "supported scale formats", format::yxfb, format::bfyx);
-		CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Shift format", shift_format.value, "supported shift formats", format::yxfb, format::bfyx);
+		CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Scale format", scale_format.value, "supported scale formats", format::yxfb, format::bfyx, format::byxf);
+		CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Shift format", shift_format.value, "supported shift formats", format::yxfb, format::bfyx, format::byxf);
 	}
 
 	if (forwad_pass())

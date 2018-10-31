@@ -42,6 +42,9 @@ void prepare_buffer_fusing::run(program_impl &p)
     {
         auto& node = (*itr++);
 
+        if (node->is_output())
+            continue;
+
         program_helpers::do_for_types<concatenation>(*node, [&p, is_debug](concatenation_node& node)
         {
             // buffer fusing should not be performed if one of inputs produces padded output since

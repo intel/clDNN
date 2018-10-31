@@ -15,6 +15,7 @@
 */
 
 #include "jitter.h"
+#include "tensor_type.h"
 
 namespace kernel_selector {
 
@@ -58,6 +59,28 @@ namespace kernel_selector {
         }
     }
 
+    std::string toCodeString(float val) {
+        if (std::isinf(val))
+            return std::signbit(val) ? "-INFINITY" : "INFINITY";
+        std::stringstream ss;
+        // Workaround GCC compiler/STL bug
+        ss << "as_float(0x" << std::hex << *reinterpret_cast<uint32_t*>(&val) << ")";
+
+        ss << " /*" << std::scientific << val << "*/";
+        return ss.str();
+    }
+
+    std::string toCodeString(double val) {
+        if (std::isinf(val))
+            return std::signbit(val) ? "-INFINITY" : "INFINITY";
+        std::stringstream ss;
+        // Workaround GCC compiler/STL bug
+        ss << "as_double(0x" << std::hex << *reinterpret_cast<uint64_t*>(&val) << ")";
+
+        ss << " /*" << std::scientific << val << "*/";
+        return ss.str();
+    }
+
     JitDefinitions JitConstants::GetDefinitions() const
     {
         JitDefinitions definitons;
@@ -69,6 +92,53 @@ namespace kernel_selector {
         }
         return definitons;
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // TensorBaseTJitConstant
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    template<typename DType, typename Layout>
+    class TensorBaseTJitConstant : public JitConstant
+    {
+    protected:
+        TensorBaseTJitConstant(const std::string& name) : JitConstant(name) {}
+
+    public:
+
+        JitDefinitions GetDefinitions(const Tensor::TensorBaseT<DType, Layout>& t) const
+        {
+            JitDefinitions definitions{
+                { _name + "_TYPE",          toCLType(t.GetDType()) },
+            { _name + "_OFFSET",        toCodeString(t.GetFirstElementOffset()) },
+            { _name + "_VIEW_OFFSET",   toCodeString(t.GetViewOffset()) },
+            { _name + "_LENGTH",        toCodeString(t.LogicalSize()) },
+            { _name + "_DIMS",          toCodeString(t.GetDims().size()) },
+            { _name + "_SIMPLE",        toCodeString(t.SimpleLayout()) },
+            { "TO_" + _name + "_TYPE",  "convert_" + toCLType(t.GetDType()) },
+            { _name + "_LAYOUT_" + toString(t.GetLayout()), "1" },
+            };
+
+            definitions.push_back({ _name + "_SIZE",        toCodeString(t.GetDims().size()) });
+            definitions.push_back({ _name + "_SIZES",       toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 1, [](const Tensor::Dim& d) { return d.v; }) });
+            definitions.push_back({ _name + "_PITCHES",     toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 1, [](const Tensor::Dim& d) { return d.pitch; }) });
+            definitions.push_back({ _name + "_PAD_BEFORE",  toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 0, [](const Tensor::Dim& d) { return d.pad.before; }) });
+            definitions.push_back({ _name + "_PAD_AFTER",   toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 0, [](const Tensor::Dim& d) { return d.pad.after; }) });
+
+            return definitions;
+        }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataTensorJitConstant
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class DataTensorJitConstant : public TensorBaseTJitConstant<Datatype, DataLayout>
+    {
+        const DataTensor _tensor;
+
+    public:
+        DataTensorJitConstant(const std::string& name, const DataTensor& t) : TensorBaseTJitConstant(name), _tensor(t) {}
+
+        JitDefinitions GetDefinitions() const override;
+    };
 
     JitDefinitions DataTensorJitConstant::GetDefinitions() const
     {
@@ -100,12 +170,30 @@ namespace kernel_selector {
         return definitions;
     }
 
+    std::shared_ptr<JitConstant> MakeJitConstant(const std::string& name, const DataTensor& value)
+    {
+        return std::static_pointer_cast<JitConstant>(std::make_shared<DataTensorJitConstant>(name, value));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // WeightTensorJitConstant
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    class WeightTensorJitConstant : public TensorBaseTJitConstant<WeightsType, WeightsLayout>
+    {
+        const WeightsTensor _tensor;
+
+    public:
+        WeightTensorJitConstant(const std::string& name, const WeightsTensor& t) : TensorBaseTJitConstant(name), _tensor(t) {}
+
+        JitDefinitions GetDefinitions() const override;
+    };
+
     JitDefinitions WeightTensorJitConstant::GetDefinitions() const
     {
         JitDefinitions baseDefinitions = TensorBaseTJitConstant::GetDefinitions(_tensor);
 
         JitDefinitions definitions{
-        { _name + "_SIZE_X",        toCodeString(_tensor.X().v) },
+            { _name + "_SIZE_X",        toCodeString(_tensor.X().v) },
         { _name + "_SIZE_Y",        toCodeString(_tensor.Y().v) },
         { _name + "_IFM_NUM",       toCodeString(_tensor.IFM().v) },
         { _name + "_OFM_NUM",       toCodeString(_tensor.OFM().v) },
@@ -118,6 +206,11 @@ namespace kernel_selector {
         definitions.insert(definitions.end(), baseDefinitions.begin(), baseDefinitions.end());
 
         return definitions;
+    }
+
+    std::shared_ptr<JitConstant> MakeJitConstant(const std::string& name, const WeightsTensor& value)
+    {
+        return std::static_pointer_cast<JitConstant>(std::make_shared<WeightTensorJitConstant>(name, value));
     }
 
     std::shared_ptr<JitConstant> MakeActivationJitConstants(ActivationFunction activation_function)
@@ -284,13 +377,6 @@ namespace kernel_selector {
             MakeJitConstant("GRADIENT",             params.gradient),
         };
 
-        // for activation function
-        jit.AddConstants({
-            MakeJitConstant("NL_M",                 params.activationParams.m),
-            MakeJitConstant("NL_N",                 params.activationParams.n),
-            MakeActivationJitConstants(params.activationFunc),
-            });
-
         if (bInt8Used)
         {
             jit.Merge(MakeUnitTypeJitConstants(Datatype::INT8));
@@ -311,6 +397,13 @@ namespace kernel_selector {
         {
             jit.Merge(MakeUnitTypeJitConstants(Datatype::F32));
         }
+
+        // for activation function
+        jit.AddConstants({
+            MakeJitConstant("NL_M",                 params.activationParams.m),
+            MakeJitConstant("NL_N",                 params.activationParams.n),
+            MakeActivationJitConstants(params.activationFunc),
+            });
 
         for (size_t i = 0; i < params.inputs.size(); i++)
         {

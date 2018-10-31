@@ -35,7 +35,7 @@ namespace cldnn
 		auto desc = node.get_primitive();
 		auto weights_layout = node.weights().get_output_layout();
 
-		auto result = layout(input_layout.data_type, format::bfyx, tensor(input_layout.size.batch[0], input_layout.size.spatial[0] * input_layout.size.spatial[1], weights_layout.size.batch[0], 1));
+		auto result = layout(input_layout.data_type, format::bfyx, tensor(input_layout.size.batch[0], input_layout.size.spatial[0], weights_layout.size.batch[0], 1));
 		return result;
 		
 	}
@@ -66,5 +66,8 @@ namespace cldnn
 		auto output_size = output_memory().get_layout();
 		CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_size.format.value, "expected format", format::yxfb, format::bfyx);
 		CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_size.size.raw.size(), "output size", output_size.size.raw.size(), "");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Input batch", input_size.size.batch[0], "output batch", output_size.size.batch[0], "");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Input feature", input_size.size.feature[0], "size 1", 1, "");
+        CLDNN_ERROR_NOT_EQUAL(node.id(), "Input y size ", input_size.size.spatial[1], "size 1", 1, "");
 	}
 }

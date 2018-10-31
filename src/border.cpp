@@ -37,7 +37,7 @@ layout border_inst::calc_output_layout(border_node const& node)
     new_size += desc->left_top_sizes.sub({0, 0, 0, 0});
     new_size += desc->right_bottom_sizes.sub({0, 0, 0, 0});
 
-    return {input_layout.data_type, input_layout.format, new_size};
+    return { input_layout.data_type, input_layout.format, {new_size.batch[0], new_size.feature[0], new_size.spatial[0], new_size.spatial[1]} };
 }
 
 std::string border_inst::to_string(border_node const& node)

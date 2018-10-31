@@ -108,7 +108,9 @@ struct format
         image_2d_weights_winograd_6x3_s1_xfbyb,      ///< image format used for weights for winograd fused convolution, F(6,3) -- filter 3x3 with stride 1
         os_is_yx_isa8_osv8_isv4,                        /// format for weights for MMAD convolution
         is_o_yx_isv32, /// format for weights for 1x1 MMAD convolutions
+        os_is_y_x8_osv8_isv4, /// format for weights for 1x1 MMAD convolutions
         byxf_af32,           /// < \n format for input for primitives using MMAD
+        byx8_f4,             /// < \n format for input for MMAD convolutions
         fs_bs_yx_bsv4_fsv32, /// < \n format for batched input for primitives using MMAD
         bf_lyx_yx = cldnn_bf_lyx_yx,            /// < \n format for local convolution weights
         format_num = cldnn_format_format_num, ///< number of format types
@@ -139,8 +141,10 @@ struct format
             { image_2d_weights_winograd_6x3_s1_xfbyb,{ 1, 1, 2, 0, "xyfb", "bfxy" } },
             { os_is_yx_isa8_osv8_isv4, { 1, 1, 2, 0, "bfyx", "bfxy" } },
             { byxf_af32, { 1, 1, 2, 0, "byxf", "bfxy" } },
+            { byx8_f4 , { 1, 1, 2, 0, "byxf", "bfyx"} },
             { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, 0, "fbyx", "bfxy" }},
             { is_o_yx_isv32 , {1, 1, 2, 0, "byxf", "bfxy" } },
+            { os_is_y_x8_osv8_isv4 , { 1, 1, 2, 0, "byxf", "bfxy" } },
             { bf_lyx_yx,{ 1, 1, 2, 2, "bfklyx", "bfklxy" } }
         };
         return traits.at(fmt);
@@ -768,10 +772,23 @@ public:
             my_sizes[1] = align_to(my_sizes[1], 32);
             adjusted_coords[1] = align_to(adjusted_coords[1], 32);
         }
+        else if (fmt == cldnn::format::os_is_y_x8_osv8_isv4)
+        {
+            my_sizes[1] = align_to(my_sizes[1], 4);
+            my_sizes[0] = align_to(my_sizes[0], 8);
+            my_sizes[2] = align_to(my_sizes[2], 8);
+        }
         else if (fmt == cldnn::format::byxf_af32 && !(is_aligned_to(my_sizes[1], 32)))
         {
             my_sizes[1] = align_to(my_sizes[1], 32);
             adjusted_coords[1] = align_to(adjusted_coords[1], 32);
+        }
+        else if (fmt == cldnn::format::byx8_f4 && (!(is_aligned_to(my_sizes[1], 4)) || !(is_aligned_to(my_sizes[2], 8))))
+        {
+            my_sizes[1] = align_to(my_sizes[1], 4);
+            my_sizes[2] = align_to(my_sizes[2], 8);
+            adjusted_coords[1] = align_to(adjusted_coords[1], 4);
+            adjusted_coords[2] = align_to(adjusted_coords[2], 8);
         }
         else if (fmt == cldnn::format::fs_bs_yx_bsv4_fsv32 && (!is_aligned_to(my_sizes[1], 32) || !is_aligned_to(my_sizes[0], 4) ))
         {
