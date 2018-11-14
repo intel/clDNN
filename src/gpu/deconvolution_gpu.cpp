@@ -100,7 +100,7 @@ public:
         auto deconv_optional_params = get_default_weights_bias_optional_params<kernel_selector::deconvolution_optional_params>(arg.get_program());
 
         if(primitive->with_activation)
-            convert_activation_func_params(primitive, deconv_params);
+            convert_activation_func_params(primitive, deconv_params.activation);
 
         deconv_params.depthwise_separable_opt = depthwise_separable_opt;
 
@@ -128,7 +128,10 @@ public:
         deconv_params.gradient = primitive->gradient();
 
         if (arg.get_dependencies().size() > primitive->weights.size() + primitive->bias.size() + 1)
+        {
             deconv_params.fused_eltwise = true;
+            deconv_params.inputs.push_back(convert_data_tensor(arg.fused_sum().get_output_layout()));
+        }
 
         auto& kernel_selector = kernel_selector::deconvolution_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(deconv_params, deconv_optional_params);

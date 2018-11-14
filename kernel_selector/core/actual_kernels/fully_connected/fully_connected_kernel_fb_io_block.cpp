@@ -35,8 +35,10 @@ namespace kernel_selector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_fb_io_block::FullyConnectedKernelBase::DispatchData> FullyConnected_fb_io_block::SetDefault(const fully_connected_params& arg) const
+
+    std::unique_ptr<FullyConnected_fb_io_block::FullyConnectedKernelBase::DispatchData> FullyConnected_fb_io_block::SetDefault(const fully_connected_params& arg, int ) const
     {
+
         auto kd = boost::make_unique<DispatchData>(*FullyConnectedKernelBase::SetDefault(arg));
         const auto& output = arg.output;
         
@@ -144,6 +146,18 @@ namespace kernel_selector
         //       (fb == fyxb flatten fyx, not yxfb flatten yxf).
         //       the order of the add operation cause some numeric changes. in order to avoid them right now we use yxfb/oiyx instead.
         // return GetCommonKernelsData(params, optParams, DataLayout::fb, WeightsLayout::io, estimated_time);
-        return GetCommonKernelsData(params, optParams, DataLayout::yxfb, { WeightsLayout::yxio }, estimated_time);
+        //return GetCommonKernelsData(params, optParams, DataLayout::yxfb, { WeightsLayout::yxio }, estimated_time);
+
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, optParams, DataLayout::yxfb, { WeightsLayout::yxio }, estimated_time, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+
+        return res;
     }
 }

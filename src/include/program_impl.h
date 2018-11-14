@@ -40,6 +40,7 @@ class constants_propagator;
 struct program_impl : public refcounted_obj<program_impl>
 {
     friend struct program_node;
+    friend class add_required_reorders; // to be removed when possible
     friend class trim_to_outputs;   // to be removed when possible
     friend class prepare_buffer_fusing; // to be removed when possible
     friend class prepare_primitive_fusing; // to be removed when possible
@@ -112,6 +113,18 @@ public:
     program_node const& get_node(primitive_id const& id) const;
     void dump_memory_pool() const;
 
+    //returns already existing program_node for given primitive 'prim' (lookup in 'nodes_map')
+    //if it was previously created, otherwise creates and then returns program_node
+    program_node& get_or_create(std::shared_ptr<primitive> prim);
+
+    // Inserts given program_node 'node' as an intermediate node between 'next' and it's
+    //  dependency at 'prev_idx' index.
+    void add_intermediate(program_node& node, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep = true);
+
+    // Gets or creates program_node for given primitive 'prim' and inserts it as an intermediate
+    // node between 'next' and it's dependency at 'prev_idx' index.
+    void add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep = true);
+
 private:
     uint32_t prog_id = 0;
 
@@ -173,18 +186,6 @@ private:
 
     //Reverses connection - user becomes dependency.
     void reverse_connection(program_node& dep_node, program_node& user_node);
-
-    //returns already existing program_node for given primitive 'prim' (lookup in 'nodes_map')
-    //if it was previously created, otherwise creates and then returns program_node
-    program_node& get_or_create(std::shared_ptr<primitive> prim);
-
-    // Inserts given program_node 'node' as an intermediate node between 'next' and it's
-    //  dependency at 'prev_idx' index.
-    void add_intermediate(program_node& node, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep = true);
-
-    // Gets or creates program_node for given primitive 'prim' and inserts it as an intermediate
-    // node between 'next' and it's dependency at 'prev_idx' index.
-    void add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep = true);
 
     void add_connection(program_node& prev, program_node& next);
 

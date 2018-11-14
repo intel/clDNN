@@ -21,22 +21,22 @@ namespace kernel_selector
     std::shared_ptr<auto_tuner_offline> auto_tuner_offline::instance = 0;
     std::mutex auto_tuner_offline::mutex;
 
-    auto_tuner_offline::auto_tuner_offline(const std::string& hw_id)
+    auto_tuner_offline::auto_tuner_offline(const uint32_t compute_units_count)
     {
-        std::string temp_hw_id = hw_id;
+        uint32_t temp_compute_units_count = compute_units_count;
         // TODO: this is temporary solution of cases where user has non-tuned configuration. needs to implement better logic
         // i.e. create table with number of eu's configuration that will point to common cache.
-        if (sku_cache_fillers.count(hw_id) == 0)
-            temp_hw_id = "0x1912";
-        sku_cache_fillers.at(temp_hw_id)(t_data);
+        if (compute_units_count == 0)
+            temp_compute_units_count = 24;
+        sku_cache_fillers.at(temp_compute_units_count)(t_data);
     }
 
-    std::shared_ptr<auto_tuner_offline> auto_tuner_offline::get_instance(const std::string& hw_id)
+    std::shared_ptr<auto_tuner_offline> auto_tuner_offline::get_instance(const uint32_t computeUnitsCount)
     {
         std::lock_guard<std::mutex> lock(mutex);
         if (instance == nullptr)
         {
-            instance = std::make_shared<auto_tuner_offline>(auto_tuner_offline(hw_id));
+            instance = std::make_shared<auto_tuner_offline>(auto_tuner_offline(computeUnitsCount));
         }
         return instance;
     }

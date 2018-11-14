@@ -36,7 +36,7 @@ namespace kernel_selector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_fb_io_b8_f8::DispatchData> FullyConnected_fb_io_b8_f8::SetDefault(const fully_connected_params& arg) const
+    std::unique_ptr<FullyConnected_fb_io_b8_f8::DispatchData> FullyConnected_fb_io_b8_f8::SetDefault(const fully_connected_params& arg, int ) const
     {
         auto kd = FullyConnectedBlockKernelBase::SetDefault(arg);
 
@@ -79,13 +79,22 @@ namespace kernel_selector
     KernelsData FullyConnected_fb_io_b8_f8::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
         assert(params.GetType() == KernelType::FULLY_CONNECTED);
-
+        KernelsData res = {};
         const auto& orgParams = static_cast<const fully_connected_params&>(params);
 
         float estimated_time =
             orgParams.inputs[0].GetDType() == Datatype::F16 && orgParams.output.Batch().v >= 16 ?
             FORCE_PRIORITY_3 : FORCE_PRIORITY_5;
         
-        return GetCommonKernelsData(params, optParams, DataLayout::fb, { WeightsLayout::io }, estimated_time);
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, optParams, DataLayout::fb, { WeightsLayout::io }, estimated_time, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+
+        return res;
     }
 }

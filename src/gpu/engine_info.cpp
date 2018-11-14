@@ -166,6 +166,7 @@ engine_info_internal::engine_info_internal(const gpu_toolkit& context)
     configuration = dev_info.config;
     dev_id = to_string_hex(device_id);
     driver_version = context.device().getInfo<CL_DRIVER_VERSION>();
+    compute_units_count = context.device().getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
 
     cores_count = static_cast<uint32_t>(context.device().getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>());
     core_frequency = static_cast<uint32_t>(context.device().getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());

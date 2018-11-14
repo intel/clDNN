@@ -92,6 +92,14 @@ inline VF<T> flatten_4d(cldnn::format input_format, VVVVF<T> &data) {
                             vec[idx++] = data[bi][fi][yi][xi];
             break;
         
+        case cldnn::format::fyxb:
+            for (size_t fi = 0; fi < b; ++fi)
+                for (size_t yi = 0; yi < c; ++yi)
+                    for (size_t xi = 0; xi < d; ++xi)
+                        for (size_t bi = 0; bi < a; ++bi)
+                            vec[idx++] = data[bi][fi][yi][xi];
+            break;
+
         case cldnn::format::bfyx:
             for (size_t bi = 0; bi < a; ++bi)
                 for (size_t fi = 0; fi < b; ++fi)

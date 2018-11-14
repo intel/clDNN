@@ -33,10 +33,14 @@ namespace kernel_selector
         struct DispatchData : public CommonDispatchData
         {};
     
+        std::string GetAutoTuneOptions(int autoTuneIndex) const;
+        std::vector<std::string> autoTuneOptions = { DEFAULT, NO_PRERA_SCH, AGE_BASED };
+        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time = DONT_USE_IF_HAVE_SOMETHING_ELSE, int autoTuneIndex = -1) const ;
+
     protected:
         virtual JitConstants GetJitConstants(const fully_connected_params& params, const DispatchData& kd) const;
-        virtual std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params) const;
-        KernelsData GetCommonKernelsData(const Params& params, const optional_params& optParams, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time = DONT_USE_IF_HAVE_SOMETHING_ELSE) const;
+        virtual std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params, int autoTuneIndex = -1) const;
+        KernelsData GetCommonKernelsData(const Params& params, const optional_params& optParams, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time = DONT_USE_IF_HAVE_SOMETHING_ELSE, const std::string exeMode = DEFAULT, int autoTuneIndex = -1) const;
 
         bool Validate(const Params& p, const optional_params&) const override
         {

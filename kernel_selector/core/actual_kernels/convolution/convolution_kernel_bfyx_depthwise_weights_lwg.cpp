@@ -94,6 +94,6 @@ namespace kernel_selector
 
     KernelsData ConvolutionKernel_bfyx_depthwise_weights_lwg::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options);
+        return GetTunedKernelsDataByIndex(params, options);
     }
 }

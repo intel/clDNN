@@ -134,6 +134,6 @@ namespace kernel_selector
 
     KernelsData ConvolutionKernel_bfyx_GEMMLike::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, AGE_BASED);
+        return GetTunedKernelsDataByIndex(params, options);
     }
 }

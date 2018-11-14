@@ -157,14 +157,14 @@ namespace kernel_selector {
             if (options.tuningParams.mode == TuningMode::TUNING_DISABLED) // Try to load kernel/config from offline cache
             {
 #if ENABLE_OFFLINE_TUNING_CACHE
-                cachedKernelConfig = autoTuner.LoadKernelOffline(params.engineInfo.deviceId, hash);
+                cachedKernelConfig = autoTuner.LoadKernelOffline(params.engineInfo.computeUnitsCount, hash);
 #else
                 return  GetNaiveBestKernel(params, options, kType);
 #endif
             }
             else // Try to load kernel/config from on-line cache
             {
-                cachedKernelConfig = autoTuner.LoadKernelOnline(options.tuningParams.mode, options.tuningParams.cacheFilePath, params.engineInfo.deviceId, params.engineInfo.driverVersion, params.engineInfo.hostVersion, hash);
+                cachedKernelConfig = autoTuner.LoadKernelOnline(options.tuningParams.mode, options.tuningParams.cacheFilePath, params.engineInfo.computeUnitsCount, params.engineInfo.driverVersion, params.engineInfo.hostVersion, hash);
             }       
             bool hashFoundInCache = !std::get<0>(cachedKernelConfig).empty();
 
@@ -208,7 +208,8 @@ namespace kernel_selector {
 
             for (const auto& implementation : implementations)
             {
-                
+                printf("%s \n", implementation->GetName().c_str());
+
                 const ParamsKey implKey = implementation->GetSupportedKey();
                 if (implKey.Support(requireKey) && implKey.TuningSupport())
                 {
@@ -219,11 +220,11 @@ namespace kernel_selector {
                         
                         for (size_t i = 0; i < kds.size(); i++)
                         {
-                            kds[i].runTime = runTimes[i];  
+                            kds[i].runTime = runTimes[i];
                             if (kernelsData.size() == 0 || kds[i].runTime < kernelsData[0].runTime)
                             {
                                 kernelsData = { kds[i] };
-                                kernelName = implementation->GetName();
+                                kernelName = implementation->GetName();                                
                             }
                         }
                     }

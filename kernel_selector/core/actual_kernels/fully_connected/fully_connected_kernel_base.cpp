@@ -48,7 +48,7 @@ namespace kernel_selector
         return jit;
     }
 
-    std::unique_ptr<FullyConnectedKernelBase::DispatchData> FullyConnectedKernelBase::SetDefault(const fully_connected_params& params) const
+    std::unique_ptr<FullyConnectedKernelBase::DispatchData> FullyConnectedKernelBase::SetDefault(const fully_connected_params& params, int) const
     {
         std::unique_ptr<DispatchData> dispatchData = boost::make_unique<DispatchData>();
         dispatchData->fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
@@ -68,7 +68,7 @@ namespace kernel_selector
         return std::move(dispatchData);
     }
 
-    KernelsData FullyConnectedKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time) const
+    KernelsData FullyConnectedKernelBase::GetCommonKernelsData(const Params& params, const optional_params& options, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time, const std::string exeMode, int autoTuneIndex) const
     {
         if (!Validate(params, options) ||
             wl.empty())
@@ -118,15 +118,31 @@ namespace kernel_selector
         
         auto entry_point = GetEntryPoint(kernelName, orgParams.layerID, options);
 
-        const std::unique_ptr<DispatchData> runInfo = SetDefault(newParams);
+        const std::unique_ptr<DispatchData> runInfo = SetDefault(newParams, autoTuneIndex);
         auto cldnn_jit = GetJitConstants(newParams, *runInfo.get());
         std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, *runInfo.get(), params.engineInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !orgParams.bias.empty(), 1, newParams.int8_quantization, newParams.output_calibration);
+        FillCLKernelData(kernel, *runInfo.get(), params.engineInfo, kernelName, jit, entry_point, exeMode, true, !orgParams.bias.empty(), 1, newParams.int8_quantization, newParams.output_calibration);
 
         kd.estimatedTime = estimated_time;
-        kd.autoTuneIndex = -1;
+        kd.autoTuneIndex = autoTuneIndex;
         return{ kd };
     }
+
+    std::string FullyConnectedKernelBase::GetAutoTuneOptions(int autoTuneIndex) const
+    {
+        if ((autoTuneIndex >= 0) && (autoTuneIndex < (int)autoTuneOptions.size()))
+        {
+            return autoTuneOptions[autoTuneIndex];
+        }
+
+        return DEFAULT;
+    }
+
+    KernelsData FullyConnectedKernelBase::GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, DataLayout dl, std::vector<WeightsLayout> wl, float estimated_time, const int autoTuneIndex) const
+    {
+        return GetCommonKernelsData(params, options, dl, wl, estimated_time, GetAutoTuneOptions(autoTuneIndex), autoTuneIndex);
+    }
+
 }

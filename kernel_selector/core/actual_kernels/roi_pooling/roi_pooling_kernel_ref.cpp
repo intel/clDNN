@@ -83,7 +83,7 @@ namespace kernel_selector {
         assert(params.GetType() == KernelType::ROI_POOLING);
         const roi_pooling_params& orgParams = static_cast<const roi_pooling_params&>(params);
 
-        if (orgParams.activationFunc != ActivationFunction::NONE)
+        if (orgParams.activation.function != ActivationFunction::NONE)
         {
             return{};
         }

@@ -271,6 +271,8 @@ namespace kernel_selector {
         case PoolType::MAX_WITH_ARGMAX:
             key.restrict.val.dedicated.pooling.max_with_argmax = 1;
             break;
+        case PoolType::BILINEAR:
+            key.restrict.val.dedicated.pooling.bilinear = 1;
         default:
             break;
         }
@@ -556,12 +558,18 @@ namespace kernel_selector {
         return k;
     }
 
+    std::string base_activation_params::to_string() const
+    {
+        std::stringstream s;
+        s << "m" << m << "_n" << n << "_" << toString(function);
+        return s.str();
+    }
+
     std::string base_params::to_string() const
     {
         std::stringstream s;
         s << Params::to_string() << "_";
-        s << toString(activationParams) << "_";
-        s << toString(activationFunc) << "_";
+        s << activation.to_string() << "_";
 
         for (auto input : inputs)
         {

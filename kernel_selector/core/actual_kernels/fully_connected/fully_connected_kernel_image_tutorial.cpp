@@ -40,7 +40,7 @@ namespace kernel_selector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_image_tutorial::Parent::DispatchData> FullyConnected_image_tutorial::SetDefault(const fully_connected_params& params) const
+    std::unique_ptr<FullyConnected_image_tutorial::Parent::DispatchData> FullyConnected_image_tutorial::SetDefault(const fully_connected_params& params, int ) const
     {
         auto runInfo = Parent::SetDefault(params);
         
@@ -62,8 +62,16 @@ namespace kernel_selector
 
     KernelsData FullyConnected_image_tutorial::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, DataLayout::bfyx,
-        { WeightsLayout::image_2d_weights_c4_fyx_b }
-        );
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, DataLayout::bfyx,
+                { WeightsLayout::image_2d_weights_c4_fyx_b }, DONT_USE_IF_HAVE_SOMETHING_ELSE, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+        return res;
     }
 }

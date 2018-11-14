@@ -38,9 +38,9 @@ layout lstm_inst::calc_output_layout(lstm_node const& node)
     // weights   = [     1, direction, 4 * hidden_size,      input_size ]
     // recurrent = [     1, direction, 4 * hidden_size,     hidden_size ]
     // biases    = [     1,         1,       direction, 4 * hidden_size ]
-    // hidden    = [ batch, direction,               1,     hidden_size ]
-    // cell      = [ batch, direction,               1,     hidden_size ]
-    // output    = [ batch, direction,        sequence,     hidden_size ]    
+    // hidden    = [ batch,         1,       direction,     hidden_size ]
+    // cell      = [ batch,         1,       direction,     hidden_size ]
+    // output    = [ batch,  sequence,       direction,     hidden_size ]
 	auto result = layout(input_layout.data_type, format::bfyx,
                   tensor(hidden_layout.size.feature[0], input_layout.size.feature[0],
                          hidden_layout.size.spatial[0], hidden_layout.size.spatial[1]));
@@ -76,7 +76,8 @@ std::string lstm_inst::to_string(lstm_node const& node)
 lstm_inst::typed_primitive_inst(network_impl& network, lstm_node const& node)
     :parent(network, node)
 {
-    auto input_size = node.input().get_output_layout();
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_size.format.value, "expected format", format::bfyx);
+    auto input_layout = node.input().get_output_layout();
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_layout.format.value, "expected format", format::bfyx);
 }
+
 }

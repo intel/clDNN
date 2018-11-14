@@ -92,7 +92,7 @@ crop_inst::typed_primitive_inst(network_impl& network, crop_node const& node)
     const auto in_format     = in_layout.format;
     const auto& offsets      = argument.offsets;
 
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input format", in_format.value, "supported crop input formats", format::yxfb, format::bfyx );
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "Input format", in_format.value, "supported crop input formats", format::yxfb, format::bfyx, format::fyxb);
 
     // Check for borders variant of crop.
     if (ref_in_sizes.batch[0] < 0 || ref_in_sizes.feature[0] < 0 ||
@@ -112,7 +112,7 @@ crop_inst::typed_primitive_inst(network_impl& network, crop_node const& node)
 
     //check if output sizes matches reference input sizes
     CLDNN_ERROR_TENSOR_SIZES_GREATER_THAN(node.id(), "Reference input", ref_in_sizes, "input sizes", in_sizes, "Reference input tensor/ input tensor mismtach");
-    
+
     //check if offsets do not extend input sizes and if match the output sizes
     CLDNN_ERROR_TENSOR_SIZES_LESS_THAN(node.id(), "Batch offsets", offsets, "0 value", {}, "Invalid Batch offset: negative value");
     auto input_size_sub_offsets = in_sizes - offsets;

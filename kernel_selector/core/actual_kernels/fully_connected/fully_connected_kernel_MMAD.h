@@ -32,6 +32,6 @@ namespace kernel_selector {
         
     protected:
         JitConstants GetJitConstants(const fully_connected_params& params, const DispatchData& kd) const override;
-        std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params) const override;
+        std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params, int autoTuneIndex = -1) const override;
     };
 }

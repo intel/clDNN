@@ -113,34 +113,34 @@ kernel_selector::dim_tensor<T> convert_dim_vector(const tensor& t)
 }
 
 template <typename p_type>
-inline void convert_activation_func_params(const p_type primitive, kernel_selector::base_params& params)
+inline void convert_activation_func_params(const p_type primitive, kernel_selector::base_activation_params& params)
 {
     const float negative_slope = primitive->activation_negative_slope;
     if (negative_slope != 0.0f)
     {
-        params.activationParams.m = negative_slope;
-        params.activationFunc = kernel_selector::activation_function::RELU_NEGATIVE_SLOPE;
+        params.m = negative_slope;
+        params.function = kernel_selector::activation_function::RELU_NEGATIVE_SLOPE;
     }
     else
     {
-        params.activationFunc = kernel_selector::activation_function::RELU;
+        params.function = kernel_selector::activation_function::RELU;
     }
 }
 
 template <typename arg_t>
-inline void convert_fused_activation_func_params(const arg_t& arg, kernel_selector::base_params& params)
+inline void convert_fused_activation_func_params(const arg_t& arg, kernel_selector::base_activation_params& params)
 {
-    params.activationParams.m = arg.get_fused_activation_params().a;
-    params.activationParams.n = arg.get_fused_activation_params().b;
-    params.activationFunc = get_kernel_selector_activation_param(arg.get_fused_activation_func());
+    params.m = arg.get_fused_activation_params().a;
+    params.n = arg.get_fused_activation_params().b;
+    params.function = get_kernel_selector_activation_param(arg.get_fused_activation_func());
 }
 
 template <typename p_type>
-inline void convert_new_activation_func(const p_type primitive, kernel_selector::base_params& params)
+inline void convert_new_activation_func(const p_type primitive, kernel_selector::base_activation_params& params)
 {
-    params.activationFunc = get_kernel_selector_activation_param(primitive->activation_func);
-    params.activationParams.m = primitive->additional_params.a;
-    params.activationParams.n = primitive->additional_params.b;
+    params.function = get_kernel_selector_activation_param(primitive->activation_func);
+    params.m = primitive->additional_params.a;
+    params.n = primitive->additional_params.b;
 }
 
 void set_params(const program_node& node, kernel_selector::params& params);
@@ -160,7 +160,7 @@ inline params_t get_default_params(const arg_t& arg, uint32_t split = 1)
 
     params.layerID = arg.id();
 
-    convert_fused_activation_func_params(arg, params);
+    convert_fused_activation_func_params(arg, params.activation);
 
     return params;
 }

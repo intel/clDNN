@@ -35,7 +35,7 @@ namespace kernel_selector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_bf_io_input_spatial::DispatchData> FullyConnected_bf_io_input_spatial::SetDefault(const fully_connected_params& arg) const
+    std::unique_ptr<FullyConnected_bf_io_input_spatial::DispatchData> FullyConnected_bf_io_input_spatial::SetDefault(const fully_connected_params& arg, int ) const
     {
         auto kd = FullyConnectedKernelBase::SetDefault(arg);
 
@@ -84,10 +84,21 @@ namespace kernel_selector
 
     KernelsData FullyConnected_bf_io_input_spatial::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
+        KernelsData res = {};
         const auto& orgParams = static_cast<const fully_connected_params&>(params);
 
         const auto& input = orgParams.inputs[0];
         const auto& output = orgParams.output;
+
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+
+            KernelsData kd = GetTunedKernelsDataByIndex(params, optParams, DataLayout::bf, { WeightsLayout::io }, DONT_USE_IF_HAVE_SOMETHING_ELSE, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
 
         if (input.GetLayout() == DataLayout::bfyx)
         {
@@ -95,10 +106,20 @@ namespace kernel_selector
             {
                 if ((input.LogicalSize() / output.Batch().v >= 9216) && (output.Feature().v >= 4096))
                 {
-                    return GetCommonKernelsData(params, optParams, DataLayout::bf, { WeightsLayout::io }, FORCE_PRIORITY_1);
+                    for (size_t i = 0; i < autoTuneOptions.size(); i++)
+                    {
+                        KernelsData kd = GetTunedKernelsDataByIndex(params, optParams, DataLayout::bf, { WeightsLayout::io }, FORCE_PRIORITY_1, (int)i+3);
+                        if (!kd.empty())
+                        {
+                            res.emplace_back(kd[0]);
+                        }
+                    }
                 }
             }
         }
-        return GetCommonKernelsData(params, optParams, DataLayout::bf, { WeightsLayout::io });
+       
+
+
+        return res;
     }
 }

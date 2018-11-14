@@ -29,7 +29,6 @@ namespace kernel_selector {
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
         virtual KernelsData GetKernelsDataForAutoTune(const Params& params, const optional_params& options) const override;
-        virtual KernelsData GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, int autoTuneIndex) const override;
         virtual ParamsKey GetSupportedKey() const override;
 
     protected:

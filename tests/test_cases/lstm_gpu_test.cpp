@@ -571,17 +571,17 @@ void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batc
         ASSERT_EQ(output_size, size_t(hidden_size * sequence_len * batch_size * direction));
 
         auto output = outputs.begin()->second.get_memory();
-        
+
         // Get the output tensor
         cldnn::layout output_layout = output.get_layout();
-        cldnn::tensor output_tensor = output_layout.size; 
-        
+        cldnn::tensor output_tensor = output_layout.size;
+
         // Compare the output tensor configuration against the reference value
         // Output tensor is configured in bfyx format
         ASSERT_EQ(batch_size, output_tensor.batch[0]);
         ASSERT_EQ(sequence_len, output_tensor.feature[0]);
         ASSERT_EQ(direction, output_tensor.spatial[1]);
-        ASSERT_EQ(hidden_size, output_tensor.spatial[0]); 
+        ASSERT_EQ(hidden_size, output_tensor.spatial[0]);
 
         auto output_ptr = output.pointer<T>();
         int32_t i = 0;
@@ -607,7 +607,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
     int hidden_size = 4;
 
     std::cout << "Layers = " << layers << " Input Size = " << input_size << " Hidden Size = " << hidden_size
-            << " Sequence Len = " << sequence_len << " Directions = " << directions << " Batch Size = " << batch_size 
+            << " Sequence Len = " << sequence_len << " Directions = " << directions << " Batch Size = " << batch_size
 			<< " Output selection: " << output_selection << std::endl;
     int min_random = -2, max_random = 2;
 
@@ -635,7 +635,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
 
     engine engine;
 
-    memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} }); 
+    memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
     memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, input_size , 4 * hidden_size } });
     memory recurrent = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, hidden_size, 4 * hidden_size } });
     memory biases = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, 1, 4 * hidden_size, directions } });
@@ -651,7 +651,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
 
     bool emit_last_cell = output_selection == cldnn_lstm_output_hidden_cell ||
                           output_selection == cldnn_lstm_output_sequence_cell;
-    bool emit_last_hidden = output_selection == cldnn_lstm_output_hidden || 
+    bool emit_last_hidden = output_selection == cldnn_lstm_output_hidden ||
                             output_selection == cldnn_lstm_output_hidden_cell;
 
     topology topology;
@@ -674,13 +674,13 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
     topology.add(lstm("lstm", lstm_inputs, "weights", "recurrent",
                       "biases", "hidden", "cell", "", 0, false, {}, {},
                       output_selection, default_offset_type));
-    if (emit_last_cell) 
+    if (emit_last_cell)
     {
         int32_t concatenation_len = emit_last_hidden ? 2 : sequence_len + 1;
         tensor hidden_tensor {batch_size, concatenation_len - 1, hidden_size, directions};
         tensor cell_tensor {batch_size, 1, hidden_size, directions};
         topology.add(crop(emit_last_hidden ? "crop:last_hidden" : "crop:sequence", "lstm", hidden_tensor, tensor {0, 0, 0, 0}));
-        topology.add(crop("crop:last_cell", "lstm", cell_tensor, tensor {0, concatenation_len - 1, 0, 0}));	
+        topology.add(crop("crop:last_cell", "lstm", cell_tensor, tensor {0, concatenation_len - 1, 0, 0}));
     }
 
     network network(engine, topology);
@@ -690,16 +690,16 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
 
     auto outputs = network.execute();
 	uint32_t ref_num_output_primitives = 1;  // Output will return atleast 1 primitive
-	
+
 	if (emit_last_cell) {
 		// add another primitve to account for cell state if the output selection includes cell state
-		ref_num_output_primitives += 1;  
+		ref_num_output_primitives += 1;
 	}
 
 	// check if the number of returned primitives match the expected number of output primitives
-	ASSERT_EQ(ref_num_output_primitives, outputs.size()); 
+	ASSERT_EQ(ref_num_output_primitives, outputs.size());
 
-	for (auto itr = outputs.begin(); itr != outputs.end(); itr++) 
+	for (auto itr = outputs.begin(); itr != outputs.end(); itr++)
 	{
         auto output_tensor = itr->second.get_memory().get_layout().size;
         primitive_id primitive_name = itr->first;
@@ -708,7 +708,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
         int32_t output_size = (int32_t)(itr->second.get_memory().size() / sizeof(T));
 		cldnn::tensor ref_output_tensor;
 		VVVVF<T> ref_primitive_output;
-		
+
 		int32_t ref_batch_size = batch_size;
 		int32_t ref_hidden_size = hidden_size;
 		int32_t ref_directions = directions;
@@ -717,11 +717,11 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
         // Set the reference output against which the primitive's output will be compared
 		if (primitive_name.find("crop:last_cell") != std::string::npos)
 		{
-			ref_primitive_output = last_cell;  
+			ref_primitive_output = last_cell;
 		}
 		else if (emit_last_hidden || primitive_name.find("crop:last_hidden") != std::string::npos)
 		{
-			ref_primitive_output = last_hidden;  
+			ref_primitive_output = last_hidden;
 		}
 		else
 		{
@@ -733,7 +733,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
 		int32_t ref_output_size = ref_batch_size * ref_seq_len * ref_hidden_size * ref_directions;
 
 		// The number of elements in reference should match the number of elements in the primitive's output
-		ASSERT_EQ(ref_output_size , output_size);  
+		ASSERT_EQ(ref_output_size , output_size);
 
         // Compare the output tensor configuration against the reference value
         // Output tensor is configured in bfyx format
@@ -741,7 +741,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
         ASSERT_EQ(ref_seq_len, output_tensor.feature[0]);		// Sequence length should match
 		ASSERT_EQ(ref_directions, output_tensor.spatial[1]);	// directions should match
         ASSERT_EQ(ref_hidden_size, output_tensor.spatial[0]);	// input size should match
-		
+
         auto output_ptr = output_memory.pointer<T>();
 
 		int32_t i = 0;
@@ -756,6 +756,289 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
         }
     }
 }
+
+
+// -------------------------------------------------------
+template<typename T>
+void lstm_gpu_format_test(const cldnn::format& format, int directions) {
+    int layers = 1;
+    int sequence_len = 6;
+    int batch_size = 3;
+    int input_size = 4;
+    int hidden_size = 5;
+
+    cldnn_lstm_output output_selection = cldnn_lstm_output::cldnn_lstm_output_sequence;
+
+    std::cout << "Layers = " << layers << " Input Size = " << input_size << " Hidden Size = " << hidden_size
+            << " Sequence Len = " << sequence_len << " Directions = " << directions << " Batch Size = " << batch_size
+            << " Output selection: " << output_selection << std::endl;
+    int min_random = -2, max_random = 2;
+
+    VVVVF<T> ref_input = generate_random_4d<T>(batch_size, sequence_len, 1, input_size, min_random, max_random);
+    VVVVF<T> ref_weights = generate_random_4d<T>(1, directions, 4 * hidden_size, input_size, min_random, max_random);
+    VVVVF<T> ref_recurrent = generate_random_4d<T>(1, directions, 4 * hidden_size, hidden_size, min_random, max_random);
+    VVVVF<T> ref_bias = generate_random_4d<T>(1, 1, directions, 4 * hidden_size, min_random, max_random);
+    VVVVF<T> ref_hidden = generate_random_4d<T>(batch_size, 1, directions, hidden_size, min_random, max_random);
+    VVVVF<T> ref_cell = generate_random_4d<T>(batch_size, 1, directions, hidden_size, min_random, max_random);
+    VVVVF<T> ref_output = VVVVF<T>(batch_size, VVVF<T>(sequence_len, VVF<T>(directions, VF<T>(hidden_size))));
+
+    VF<T> ref_input_vec = flatten_4d<T>(format, ref_input);
+    VF<T> ref_weights_vec = flatten_4d<T>(cldnn::format::bfyx, ref_weights);
+    VF<T> ref_recurrent_vec = flatten_4d<T>(cldnn::format::bfyx, ref_recurrent);
+    VF<T> ref_bias_vec = flatten_4d<T>(cldnn::format::bfyx, ref_bias);
+    VF<T> ref_hidden_vec = flatten_4d<T>(format, ref_hidden);
+    VF<T> ref_cell_vec = flatten_4d<T>(format, ref_cell);
+
+    VVVVF<T> last_hidden(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))));
+    VVVVF<T> last_cell(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))));
+
+    lstm_reference(ref_input, ref_hidden, ref_cell, ref_weights, ref_recurrent, ref_bias, ref_output,
+                   last_hidden, last_cell, true, true, true,
+                   0, false, true);
+
+    engine engine;
+
+    memory input = memory::allocate(engine, { type_to_data_type<T>::value,format, {batch_size, sequence_len, input_size, 1} });
+    memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, input_size , 4 * hidden_size } });
+    memory recurrent = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, hidden_size, 4 * hidden_size } });
+    memory biases = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, 1, 4 * hidden_size, directions } });
+    memory hidden = memory::allocate(engine, { type_to_data_type<T>::value, format, { batch_size, 1, hidden_size, directions } });
+    memory cell = memory::allocate(engine, { type_to_data_type<T>::value, format, { batch_size, 1, hidden_size, directions } });
+
+    set_values(input, ref_input_vec);
+    set_values(weights, ref_weights_vec);
+    set_values(recurrent, ref_recurrent_vec);
+    set_values(biases, ref_bias_vec);
+    set_values(hidden, ref_hidden_vec);
+    set_values(cell, ref_cell_vec);
+
+    bool emit_last_cell = output_selection == cldnn_lstm_output_hidden_cell ||
+                          output_selection == cldnn_lstm_output_sequence_cell;
+    bool emit_last_hidden = output_selection == cldnn_lstm_output_hidden ||
+                            output_selection == cldnn_lstm_output_hidden_cell;
+
+    topology topology;
+    std::vector<std::pair<primitive_id, tensor>> input_ids_offsets;
+    std::vector<primitive_id> lstm_inputs;
+    std::vector<primitive_id> output_ids_offsets;
+
+    topology.add(input_layout("input", input.get_layout()));
+    for (int i = 0; i < sequence_len; ++i)
+    {
+        input_ids_offsets.push_back({get_string_id(i), {0, i, 0, 0}});
+        lstm_inputs.push_back("inputSplit:"+get_string_id(i));
+    }
+    topology.add(split("inputSplit", "input", input_ids_offsets));
+    topology.add(data("weights", weights));
+    topology.add(data("recurrent", recurrent));
+    topology.add(data("biases", biases));
+    topology.add(input_layout("hidden", hidden.get_layout()));
+    topology.add(input_layout("cell", cell.get_layout()));
+    topology.add(lstm("lstm"+get_string_id(0), lstm_inputs, "weights", "recurrent",
+                      "biases", "hidden", "cell", "", 0, false, {}, {},
+                      output_selection, default_offset_type));
+
+    if (emit_last_cell)
+    {
+        int32_t concatenation_len = emit_last_hidden ? 2 : sequence_len + 1;
+        tensor hidden_tensor {batch_size, concatenation_len - 1, hidden_size, directions};
+        tensor cell_tensor {batch_size, 1, hidden_size, directions};
+        topology.add(crop(emit_last_hidden ? "crop:last_hidden" : "crop:sequence", "lstm", hidden_tensor, tensor {0, 0, 0, 0}));
+        topology.add(crop("crop:last_cell", "lstm", cell_tensor, tensor {0, concatenation_len - 1, 0, 0}));
+    }
+
+    network network(engine, topology);
+    std::map<primitive_id, network_output> outputs;
+
+    network.set_input_data("input", input);
+    network.set_input_data("hidden", hidden);
+    network.set_input_data("cell", cell);
+    outputs = network.execute();
+
+    uint32_t ref_num_output_primitives = 1;  // Output will return atleast 1 primitive
+
+    if (emit_last_cell) {
+        // add another primitve to account for cell state if the output selection includes cell state
+        ref_num_output_primitives += 1;
+    }
+
+    // check if the number of returned primitives match the expected number of output primitives
+    ASSERT_EQ(ref_num_output_primitives, outputs.size());
+
+    for (auto itr = outputs.begin(); itr != outputs.end(); itr++)
+    {
+        auto output_tensor = itr->second.get_memory().get_layout().size;
+        primitive_id primitive_name = itr->first;
+
+        cldnn::memory output_memory = itr->second.get_memory();
+        int32_t output_size = (int32_t)(itr->second.get_memory().size() / sizeof(T));
+        cldnn::tensor ref_output_tensor;
+        VVVVF<T> ref_primitive_output;
+
+        int32_t ref_batch_size = batch_size;
+        int32_t ref_hidden_size = hidden_size;
+        int32_t ref_directions = directions;
+
+        int32_t ref_seq_len = 1;
+        // Set the reference output against which the primitive's output will be compared
+        if (primitive_name.find("crop:last_cell") != std::string::npos)
+        {
+            ref_primitive_output = last_cell;
+        }
+        else if (emit_last_hidden || primitive_name.find("crop:last_hidden") != std::string::npos)
+        {
+            ref_primitive_output = last_hidden;
+        }
+        else
+        {
+            ref_seq_len = sequence_len;
+            ref_primitive_output = ref_output;
+        }
+
+        ref_output_tensor = { ref_batch_size, ref_seq_len, ref_hidden_size, ref_directions };
+        int32_t ref_output_size = ref_batch_size * ref_seq_len * ref_hidden_size * ref_directions;
+
+        // The number of elements in reference should match the number of elements in the primitive's output
+        ASSERT_EQ(ref_output_size , output_size);
+
+        // Compare the output tensor configuration against the reference value
+        // Output tensor is configured in bfyx format
+        ASSERT_EQ(ref_batch_size, output_tensor.batch[0]);
+        ASSERT_EQ(ref_seq_len, output_tensor.feature[0]);       // Sequence length should match
+        ASSERT_EQ(ref_directions, output_tensor.spatial[1]);    // directions should match
+        ASSERT_EQ(ref_hidden_size, output_tensor.spatial[0]);   // input size should match
+
+        auto output_ptr = output_memory.pointer<T>();
+
+        int32_t i = 0;
+        if (format == cldnn::format::bfyx) {
+            for (int32_t b = 0; b < ref_batch_size; ++b) {
+                for (int32_t s = 0; s < ref_seq_len; ++s) {
+                    for (int32_t d = 0; d < ref_directions; ++d) {
+                        for (int32_t x = 0; x < ref_hidden_size; ++x) {
+                            ASSERT_NEAR(ref_primitive_output[b][s][d][x], output_ptr[i++], FERROR);
+                        }
+                    }
+                }
+            }
+        }
+        else if(format == cldnn::format::fyxb)
+        {
+            for (int32_t s = 0; s < ref_seq_len; ++s) {
+                for (int32_t d = 0; d < ref_directions; ++d) {
+                    for (int32_t x = 0; x < ref_hidden_size; ++x) {
+                        for (int32_t b = 0; b < ref_batch_size; ++b) {
+                            ASSERT_NEAR(ref_primitive_output[b][s][d][x], output_ptr[i++], FERROR);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+
+// -------------------------------------------------------
+template<typename T>
+void lstm_gpu_users_test() {
+    int sequence_len = 2;
+    int batch_size = 1;
+    int input_size = 1;
+    int hidden_size = 1;
+    int directions = 1;
+    int min_random = -2, max_random = 2;
+
+    // The following test is designed to test the user dependencies of an LSTM node when replaced by subcomponents
+    // by the graph compiler.
+    // The output of an LSTM node is set to last_hidden only. Then we concatenate the last_hidden with the initial_hidden tensor:
+    // (input, weights, recurrent, bias, initial_hidden, inital_cell) -> LSTM -> last_hidden
+    // concatenation(last_hidden, initial_hidden)
+    // If the replacing is is done correctly then the initial_hidden tensor should match the output of the concatenation
+    // by an offset along the sequence.
+
+    VVVVF<T> ref_input = generate_random_4d<T>(batch_size, sequence_len, 1, input_size, min_random, max_random);
+    VVVVF<T> ref_weights = generate_random_4d<T>(1, directions, 4 * hidden_size, input_size, min_random, max_random);
+    VVVVF<T> ref_recurrent = generate_random_4d<T>(1, directions, 4 * hidden_size, hidden_size, min_random, max_random);
+    VVVVF<T> ref_bias = generate_random_4d<T>(1, 1, directions, 4 * hidden_size, min_random, max_random);
+    VVVVF<T> ref_hidden = generate_random_4d<T>(batch_size, 1, directions, hidden_size, min_random, max_random);
+    VVVVF<T> ref_cell = generate_random_4d<T>(batch_size, 1, directions, hidden_size, min_random, max_random);
+    VVVVF<T> ref_output = VVVVF<T>(batch_size, VVVF<T>(sequence_len, VVF<T>(directions, VF<T>(hidden_size))));
+
+    VF<T> ref_input_vec = flatten_4d<T>(format::bfyx, ref_input);
+    VF<T> ref_weights_vec = flatten_4d<T>(format::bfyx, ref_weights);
+    VF<T> ref_recurrent_vec = flatten_4d<T>(format::bfyx, ref_recurrent);
+    VF<T> ref_bias_vec = flatten_4d<T>(format::bfyx, ref_bias);
+    VF<T> ref_hidden_vec = flatten_4d<T>(format::bfyx, ref_hidden);
+    VF<T> ref_cell_vec = flatten_4d<T>(format::bfyx, ref_cell);
+
+    VVVVF<T> last_hidden(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))));
+    VVVVF<T> last_cell(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))));
+
+    engine engine;
+
+    memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
+    memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, input_size , 4 * hidden_size } });
+    memory recurrent = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, hidden_size, 4 * hidden_size } });
+    memory biases = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, 1, 4 * hidden_size, directions } });
+    memory hidden = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { batch_size, 1, hidden_size, directions } });
+    memory cell = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { batch_size, 1, hidden_size, directions } });
+
+    set_values(input, ref_input_vec);
+    set_values(weights, ref_weights_vec);
+    set_values(recurrent, ref_recurrent_vec);
+    set_values(biases, ref_bias_vec);
+    set_values(hidden, ref_hidden_vec);
+    set_values(cell, ref_cell_vec);
+
+    topology topology;
+    std::vector<std::pair<primitive_id, tensor>> input_ids_offsets;
+    std::vector<primitive_id> lstm_inputs;
+
+    topology.add(input_layout("input", input.get_layout()));
+    for (int i = 0; i < sequence_len; ++i)
+    {
+        input_ids_offsets.push_back({get_string_id(i), {0, i, 0, 0}});
+        lstm_inputs.push_back("inputSplit:"+get_string_id(i));
+    }
+    topology.add(split("inputSplit", "input", input_ids_offsets));
+    topology.add(data("weights", weights));
+    topology.add(data("recurrent", recurrent));
+    topology.add(data("biases", biases));
+    topology.add(input_layout("hidden", hidden.get_layout()));
+    topology.add(input_layout("cell", cell.get_layout()));
+    topology.add(lstm("lstm", lstm_inputs, "weights", "recurrent",
+                      "biases", "hidden", "cell", "", 0, false, {}, {},
+                      cldnn_lstm_output::cldnn_lstm_output_hidden, default_offset_type));
+    std::vector<primitive_id> output_ids_offsets {"lstm", "hidden"};
+    topology.add(concatenation("concatenation", output_ids_offsets, concatenation::along_f));
+
+    network network(engine, topology);
+    std::map<primitive_id, network_output> outputs;
+
+    network.set_input_data("input", input);
+    network.set_input_data("hidden", hidden);
+    network.set_input_data("cell", cell);
+    outputs = network.execute();
+
+    // check if the number of returned primitives match the expected number of output primitives
+    ASSERT_EQ(size_t(1), outputs.size());
+    cldnn::memory output_memory = outputs.begin()->second.get_memory();
+    auto output_ptr = output_memory.pointer<T>();
+
+    int32_t i = 0;
+    for (int32_t b = 0; b < batch_size; ++b) {
+        for (int32_t s = 0; s < 1; ++s) {
+            for (int32_t d = 0; d < directions; ++d) {
+                for (int32_t x = 0; x < hidden_size; ++x) {
+                    int32_t idx = x + hidden_size * (d + directions * ((s+1) + sequence_len * b));
+                    ASSERT_NEAR(ref_hidden[b][s][d][x], output_ptr[idx], FERROR);
+                }
+            }
+        }
+    }
+}
+
 
 TEST(lstm_gemm_gpu, generic_lstm_gemm_test_f32) {
     generic_lstm_gemm_gpu_test<float>(1, 1, 3, 6, 2, true, true);
@@ -948,6 +1231,30 @@ TEST(lstm_gpu, output_test_sequence_cell_bi_f32) {
     lstm_gpu_output_test<float>(cldnn_lstm_output::cldnn_lstm_output_sequence_cell, 2);
 }
 
+// format tests
+TEST(lstm_gpu, lstm_gpu_format_bfyx_f32) {
+    lstm_gpu_format_test<float>(cldnn::format::bfyx, 1);
+}
+
+TEST(lstm_gpu, lstm_gpu_format_bfyx_bi_f32) {
+    lstm_gpu_format_test<float>(cldnn::format::bfyx, 2);
+}
+
+TEST(lstm_gpu, lstm_gpu_format_fyxb_f32) {
+    lstm_gpu_format_test<float>(cldnn::format::fyxb, 1);
+}
+
+TEST(lstm_gpu, lstm_gpu_format_fyxb_bi_f32) {
+    lstm_gpu_format_test<float>(cldnn::format::fyxb, 2);
+}
+
+// test for LSTM users' dependencies
+TEST(lstm_gpu, lstm_users_f32) {
+    lstm_gpu_users_test<float>();
+}
+
 // TODO: Add tests for the following:
+// integration testing using multi-layer and chained LSTMs
+// LSTMs single input
 // optional activation list
 

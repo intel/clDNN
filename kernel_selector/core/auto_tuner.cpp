@@ -23,7 +23,7 @@
  
 namespace kernel_selector 
 {
-    std::tuple<std::string, int> AutoTuner::LoadKernelOnline(const TuningMode tuningMode, const std::string& tuningFilePath, const std::string& deviceID, const std::string& driverVersion, const std::string& hostVersion, const std::string& hash)
+    std::tuple<std::string, int> AutoTuner::LoadKernelOnline(const TuningMode tuningMode, const std::string& tuningFilePath, const uint32_t compute_units_count, const std::string& driverVersion, const std::string& hostVersion, const std::string& hash)
     {
         std::lock_guard<std::mutex> lock(mutex);
 
@@ -40,14 +40,15 @@ namespace kernel_selector
             std::string cachedHostVersion;
             std::string cachedhash;
             std::string cachedkernelName;
+            uint32_t cachedComputeUnits;
             int cachedIndex;
             std::string line;
 
             if (tuningFile) // Tuning file exists
             {
                 // Read device ID
-                tuningFile >> cachedDeviceId;
-                if (!tuningFile.good() || (cachedDeviceId.compare(deviceID) != 0))
+                tuningFile >> cachedComputeUnits;
+                if (!tuningFile.good() || cachedComputeUnits != compute_units_count)
                 {
                     throw std::runtime_error("Tuning file bad structure or wrong device ID. Re-generate cache in TUNE_AND_CACHE mode.");
                 }
@@ -96,7 +97,7 @@ namespace kernel_selector
                 // Create a new tuning file and write the versions
                 std::ofstream newTuningFile(tuningFilePath, std::ofstream::out);
 
-                newTuningFile << deviceID << "\n";
+                newTuningFile << compute_units_count << "\n";
                 newTuningFile << driverVersion << "\n";
                 newTuningFile << hostVersion << "\n";
             }
@@ -136,9 +137,9 @@ namespace kernel_selector
         cachedKernelsFile.close();
     }
 
-    std::tuple<std::string, int> AutoTuner::LoadKernelOffline(const std::string& deviceID, const std::string& hash)
+    std::tuple<std::string, int> AutoTuner::LoadKernelOffline(const uint32_t computeUnitsCount, const std::string& hash)
     {
-        auto const& deviceCache = auto_tuner_offline::get_instance(deviceID)->get_tuning_data();
+        auto const& deviceCache = auto_tuner_offline::get_instance(computeUnitsCount)->get_tuning_data();
         if (deviceCache.td.empty())
         {
             return std::make_pair("", 0);

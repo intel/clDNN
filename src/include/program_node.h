@@ -22,6 +22,7 @@
 
 #include "meta_utils.h"
 
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
 namespace cldnn
 {
@@ -53,6 +54,7 @@ struct program_node
 {
     friend struct program_impl;
     friend class constants_propagator;
+    friend class add_required_reorders; //to be removed
     friend class trim_to_outputs;      //to be removed
     friend class prepare_buffer_fusing; // to be removed when possible
     friend class prepare_primitive_fusing; // to be removed when possible
@@ -125,7 +127,7 @@ public:
 
     std::unique_ptr<json_composite> desc_to_json() const;
 	std::unique_ptr<xml_composite> desc_to_xml() const;
-    //do not modify primitive directly to keep synchronisation wit graph
+    //do not modify primitive directly to keep synchronisation with graph
     std::shared_ptr<const primitive> get_primitive() const { return desc; }
     //primitive modification functions
     void set_output_padding(padding const& padd)
@@ -143,7 +145,7 @@ public:
     //only calculated output layout (for external usage), does not modify/use cached output layout nor invalidate users
     layout calc_output_layout() const;
 
-    //uses cached output layout if vlid, if not calls 'calc_output_layout' and stores its result + invalidate all users if layout has changed and @p invalidate_users_if_changed is set to true
+    //uses cached output layout if valid, if not calls 'calc_output_layout' and stores its result + invalidate all users if layout has changed and @p invalidate_users_if_changed is set to true
     layout get_output_layout(bool invalidate_users_if_changed = true);
     //returns cached output layout if valid, otherwise throws an exception
     layout get_output_layout() const;
@@ -259,7 +261,11 @@ protected:
     std::vector<program_node*> dependencies;
     std::list<program_node*> users;
 
+#if defined(__GNUC__) && (GCC_VERSION < 40900)
+    std::list<program_node*>::iterator processing_itr;
+#else
     std::list<program_node*>::const_iterator processing_itr;
+#endif
     uint32_t processing_num = 0;
 
     // list of primitives that can reuse same memory buffers due to execution order conflicts

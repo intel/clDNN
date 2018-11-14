@@ -368,6 +368,7 @@ void set_params(const program_node& node, kernel_selector::params& params)
     params.engineInfo.maxImage2dWidth = engine_info.max_image2d_width;
     params.engineInfo.maxImage2dHeight = engine_info.max_image2d_height;
     params.engineInfo.deviceId = engine_info.dev_id;
+    params.engineInfo.computeUnitsCount = engine_info.compute_units_count;
     params.engineInfo.driverVersion = engine_info.driver_version;
     params.engineInfo.hostVersion = to_host_version(cldnn::get_version());
 }

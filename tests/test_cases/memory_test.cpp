@@ -207,7 +207,7 @@ TEST(memory_pool, oooq) {
     network.set_input_data("input", input);
     auto outputs = network.execute();
 
-    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 2304);
+    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 2816);
 }
 
 TEST(memory_pool, shared_mem_pool_same_topology_twice) {
@@ -254,7 +254,7 @@ TEST(memory_pool, shared_mem_pool_same_topology_twice) {
     auto output_layout_first = output_memory_first.get_layout();
     auto output_ptr_first = output_memory_first.pointer<float>();
 
-    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 2304);
+    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 2816);
 
     network network_second(engine, topology, bo);
     network_second.set_input_data("input", input);
@@ -264,7 +264,7 @@ TEST(memory_pool, shared_mem_pool_same_topology_twice) {
     auto output_layout_second = output_memory_second.get_layout();
     auto output_ptr_second = output_memory_second.pointer<float>();
 
-    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t)3072);
+    EXPECT_EQ(engine.get_max_used_device_memory_size(), (uint64_t) 3584);
     EXPECT_EQ(output_layout_first, output_layout_second);
 
     int y_size = output_layout_first.size.spatial[1];

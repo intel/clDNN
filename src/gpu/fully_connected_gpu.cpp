@@ -92,7 +92,7 @@ public:
         fc_optional_params.allowInputReordering = true;
 
         if(arg.get_primitive()->with_activation)
-            convert_activation_func_params(arg.get_primitive(), fc_params);
+            convert_activation_func_params(arg.get_primitive(), fc_params.activation);
 
         fc_params.output = fc_params.output.FlattenFeatureAndSpatials();
 

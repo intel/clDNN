@@ -31,6 +31,6 @@ namespace kernel_selector {
         ParamsKey GetSupportedKey() const override;
         
     protected:
-        std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params) const override;
+        std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params, int autoTuneIndex = -1) const override;
     };
 }

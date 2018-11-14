@@ -32,9 +32,9 @@ namespace kernel_selector
     {
     public:
         AutoTuner() = default;
-        std::tuple<std::string, int> LoadKernelOnline(const TuningMode tuningMode, const std::string& tuningFilePath, const std::string& deviceID, const std::string& driverVersion, const std::string& hostVersion, const std::string& hash);
+        std::tuple<std::string, int> LoadKernelOnline(const TuningMode tuningMode, const std::string& tuningFilePath, const uint32_t compute_units_count, const std::string& driverVersion, const std::string& hostVersion, const std::string& hash);
         void StoreKernel(const std::string& tuningFilePath, const std::string& hash, const std::string& implementationName, const int tuneIndex);
-        std::tuple<std::string, int> LoadKernelOffline(const std::string& deviceID, const std::string& hash);
+        std::tuple<std::string, int> LoadKernelOffline(const uint32_t compute_units_count, const std::string& hash);
 
     private:    
         std::map<std::string, tuning_data> onlineCache; // Tuning file name -> kernel/config per hash (hash -> [implementation name, tuning index])

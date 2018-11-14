@@ -34,7 +34,7 @@ namespace kernel_selector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_fb_oi_b8_ref::DispatchData> FullyConnected_fb_oi_b8_ref::SetDefault(const fully_connected_params& arg) const
+    std::unique_ptr<FullyConnected_fb_oi_b8_ref::DispatchData> FullyConnected_fb_oi_b8_ref::SetDefault(const fully_connected_params& arg, int ) const
     {
         auto kd = FullyConnectedKernelBase::SetDefault(arg);
 
@@ -66,6 +66,15 @@ namespace kernel_selector
 
     KernelsData FullyConnected_fb_oi_b8_ref::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
-        return GetCommonKernelsData(params, optParams, DataLayout::fb, { WeightsLayout::oi }, FORCE_PRIORITY_6);
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, optParams, DataLayout::fb, { WeightsLayout::oi }, FORCE_PRIORITY_6, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+        return res;
     }
 }

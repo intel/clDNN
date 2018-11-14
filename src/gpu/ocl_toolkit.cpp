@@ -24,7 +24,6 @@
 #include <ios>
 
 #include <fstream>
-#include <boost/optional.hpp>
 
 // NOTE: Due to buggy scope transition of warnings we need to disable warning in place of use/instantation
 //       of some types (even though we already disabled them in scope of definition of these types).
@@ -174,7 +173,7 @@ std::shared_ptr<gpu_toolkit> gpu_toolkit::create(const configuration & cfg)
 
 struct gpu_toolkit::ocl_logger
 {
-    boost::optional<std::ofstream> _log_file;
+    std::ofstream _log_file;
 };
 
 gpu_toolkit::gpu_toolkit(const configuration& config) 
@@ -214,11 +213,17 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
             // TODO: When cl_khr_create_command_queue will be availible the
             // function name will change to clCreateCommandQueueWithPropertiesKHR
             // in place of clCreateCommandQueueWithPropertiesINTEL.
+#ifndef WIN32
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
             pfn_clCreateCommandQueueWithPropertiesINTEL clCreateCommandQueueWithPropertiesINTEL =
                 (pfn_clCreateCommandQueueWithPropertiesINTEL)clGetExtensionFunctionAddressForPlatform(
                     _platform_id,
                     "clCreateCommandQueueWithPropertiesINTEL");
-
+#ifndef WIN32
+    #pragma GCC diagnostic pop
+#endif
             unsigned cl_queue_priority_value = CL_QUEUE_PRIORITY_MED_KHR;
 
             switch (_configuration.priority_mode)
@@ -499,19 +504,18 @@ void gpu_toolkit::sync_events(std::vector<event_impl::ptr> const & deps)
 
 std::ofstream& gpu_toolkit::open_log()
 {
-    if (!_logger->_log_file.is_initialized())
+    if (!_logger->_log_file.is_open())
     {
-        _logger->_log_file.emplace(_configuration.log, std::ios::out | std::ios::trunc);
-        if (!_logger->_log_file.is_initialized())
+        _logger->_log_file.open(_configuration.log, std::ios::out | std::ios::trunc);
+        if (!_logger->_log_file.good())
             throw std::runtime_error("Could not initialize ocl_toolkit log file");
-        if (!_logger->_log_file->is_open())
+        if (!_logger->_log_file.is_open())
         {
-            _logger->_log_file.reset();
             throw std::runtime_error("Could not open ocl_toolkit log file '" + _configuration.log + "' for writing");
         }
     }
 
-    return _logger->_log_file.get();
+    return _logger->_log_file;
 }
 
 }

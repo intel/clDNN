@@ -34,6 +34,12 @@ namespace cldnn
         virtual void run(program_impl &p) override;
     };
 
+    class add_reshape_to_primitives : base_pass
+    {
+    public:
+        virtual void run(program_impl &p) override;
+    };
+
     class prepare_buffer_fusing : base_pass
     {
     public:
@@ -89,6 +95,14 @@ namespace cldnn
     {
     public:
         virtual void run(program_impl &p) override;
+    };
+
+    class add_required_reorders : base_pass
+    {
+    public:
+        virtual void run(program_impl &p) override;
+    private:
+        void add_reorder(program_impl &p, program_node* node, program_node* usr, layout reorder_layout);
     };
 
     class pre_optimize_bias : base_pass

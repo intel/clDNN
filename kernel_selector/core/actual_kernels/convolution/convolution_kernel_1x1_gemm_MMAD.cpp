@@ -110,6 +110,6 @@ namespace kernel_selector {
 
     KernelsData ConvolutionKernel_1x1_gemm_MMAD::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options);
+        return GetTunedKernelsDataByIndex(params, options);
     }
 }

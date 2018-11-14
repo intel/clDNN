@@ -111,7 +111,7 @@ public:
         fuse_params.scale_bias = arg.scale_bias_term();
 
         if(primitive->with_activation)
-            convert_activation_func_params(primitive, fuse_params);
+            convert_activation_func_params(primitive, fuse_params.activation);
 
         fuse_params.split = split;
         fuse_params.filterSize = {

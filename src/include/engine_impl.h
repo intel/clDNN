@@ -77,7 +77,23 @@ public:
         auto factory = implementation_map<T>::get(type(), node);
         return std::move(std::unique_ptr<primitive_impl>(factory(node)));
     }
-    
+
+    template <class T>
+    bool does_an_implementation_exist(typed_program_node<T> const& node)
+    {
+        if (&node.get_program().get_engine() != this)
+          throw std::invalid_argument("engine_impl::create_primitive_impl: program's engine does not match called engine");
+        return implementation_map<T>::check(type(), node);
+    }
+
+    template <class T>
+    bool does_possible_implementation_exist(typed_program_node<T> const& node)
+    {
+        if (&node.get_program().get_engine() != this)
+            throw std::invalid_argument("engine_impl::create_primitive_impl: program's engine does not match called engine");
+        return implementation_map<T>::check_io_eq(type(), node);
+    }
+
     const engine_configuration& configuration() const { return _configuration; }
     void set_mem_pool(bool flag) { _configuration.enable_memory_pool = flag; }
     std::shared_ptr<gpu_toolkit> get_context() const { return _context; }

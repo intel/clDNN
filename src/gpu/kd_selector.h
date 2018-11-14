@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include "boost/functional/hash.hpp"
-
 #include <initializer_list>
 #include <tuple>
 #include <type_traits>
@@ -260,7 +258,7 @@ class kd_selector<KernelDataTy, OuterTy, ReqSelectorCount, mputils::type_tuple<S
 public:
     using key_type = mputils::make_vttype_tt_t<std::tuple, _selector_types>;
 
-    using hash_type = boost::hash<key_type>;
+    using hash_type = std::hash<key_type>;
     using mapped_type = KernelDataTy (*)(const OuterTy&);
     using map_type = std::unordered_map<key_type, mapped_type, hash_type>;
     using value_type = typename map_type::value_type;

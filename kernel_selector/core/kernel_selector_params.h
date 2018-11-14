@@ -115,6 +115,7 @@ namespace kernel_selector
                             uint32_t floor : 1;
                             uint32_t max_with_argmax : 1;
                             uint32_t ceil : 1;
+                            uint32_t bilinear : 1;
                             uint32_t fixedKenrelDivider : 1;
                             uint32_t dynamicKenrelDivider : 1;
                             uint32_t dynamicKenrelDividerWithPadding : 1;
@@ -310,6 +311,7 @@ namespace kernel_selector
         bool bImageSupport = false;
         bool bIMADSupport = false;
         bool bIMMADSupport = false;
+        uint32_t computeUnitsCount = 0;
         uint64_t maxWorkGroupSize = 0;
         uint64_t maxLocalMemSize = 0;
         uint64_t maxImage2dWidth = 0;
@@ -341,17 +343,31 @@ namespace kernel_selector
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // base_activation_params
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct base_activation_params
+    {
+        ActivationFunction  function = ActivationFunction::NONE;
+        float m = 1.f;
+        float n = 0.f;
+
+        base_activation_params() = default;
+        base_activation_params(const float m, const float n) : m(m), n(n) {}
+
+        virtual std::string to_string() const;
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // base_params
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     struct base_params : public Params
     {
         virtual ~base_params() {}
 
-        ActivationFunction  activationFunc = ActivationFunction::NONE;
-        NonLinearParams     activationParams;
-        MultiDataTensor     inputs;
-        DataTensor          output;
-        bool                gradient = false;
+        base_activation_params activation;
+        MultiDataTensor        inputs;
+        DataTensor             output;
+        bool                   gradient = false;
 
         virtual std::string to_string() const;
         virtual ParamsKey GetParamsKey() const;

@@ -90,7 +90,7 @@ public:
         }
 
         if(primitive->with_activation)
-            convert_activation_func_params(primitive, conv_params);
+            convert_activation_func_params(primitive, conv_params.activation);
 
         conv_params.depthwise_separable_opt = depthwise_separable_opt;
         conv_params.transposed = transposed;

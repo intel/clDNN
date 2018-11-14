@@ -338,4 +338,39 @@ namespace kernel_selector
         return false;
     }
 
+	    std::string ConvolutionKernelBase::GetAutoTuneOptions(int autoTuneIndex) const
+    {
+        if ((autoTuneIndex >= 0) && (autoTuneIndex < (int)autoTuneOptions.size()))
+        {
+            return autoTuneOptions[autoTuneIndex];
+        }
+
+        return DEFAULT;
+    }
+
+    KernelsData ConvolutionKernelBase::GetTunedKernelsDataByIndex(const Params& params, const optional_params& options, const int autoTuneIndex) const
+    {
+        return GetCommonKernelsData(params, options, GetAutoTuneOptions(autoTuneIndex), autoTuneIndex);
+    }
+
+    KernelsData ConvolutionKernelBase::GetKernelsDataForAutoTune(const Params& params, const optional_params& options) const
+    {
+        if (!Validate(params, options))
+        {
+            return{};
+        }
+
+        KernelsData res = {};
+
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+        
+        return res;
+    }
 }

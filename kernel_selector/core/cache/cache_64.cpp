@@ -18,11 +18,9 @@
 #include "auto_tuner_offline.h"
 namespace kernel_selector 
 {
-    //SKL GT2
-    void tuning_cache_1912(tuning_data& td)
+    // ICL_GT2
+    void tuning_cache_64(tuning_data& td)
     {
-        tuning_cache_1912_B1_B16(td);
-        tuning_cache_1912_B8(td);
-        tuning_cache_1912_B32_B64(td);
+        tuning_cache_64_1(td);
     }
 }

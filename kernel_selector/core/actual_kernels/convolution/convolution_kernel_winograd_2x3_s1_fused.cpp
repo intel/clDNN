@@ -147,6 +147,6 @@ namespace kernel_selector {
 
     KernelsData ConvolutionKernel_Winograd_2x3_s1_fused::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options);
+        return GetTunedKernelsDataByIndex(params, options);
     }
 }

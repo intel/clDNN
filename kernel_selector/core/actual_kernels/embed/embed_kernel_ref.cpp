@@ -104,7 +104,7 @@ namespace kernel_selector
 
 		auto& kernel = kd.kernels[0];
 
-		FillCLKernelData(kernel, runInfo, params.engineInfo, kernelName, jit, entry_point, ROUND_ROBIN, true, !newParams.bias.empty());
+		FillCLKernelData(kernel, runInfo, params.engineInfo, kernelName, jit, entry_point, DEFAULT, true, !newParams.bias.empty());
 
 		kd.estimatedTime = runInfo.effiency;
 

@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -274,10 +274,15 @@ struct proposal_gpu : typed_primitive_impl<proposal>
             }
         }
 
+        if (swap_xy)
+        {
+            std::swap(img_w, img_h);
+        }
+
         // feat map sizes
         const auto& score_size = cls_scores.get_layout().size;
-        int fm_h = score_size.spatial[swap_xy ? 0 : 1];
-        int fm_w = score_size.spatial[swap_xy ? 1 : 0];
+        int fm_h = score_size.spatial[1];
+        int fm_w = score_size.spatial[0];
 
         int fm_sz = fm_w * fm_h;
 

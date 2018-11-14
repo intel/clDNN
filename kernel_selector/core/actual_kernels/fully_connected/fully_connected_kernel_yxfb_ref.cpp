@@ -39,8 +39,16 @@ namespace kernel_selector
 
     KernelsData FullyConnected_yxfb_ref::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, DataLayout::yxfb,
-            { WeightsLayout::io, WeightsLayout::oi, WeightsLayout::oiyx, WeightsLayout::oyxi, WeightsLayout::iyxo, WeightsLayout::yxio }
-        );
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, DataLayout::yxfb,
+                { WeightsLayout::io, WeightsLayout::oi, WeightsLayout::oiyx, WeightsLayout::oyxi, WeightsLayout::iyxo, WeightsLayout::yxio }, DONT_USE_IF_HAVE_SOMETHING_ELSE, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+        return res;
     }
 }

@@ -35,42 +35,35 @@ layout batch_norm_inst::calc_output_layout(batch_norm_node const& node)
 
 std::string batch_norm_inst::to_string(batch_norm_node const& node)
 {
-    auto desc      = node.get_primitive();
-    auto node_info = node.desc_to_json();
-    auto& mean     = node.mean();
-	auto& scale = node.scale();
-	auto& shift = node.shift();
     bool variance_term = node.variance_term();
-    auto& inv_var  = node.inv_variance();
 
     std::stringstream primitive_description;
-
     json_composite batch_norm_info;
     if (node.use_global_stats())
     {
-        batch_norm_info.add("mean_id", mean.id());
-
+        batch_norm_info.add("mean_id", node.mean().id());
         if (variance_term)
         {
             batch_norm_info.add("variance_id", node.variance().id());
         }
     }
-	if (node.use_scale_shift())
-	{
-		batch_norm_info.add("scale_id", scale.id());
-		batch_norm_info.add("shift_id", shift.id());
-	}
+    if (node.use_scale_shift())
+    {
+        batch_norm_info.add("scale_id", node.scale().id());
+        batch_norm_info.add("shift_id", node.shift().id());
+    }
     if (node.forwad_pass())
     {
-        batch_norm_info.add("inv_var", inv_var.id());
+        batch_norm_info.add("inv_var", node.inv_variance().id());
     }
-    batch_norm_info.add("epsilon", desc->epsilon);
+    batch_norm_info.add("epsilon", node.get_primitive()->epsilon);
 
-    node_info->add("batch norm info", batch_norm_info);
-    node_info->dump(primitive_description);
+    node.desc_to_json()->add("batch norm info", batch_norm_info);
+    node.desc_to_json()->dump(primitive_description);
 
     return primitive_description.str();
 }
+
 
 batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node const& node)
     :parent(network, node) 

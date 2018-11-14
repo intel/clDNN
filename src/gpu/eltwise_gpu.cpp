@@ -70,7 +70,7 @@ public:
 
         const auto& primitive = arg.get_primitive();
         if(primitive->with_activation)
-            convert_activation_func_params(primitive, ew_params);
+            convert_activation_func_params(primitive, ew_params.activation);
 
         ew_params.operations.push_back({ 
             { kernel_selector::eltwise_params::InputType::Buffer(0), kernel_selector::eltwise_params::InputType::Buffer(1) },

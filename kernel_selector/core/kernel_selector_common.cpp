@@ -240,6 +240,7 @@ namespace kernel_selector
         case PoolType::MAX: return "MAX";
         case PoolType::AVG: return "AVG";
         case PoolType::MAX_WITH_ARGMAX: return "MAX_WITH_ARGMAX";
+        case PoolType::BILINEAR: return "BILINEAR";
         default: return "";
         }
     }
@@ -386,13 +387,6 @@ namespace kernel_selector
         case IndexSelectAxis::Y:           return "INDEX_SELECT_AXIS_Y";
         default:                           return "";
         }
-    }
-
-    std::string toString(NonLinearParams params)
-    {
-        std::stringstream s;
-        s << "m" << params.m << "_n" << params.n;
-        return s.str();
     }
     
     std::string toString(const Tensor::Dim& dim)

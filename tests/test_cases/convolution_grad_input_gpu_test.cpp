@@ -198,8 +198,8 @@ TEST(convolution_grad_input_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_fus
     auto output_ptr = output_prim.pointer<float>();
 
     std::vector<float> expected_output_vec = {
-        -3.f, 5.5f, 15.f, -14.f,
-        4.5f, 27.f, 11.f, 0.f
+        -3.f, 5.5f, 14.f, -15.f,
+        4.5f, 27.f, 10.f, -1.f
     };
 
     for (unsigned int i = 0; i < expected_output_vec.size(); i++)

@@ -78,6 +78,7 @@ struct engine_info_internal : cldnn::engine_info
     architectures architecture;
     std::string dev_id;
     std::string driver_version;
+    std::uint32_t compute_units_count;
 private:
     friend class gpu_toolkit;
     explicit engine_info_internal(const gpu_toolkit& context);

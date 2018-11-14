@@ -23,7 +23,6 @@
 #include "data_inst.h"
 #include "reorder_inst.h"
 #include "generic_layer.hpp"
-#include <boost/filesystem.hpp>
 #include <sstream>
 
 #include "eltwise_inst.h"

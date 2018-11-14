@@ -59,7 +59,7 @@ namespace kernel_selector {
 
     KernelsData ConvolutionKernel_byxf_af32_depthiwise::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        KernelsData kd = GetCommonKernelsData(params, options);
+        KernelsData kd = GetTunedKernelsDataByIndex(params, options);
         if(!kd.empty())
             kd[0].estimatedTime = FORCE_PRIORITY_3;
         return kd;

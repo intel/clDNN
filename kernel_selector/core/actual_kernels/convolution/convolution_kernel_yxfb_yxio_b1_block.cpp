@@ -56,6 +56,6 @@ namespace kernel_selector
 
     KernelsData ConvolutionKernel_yxfb_yxio_b1_block::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options);
+        return GetTunedKernelsDataByIndex(params, options);
     }
 }

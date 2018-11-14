@@ -58,7 +58,7 @@ namespace kernel_selector
         return cldnn_jit;
     }
 
-    std::unique_ptr<FullyConnected_bs_f_bsv16_b1::FullyConnectedKernelBase::DispatchData> FullyConnected_bs_f_bsv16_b1::SetDefault(const fully_connected_params& arg) const
+    std::unique_ptr<FullyConnected_bs_f_bsv16_b1::FullyConnectedKernelBase::DispatchData> FullyConnected_bs_f_bsv16_b1::SetDefault(const fully_connected_params& arg, int ) const
     {
         auto run_info = boost::make_unique<DispatchData>(*FullyConnectedKernelBase::SetDefault(arg));
 
@@ -98,6 +98,16 @@ namespace kernel_selector
 
     KernelsData FullyConnected_bs_f_bsv16_b1::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
-        return GetCommonKernelsData(params, optParams, DataLayout::bf, {WeightsLayout::os_i_osv16}, FORCE_PRIORITY_5);
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, optParams, DataLayout::bf, { WeightsLayout::os_i_osv16 }, FORCE_PRIORITY_5, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+
+        return res;
     }
 }

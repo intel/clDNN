@@ -68,6 +68,23 @@ public:
             return false;
     }
 
+    program_node& fused_sum(size_t idx = 0) const
+    {
+        if (static_cast<int32_t>(idx) > 0)
+            throw std::range_error("Only one input for fused sum is supported");
+
+        size_t d_idx = 1 + this->get_split() + idx;
+        d_idx += bias_term() ? this->get_split() : 0;
+        return get_dependency(d_idx);
+    }
+
+    bool has_fused_sum() const
+    {
+        size_t d_idx = 1 + this->get_split();
+        d_idx += bias_term() ? this->get_split() : 0;
+        return dependencies.size() == (d_idx + 1);
+    }
+
 private:
     int32_t split;
     bool depthwise_sep_opt;

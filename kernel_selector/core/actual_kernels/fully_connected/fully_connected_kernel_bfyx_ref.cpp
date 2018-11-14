@@ -46,7 +46,7 @@ namespace kernel_selector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_bfyx_Ref::Parent::DispatchData> FullyConnected_bfyx_Ref::SetDefault(const fully_connected_params& params) const
+    std::unique_ptr<FullyConnected_bfyx_Ref::Parent::DispatchData> FullyConnected_bfyx_Ref::SetDefault(const fully_connected_params& params, int ) const
     {
         auto runInfo = Parent::SetDefault(params);
         
@@ -66,7 +66,18 @@ namespace kernel_selector
 
     KernelsData FullyConnected_bfyx_Ref::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, DataLayout::bfyx,
-        { WeightsLayout::oiyx, WeightsLayout::oyxi, WeightsLayout::iyxo, WeightsLayout::yxio });
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, DataLayout::bfyx,
+                { WeightsLayout::oiyx, WeightsLayout::oyxi, WeightsLayout::iyxo, WeightsLayout::yxio },
+                DONT_USE_IF_HAVE_SOMETHING_ELSE, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+
+        return res;
     }
 }

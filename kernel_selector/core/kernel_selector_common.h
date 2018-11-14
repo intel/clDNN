@@ -28,7 +28,8 @@
 #include <vector>
 
 #define AGE_BASED "-cl-no-subgroup-ifp"
-#define ROUND_ROBIN ""
+#define DEFAULT ""
+#define NO_PRERA_SCH "-cl-intel-no-prera-scheduling"
 
 namespace kernel_selector {
 
@@ -280,7 +281,6 @@ namespace kernel_selector {
     std::string toString(TileAxis a);
     std::string toString(SampleType type);
     std::string toString(const BorderType type);
-    std::string toString(NonLinearParams params);
     std::string toString(const Tensor::Dim& dim);
     std::string toString(const DataTensor& tensor);
     std::string toString(const IndexSelectAxis& axis);

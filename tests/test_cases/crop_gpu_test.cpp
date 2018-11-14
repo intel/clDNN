@@ -137,6 +137,53 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_all_bfyx) {
     }
 }
 
+TEST(crop_gpu, basic_in2x3x2x2_crop_all_fyxb) {
+    //  Reference  : 3x1x2x2
+    //  Input      : 6x2x4x3
+    //  Output     : 3x1x2x2
+
+    engine engine;
+
+    auto batch_num = 6;
+    auto feature_num = 2;
+    auto x_size = 4;
+    auto y_size = 3;
+
+    auto crop_batch_num = batch_num - 3;
+    auto crop_feature_num = feature_num - 1;
+    auto crop_x_size = x_size - 2;
+    auto crop_y_size = y_size - 1;
+
+    auto input = memory::allocate(engine, { data_types::f32,format::fyxb,{ batch_num, feature_num, x_size, y_size } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(crop("crop", "input", { crop_batch_num, crop_feature_num, crop_x_size, crop_y_size }, {0, 0, 0, 0} ));
+
+    std::vector<float> input_vec = generate_random_input<float>(batch_num, feature_num, y_size, x_size, -10, 10);
+    set_values(input, input_vec);
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+
+    auto output = outputs.at("crop").get_memory();
+    auto output_ptr = output.pointer<float>();
+    for (int b = 0; b < crop_batch_num; ++b) { //B
+        for (int f = 0; f < crop_feature_num; ++f) { //F
+            for (int y = 0; y < crop_y_size; ++y) { //Y
+                for (int x = 0; x < crop_x_size; ++x) { //X
+                    int linear_id = b + batch_num * (x + x_size * (y + y_size * f));
+                    int output_linear_id = b + crop_batch_num * (x + crop_x_size * (y + crop_y_size * f));
+                    EXPECT_EQ(output_ptr[output_linear_id], input_vec[linear_id]);
+                }
+            }
+        }
+    }
+}
+
 TEST(crop_gpu, basic_in2x3x2x2_crop_offsets) {
     //  Reference  : 1x2x2x1
     //  Offsets    : 1x0x1x1
@@ -145,8 +192,8 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_offsets) {
 
     //  Input:
     //  f0: b0:  1    2  -10   b1:   0    0    -11
-    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15  
-    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13     
+    //  f0: b0:  3    4  -14   b1:   0.5 -0.5  -15
+    //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
 
     engine engine;
@@ -206,7 +253,7 @@ TEST(crop_gpu, basic_in1x4x1x1_split) {
     // Tests split with crop implementation
     //                 _CROP_1(1x3x1x1,offset(0x0x0x0))
     //                |
-    //  INPUT(1x4x1x1)  
+    //  INPUT(1x4x1x1)
     //                |_
     //                  CROP_2(1x1x1x1,offset(0x3x0x0))
     //
@@ -282,7 +329,7 @@ TEST(crop_gpu, basic_in1x4x1x1_split_w_relu) {
     // Tests split with crop implementation
     //                        _ CROP_1(1x3x1x1,offset(0x0x0x0)) --> RELU
     //                       |
-    //  INPUT(1x4x1x1)--RELU  
+    //  INPUT(1x4x1x1)--RELU
     //                       |_
     //                          CROP_2(1x1x1x1,offset(0x3x0x0)) --> RELU
     //

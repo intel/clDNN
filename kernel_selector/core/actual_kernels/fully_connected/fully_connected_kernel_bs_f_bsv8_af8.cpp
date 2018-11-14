@@ -37,7 +37,7 @@ namespace kernel_selector
         return k;
     }
 
-    std::unique_ptr<FullyConnected_bs_f_bsv8_af8::DispatchData> FullyConnected_bs_f_bsv8_af8::SetDefault(const fully_connected_params& arg) const
+    std::unique_ptr<FullyConnected_bs_f_bsv8_af8::DispatchData> FullyConnected_bs_f_bsv8_af8::SetDefault(const fully_connected_params& arg, int ) const
     {
         auto kd = FullyConnectedBlockKernelBase::SetDefault(arg);
 
@@ -98,6 +98,16 @@ namespace kernel_selector
 
     KernelsData FullyConnected_bs_f_bsv8_af8::GetKernelsData(const Params& params, const optional_params& optParams) const
     {
-        return GetCommonKernelsData(params, optParams, DataLayout::bs_f_bsv8__af8, { WeightsLayout::os_i_osv8__ai8 }, FORCE_PRIORITY_4);
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, optParams, DataLayout::bs_f_bsv8__af8, { WeightsLayout::os_i_osv8__ai8 }, FORCE_PRIORITY_4, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+
+        return res;
     }
 }

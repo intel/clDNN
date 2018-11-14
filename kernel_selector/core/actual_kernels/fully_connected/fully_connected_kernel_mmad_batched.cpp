@@ -87,7 +87,7 @@ namespace kernel_selector
         return jit;
     }
 
-    std::unique_ptr<FullyConnected_mmad_batched::Parent::DispatchData> FullyConnected_mmad_batched::SetDefault(const fully_connected_params& params) const
+    std::unique_ptr<FullyConnected_mmad_batched::Parent::DispatchData> FullyConnected_mmad_batched::SetDefault(const fully_connected_params& params, int) const
     {
         auto runInfo = Parent::SetDefault(params);
         
@@ -110,7 +110,16 @@ namespace kernel_selector
 
     KernelsData FullyConnected_mmad_batched::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, DataLayout::fs_bs_yx_bsv4_fsv32,
-        { WeightsLayout::os_is_yx_isa8_osv8_isv4 }, FORCE_PRIORITY_1);
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, DataLayout::fs_bs_yx_bsv4_fsv32,
+                { WeightsLayout::os_is_yx_isa8_osv8_isv4 }, FORCE_PRIORITY_1, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+        return res;
     }
 }

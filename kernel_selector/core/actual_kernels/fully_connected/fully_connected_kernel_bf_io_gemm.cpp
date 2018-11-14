@@ -37,9 +37,9 @@ namespace kernel_selector {
         return k;
     }
 
-    std::unique_ptr<FullyConnected_bf_io_GEMM::Parent::DispatchData> FullyConnected_bf_io_GEMM::SetDefault(const fully_connected_params& params) const
+    std::unique_ptr<FullyConnected_bf_io_GEMM::Parent::DispatchData> FullyConnected_bf_io_GEMM::SetDefault(const fully_connected_params& params, int autoTuneIndex) const
     {
-        auto runInfo = Parent::SetDefault(params);
+        auto runInfo = Parent::SetDefault(params, autoTuneIndex);
 
         const uint32_t localWorkSizeX = 64;
         const uint32_t globalWorkSizeX = localWorkSizeX;
@@ -88,6 +88,16 @@ namespace kernel_selector {
 
     KernelsData FullyConnected_bf_io_GEMM::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, DataLayout::bf, { WeightsLayout::oiyx }, FORCE_PRIORITY_6);
+        KernelsData res = {};
+        for (size_t i = 0; i < autoTuneOptions.size(); i++)
+        {
+            KernelsData kd = GetTunedKernelsDataByIndex(params, options, DataLayout::bf, { WeightsLayout::oiyx }, FORCE_PRIORITY_6, (int)i);
+            if (!kd.empty())
+            {
+                res.emplace_back(kd[0]);
+            }
+        }
+
+        return res;
     }
 }

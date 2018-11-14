@@ -23,26 +23,28 @@
 
 namespace kernel_selector 
 {
-    // SKL GT4e
-    void tuning_cache_193B(tuning_data&);
-    void tuning_cache_193B_B1_B16(tuning_data&);
-    void tuning_cache_193B_B8(tuning_data&);
-    void tuning_cache_193B_B32_B64(tuning_data&);
-    //SKL GT2
-    void tuning_cache_1912(tuning_data&);
-    void tuning_cache_1912_B1_B16(tuning_data&);
-    void tuning_cache_1912_B8(tuning_data&);
-    void tuning_cache_1912_B32_B64(tuning_data&);
-    //KBL GT3e
-    void tuning_cache_5927(tuning_data&);
-    void tuning_cache_5927_B1(tuning_data&);
-    //ICL GT2
-    void tuning_cache_8A52(tuning_data&);
-    void tuning_cache_8A52_B1_B16(tuning_data&);
-    //APL 10W
-    void tuning_cache_5A84(tuning_data&);
-    // Device ID for APL E3930.
-    void tuning_cache_5A85(tuning_data&);
+    //72 compute units GT4e
+    void tuning_cache_72(tuning_data&);
+    void tuning_cache_72_1(tuning_data&);
+    void tuning_cache_72_2(tuning_data&);
+    void tuning_cache_72_3(tuning_data&);
+    //24 Compute units GT2
+    void tuning_cache_24(tuning_data&);
+    void tuning_cache_24_1(tuning_data&);
+    void tuning_cache_24_2(tuning_data&);
+    void tuning_cache_24_3(tuning_data&);
+    //48 Compute units GT3e 
+    void tuning_cache_48(tuning_data&);
+    void tuning_cache_48_1(tuning_data&);
+    void tuning_cache_48_2(tuning_data&);
+    void tuning_cache_48_3(tuning_data&);
+    //64 Compute units ICL GT2
+    void tuning_cache_64(tuning_data&);
+    void tuning_cache_64_1(tuning_data&);
+    //APL 
+    void tuning_cache_18(tuning_data&);
+    //APL E3930.
+    void tuning_cache_12(tuning_data&);
 
     class auto_tuner_offline
     {
@@ -52,22 +54,21 @@ namespace kernel_selector
         auto_tuner_offline() = delete;
         // this is singleton implementation, if called twice with different parameter, 
         // second call param will be ignored
-        auto_tuner_offline(const std::string& hw_id);
+        auto_tuner_offline(const uint32_t computeUnitsCount);
         tuning_data t_data;
 
-        const std::map<std::string, void(*)(tuning_data&)> sku_cache_fillers
+        const std::map<uint32_t, void(*)(tuning_data&)> sku_cache_fillers
         {
-            { "0x193B" , tuning_cache_193B },
-            { "0x1912" , tuning_cache_1912 },
-            { "0x5927" , tuning_cache_5927 },
-            { "0x8A52" , tuning_cache_8A52 },
-            { "0x5A84" , tuning_cache_5A84 },
-            { "0x5A85" , tuning_cache_5A84 },
-            { "0x3184" , tuning_cache_5A84 },
+            { 72 , tuning_cache_72 },
+            { 24 , tuning_cache_24 },
+            { 48 , tuning_cache_48 },
+            { 64 , tuning_cache_64 },
+            { 18 , tuning_cache_18 },
+            { 12 , tuning_cache_18 },
         };
 
     public:
-        static std::shared_ptr<auto_tuner_offline> get_instance(const std::string& hw_id);
+        static std::shared_ptr<auto_tuner_offline> get_instance(const uint32_t computeUnitsCount);
         tuning_data get_tuning_data() const { return t_data; }
    };
 }

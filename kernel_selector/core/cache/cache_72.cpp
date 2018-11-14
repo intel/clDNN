@@ -18,12 +18,11 @@
 #include "auto_tuner_offline.h"
 namespace kernel_selector 
 {
-    //SKL GT2
-    void tuning_cache_1912_B32_B64(tuning_data& td)
+    // SKL GT4e
+    void tuning_cache_72(tuning_data& td)
     {
-        td.td.insert({
-            
-            { "9500850790449116723", std::make_tuple("convolution_gpu_bfyx_os_iyx_osv16", 16) },
-            });
+        tuning_cache_72_1(td);
+        tuning_cache_72_2(td);
+        tuning_cache_72_3(td);
     }
 }

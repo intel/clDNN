@@ -42,7 +42,8 @@ void prepare_buffer_fusing::run(program_impl &p)
     {
         auto& node = (*itr++);
 
-        if (node->is_output())
+        if (node->is_output() ||
+           (node->fused_activation.activation_func != cldnn_activation_func_t::activation_none))
             continue;
 
         program_helpers::do_for_types<concatenation>(*node, [&p, is_debug](concatenation_node& node)
@@ -207,7 +208,8 @@ void prepare_buffer_fusing::run(program_impl &p)
         program_helpers::do_for_types<reshape>(*node, [&p](reshape_node& node)
         {
             node.get_output_layout();
-            if (node.is_in_place())
+            if (node.is_in_place()
+                && node.get_fused_activation_func() == activation_none)
                 node.can_be_optimized(true);
         });
         program_helpers::do_for_types<reorder>(*node, [&p](reorder_node& node)

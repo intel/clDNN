@@ -88,7 +88,7 @@ namespace kernel_selector {
 
     KernelsData ConvolutionKernel_mmad_batched::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        KernelsData kd = GetCommonKernelsData(params, options);
+        KernelsData kd = GetTunedKernelsDataByIndex(params, options);
         if(!kd.empty())
             kd[0].estimatedTime = FORCE_PRIORITY_6;
         return kd;

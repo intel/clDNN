@@ -109,6 +109,6 @@ namespace kernel_selector {
 
     KernelsData ConvolutionKernel_bfyx_Direct_10_10_12::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, AGE_BASED);
+        return GetTunedKernelsDataByIndex(params, options);
     }
 }

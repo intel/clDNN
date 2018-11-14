@@ -30,4 +30,5 @@ namespace kernel_selector
 
         return cldnnJit;
     }
+
 }
