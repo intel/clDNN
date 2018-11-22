@@ -26,7 +26,7 @@ namespace kernel_selector
         uint32_t temp_compute_units_count = compute_units_count;
         // TODO: this is temporary solution of cases where user has non-tuned configuration. needs to implement better logic
         // i.e. create table with number of eu's configuration that will point to common cache.
-        if (compute_units_count == 0)
+        if (sku_cache_fillers.find(compute_units_count) == sku_cache_fillers.end())
             temp_compute_units_count = 24;
         sku_cache_fillers.at(temp_compute_units_count)(t_data);
     }

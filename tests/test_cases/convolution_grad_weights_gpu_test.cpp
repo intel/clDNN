@@ -275,10 +275,12 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_p
         mutable_data("biases", biases),
         convolution("conv", "input_reordered", { "weights" }, { "biases" }, { 1, 1, 1, 1 }, { 0, 0, -1, -1 }),
         convolution_grad_input("conv_grad_input", "conv", { "weights" }, { 1, 1, 1, 1 }, { 0, 0, -1, -1 }),
-        convolution_grad_weights("conv_grad_weights", "conv", "input_reordered", { "weights" }, { "biases" }, { 1, 1, 1, 1 }, { 0, 0, -1, -1 })
+        convolution_grad_weights("conv_grad_weights", "conv", "input_reordered", { "weights" }, { "biases" }, { 1, 1, 1, 1 },
+        { 0, 0, -1, -1 }, { 1,1,1,1 }, "conv_grad_input")
     );
-
-    network network(engine, topology);
+    build_options opt;
+    opt.set_option(build_option::outputs({ "conv_grad_input", "conv_grad_weights" }));
+    network network(engine, topology, opt);
     network.set_input_data("input", input);
     network.set_learning_rate(lr);
 

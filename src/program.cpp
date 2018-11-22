@@ -406,6 +406,36 @@ void program_impl::replace_nodes_pre()
                 get_or_create(crop_prim);
             }
         }
+
+        // Create second part detection output primitive and replace nodes names - do it only once
+        if ((options.get<build_option_type::detection_output_gpu>()->enabled()) &&
+            (node->is_type<detection_output>()) &&
+            (node->id().find("_pre") == std::string::npos))
+        {
+            auto detect_out_prim = node->as<detection_output>().typed_desc();
+
+            // Create new primitive, "keep top k" part of detection output
+            auto detect_out_sort_prim = std::make_shared<detection_output_sort>(
+                DETECTION_OUTPUT_NODE_NAME_TMP,
+                detect_out_prim->input[0],
+                // not important params here - it will be set during "primitive_impl* create" func in "detection_output_sort_gpu"
+                0,      // num_images
+                0,      // num_classes
+                0,      // keep_top_k
+                false,  // share_location
+                0,      // top_k
+                -1,     // background_label_id
+                detect_out_prim->output_padding);
+
+            get_or_create(detect_out_sort_prim);
+
+            auto sort_node = nodes_map.find(DETECTION_OUTPUT_NODE_NAME_TMP)->second;
+
+            // Replace nodes name - so primitive with output for user will have proper id
+            const primitive_id detect_out_node_name = node->id();
+            rename(*node, detect_out_node_name + "_pre");
+            rename(*sort_node, detect_out_node_name);
+        }
     }
 }
 
@@ -664,6 +694,22 @@ void program_impl::replace_nodes_post()
             nodes_map.erase(rename_id);
 
             continue;
+        }
+
+        if (options.get<build_option_type::detection_output_gpu>()->enabled() && 
+            node->is_type<detection_output>())
+        {
+            auto sort_node = nodes_map.find(node->get_org_primitive_id())->second;
+
+            // Add connection to second part of detection output
+            if (node->get_users().size())
+            {
+                add_intermediate(*sort_node, *node->get_users().front(), 0, false);
+            }
+            else
+            {
+                add_connection(*node, *sort_node);
+            }
         }
     }
 }

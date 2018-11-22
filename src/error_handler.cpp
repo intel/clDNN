@@ -43,9 +43,9 @@ void err_details::cldnn_print_error_message(const std::string& file, int line, c
 
 void error_message(const std::string& file, int line, const std::string& instance_id, const std::string& message)
 {
-        std::stringstream error_msg;
-        error_msg << message << std::endl;
-        err_details::cldnn_print_error_message(file, line, instance_id, error_msg);
+    std::stringstream error_msg;
+    error_msg << message << std::endl;
+    err_details::cldnn_print_error_message(file, line, instance_id, error_msg);
 }
 
 void error_on_not_supported_fp16(const std::string& file, int line, const std::string& instance_id, uint8_t supp_fp16, bool fp16_used)

@@ -49,6 +49,9 @@ engine_impl::engine_impl(const engine_configuration& conf)
     , _memory_pool(*this)
 { }
 
+engine_impl::~engine_impl()
+{ }
+
 memory_impl::ptr engine_impl::allocate_memory(layout layout)
 {
     return _memory_pool.get_memory(layout);

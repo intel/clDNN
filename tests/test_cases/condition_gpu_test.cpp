@@ -233,7 +233,7 @@ std::pair<std::vector<float>, std::vector<float>> get_values_to_compare(const cl
     return { ret_true, ret_false };
 }
 
-TEST(condition_gpu, generic_test_true_false) {
+TEST(DISABLED_condition_gpu, generic_test_true_false) {
 
     engine engine;
     build_options bs;

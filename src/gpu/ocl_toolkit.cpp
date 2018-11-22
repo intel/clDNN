@@ -18,6 +18,7 @@
 #include "ocl_toolkit.h"
 #include "ocl_base_event.h"
 #include "ocl_user_event.h"
+#include "command_queues_builder.h"
 
 #include <cassert>
 #include <iomanip>
@@ -181,111 +182,14 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
     , _device(get_gpu_device(config, _platform_id))
     , _neo_driver(strstr(get_device_version().c_str(), "NEO") ? true : false)
     , _context(_device)
-    , _command_queue(_context,
-                     _device,
-                     (config.enable_profiling
-                        ? cl::QueueProperties::Profiling
-                        : cl::QueueProperties::None) | 
-                     (config.host_out_of_order && _neo_driver
-                        ? cl::QueueProperties::OutOfOrder
-                        : cl::QueueProperties::None))
     , _engine_info(*this)
     , _kernels_cache(*this)
 {
     _device.getInfo(CL_DEVICE_EXTENSIONS, &_extensions);
 
-    cl_command_queue_properties queue_properties =
-        ((config.enable_profiling) ?
-            CL_QUEUE_PROFILING_ENABLE :
-            0) |
-            ((config.host_out_of_order &&
-                _neo_driver) ?
-                CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE :
-                0);
-
-    if (_configuration.priority_mode != cldnn_priority_disabled)
-    {
-        if (extension_supported("cl_khr_priority_hints") &&
-            extension_supported("cl_intelx_create_command_queue"))
-            // TODO add check when caps will be availible (instead of cl_intelx_create_command_queue)
-            //&& extension_supported("cl_khr_create_command_queue"))
-        {
-            // TODO: When cl_khr_create_command_queue will be availible the
-            // function name will change to clCreateCommandQueueWithPropertiesKHR
-            // in place of clCreateCommandQueueWithPropertiesINTEL.
-#ifndef WIN32
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-            pfn_clCreateCommandQueueWithPropertiesINTEL clCreateCommandQueueWithPropertiesINTEL =
-                (pfn_clCreateCommandQueueWithPropertiesINTEL)clGetExtensionFunctionAddressForPlatform(
-                    _platform_id,
-                    "clCreateCommandQueueWithPropertiesINTEL");
-#ifndef WIN32
-    #pragma GCC diagnostic pop
-#endif
-            unsigned cl_queue_priority_value = CL_QUEUE_PRIORITY_MED_KHR;
-
-            switch (_configuration.priority_mode)
-            {
-            case cldnn_priority_high:
-                cl_queue_priority_value = CL_QUEUE_PRIORITY_HIGH_KHR;
-                break;
-            case cldnn_priority_low:
-                cl_queue_priority_value = CL_QUEUE_PRIORITY_LOW_KHR;
-                break;
-            default:
-                break;
-            }
-
-            cl_int error_code = CL_SUCCESS;
-            cl_queue_properties properties_low[] = {
-                CL_QUEUE_PRIORITY_KHR, cl_queue_priority_value,
-                CL_QUEUE_PROPERTIES, queue_properties,
-                0 };
-
-            _command_queue = clCreateCommandQueueWithPropertiesINTEL(
-                _context.get(),
-                _device.get(),
-                properties_low,
-                &error_code);
-
-            if (error_code != CL_SUCCESS) {
-                throw std::runtime_error("clCreateCommandQueueWithPropertiesINTEL error " + std::to_string(error_code));
-            }
-        }
-        else
-        {
-            throw std::invalid_argument(
-                "The param priority_mode is set in engine_configuration,\
-                 but cl_khr_priority_hints or cl_khr_create_command_queue\
-                 is not supported by current OpenCL implementation.");
-        }
-    }
-    else
-    {
-        _command_queue = cl::CommandQueue(_context, _device, queue_properties);
-    }
-
-    if (_configuration.throttle_mode != cldnn_throttle_disabled)
-    {
-        if (extension_supported("cl_khr_throttle_hints"))
-        {
-            throw std::invalid_argument(
-                "The param throttle_mode is set in engine_configuration,\
-                 but it is placeholder for future use. It has no effect for now\
-                 and should be set to cldnn_throttle_disabled");
-        }
-        else
-        {
-            throw std::invalid_argument(
-                "The param throttle_mode is set in engine_configuration,\
-                 but cl_khr_throttle_hints is not supported by current OpenCL implementation.");
-        }
-    }
+    build_command_queues(config);
 
     _logger = std::unique_ptr<ocl_logger>(new ocl_logger());
-
     if (logging_enabled())
     {
         open_log()
@@ -315,6 +219,24 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
             << "    subgroups short: "     << std::boolalpha << (_engine_info.supports_subgroups_short != 0) << "\n"
             << std::endl;
     }
+}
+
+void cldnn::gpu::gpu_toolkit::build_command_queues(const configuration& config)
+{
+    command_queues_builder queue_builder(_context, _device, _platform_id);
+    queue_builder.set_profiling(config.enable_profiling);
+    queue_builder.set_out_of_order((config.host_out_of_order && _neo_driver));
+    // TODO add check when caps will be availible (instead of cl_intelx_create_command_queue)
+    //&& extension_supported("cl_khr_create_command_queue"))
+    bool priorty_extensions = extension_supported("cl_khr_priority_hints") && extension_supported("cl_intelx_create_command_queue");
+    queue_builder.set_priority_mode(config.priority_mode, priorty_extensions);
+
+    bool throttle_extensions = extension_supported("cl_khr_throttle_hints") && extension_supported("cl_intelx_create_command_queue");
+    queue_builder.set_throttle_mode(config.throttle_mode, throttle_extensions);
+
+    queue_builder.build();
+
+    _command_queue = queue_builder.queue();
 }
 
 event_impl::ptr gpu_toolkit::enqueue_kernel(cl::Kernel const& kern, cl::NDRange const& global, cl::NDRange const& local, std::vector<event_impl::ptr> const & deps)

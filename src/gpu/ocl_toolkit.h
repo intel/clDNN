@@ -125,7 +125,7 @@ public:
     void store_binaries(kernels_binaries_vector binaries) { _binaries.push_back(binaries); }
     bool get_serialization_flag() { return _serialize; }
     void set_serialization_flag(bool serialization_flag) { _serialize = serialization_flag; }
-    
+
     inline bool extension_supported(const std::string ext) { return _extensions.find(ext) != std::string::npos; }
 
     gpu_toolkit(const gpu_toolkit& other) = delete;
@@ -175,6 +175,8 @@ private:
     std::ofstream& open_log();
 
     std::string get_device_version() { return _device.getInfo<CL_DEVICE_VERSION>(); }
+
+    void build_command_queues(const configuration& config);
 };
 
 }}

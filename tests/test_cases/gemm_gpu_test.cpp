@@ -255,7 +255,7 @@ TEST(gemm_gpu, basic_input3_t1t2) {
     engine engine;
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 3 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 2 } });
-    auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 2 } });
+    auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
     float alpha = 2.f;
     float beta = 3.f;
 
@@ -272,8 +272,10 @@ TEST(gemm_gpu, basic_input3_t1t2) {
     };
 
     std::vector<float> input3_data = {
-        1.0f, 0.0f, 1.0f, 0.0f,
-        2.0f, 2.0f, 1.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        2.0f, 2.0f,
+        1.0f, 1.0f,
     };
 
     set_values(input, input_data);
@@ -281,8 +283,10 @@ TEST(gemm_gpu, basic_input3_t1t2) {
     set_values(input3, input3_data);
 
     std::vector<float> out_data = {
-        15.0f, 12.0f, 27.0f, 24.0f,
-        12.0f, 14.0f, 17.0f, 19.0f,
+        15.0f, 6.0f,
+        15.0f, 8.0f,
+        30.0f, 20.0f,
+        27.0f, 19.0f
     };
 
     topology topology;
@@ -314,6 +318,215 @@ TEST(gemm_gpu, basic_input3_t1t2) {
         EXPECT_FLOAT_EQ(output_ptr[i], out_data[i]);
     }
 }
+TEST(gemm_gpu, basic_input3_1) {
+    engine engine;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 4 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 3 } });
+    auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
+    float alpha = 2.f;
+    float beta = 3.f;
+
+    std::vector<float> input_data = {
+        1.0f, 1.0f, 0.0f,
+        2.0f, 0.0f, 0.0f,
+        3.0f, 1.0f, 0.0f,
+        4.0f, 0.0f, 0.0f
+    };
+
+    std::vector<float> input_data2 = {
+        3.0f, 2.0f,
+        3.0f, 1.0f,
+        1.0f, 2.0f,
+    };
+
+    std::vector<float> input3_data = {
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        2.0f, 2.0f,
+        1.0f, 1.0f,
+    };
+
+    set_values(input, input_data);
+    set_values(input2, input_data2);
+    set_values(input3, input3_data);
+
+    std::vector<float> out_data = {
+        15.0f, 6.0f,
+        15.0f, 8.0f,
+        30.0f, 20.0f,
+        27.0f, 19.0f
+    };
+
+    topology topology;
+    topology.add(
+        input_layout("input", input.get_layout())
+    );
+    topology.add(
+        input_layout("input2", input2.get_layout())
+    );
+    topology.add(
+        input_layout("input3", input3.get_layout())
+    );
+    topology.add(
+        gemm("output", "input", "input2", "input3", false, false, alpha, beta)
+
+    );
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("input3", input3);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("output").get_memory();
+    auto output_ptr = output.pointer<float>();
+
+    EXPECT_EQ(output_ptr.size(), (uint32_t)8);
+
+    for (uint32_t i = 0; i < out_data.size(); ++i) {
+        EXPECT_FLOAT_EQ(output_ptr[i], out_data[i]);
+    }
+}
+
+TEST(gemm_gpu, basic_input3_t2) {
+    engine engine;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 4 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 2 } });
+    auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
+    float alpha = 2.f;
+    float beta = 3.f;
+
+
+    std::vector<float> input_data = {
+        1.0f, 1.0f, 0.0f,
+        2.0f, 0.0f, 0.0f,
+        3.0f, 1.0f, 0.0f,
+        4.0f, 0.0f, 0.0f
+    };
+
+
+    std::vector<float> input_data2 = {
+        3.0f, 3.0f, 1.0f,
+        2.0f, 1.0f, 2.0f,
+    };
+
+    std::vector<float> input3_data = {
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        2.0f, 2.0f,
+        1.0f, 1.0f,
+    };
+
+    set_values(input, input_data);
+    set_values(input2, input_data2);
+    set_values(input3, input3_data);
+
+    std::vector<float> out_data = {
+        15.0f, 6.0f,
+        15.0f, 8.0f,
+        30.0f, 20.0f,
+        27.0f, 19.0f,
+    };
+
+    topology topology;
+    topology.add(
+        input_layout("input", input.get_layout())
+    );
+    topology.add(
+        input_layout("input2", input2.get_layout())
+    );
+    topology.add(
+        input_layout("input3", input3.get_layout())
+    );
+    topology.add(
+        gemm("output", "input", "input2", "input3", false, true, alpha, beta)
+    );
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("input3", input3);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("output").get_memory();
+    auto output_ptr = output.pointer<float>();
+
+    EXPECT_EQ(output_ptr.size(), (uint32_t)8);
+
+    for (uint32_t i = 0; i < out_data.size(); ++i) {
+        EXPECT_FLOAT_EQ(output_ptr[i], out_data[i]);
+    }
+}
+
+TEST(gemm_gpu, basic_input3_t1) {
+    engine engine;
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 3 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 3 } });
+    auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
+    float alpha = 2.f;
+    float beta = 3.f;
+
+
+    std::vector<float> input_data = {
+        1.0f, 2.0f, 3.0f, 4.0f,
+        1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f
+    };
+
+    std::vector<float> input_data2 = {
+        3.0f, 2.0f,
+        3.0f, 1.0f,
+        1.0f, 2.0f
+    };
+
+    std::vector<float> input3_data = {
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        2.0f, 2.0f,
+        1.0f, 1.0f,
+    };
+
+    set_values(input, input_data);
+    set_values(input2, input_data2);
+    set_values(input3, input3_data);
+
+    std::vector<float> out_data = {
+        15.0f, 6.0f,
+        15.0f, 8.0f,
+        30.0f, 20.0f,
+        27.0f, 19.0f,
+    };
+
+    topology topology;
+    topology.add(
+        input_layout("input", input.get_layout())
+    );
+    topology.add(
+        input_layout("input2", input2.get_layout())
+    );
+    topology.add(
+        input_layout("input3", input3.get_layout())
+    );
+    topology.add(
+        gemm("output", "input", "input2", "input3", true, false, alpha, beta)
+    );
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("input3", input3);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("output").get_memory();
+    auto output_ptr = output.pointer<float>();
+
+    EXPECT_EQ(output_ptr.size(), (uint32_t)8);
+
+    for (uint32_t i = 0; i < out_data.size(); ++i) {
+        EXPECT_FLOAT_EQ(output_ptr[i], out_data[i]);
+    }
+}
+
 TEST(gemm_gpu, basic_bfyx) {
     engine engine;
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 4, 3 } });

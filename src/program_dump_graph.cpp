@@ -24,6 +24,8 @@
 
 #include "gpu/ocl_toolkit.h"
 
+#include "to_string_utils.h"
+
 #include <algorithm>
 #include <vector>
 
@@ -157,12 +159,12 @@ namespace cldnn
         graph.close();
     }
 
-    std::string get_node_id(program_node* ptr)
+    std::string get_node_id(const program_node* ptr)
     {
         return "node_" + std::to_string(reinterpret_cast<uintptr_t>(ptr));
     }
 
-    void dump_full_node(std::ofstream& out, program_node* node)
+    void dump_full_node(std::ofstream& out, const program_node* node)
     {
         out << node->type()->to_string(*node);
     }
@@ -198,53 +200,11 @@ namespace cldnn
     {
         const auto extr_oformat = [](program_node* ptr)
         {
-            std::string out = "";
-            switch (ptr->get_output_layout().format)
-            {
-            case format::yxfb: out = "yxfb"; break;
-            case format::byxf: out = "byxf"; break;
-            case format::bfyx: out = "bfyx"; break;
-            case format::fyxb: out = "fyxb"; break;
-            case format::os_iyx_osv16: out = "os_iyx_osv16"; break;
-            case format::bs_xs_xsv8_bsv8: out = "bs_xs_xsv8_bsv8"; break;
-            case format::bs_xs_xsv8_bsv16: out = "bs_xs_xsv8_bsv16"; break;
-            case format::bs_x_bsv16: out = "bs_x_bsv16"; break;
-            case format::bf8_xy16: out = "bf8_xy16"; break;
-            case format::image_2d_weights_c1_b_fyx: out = "image_2d_weights_c1_b_fyx"; break;
-            case format::image_2d_weights_c4_fyx_b: out = "image_2d_weights_c4_fyx_b"; break;
-            case format::image_2d_weights_winograd_6x3_s1_fbxyb: out = "image_2d_weights_winograd_6x3_s1_fbxyb"; break;
-            case format::image_2d_weights_winograd_6x3_s1_xfbyb: out = "image_2d_weights_winograd_6x3_s1_xfbyb"; break;
-            case format::os_is_yx_isa8_osv8_isv4: out = "os_is_yx_isa8_osv8_isv4"; break;
-            case format::is_o_yx_isv32: out = "is_o_yx_isv32"; break;
-            case format::os_is_y_x8_osv8_isv4: out = "os_is_y_x8_osv8_isv4"; break;
-            case format::byxf_af32: out = "byxf_af32"; break;
-            case format::byx8_f4: out = "byx8_f8"; break;
-            case format::fs_bs_yx_bsv4_fsv32: out = "fs_bs_yx_bsv4_fsv32"; break;
-            case format::any: out = "any"; break;
-            default:
-                out = "unk format";
-                break;
-            }
+            std::string out = fmt_to_str(ptr->get_output_layout().format);
 
             if (!ptr->is_valid_output_layout())
                 out += " (invalid)";
 
-            return out;
-        };
-
-        const auto extr_data_type = [](program_node* ptr)
-        {
-            std::string out = "";
-            switch (ptr->get_output_layout().data_type)
-            {
-            case data_types::i8: out = "i8"; break;
-            case data_types::u8: out = "u8"; break;
-            case data_types::f16: out = "f16"; break;
-            case data_types::f32: out = "f32"; break;
-            default:
-                out = "unknown data_type";
-                break;
-            }
             return out;
         };
 
@@ -279,14 +239,18 @@ namespace cldnn
                 #pragma clang diagnostic push
                 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
             #endif
-            std::string node_type = get_extr_type(typeid(*node).name());
-            graph << "    " << get_node_id(node.get()) << "[label=\"" << node->id() << ":\n" << node_type << "\n out format: " + extr_oformat(node.get())
-                << "\n out data_type: " + extr_data_type(node.get())
+            auto& node_type = typeid(*node);
+            std::string node_type_name = get_extr_type(node_type.name());
+            graph << "    " << get_node_id(node.get()) << "[label=\"" << node->id() << ":\n" << node_type_name << "\n out format: " + extr_oformat(node.get())
+                << "\n out data_type: " + dt_to_str(node.get()->get_output_layout().data_type)
                 << "\\nprocessing number: " << node->get_processing_num() << "\\n color:" << (node->is_reusing_memory() ? std::to_string(node->get_reused_memory_color()) : "none")
                 << (node->can_be_optimized() ? "\\n optimized out" : "");
-            if (node_type != "struct cldnn::data" && node_type != "struct cldnn::input_layout" && !node->can_be_optimized())
+
+            if (node_type_name != "struct cldnn::data" && node_type_name != "struct cldnn::input_layout" && !node->can_be_optimized())
+            {
                 graph << "\\n Selected kernel: " << (node->get_selected_impl() == nullptr ? "none" : node->get_selected_impl().get()->get_kernel_name()
                     + "\n" + dump_mem_info(node.get()));
+            }
             graph << "\"";
             #ifdef __clang__
                 #pragma clang diagnostic pop

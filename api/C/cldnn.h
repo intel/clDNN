@@ -157,7 +157,7 @@ typedef struct
     const char* engine_log;                             ///< Specifies a file to which engine log should be dumped. Null/empty values means no logging.
     const char* sources_dumps_dir;                      ///< Specifies a directory where sources of cldnn::program objects should be dumped. Null/empty values means no loggins.
     /*cldnn_priority_mode_type*/ int16_t priority_mode; ///< Priority mode (support of OpenCL priority hints in command queue).
-    /*cldnn_throttle_mode_type*/ int16_t throttle_mode; ///< Placeholder for throttle mode (support of throttle hints in command queue). It has no effect for now and should be set to cldnn_throttle_disabled.
+    /*cldnn_throttle_mode_type*/ int16_t throttle_mode; ///< Throttle mode (support of throttle hints in command queue).
     uint32_t enable_memory_pool;                        ///< Enables memory usage optimization. memory objects will be reused when possible. 
 }  cldnn_engine_configuration;
 
@@ -212,7 +212,8 @@ typedef enum /*:int32_t*/
     cldnn_build_option_graph_dumps_dir,         ///< Specifies a directory to which stages of network compilation should be dumped.
     cldnn_build_option_serialization,           ///< Specifies a name of files to which serialization should be dumped.
     cldnn_build_option_load_program,            ///< Specifies a name of load_program process.
-    cldnn_build_option_learning_config          ///< User defined learning parameters.
+    cldnn_build_option_learning_config,         ///< User defined learning parameters.
+    cldnn_build_option_detection_output_gpu     ///< Run detection output layer always on GPU, regardless performance
 } cldnn_build_option_type;
 
 /// @brief Tuning modes.

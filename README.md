@@ -44,6 +44,20 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 11.0
+    New features:
+    - throttle hints
+    - extended border and tile
+    - GPU implementation of Detection Output
+	- More cases for BatchNorm primitive
+    Bug fixes:
+    - GEMM fix (align with ONNX)
+	- memory leak fix in memory pool
+	- increase FC precision for fp16 (fp32 accu) 
+    Performance:
+    - cache for new topologies and devices
+    - conv1x1 with stride >1 into eltwise optimization 
+
 ### Drop 10.0
     New features:
     - condition primitive

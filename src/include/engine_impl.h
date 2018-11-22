@@ -22,7 +22,6 @@
 #include "refcounted_obj.h"
 #include "implementation_map.h"
 #include "memory_pool.h"
-
 #include "gpu/engine_info.h"
 
 #include <memory>
@@ -49,7 +48,7 @@ struct engine_impl : public refcounted_obj<engine_impl>
 {
 public:
     engine_impl(const engine_configuration& conf);
-
+    ~engine_impl();
     engine_types type() const { return engine_types::ocl; }
 
     refcounted_obj_ptr<memory_impl> allocate_memory(layout layout);
