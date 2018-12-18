@@ -15,9 +15,15 @@
 */
 #pragma once
 #include <cstdint>
+#include <memory>
 #include "api/CPP/engine.hpp"
+#include "document.h"
 
-namespace cldnn { namespace gpu {
+
+
+
+namespace cldnn {
+    namespace gpu {
 
 class gpu_toolkit;
 struct engine_info_internal : cldnn::engine_info
@@ -79,6 +85,8 @@ struct engine_info_internal : cldnn::engine_info
     std::string dev_id;
     std::string driver_version;
     std::uint32_t compute_units_count;
+    std::shared_ptr<rapidjson::Document> device_cache; 
+
 private:
     friend class gpu_toolkit;
     explicit engine_info_internal(const gpu_toolkit& context);

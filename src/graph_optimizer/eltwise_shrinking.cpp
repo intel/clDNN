@@ -52,7 +52,7 @@ void eltwise_shrinking::run(program_impl &p)
                         break;
                     }
 
-                    auto weights_node_ptr = p.nodes_map.find(conv->weights[0])->second;
+                    auto weights_node_ptr = p.get_node_ptr(conv->weights[0]);
                     auto filter_size = weights_node_ptr->get_output_layout().size;
                     // make sure this is conv 1x1
                     if (filter_size.spatial[0] != 1 || filter_size.spatial[1] != 1)

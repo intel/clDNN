@@ -26,6 +26,7 @@ clDNN uses 3<sup>rd</sup>-party components licensed under following licenses:
 - *boost* under [Boost\* Software License - Version 1.0](http://www.boost.org/LICENSE_1_0.txt)
 - *googletest* under [Google\* License](https://github.com/google/googletest/blob/master/googletest/LICENSE)
 - *OpenCL™ ICD and C++ Wrapper* under [Khronos™ License](https://github.com/KhronosGroup/OpenCL-CLHPP/blob/master/LICENSE.txt)
+- *RapidJSON* under [Tencent\* License](https://github.com/Tencent/rapidjson/blob/master/license.txt)
 
 ## Documentation
 The latest clDNN documentation is at [GitHub pages](https://intel.github.io/clDNN/index.html).
@@ -44,6 +45,23 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 12.0
+    New features:
+    - pyramidRoiAlign primitive
+    - multiple axes support for reverse mode in index_select
+    - eltwise min/max/mod support for i8/i32/i64
+    - broadcast support for i32/i64
+    Bug fixes:
+    - memory leak fixes
+    - in-place reshape
+    - no padding for output primitives
+    UX:
+    - RapidJSON library for auto-tune cache
+    - less dependencies in program.cpp
+    - do not throw error, when device not validated
+    - global pooling in c API
+    - optimized padding for convolution
+    
 ### Drop 11.0
     New features:
     - throttle hints

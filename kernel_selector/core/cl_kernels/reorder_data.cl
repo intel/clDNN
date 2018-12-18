@@ -34,6 +34,8 @@ inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
 	return GET_DATA_BYX8_F4_INDEX(INPUT0, b, f, y, x);
 #elif defined INPUT0_LAYOUT_FS_BS_YX_BSV4_FSV32
     return GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(INPUT0, b, f, y, x);
+#elif defined INPUT0_LAYOUT_B_FS_YX_FSV4
+    return GET_DATA_B_FS_YX_FSV4_INDEX(INPUT0, b, f, y, x);
 #else
 #error reorder_data.cl: input format - not supported
 #endif
@@ -56,6 +58,8 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
 	return GET_DATA_BYX8_F4_INDEX(OUTPUT, b, f, y, x);
 #elif defined OUTPUT_LAYOUT_FS_BS_YX_BSV4_FSV32
     return GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(OUTPUT, b, f, y, x);
+#elif defined OUTPUT_LAYOUT_B_FS_YX_FSV4
+    return GET_DATA_B_FS_YX_FSV4_INDEX(OUTPUT, b, f, y, x);
 #else
 #error reorder_data.cl: output format - not supported
 #endif

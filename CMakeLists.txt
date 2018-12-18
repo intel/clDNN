@@ -571,6 +571,7 @@ unset(__CLDNN_IOclIcdVersionIdx)
 
 
 # ======================================================================================================
+set(CLDNN_UTILS__RAPIDJSON_INCDIRS "utils/rapidjson" CACHE INTERNAL "Paths to interface headers for rapidjson.")
 
 # Selecting boost libraries version and path.
 list(FIND __CLDNN_BoostVersions "${CLDNN__BOOST_VERSION}" __CLDNN_BoostVersionIdx)
@@ -1079,6 +1080,7 @@ endif()
 
 include_directories(
     ${CLDNN__IOCL_ICD_INCDIRS}
+	${CLDNN_UTILS__RAPIDJSON_INCDIRS}
     "${CLDNN__KHR_CLHPP_DIR}"
     ${Boost_INCLUDE_DIRS}
     "${CLDNN__CODEGEN_INCDIR}"

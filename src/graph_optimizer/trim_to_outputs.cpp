@@ -32,7 +32,7 @@ void trim_to_outputs::run(program_impl &p)
             return;
 
         //do backward bfs starting from all outputs
-        std::list<const std::vector<program_node*>*> stack = { &(p.outputs) };
+        std::list<const std::vector<program_node*>*> stack = { &(p.get_outputs()) };
         while (!stack.empty())
         {
             auto nodes_list = stack.front();
@@ -60,23 +60,7 @@ void trim_to_outputs::run(program_impl &p)
                 to_rem.push_back(node);
         }
 
-        for (auto const& node : to_rem)
-        {
-            //ToDo: replace by remove_node method in p
-            if (node->is_input())
-                p.get_inputs().remove(node);
-            else
-            {
-                for (auto& dep : node->dependencies)
-                    dep->users.remove(node);
-            }
-            for (auto& user : node->users)
-                user->dependencies.erase(std::remove(user->dependencies.begin(), user->dependencies.end(), node), user->dependencies.end());
-
-            p.processing_order.erase(p.processing_order.get_processing_iterator(*node));
-            p.optimized_out.push_back(node->id());
-            p.nodes_map.erase(node->id());
-        }
+        p.remove_nodes(to_rem);
 
         //unmark all nodes
         //ToDo: mark()/unmark() methods might cause hidden dependencies in between optimization passes. They shoud be encapsulated within the opt pass itself.

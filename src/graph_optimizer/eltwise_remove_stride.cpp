@@ -34,7 +34,7 @@ void eltwise_remove_stride::conv_stride_extend(program_impl &p, program_node& no
         return;
 
     const auto conv = std::static_pointer_cast<const convolution>(node.get_primitive());
-    auto weights_node_ptr = p.nodes_map.find(conv->weights[0])->second;
+    auto weights_node_ptr = p.get_node_ptr(conv->weights[0]);
     auto filter_size = weights_node_ptr->get_output_layout().size;
     // make sure this is conv 1x1
     if (filter_size.spatial[0] == 1 && filter_size.spatial[1] == 1)
@@ -67,7 +67,7 @@ void eltwise_remove_stride::conv_stride_extend(program_impl &p, program_node& no
 
 void eltwise_remove_stride::run(program_impl &p)
 {
-    for (auto& node : p.processing_order)
+    for (auto& node : p.get_processing_order())
     {
         if (node->is_type<eltwise>())
         {

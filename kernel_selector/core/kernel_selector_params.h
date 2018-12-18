@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <cstddef>
 #include "common_types.h"
 #include "tensor_type.h"
+#include "document.h"
 
 namespace kernel_selector
 {
@@ -57,6 +58,7 @@ namespace kernel_selector
                 struct val_t
                 {
                     uint32_t different_types : 1;
+                    uint32_t different_input_weights_types : 1;
                     uint32_t offset : 1;
                     uint32_t pitches : 1;
                     uint32_t batching : 1;
@@ -237,6 +239,8 @@ namespace kernel_selector
         void EnableAllOutputWeightsType();
         void EnableFP16Emulation() { key.restrict.val.FP16Emulation = 1; }
         void EnableDifferentTypes() { key.restrict.val.different_types = 1; }
+        void EnableDifferentInputWeightsTypes() {
+            key.restrict.val.different_input_weights_types = 1; }
         void EnableInputLayout(DataLayout l) { key.inputLayout |= (1 << l); }
         void EnableAllInputLayout() { key.inputLayout = 0xffffffff; }
         void EnableOutputLayout(DataLayout l) { key.outputLayout |= (1 << l); }
@@ -293,6 +297,9 @@ namespace kernel_selector
                 return true;
             return false;
         }
+        bool isEnabledDifferentInputWeightsTypes() const {
+            return key.restrict.val.different_input_weights_types ? true : false;
+        }
         ParamsKey Merge(const ParamsKey& k) const;
 
     private:
@@ -319,6 +326,7 @@ namespace kernel_selector
         std::string deviceId = "";
         std::string driverVersion = "";
         std::string hostVersion = "";
+        std::shared_ptr<rapidjson::Document> deviceCache;
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

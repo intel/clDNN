@@ -18,6 +18,10 @@
 #include <unordered_map>
 #include <string>
 #include <cassert>
+#include <time.h>
+#include <limits>
+#include <chrono>
+#include "istreamwrapper.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -25,10 +29,16 @@
 #include <SetupAPI.h>
 #include <devguid.h>
 #include <cstring>
-#elif defined(__linux__)
-#include <fstream>
+#else
+#include <unistd.h>
+#include <limits.h>
 #endif
+
+#include <fstream>
 #include <iostream>
+#include <utility>
+
+
 namespace cldnn { namespace gpu{
 
 namespace {
@@ -140,18 +150,69 @@ const device_info& get_device_info(int device_id)
     auto it = device_map.find(device_id);
     if (it == device_map.end())
     {
-        if (public_caps)
+        std::cerr << "[WARNING]. Device ID (" << to_string_hex(device_id) << ") not supported. Pretending to behave like SKL GT2." << std::endl;
+        int new_device_id = 6433;
+        return device_map.at(new_device_id);
+    }
+    return device_map.at(device_id);
+}
+
+std::shared_ptr<rapidjson::Document> get_cache_from_file(uint32_t compute_units_count, const gpu_toolkit& context) {
+    std::string tuning_cache_path = context.get_configuration().tuning_cache_path;
+    if (tuning_cache_path.compare("cache.json") == 0)
+    {
+#ifdef _WIN32
+        char path[260];
+        GetModuleFileNameA(NULL, path, 2048);
+        std::string bin_path(path);
+        tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("\\")) + "\\cache.json";
+#else
+        char arg1[260];
+        char path[260] = { 0 };
+        sprintf(arg1, "/proc/%d/exe", getpid());
+        auto check = readlink(arg1, path, sizeof(path));
+
+        if (check != -1)
         {
-            throw std::runtime_error(std::string(device_info_failed_msg) + " - unsupported device id: " + to_string_hex(device_id) + ". Note: HD5xx+ devices are supported");
+            std::string bin_path(path);
+            tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("/")) + "/cache.json";
+            
+            std::ifstream file_check(tuning_cache_path);
+            if (!file_check.good())
+                tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("/")) + "/lib/cache.json";
+            file_check.close();
+        }
+#endif
+    }
+    
+    rapidjson::Document cacheFile;
+    rapidjson::Document cacheDeviceData;
+    auto computeUnits = std::to_string(compute_units_count);
+    std::ifstream f(tuning_cache_path);
+    if (f.good())
+    {
+        rapidjson::IStreamWrapper isw{ f };
+        cacheFile.ParseStream(isw);
+        auto errorCode = cacheFile.GetParseError();
+        if (!cacheFile.HasMember(computeUnits.c_str()) && errorCode == 0)
+        {
+            computeUnits = "24";
+        }
+        if (cacheFile.HasMember(computeUnits.c_str()) && errorCode == 0)
+        {
+            cacheDeviceData.CopyFrom(cacheFile[computeUnits.c_str()], cacheDeviceData.GetAllocator());
         }
         else
         {
-            std::cerr << "[WARNING]. Device ID (" << to_string_hex(device_id) << ") not supported. Pretending to behave like SKL GT2." << std::endl;
-            int new_device_id = 6433;
-            return device_map.at(new_device_id);
+            cacheDeviceData.Parse("{}");
         }
     }
-    return device_map.at(device_id);
+    else
+    {
+        std::cout << "[WARNING] No cache data found for your device" << std::endl;
+        cacheDeviceData.Parse("{}");
+    }
+    return std::make_shared < rapidjson::Document>(std::move(cacheDeviceData));
 }
 
 } // namespace <anonymous>
@@ -166,8 +227,15 @@ engine_info_internal::engine_info_internal(const gpu_toolkit& context)
     configuration = dev_info.config;
     dev_id = to_string_hex(device_id);
     driver_version = context.device().getInfo<CL_DRIVER_VERSION>();
-    compute_units_count = context.device().getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
 
+    compute_units_count = context.device().getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
+    try {
+        device_cache = get_cache_from_file(compute_units_count, context);
+    }
+    catch (...){
+        std::cout << "[WARNING] error during parsing cache file, tuning data won't be used" << std::endl;
+        device_cache->Parse("{}");
+    }
     cores_count = static_cast<uint32_t>(context.device().getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>());
     core_frequency = static_cast<uint32_t>(context.device().getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 

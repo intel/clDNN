@@ -89,6 +89,17 @@ namespace cldnn
     {
     public:
         virtual void run(program_impl &p) override;
+    private:
+        std::list<std::pair<primitive_id, memory_impl::ptr>> calculate(engine_impl &engine);
+        bool has_non_const_user(program_node& node) const;
+        void handle_constant(program_impl &prog, program_node& node);
+        void add_constant(program_impl &prog, program_node& node);
+        void add_deps_to_tpl(program_impl &prog, const std::vector<program_node*>& node);
+
+        bool has_non_trivial_constants = false;
+        std::list<typed_program_node<data>*> const_inputs;
+        std::vector<primitive_id> const_outputs;
+        std::set<std::shared_ptr<program_node>> nodes;
     };
 
     class remove_redundant_reorders : base_pass

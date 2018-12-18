@@ -35,7 +35,7 @@
 namespace cldnn
 {
 /*
-Network_impl will always have net_id = 0 when it will be cldnn internal micronetwork (created i.e by const. propagator).
+Network_impl will always have net_id = 0 when it will be cldnn internal micronetwork (created i.e by propagate_constants opt pass).
 */
 network_impl::network_impl(const program_impl& program, bool is_internal)
     : _program(&program)
@@ -57,6 +57,11 @@ network_impl::network_impl(const program_impl& program, bool is_internal)
 
 network_impl::network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options, bool is_internal)
     : network_impl(*engine.build_program(topo, options, is_internal), is_internal)
+{
+}
+
+network_impl::network_impl(engine_impl& engine, const std::set<std::shared_ptr<program_node>>& nodes, const build_options& options, bool is_internal)
+    : network_impl(*engine.build_program(nodes, options, is_internal), is_internal)
 {
 }
 
@@ -158,9 +163,11 @@ std::string network_impl::get_primitive_info(const primitive_id& id) const
 
 void network_impl::allocate_primitives()
 {
-    auto nodes = _program->get_nodes();
     std::vector<std::shared_ptr<program_node>> nodes_to_allocate{};
-    nodes_to_allocate.insert(nodes_to_allocate.begin(), nodes.begin(), nodes.end());
+    for (auto node : _program->get_processing_order())
+    {
+        nodes_to_allocate.push_back(_program->get_node_ptr(node->id()));
+    }
     std::sort(nodes_to_allocate.begin(), nodes_to_allocate.end(), [](std::shared_ptr<program_node> const& lhs,
                                                                      std::shared_ptr<program_node> const& rhs)
     {
@@ -214,10 +221,10 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
         //the mutable_data can be updated when is both user or dependency.
         if (inst->is_type<mutable_data>())
         {
-            decltype(inst->get_processing_num()) proc_num = 0;
+            decltype(_program->get_processing_order().get_processing_number(inst)) proc_num = 0;
             for (auto& user : inst->get_users())
             {
-                auto user_proc_num = user->get_processing_num();
+                auto user_proc_num = _program->get_processing_order().get_processing_number(user);
                 if (user_proc_num > proc_num)
                 {
                     _events[inst->id()] = _events[user->id()];
@@ -229,7 +236,7 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
             {
                 for (auto& dep : inst->get_dependencies())
                 {
-                    auto dep_proc_num = dep->get_processing_num();
+                    auto dep_proc_num = _program->get_processing_order().get_processing_number(dep);
                     if (dep_proc_num > proc_num)
                     {
                         _events[inst->id()] = _events[dep->id()];

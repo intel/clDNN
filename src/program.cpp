@@ -61,37 +61,20 @@
 #include <sstream>
 #include <iomanip>
 
-
 program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal)
     : engine(&engine_ref), options(options), processing_order(* new nodes_ordering)
 {
-    static std::atomic<uint32_t> id_gen{ 0 };
-    prog_id = ++id_gen;
-    assert(prog_id != 0);
+    set_options();
+    prepare_nodes(topology);
+    build_program(is_internal);
+}
 
-    if ((options.get<build_option_type::tuning_config>()->config.mode == tuning_mode::tuning_tune_and_cache) &&
-        !engine->configuration().enable_profiling)
-    {
-        throw std::invalid_argument("Engine must be created with profiling enabled in tune_and_cache mode!");
-    }
-
-    init_graph(topology);
-    pre_optimize_graph();
-    compile_graph();
-    post_optimize_graph();
-
-    engine->compile_program(*this);
-    this->dump_program("13_finished", true);
-
-    //Makes serialization with given name.
-    //Placeholder, not working yet, in progress.
-    auto serialization_network_name = get_serialization_network_name(options);
-    if (!serialization_network_name.empty() && !is_internal)
-    {
-        this->serialize(serialization_network_name);
-    }
-
-    cleanup();
+program_impl::program_impl(engine_impl& engine_ref, std::set<std::shared_ptr<program_node>> const& nodes, build_options const& options, bool is_internal)
+    : engine(&engine_ref), options(options), processing_order(*new nodes_ordering)
+{
+    set_options();
+    prepare_nodes(nodes);
+    build_program(is_internal);
 }
 
 program_node& program_impl::get_node(primitive_id const& id)
@@ -187,52 +170,151 @@ bool program_impl::analyze_output_size_handling_need()
     return handling_needed;
 }
 
-std::list<std::shared_ptr<program_node>> program_impl::get_nodes() const
+// create new nodes for a program based on the set of nodes
+// method created to be used by propagate_constants to build sub program from constant nodes 
+void program_impl::prepare_nodes(std::set<std::shared_ptr<program_node>>const &nodes)
 {
-    std::list<std::shared_ptr<program_node>> ret;
-
-    for (auto& node : processing_order)
-        ret.push_back(nodes_map.at(node->id()));
-    return ret;
-}
-
-void program_impl::init_graph(topology_impl const& topology)
-{
-    auto const& topo_map = topology.get_primitives();
-    for (auto const& prim : topo_map)
+    for (const auto& itr : nodes)
     {
-        auto& n = get_or_create(prim.second);
-        inputs.push_back(&n);
-    }
-    replace_nodes_pre();
-
-    for (auto itr = inputs.begin(); itr != inputs.end(); )
-    {
-        auto node_itr = itr++;
-        auto& node = (*node_itr);
-        auto deps = node->get_primitive()->dependencies();
-        if (deps.empty())
-            continue;
-
-        //add pointers to node's dependencies
-        for (auto& dep : deps)
+        if (itr.get()->is_type<data>())
         {
-            try {
-                auto dep_node = nodes_map.at(dep);
-                node->dependencies.push_back(dep_node.get());
-                dep_node->users.push_back(node);
-            }
-            catch (...) {
-                throw std::runtime_error("Program doesn't contain primitive: " + dep +
-                    " that is input to: " + node->get_primitive()->id);
+            get_or_create(
+                std::make_shared<input_layout>(itr.get()->id(), itr.get()->as<data>().get_primitive()->mem.get_layout())
+            );
+        }
+        else
+        {
+            get_or_create(itr->desc);
+        }
+    }
+    for (const auto& node : nodes_map)
+    {
+        auto node_ptr = node.second;
+        if (node_ptr == nullptr)
+            throw error("NULL pointer in nodes_map.", CLDNN_ERROR);
+        //ToDo: avoid O(n^2) run time here (pass map instead of set?)
+        bool found = false;
+        for (const auto& src_node : nodes)
+        {
+            if (src_node == nullptr)
+                throw error("NULL pointer in nodes_map.", CLDNN_ERROR);
+            if (node.first == src_node->get_primitive()->id)
+            {
+                copy_node_dependencies(node_ptr.get(), src_node.get());
+                found = true;
+                break;
             }
         }
-
-        //primitive has dependencies so remove it from 'inputs'
-        inputs.erase(node_itr);
+        if (!found)
+        {
+            add_node_dependencies(node_ptr.get());
+        }
+        if (node_ptr->dependencies.size() == 0)
+            inputs.push_back(node_ptr.get());
     }
+}
 
-    replace_nodes_post();
+// create all nodes from topology primitives, add dependencies among them and create inputs list
+void program_impl::prepare_nodes(topology_impl const &topology)
+{
+    auto const& topo_map = topology.get_primitives();
+    for (const auto& prim : topo_map)
+    {
+        get_or_create(prim.second);
+    }
+    add_split_outputs();
+    for (const auto& node : nodes_map)
+    {
+        auto node_ptr = node.second.get();
+        if (node_ptr == nullptr)
+            throw error("NULL pointer in nodes_map.", CLDNN_ERROR);
+        add_node_dependencies(node_ptr);
+        if (node_ptr->dependencies.size()==0)
+        {
+            inputs.push_back(node_ptr);
+        }
+    }
+}
+
+// add node's dependecies from its primitive dependencies
+void program_impl::add_node_dependencies(program_node* node)
+{
+    auto deps = node->get_primitive()->dependencies();
+    //add pointers to node's dependencies
+    for (auto& dep : deps)
+    {
+        try {
+            auto dep_node = nodes_map.at(dep);
+            node->dependencies.push_back(dep_node.get());
+            dep_node->users.push_back(node);
+        }
+        catch (...) {
+            throw std::runtime_error("Program doesn't contain primitive: " + dep +
+                " that is input to: " + node->get_primitive()->id);
+        }
+    }
+}
+
+/* helper method for program_impl constructor from list of nodes which
+   copies src_node dependecies to the destination node dest_node dependencies.
+   But only to those which appaer in this program implementation nodes_map */
+void program_impl::copy_node_dependencies(program_node* dest_node, program_node* src_node)
+{
+    if (dest_node->get_primitive()->id != src_node->get_primitive()->id)
+    {
+        throw std::runtime_error("Node " + src_node->get_primitive()->id +  " and its copy " + dest_node->get_primitive()->id + " do not match.");
+    }
+    auto src_deps = src_node->get_dependencies();
+    //add pointers to node's dependencies
+    for (auto& src_dep : src_deps)
+    {
+        // do not copy dependencies to nodes which does not belong to the new (subgraph) topology
+        if (nodes_map.find(src_dep->get_primitive()->id) == nodes_map.end()) continue;
+
+        try {
+            auto dest_dep = nodes_map.at(src_dep->get_primitive()->id);
+            dest_node->dependencies.push_back(dest_dep.get());
+            dest_dep->users.push_back(dest_node);
+        }
+        catch (...) {
+            throw std::runtime_error("Program doesn't contain primitive: " + src_dep->get_primitive()->id +
+                " that is input to: " + src_node->get_primitive()->id);
+        }
+    }
+}
+
+void program_impl::set_options()
+{
+    static std::atomic<uint32_t> id_gen{ 0 };
+    prog_id = ++id_gen;
+    assert(prog_id != 0);
+
+    if ((options.get<build_option_type::tuning_config>()->config.mode == tuning_mode::tuning_tune_and_cache) &&
+        !engine->configuration().enable_profiling)
+    {
+        throw std::invalid_argument("Engine must be created with profiling enabled in tune_and_cache mode!");
+    }
+}
+
+void program_impl::build_program(bool is_internal)
+{
+    init_graph();
+    {
+        pre_optimize_graph(is_internal);
+    }
+    compile_graph();
+    {
+        post_optimize_graph(is_internal);
+    }
+    engine->compile_program(*this);
+    this->dump_program("13_finished", true);
+    cleanup();
+}
+
+void program_impl::init_graph()
+{
+    replace_nodes();
+    handle_detection_output();
     handle_lstm();
     set_outputs();
     processing_order.calc_processing_order(*this);
@@ -245,7 +327,7 @@ void program_impl::init_graph(topology_impl const& topology)
     dump_program("2_analyzed_graph", true);
 }
 
-void program_impl::pre_optimize_graph()
+void program_impl::pre_optimize_graph(bool is_internal)
 {
     trim_to_outputs trim_pass; //trim to outputs
     trim_pass.run(*this); // ToDo remove hidden dependencies from trimm pass
@@ -297,10 +379,12 @@ void program_impl::pre_optimize_graph()
     prepare_depthwise_sep_opt prepare_depthwise_sep_opt_pass;
     prepare_depthwise_sep_opt_pass.run(*this);
 
-    propagate_constants propagate_constants_pass;  // ToDo remove hidden dependencies from propagate_constants pass, consider merging propagate constants and constant propagator classes
-    propagate_constants_pass.run(*this);
-    dump_program("6_propagated_constants", true);
-
+    if (!is_internal)
+    {
+        propagate_constants propagate_constants_pass;  // ToDo remove hidden dependencies from propagate_constants pass
+        propagate_constants_pass.run(*this);
+        dump_program("6_propagated_constants", true);
+    }
     //try to fuse buffers (i.e. depth_concat in bfyx format) after padding calculations
     if (options.get<build_option_type::optimize_data>()->enabled())
     {
@@ -330,7 +414,7 @@ void program_impl::compile_graph()
     dump_program("8_compiled", true);
 }
 
-void program_impl::post_optimize_graph()
+void program_impl::post_optimize_graph(bool is_internal)
 {
     layout_optimizer lo;
     post_optimize_weights post_optimize_weights_pass(lo);
@@ -342,15 +426,16 @@ void program_impl::post_optimize_graph()
 
     dump_program("10_removed_redundant_reorders", true); //TODO: do we need it at this place also?
 
-    propagate_constants propagate_constants_pass;  // ToDo remove hidden dependencies from propagate_constants pass, consider merging propagate constants and constant propagator classes
-    propagate_constants_pass.run(*this);
-    dump_program("11_propagated_constants", true);
+    if (!is_internal)
+    {
+        propagate_constants propagate_constants_pass;  // ToDo remove hidden dependencies from propagate_constants pass
+        propagate_constants_pass.run(*this);
+        dump_program("11_propagated_constants", true);
+    }
 
     prep_opt_depthwise_sep_post prep_opt_depthwise_sep_post_pass;
     prep_opt_depthwise_sep_post_pass.run(*this);
-
-    processing_order.update_processing_numbers();
-    dump_program("12_validated_processing_order", true);
+    dump_program("12_prep_opt_depthwise_sep_post_done", true);
 
     prepare_memory_dependencies();
 }
@@ -381,15 +466,13 @@ std::string get_id_string(size_t i) {
     return ss.str();
 }
 
-void program_impl::replace_nodes_pre()
-{
+void program_impl::add_split_outputs() {
     auto itr = nodes_map.begin();
     while (itr != nodes_map.end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr).second;
 
-        //find split primitives and create crop primitives out of them
         if (node->is_type<split>())
         {
             auto split_prim = node->as<split>().typed_desc();
@@ -406,48 +489,17 @@ void program_impl::replace_nodes_pre()
                 get_or_create(crop_prim);
             }
         }
-
-        // Create second part detection output primitive and replace nodes names - do it only once
-        if ((options.get<build_option_type::detection_output_gpu>()->enabled()) &&
-            (node->is_type<detection_output>()) &&
-            (node->id().find("_pre") == std::string::npos))
-        {
-            auto detect_out_prim = node->as<detection_output>().typed_desc();
-
-            // Create new primitive, "keep top k" part of detection output
-            auto detect_out_sort_prim = std::make_shared<detection_output_sort>(
-                DETECTION_OUTPUT_NODE_NAME_TMP,
-                detect_out_prim->input[0],
-                // not important params here - it will be set during "primitive_impl* create" func in "detection_output_sort_gpu"
-                0,      // num_images
-                0,      // num_classes
-                0,      // keep_top_k
-                false,  // share_location
-                0,      // top_k
-                -1,     // background_label_id
-                detect_out_prim->output_padding);
-
-            get_or_create(detect_out_sort_prim);
-
-            auto sort_node = nodes_map.find(DETECTION_OUTPUT_NODE_NAME_TMP)->second;
-
-            // Replace nodes name - so primitive with output for user will have proper id
-            const primitive_id detect_out_node_name = node->id();
-            rename(*node, detect_out_node_name + "_pre");
-            rename(*sort_node, detect_out_node_name);
-        }
     }
 }
 
-void program_impl::replace_nodes_post()
+void program_impl::replace_nodes()
 {
-    auto itr = nodes_map.begin(); //note we need to use iterators since currently processed element can be removed
+    auto itr = nodes_map.begin();
     while (itr != nodes_map.end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr).second;
 
-        //find split primitives and create crop primitives out of them
         if (node->is_type<split>())
         {
             //check if split is not used by any primitive, as it will be optimized
@@ -472,24 +524,24 @@ void program_impl::replace_nodes_post()
                 //calculate crop reference input size
                 tensor reference_input_size;
 
-				// For all the split offsets before the last split offset, the size can be calculated
-				// size_of_offset[n] = offset[n + 1] - offset[n];
-				if (i != (split_num - 1))
-				{
-					reference_input_size += split_prim->output_offsets[i + 1] - split_prim->output_offsets[i];
-				}
-				// For the last split i.e. size[split_num - 1] = split_input.size - offsets[n];
-				else
-				{
-					reference_input_size += output_layout_size - split_prim->output_offsets[i];
-				}
+                // For all the split offsets before the last split offset, the size can be calculated
+                // size_of_offset[n] = offset[n + 1] - offset[n];
+                if (i != (split_num - 1))
+                {
+                    reference_input_size += split_prim->output_offsets[i + 1] - split_prim->output_offsets[i];
+                }
+                // For the last split i.e. size[split_num - 1] = split_input.size - offsets[n];
+                else
+                {
+                    reference_input_size += output_layout_size - split_prim->output_offsets[i];
+                }
 
-				// For all the other dimensions, copy from the split_input
-				for (int dimension = 0; dimension < CLDNN_TENSOR_DIM_MAX; dimension++)
-				{
-					reference_input_size.raw[dimension]
-						= (reference_input_size.raw[dimension] == 0) ? output_layout_size.raw[dimension] : reference_input_size.raw[dimension];
-				}
+                // For all the other dimensions, copy from the split_input
+                for (int dimension = 0; dimension < CLDNN_TENSOR_DIM_MAX; dimension++)
+                {
+                    reference_input_size.raw[dimension]
+                        = (reference_input_size.raw[dimension] == 0) ? output_layout_size.raw[dimension] : reference_input_size.raw[dimension];
+                }
 
                 //update crop primitive and add connections
                 node_ptr->set_output_padding(output_layout.data_padding);
@@ -695,20 +747,54 @@ void program_impl::replace_nodes_post()
 
             continue;
         }
+    }
+}
 
-        if (options.get<build_option_type::detection_output_gpu>()->enabled() && 
-            node->is_type<detection_output>())
+void program_impl::handle_detection_output()
+{
+    auto itr = nodes_map.begin(); //note we need to use iterators since currently processed element can be removed
+    while (itr != nodes_map.end())
+    {
+        auto node_itr = itr++;
+        auto& node = *(*node_itr).second;
+        // Create second part detection output primitive and replace nodes names - do it only once
+        if ((options.get<build_option_type::detection_output_gpu>()->enabled()) &&
+            (node.is_type<detection_output>()) &&
+            (node.id().find("_pre") == std::string::npos))    //ToDo: this will fail if user will name the primitive with using _pre like do_pre
+                                                              //      we need to use node mark() or some other idea to prevent it   
         {
-            auto sort_node = nodes_map.find(node->get_org_primitive_id())->second;
+            // rename detection output
+            const primitive_id detect_out_node_name = node.id();
+            const primitive_id new_primitive_id = detect_out_node_name + "_pre";
+            rename(node, new_primitive_id);
+
+            auto detect_out_prim = node.as<detection_output>().typed_desc();
+            // Create new primitive, "keep top k" part of detection output
+            // ToDo: add a default parameters to the detection_output_sort class constructor to get rid off this initialization from here
+            auto detect_out_sort_prim = std::make_shared<detection_output_sort>(
+                detect_out_node_name,
+                node.id(),
+                // not important params here - it will be set during "primitive_impl* create" func in "detection_output_sort_gpu"
+                0,      // num_images
+                0,      // num_classes
+                0,      // keep_top_k
+                false,  // share_location
+                0,      // top_k
+                -1,     // background_label_id
+                detect_out_prim->output_padding);
+
+            get_or_create(detect_out_sort_prim);
+
+            auto sort_node = nodes_map.find(detect_out_node_name)->second;
 
             // Add connection to second part of detection output
-            if (node->get_users().size())
+            if (node.get_users().size())
             {
-                add_intermediate(*sort_node, *node->get_users().front(), 0, false);
+                add_intermediate(*sort_node, *(node.get_users().front()), 0, false);
             }
             else
             {
-                add_connection(*node, *sort_node);
+                add_connection(node, *sort_node);
             }
         }
     }
@@ -748,20 +834,68 @@ void program_impl::handle_lstm()
             //calculating sizes
             auto input_size = node->get_dependency(0).get_output_layout().size;
             auto recurrent_size = nodes_map.at(recurrent_id)->get_output_layout().size;
+
             // hidden tensor size = [batch, seq, hidden_size, direction]
             // the output of the element wise operation is cropped and used in the next time step
             // sequence_len = 1 and direction = 1. The backward pass is separated from the forward pass
             auto hidden_size = tensor(input_size.batch[0], 1, recurrent_size.spatial[0], 1);
 
             size_t directions = recurrent_size.feature[0];
-            size_t input_dependencies = node->get_dependencies().size();
-            size_t sequence_len = node->as<lstm>().sequence_len();
+            size_t input_directions = input_size.spatial[1];
+            size_t num_input_dependencies = node->get_dependencies().size();
+            size_t input_vector_size = node->as<lstm>().sequence_len();
+            size_t sequence_len = input_vector_size;
+
+            // Calculate the input sequence length for the lstm node
+            // Case 1: If the input comes in as a concatenated input i.e. the
+            // input is not divided into sequence elements
+            if (input_vector_size == 1 && num_input_dependencies == 1)
+            {
+	            // Either the input actually has 1 sequence element
+	            auto& input = node->get_dependency(0);
+	            auto input_layout = input.get_output_layout();
+                tensor input_tensor = input_layout.size;
+				
+	            // Get the sequence length from the input to LSTM
+	            sequence_len = input_layout.size.feature[0];  
+
+	            // If the input's feature/sequence length field is > 1, i.e. If
+                // the sequence elements are concatenated into one single input
+                // then it has to be split into individual sequence elements
+	            if (sequence_len > 1)
+	            {                
+                    for (size_t sequence_element = 0; sequence_element < sequence_len; sequence_element++)
+                    {
+                        primitive_id crop_id = input.id() + ":crop:" + get_id_string(sequence_element);
+                        tensor crop_tensor{ input_tensor.batch[0], 1, input_tensor.spatial[0], input_tensor.spatial[1] };
+                        tensor offset_tensor{ 0, static_cast<tensor::value_type>(sequence_element), 0, 0 };
+                        auto input_crop = std::make_shared<crop>(crop_id, input.id(), crop_tensor, offset_tensor);
+                        auto& input_crop_node = get_or_create(input_crop);
+
+                        // Add the crop nodes as user for input
+                        add_connection(node->get_dependency(0), input_crop_node);
+
+                        // Connect crop with lstm
+                        add_connection(input_crop_node, *node);
+                    }
+
+                    // We have the sequence elements (cropped inputs) as input to LSTM. 
+                    // The original input is no longer a dependency to LSTM. 
+                    // Remove the input node as a dependency to LSTM
+                    remove_connection(node->get_dependency(0), *node);
+
+		            // Update the total no. of input dependecies
+		            num_input_dependencies = node->get_dependencies().size();
+	            }
+            }
 
             //if the sequence has a single element but it has multiple inputs then
             //the parent of this lstm is an lstm node. If this is a bidirectional lstm
             //then the sequence length is the number of dependencies divided by 2.
-            if (sequence_len == 1 && input_dependencies > 1)
-                sequence_len = (directions == 1) ? input_dependencies : input_dependencies / 2;
+            else if (input_vector_size == 1 && num_input_dependencies > 1) 
+            {
+	            sequence_len = (directions == 1) ? num_input_dependencies : num_input_dependencies / 2;
+            }
 
             //check if this lstm node has an lstm child
             for (auto& user : node->get_users())
@@ -780,6 +914,7 @@ void program_impl::handle_lstm()
             std::vector<program_node*> cell_list(directions * sequence_len);
             std::vector<program_node*> hidden_list(directions * sequence_len);
             std::map<size_t, std::pair<primitive_id, program_node*>> output_map;
+			auto dependencies = node->get_dependencies();
 
             //lstm expanding
             for (size_t dir = 0; dir < directions; ++dir) {
@@ -795,16 +930,20 @@ void program_impl::handle_lstm()
                     //for bidirectional lstms, if first LSTM layer then reverse input
                     //for subsequent stacked layers the input is strided on the dir dimension
                     if (directions > 0) {
-                        if (input_dependencies > sequence_len) { // stacked layer
+                        if (num_input_dependencies > sequence_len) { // stacked layer
                             input_idx = dir * sequence_len + i;
                         }
                         else
                         {
-                            if (dir > 0) { // first layer
+                            if ((input_directions < 2) && dir > 0) { // first layer
                                 input_idx = sequence_len - i - 1;
                             }
                         }
                     }
+                    
+		    //primitive_id lstm_gemm_input_id = node->get_dependency(input_idx).get_primitive()->id;
+                    //the line below requires an attention: get_org_primitive_id() might not be an actual id of a node (see rename method)
+                    //ToDO: ensure that get_org_primitive_id() is suitable here
                     primitive_id lstm_gemm_input_id = node->get_dependency(input_idx).get_org_primitive_id();
 
                     auto lstm_gemm_node = std::make_shared<lstm_gemm>(lstm_gemm_id, lstm_gemm_input_id, weights_id, recurrent_id, bias_id, hidden_id, (uint32_t)dir);
@@ -912,7 +1051,6 @@ void program_impl::handle_lstm()
                     replace_all_usages(*node, concatenation_node);
                 }
             }
-
             //removing expanded node
             remove_all_connections(*node);
             nodes_map.erase(node->id());
@@ -950,7 +1088,6 @@ program_impl::nodes_ordering& program_impl::get_processing_order()
     return processing_order;
 }
 
-
 const program_impl::nodes_ordering& program_impl::get_processing_order() const
 {
     return processing_order;
@@ -975,7 +1112,7 @@ void program_impl::calc_prior_boxes()
         auto cpp_mem = details::memory_c_to_cpp_converter::convert(api_cast(&result));
 
         auto& data_node = get_or_create(std::make_shared<data>("_cldnn_tmp_" + pb_node.id() + "_result", cpp_mem));
-        replace(pb_node, data_node, false, false);
+        replace(pb_node, data_node);
     }
 }
 
@@ -997,11 +1134,6 @@ void program_impl::mark_constants()
                 break;
             }
         }
-
-        if (!node->constant)
-            for (auto& dep : node->get_dependencies())
-                if (dep->constant)
-                    dep->constant_frontier = true;
     }
 }
 
@@ -1107,7 +1239,7 @@ void program_impl::basic_memory_dependencies()
 void program_impl::skipped_branch_memory_dependencies()
 {
     auto itr = processing_order.begin();
-    // Primitive A can't use primitive B buffer if B->processing_num < A->processing_num and any of B users processing_num > A->processing_num
+    // Primitive A can't use primitive B buffer if processing_num(B) < processing_num(A) and any of B users processing_num > processing_num(AB)
     // Otherwise it could override data that has to be used in the future.
     // TODO: improve algorithm to to O(n*log(n))
     while (itr != processing_order.end())
@@ -1121,12 +1253,12 @@ void program_impl::skipped_branch_memory_dependencies()
         {
             auto& node2 = *itr2;
             itr2++;
-            if (node2->get_processing_num() < node->get_processing_num())
+            if (processing_order.get_processing_number(node2) < processing_order.get_processing_number(node))
             {
                 // if at least one user will be processed after 'node', node2 has to be added to forbiden list
                 for (auto usr : node2->get_users())
                 {
-                    if (usr->get_processing_num() > node->get_processing_num())
+                    if (processing_order.get_processing_number(usr) > processing_order.get_processing_number(node))
                     {
                         add_memory_dependency(node, node2);
                         add_memory_dependency(node2, node);
@@ -1145,7 +1277,7 @@ void program_impl::oooq_memory_dependencies()
     // Set of nodes between two syncing points will be called sync_region.
     // Major rules is: can't share resource with nodes in my sync_region
 
-    uint32_t last_barrier = 0;
+    int32_t last_barrier = 0;
     bool needs_barrier = false;
     std::vector<cldnn::program_node*> sync_region;
     while (itr != processing_order.end())
@@ -1156,7 +1288,7 @@ void program_impl::oooq_memory_dependencies()
         // if any of dep has proccess num after barrier -> needs barrier
         for (auto dep : node->get_dependencies())
         {
-            if (dep->get_processing_num() >= last_barrier)
+            if (processing_order.get_processing_number(dep) >= last_barrier)
             {
                 needs_barrier = true;
                 break;
@@ -1165,7 +1297,7 @@ void program_impl::oooq_memory_dependencies()
 
         if (needs_barrier)
         {
-            last_barrier = node->get_processing_num();
+            last_barrier = processing_order.get_processing_number(node);
             needs_barrier = false;
             // add each pair bi-direction dependency
             for (auto nd1 = sync_region.begin(); nd1 + 1 != sync_region.end(); nd1++)
@@ -1241,6 +1373,10 @@ void program_impl::handle_reshape()
 
             if (input_node.is_type<reorder>())
                 continue;
+
+            node->get_output_layout();
+            if (node->as<reshape>().is_in_place())
+                node->optimized = true;
 
             //vector for storing nodes that are reorder type, for which splitted primitives are needed (except for the first one where orginal reshape will be used)
             std::vector<program_node*> reorder_node_to_split;
@@ -1440,10 +1576,15 @@ void program_impl::prepare_padding(bool output_size_handling_enabled)
         if (conv_layout.format != cldnn::format::bfyx
             && conv_layout.format != cldnn::format::bf8_xy16
             && conv_layout.format != cldnn::format::byxf_af32
-            && conv_layout.format != cldnn::format::fs_bs_yx_bsv4_fsv32)
+            && conv_layout.format != cldnn::format::fs_bs_yx_bsv4_fsv32
+            && conv_layout.format != cldnn::format::b_fs_yx_fsv4)
         {
             continue;
         }
+
+        // We shoudn't apply any padding to nodes which are marked as outputs
+        if (conv_input_node.is_output())
+            continue;
 
         // Calculating input padding needed for convolution
         auto& filter_node = node.as<convolution>().weights(0);
@@ -1498,7 +1639,6 @@ program_node& program_impl::get_or_create(std::shared_ptr<primitive> prim)
         return *itr->second;
 
     auto new_node = prim->type->create_node(*this, prim);
-    new_node->set_org_primitive_id(new_node->id());
     nodes_map.insert(itr, { prim->id, new_node });
     return *new_node;
 }
@@ -1523,18 +1663,12 @@ void program_impl::add_intermediate(program_node& node, program_node& next, size
         {
             auto itr = processing_order.get_processing_iterator(prev);
             processing_order.insert(std::next(itr), &node);
-            node.processing_num = prev.processing_num;                    //LK: avoid direct manipulation on processing_num
         }
     }
 
     next.replace_dependency(prev_idx, node);
     node.constant = prev.constant;
     node.data_flow = prev.data_flow;
-    if (prev.constant_frontier)
-    {
-        node.constant_frontier = true;
-        prev.constant_frontier = false;
-    }
 }
 
 void program_impl::add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep)
@@ -1609,9 +1743,9 @@ void program_impl::replace_all_usages(program_node & old_node, program_node & ne
     }
 }
 
-void program_impl::replace(program_node& old_node, program_node& new_node, bool replace_whole_branch, bool check_output_layouts_integrity)
+void program_impl::replace(program_node& old_node, program_node& new_node)
 {
-    if ((!new_node.dependencies.empty() && !replace_whole_branch) || !new_node.users.empty())
+    if (!new_node.dependencies.empty() || !new_node.users.empty())
         throw std::invalid_argument("Node which is about to replace other node should be detached");
 
     if (new_node.is_output())
@@ -1621,15 +1755,13 @@ void program_impl::replace(program_node& old_node, program_node& new_node, bool 
     new_node.output_layout = old_node.get_output_layout();
     new_node.valid_output_layout = old_node.valid_output_layout;
 
-    if (!replace_whole_branch)
+    
+    //copy old's dependencies
+    while (!old_node.dependencies.empty())
     {
-        //copy old's dependencies
-        while (!old_node.dependencies.empty())
-        {
-            auto& dep = old_node.dependencies.front();
-            add_connection(*dep, new_node);
-            remove_connection(*dep, old_node);
-        }
+        auto& dep = old_node.dependencies.front();
+        add_connection(*dep, new_node);
+        remove_connection(*dep, old_node);
     }
 
     //append users
@@ -1648,9 +1780,6 @@ void program_impl::replace(program_node& old_node, program_node& new_node, bool 
 
     old_node.users.clear();
 
-    if (check_output_layouts_integrity && new_node.valid_output_layout)
-        new_node.recalc_output_layout();
-
     bool old_was_output = false;
     //copy node's state
     if (old_node.is_output())
@@ -1665,11 +1794,9 @@ void program_impl::replace(program_node& old_node, program_node& new_node, bool 
         inputs.remove(&old_node);
 
     new_node.constant = old_node.constant;
-    new_node.constant_frontier = old_node.constant_frontier;
     new_node.user_mark = old_node.user_mark;
 
     processing_order.insert(processing_order.get_processing_iterator(old_node), &new_node);
-    new_node.processing_num = old_node.processing_num; //LK : avoid direct manipulation of processing_num
     if (processing_order.get_processing_iterator(old_node) != processing_order.end())
         processing_order.erase(processing_order.get_processing_iterator(old_node));
     nodes_map.erase(id);
@@ -1683,65 +1810,23 @@ void program_impl::replace(program_node& old_node, program_node& new_node, bool 
     }
 }
 
-bool program_impl::remove_if_dangling(program_node& node, bool detach_whole_branch)
+bool program_impl::remove_if_dangling(program_node& node)
 {
     if (!node.users.empty())
         return false;
-    if (!detach_whole_branch && !node.dependencies.empty())
+    if (!node.dependencies.empty())
         return false;
 
-    std::list<program_node*> to_remove;
-    std::list<program_node*> marked;
-    if (detach_whole_branch)
+    if (!node.is_output() || is_debug_build())
     {
-        node.mark();
-        std::list<program_node*> queue = { &node };
-        while (!queue.empty())
-        {
-            auto curr = queue.front();
-            queue.pop_front();
-            marked.push_back(curr);
+        if (node.is_input())
+            inputs.remove(&node);
 
-            //remove only if all users also has been marked
-            bool rem = !std::any_of(curr->get_users().begin(), curr->get_users().end(), [](program_node* node) { return !node->is_marked(); });
-            if (rem)
-                to_remove.push_back(curr);
-
-            for (auto dep : curr->get_dependencies())
-            {
-                if (!dep->is_marked())
-                {
-                    dep->mark();
-                    queue.push_back(dep);
-                }
-            }
-        }
+        if (std::find(processing_order.begin(), processing_order.end(), &node) != processing_order.end())
+            processing_order.erase(processing_order.get_processing_iterator(node));
+        optimized_out.push_back(node.id());
+        nodes_map.erase(node.id());
     }
-    else
-        to_remove.push_back(&node);
-
-    for (auto n : marked)
-        n->unmark();
-
-    for (auto rem : to_remove)
-    {
-        if (!rem->is_output() || is_debug_build())
-        {
-            if (detach_whole_branch)
-            {
-                for (auto& user : rem->get_users())
-                    user->remove_dependency(*rem);
-            }
-            if (rem->is_input())
-                inputs.remove(rem);
-
-            if (std::find(processing_order.begin(), processing_order.end(), rem) != processing_order.end())
-                processing_order.erase(processing_order.get_processing_iterator(*rem));
-            optimized_out.push_back(rem->id());
-            nodes_map.erase(rem->id());
-        }
-    }
-
     return true;
 }
 
@@ -1772,19 +1857,35 @@ bool program_impl::extract_and_remove(program_node& node)
     node.dependencies.clear();
     input.users.remove(&node);
 
-    if (node.constant_frontier)
-    {
-        assert(node.constant && "Constant frontier should also, by definition, be constant");
-        assert(input.constant && "Input for constant forontier should, by definition, be constant");
-        input.constant_frontier = true;
-    }
-
     if (!node.is_endpoint())
         replace_all_usages(node, input);
     else
         remove_if_dangling(node);
 
     return true;
+}
+
+void program_impl::remove_nodes(std::list<program_node*>& to_remove)
+{
+    for (auto const& node : to_remove)
+    {
+        if (node->is_input())
+            get_inputs().remove(node);
+        else
+        {
+            for (auto& dep : node->dependencies)
+                dep->users.remove(node);
+        }
+        for (auto& user : node->users)
+        {
+            user->dependencies.erase(std::remove(user->dependencies.begin(),
+                user->dependencies.end(), node),
+                user->dependencies.end());
+        }
+        get_processing_order().erase(get_processing_order().get_processing_iterator(*node));
+        optimized_out.push_back(node->id());
+        nodes_map.erase(node->id());
+    }
 }
 
 void program_impl::dump_memory_pool() const
@@ -1830,41 +1931,4 @@ void program_impl::dump_program(const char* stage, bool with_full_info, std::fun
     dump_graph_optimized(graph, *this);
 }
 
-//Dumps weights and biasses in serialization process, not working yet, in progress.
-void program_impl::dump_weights_and_biasses(std::vector<unsigned long long>& offsets, std::vector<std::string>& data_names, std::ofstream& file_stream) const
-{
-    for (auto const& n : nodes_map)
-    {
-        auto dependency_count = (unsigned int)n.second.get()->get_dependencies().size();
-        for (unsigned int dp = 0; dp < dependency_count; dp++)
-        {
-            auto& dependency = n.second.get()->get_dependency(dp);
-            if (dependency.is_type<data>())
-            {
-                offsets.push_back(offsets.empty() ? 0ull : offsets.back());
-                auto& mem = dependency.as<data>().get_attached_memory();
-                if (mem.get_layout().data_type == data_types::f32)
-                    dump_data(mem, file_stream, offsets.back(), sizeof(float));
-                else
-                    dump_data(mem, file_stream, offsets.back(), sizeof(short));
-                data_names.push_back(dependency.as<data>().id());
-            }
-        }
-    }
-    file_stream.close();
-}
 
-//Makes serialization with given name.
-//Placeholder, not working yet, in progress.
-void program_impl::serialize(std::string network_name, std::function<bool(program_node const&)> const& filter) const
-{
-    std::vector<unsigned long long> offsets;
-    std::vector<std::string> data_names;
-
-    std::ofstream file_stream(network_name + "_" + "serialization" + ".bin", std::ios::binary);
-    dump_kernels(engine->get_context().get()->get_kernels_cache().get_context().get_binaries(), offsets, data_names, file_stream);
-    dump_weights_and_biasses(offsets, data_names, file_stream);
-
-    std::ofstream graph(network_name + "_" + "serialization" + ".xml");
-    dump_to_xml(graph, *this, filter, offsets, data_names);
-}

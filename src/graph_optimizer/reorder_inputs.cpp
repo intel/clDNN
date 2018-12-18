@@ -30,8 +30,7 @@
 
 using namespace cldnn;
 
-
-//ToDo remove friendship relation from  program_node and program_impl
+//ToDo remove friendship relation from program_impl
 
 reorder_inputs::reorder_inputs(layout_optimizer& lo_ref) : _lo(lo_ref) {}
 
@@ -42,9 +41,9 @@ void reorder_inputs::run(program_impl &p) {
 void reorder_inputs::run(program_impl &p, layout_optimizer& lo)
 {
     //first pass to set layout optimization_attributes for topology
-    for (auto& nm : p.nodes_map)
+    for (auto& node : p.get_processing_order())
     {
-        auto& prim = *nm.second;
+        auto& prim = *node;
         if (prim.type() == cldnn::convolution::type_id())
         {
             if (prim.as<convolution>().get_primitive()->split() > 1)
@@ -143,7 +142,7 @@ void reorder_inputs::run(program_impl &p, layout_optimizer& lo)
                 input_layout.data_type, std::vector<float>{}, cldnn_reorder_mean_mode::mean_subtract, conv_node.output_layout.data_padding);
             conv_node.output_layout.data_padding = padding{};
             program_node& back_node = p.get_or_create(winograd_output);
-            p.processing_order.insert(std::next(p.processing_order.get_processing_iterator(conv_node)), &back_node);
+            p.get_processing_order().insert(std::next(p.get_processing_order().get_processing_iterator(conv_node)), &back_node);
 
             auto bias_term = conv_node.bias_term();
             //create additional eltwise node after reorder to compute bias
@@ -153,10 +152,10 @@ void reorder_inputs::run(program_impl &p, layout_optimizer& lo)
                 std::vector<primitive_id> inputs = { back_node.id(), bias_node.id() };
                 auto winograd_output_biases = std::make_shared<eltwise>(back_node.id() + "_bias", inputs,
                     cldnn::eltwise_mode::sum, conv_prim->with_activation, conv_prim->activation_negative_slope,
-                    back_node.output_layout.data_padding);
-                back_node.output_layout.data_padding = padding{};
+                    back_node.get_output_layout().data_padding);
+                back_node.get_output_layout().data_padding = padding{};
                 auto& back_bias_node = p.get_or_create(winograd_output_biases);
-                p.processing_order.insert(std::next(p.processing_order.get_processing_iterator(back_node)), &back_bias_node);
+                p.get_processing_order().insert(std::next(p.get_processing_order().get_processing_iterator(back_node)), &back_bias_node);
                 p.replace_all_usages(back_node, back_bias_node);
                 p.add_connection(back_node, back_bias_node);
                 p.add_connection(bias_node, back_bias_node);
@@ -223,7 +222,7 @@ void reorder_inputs::run(program_impl &p, layout_optimizer& lo)
         {
             auto conv1x1_output = std::make_shared<reorder>("_conv1x1_reorder_back_" + conv_node.id(), conv_node.id(), input_layout.format, input_layout.data_type);
             auto& back_node = p.get_or_create(conv1x1_output);
-            p.processing_order.insert(std::next(p.processing_order.get_processing_iterator(conv_node)), &back_node);
+            p.get_processing_order().insert(std::next(p.get_processing_order().get_processing_iterator(conv_node)), &back_node);
             conv_node.invalidate_users();
             p.replace_all_usages(conv_node, back_node);
             p.add_connection(conv_node, back_node);
@@ -232,7 +231,7 @@ void reorder_inputs::run(program_impl &p, layout_optimizer& lo)
         if (new_input)
         {
             auto& r_node = p.get_or_create(new_input);
-            p.add_intermediate(r_node, conv_node, 0, r_node.dependencies.empty());
+            p.add_intermediate(r_node, conv_node, 0, r_node.get_dependencies().empty());
             conv_node.recalc_output_layout();
         }
     };

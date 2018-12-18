@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -159,6 +159,7 @@ typedef struct
     /*cldnn_priority_mode_type*/ int16_t priority_mode; ///< Priority mode (support of OpenCL priority hints in command queue).
     /*cldnn_throttle_mode_type*/ int16_t throttle_mode; ///< Throttle mode (support of throttle hints in command queue).
     uint32_t enable_memory_pool;                        ///< Enables memory usage optimization. memory objects will be reused when possible. 
+    //const char* tuning_cache_path;                      ///< Enables defining other than default path to tuning cache json file
 }  cldnn_engine_configuration;
 
 /// @brief Information about the engine returned by cldnn_get_engine_info().
@@ -301,6 +302,8 @@ typedef enum /*:int32_t*/
     cldnn_format_is_o_yx_isv32, /// < \n format for weights for 1x1 MMAD convolutions 
     cldnn_format_os_is_y_x8_osv8_isv4, /// < n\ format for weights for MMAD convolutions
     cldnn_bf_lyx_yx,                      /// < \n format for local convolution weights
+    cldnn_format_b_fs_yx_fsv4,            /// < \n format for input for IMAD convolutions
+    cldnn_format_os_is_yx_osv16_isv4,     /// < \n format for weights for IMAD convolutions
     cldnn_format_format_num,    ///< number of format types
     cldnn_format_any = -1
 } cldnn_format_type;
@@ -464,6 +467,17 @@ typedef struct cldnn_activation_additional_params_t
     float a, b;
 } cldnn_activation_additional_params;
 
+/// @brief Axis which index_select primitive will index.
+typedef enum index_select_axis_name_t
+{
+    along_b,
+    along_f,
+    along_y,
+    along_x
+} index_select_axis_name;
+
+/// @brief  Axis which index_select primitive will index array
+typedef const index_select_axis_name* index_select_axis_name_arr;
 
 /// @brief reorder mean operation modes
 typedef enum cldnn_reorder_mean_mode_t

@@ -84,8 +84,18 @@ public:
             }
         }
         lstm_gemm_params.direction = arg.direction();
-        // for future handling bidirectional inputs directly in stacked topologies
-        lstm_gemm_params.input_direction = 0;
+        
+        // Update the direction of the input for the gemm kernel
+        const auto& input_layout = arg.input().get_output_layout();
+        size_t input_directions = input_layout.size.spatial[1];
+        if (input_directions > 1)  // For bidirection input, input direction can be 1 or 0
+        {
+            lstm_gemm_params.input_direction = arg.direction();
+        }
+        else  // For unidirectional input
+        {
+            lstm_gemm_params.input_direction = 0;
+        }
 
         auto lstm_gemm_optional_params = get_default_optional_params<kernel_selector::lstm_gemm_optional_params>(arg.get_program());
 

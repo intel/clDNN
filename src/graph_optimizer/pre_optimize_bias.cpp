@@ -25,8 +25,6 @@
 
 using namespace cldnn;
 
-//ToDo remove friendship relation from  program_node and program_impl
-
 pre_optimize_bias::pre_optimize_bias(layout_optimizer& lo_ref) : _lo(lo_ref) {}
 
 void pre_optimize_bias::run(program_impl &p) {
@@ -65,26 +63,25 @@ template void pre_optimize_bias::optimize_bias<embed_node>(embed_node& node, lay
 
 void pre_optimize_bias::run(program_impl &p, layout_optimizer& lo)
 {
-    for (auto& nm : p.nodes_map)
+    for (auto& prim : p.get_processing_order())
     {
-        auto& prim = *nm.second;
-        if (prim.type() == convolution::type_id())
+        if (prim->type() == convolution::type_id())
         {
-            if (!prim.as<convolution>().weights_quantization_term())
-                optimize_bias(prim.as<convolution>(), lo, p);
+            if (!prim->as<convolution>().weights_quantization_term())
+                optimize_bias(prim->as<convolution>(), lo, p);
         }
-        else if (prim.type() == deconvolution::type_id())
+        else if (prim->type() == deconvolution::type_id())
         {
-            optimize_bias(prim.as<deconvolution>(), lo, p);
+            optimize_bias(prim->as<deconvolution>(), lo, p);
         }
-        else if (prim.type() == fully_connected::type_id())
+        else if (prim->type() == fully_connected::type_id())
         {
-            if (!prim.as<fully_connected>().weights_quantization_term())
-                optimize_bias(prim.as<fully_connected>(), lo, p);
+            if (!prim->as<fully_connected>().weights_quantization_term())
+                optimize_bias(prim->as<fully_connected>(), lo, p);
         }
-        else if (prim.type() == embed::type_id())
+        else if (prim->type() == embed::type_id())
         {
-            optimize_bias(prim.as<embed>(), lo, p);
+            optimize_bias(prim->as<embed>(), lo, p);
         }
     }
 }

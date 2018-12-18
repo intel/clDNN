@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ namespace kernel_selector
             { 1, 2, 0,-1, 3 }, // DataLayout::byxf_af32
             { 1, 2, 0,-1, 3 }, // DataLayout::byx8_f8
             { 0, 1, 3,-1, 2 }, // DataLayout::fs_bs_yx_bsv4_fsv32
+            { 0, 1, 2, -1, 3 },// DataLayout::b_fs_yx_fsv4
         } };
 
         std::array<std::array<int, 6>, WeightsLayout::WeightsLayoutCount> WeightsTensor::weightsChannelArray
@@ -72,6 +73,7 @@ namespace kernel_selector
             {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::is_o_yx_isv32
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_y_x8_osv8_isv4
             {  0,  1,  2,  3,  4,  5 }, // WeightsLayout::bf_lyx_yx
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_osv16_isv4
         } };
 
         NDims DataTensor::GetSimpleDims(const std::vector<size_t>& d, DataLayout l)

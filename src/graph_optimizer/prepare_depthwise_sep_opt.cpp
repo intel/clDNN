@@ -20,7 +20,6 @@
 #include "program_helpers.h"
 
 
-
 template <typename T>
 void prepare_depthwise_sep_opt::optimize_depthwise_sep_pre(T& node)
 {
@@ -47,16 +46,15 @@ template void prepare_depthwise_sep_opt::optimize_depthwise_sep_pre<deconvolutio
 void prepare_depthwise_sep_opt::run(program_impl &p)
 {
     //depthiwise separated convolution/deconvolution optimization
-    for (auto& nm : p.nodes_map)
+    for (auto& prim : p.get_processing_order())
     {
-        auto& prim = *nm.second;
-        if (prim.type() == convolution::type_id())
+        if (prim->type() == convolution::type_id())
         {
-            optimize_depthwise_sep_pre(prim.as<convolution>());
+            optimize_depthwise_sep_pre(prim->as<convolution>());
         }
-        else if (prim.type() == deconvolution::type_id())
+        else if (prim->type() == deconvolution::type_id())
         {
-            optimize_depthwise_sep_pre(prim.as<deconvolution>());
+            optimize_depthwise_sep_pre(prim->as<deconvolution>());
         }
     }
 }

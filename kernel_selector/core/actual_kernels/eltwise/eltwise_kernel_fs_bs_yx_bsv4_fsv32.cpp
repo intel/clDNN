@@ -189,9 +189,48 @@ namespace kernel_selector {
             case EltwiseMode::SUB:      op += input0_str + " - " + input1_str; break;
             case EltwiseMode::MUL:      op += input0_str + " * " + input1_str; break;
             case EltwiseMode::DIV:      op += input0_str + " / " + input1_str; break;
-            case EltwiseMode::MODULU:   op += cast_type + "fmod(" + input0_str + ", " + input1_str + ")"; break;
-            case EltwiseMode::MIN:      op += cast_type + "fmin(" + input0_str + ", " + input1_str + ")"; break;
-            case EltwiseMode::MAX:      op += cast_type + "fmax(" + input0_str + ", " + input1_str + ")"; break;
+            case EltwiseMode::MODULU:
+            case EltwiseMode::MIN:
+            case EltwiseMode::MAX:
+            {
+                auto mode = (ew.mode == EltwiseMode::MODULU ? "mod" : (ew.mode == EltwiseMode::MIN ? "min" : "max"));
+                auto input_0_type = params.inputs[0].GetDType();
+                auto input_1_type = params.inputs[1].GetDType();
+
+                // input_0 == int
+                if (input_0_type == kernel_selector::Datatype::INT8 ||
+                    input_0_type == kernel_selector::Datatype::INT32 ||
+                    input_0_type == kernel_selector::Datatype::INT64)
+                {
+                    // input_0 == int && input_1 == int
+                    if (input_1_type == kernel_selector::Datatype::INT8 ||
+                        input_1_type == kernel_selector::Datatype::INT32 ||
+                        input_1_type == kernel_selector::Datatype::INT64)
+                    {
+                        if (ew.mode == EltwiseMode::MODULU)
+                            op += input0_str + " % " + input1_str;
+                        else
+                            op += cast_type + mode + "(" + input0_str + ", " + input1_str + ")";
+                    }
+                    // input_0 == int && input_1 != int
+                    else
+                    {
+                        op += cast_type + "f" + mode + "(convert_float(" + input0_str + "), " + input1_str + ")";
+                    }
+                }
+                // input_0 != int && input_1 == int
+                else if (input_1_type == kernel_selector::Datatype::INT8 ||
+                    input_1_type == kernel_selector::Datatype::INT32 ||
+                    input_1_type == kernel_selector::Datatype::INT64)
+                {
+                    op += cast_type + "f" + mode + "(" + input0_str + ", convert_float(" + input1_str + "))";
+                }
+                // input_0 != int && input_1 != int
+                else
+                {
+                    op += cast_type + "f" + mode + "(" + input0_str + ", " + input1_str + ")";
+                }
+            } break;
             case EltwiseMode::POW:      op += cast_type + "pow(" + input0_str + ", " + input1_str + ")"; break;
             case EltwiseMode::SQRT:     op += cast_type + "sqrt(" + input0_str + ")"; break;
             case EltwiseMode::RSQRT:    op += cast_type + "1/sqrt(" + input0_str + ")"; break;

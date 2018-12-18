@@ -50,7 +50,6 @@ namespace cldnn
         {
             node->unmark();
         }
-        update_processing_numbers();
         return;
     }
 
@@ -102,7 +101,6 @@ namespace cldnn
                 processing_order_iterators[node]--;
             }
         }
-        update_processing_numbers();
         return;
     }
 
@@ -111,7 +109,7 @@ namespace cldnn
     {
         for (auto& dep : node->get_dependencies())
         {
-            if (node->processing_num < dep->processing_num)
+            if (get_processing_number(node) < get_processing_number(dep))
             {
                 return false;
             }
@@ -119,26 +117,7 @@ namespace cldnn
         return true;
     }
 
-    void program_impl::nodes_ordering::update_processing_numbers()
-    {
-        uint32_t idx = 0;
-        for (auto& node : _processing_order)
-        {
-            node->processing_num = ++idx;
-        }
-
-        //verify the correctness of processing order - can be moved to Debug configuration only
-        for (auto& node : _processing_order)
-        {
-            if (!is_correct(node))
-            {
-                CLDNN_ERROR_MESSAGE(node->id(), "Incorrect processing order");
-                return;
-            }
-        }
-    }
-
-    program_impl::nodes_ordering::const_iterator program_impl::nodes_ordering::get_processing_iterator(program_node& node) {
+    program_impl::nodes_ordering::const_iterator program_impl::nodes_ordering::get_processing_iterator(program_node& node) const {
         return processing_order_iterators.at(&node);
     }
 

@@ -40,6 +40,7 @@ struct event_impl;
 struct topology_impl;
 struct program_impl;
 struct network_impl;
+struct program_node;
 
 template <class>
 struct typed_program_node;
@@ -50,7 +51,6 @@ public:
     engine_impl(const engine_configuration& conf);
     ~engine_impl();
     engine_types type() const { return engine_types::ocl; }
-
     refcounted_obj_ptr<memory_impl> allocate_memory(layout layout);
     refcounted_obj_ptr<memory_impl> allocate_memory(layout layout, primitive_id, uint32_t, std::set<primitive_id>, bool reusable = true);
     refcounted_obj_ptr<memory_impl> reinterpret_buffer(const memory_impl& memory, layout new_layout);
@@ -60,10 +60,12 @@ public:
     void wait_for_events(std::vector<event_impl::ptr> const& events);
 
     refcounted_obj_ptr<program_impl> build_program(const topology_impl& topology, const build_options& options, bool is_internal = false);
+    refcounted_obj_ptr<program_impl> build_program(const std::set<std::shared_ptr<program_node>>& nodes, const build_options & options, bool is_internal);
     void compile_program(program_impl& prog);
 
-    refcounted_obj_ptr<network_impl> allocate_network(const program_impl& program, bool internal_network = false);
-    refcounted_obj_ptr<network_impl> build_network(const topology_impl& topology, const build_options& options, bool internal_network = false);
+    refcounted_obj_ptr<network_impl> allocate_network(const program_impl& program, bool is_internal = false);
+    refcounted_obj_ptr<network_impl> build_network(const topology_impl& topology, const build_options& options, bool is_internal = false);
+    refcounted_obj_ptr<network_impl> build_network(const std::set<std::shared_ptr<program_node>>& nodes, const build_options & options, bool is_internal);
     void flush_network();
     void release_pending_memory();
 

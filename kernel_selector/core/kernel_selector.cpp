@@ -146,25 +146,24 @@ namespace kernel_selector {
     {
         KernelsData kernelsData;
         std::string kernelName;
-
         if (params.GetType() == kType &&
             options.GetType() == kType)
         {
             std::string hash = std::to_string(create_hash(params.to_string()));
             ParamsKey requireKey = params.GetParamsKey().Merge(options.GetSupportedKey());
-            
             std::tuple<std::string, int> cachedKernelConfig;
             if (options.tuningParams.mode == TuningMode::TUNING_DISABLED) // Try to load kernel/config from offline cache
             {
 #if ENABLE_OFFLINE_TUNING_CACHE
-                cachedKernelConfig = autoTuner.LoadKernelOffline(params.engineInfo.computeUnitsCount, hash);
+                cachedKernelConfig = autoTuner.LoadKernelOffline(params.engineInfo.deviceCache, hash);
+                
 #else
                 return  GetNaiveBestKernel(params, options, kType);
 #endif
             }
             else // Try to load kernel/config from on-line cache
             {
-                cachedKernelConfig = autoTuner.LoadKernelOnline(options.tuningParams.mode, options.tuningParams.cacheFilePath, params.engineInfo.computeUnitsCount, params.engineInfo.driverVersion, params.engineInfo.hostVersion, hash);
+                cachedKernelConfig = autoTuner.LoadKernelOnline(options.tuningParams.mode, options.tuningParams.cacheFilePath, params.engineInfo.computeUnitsCount, hash);
             }       
             bool hashFoundInCache = !std::get<0>(cachedKernelConfig).empty();
 
@@ -208,8 +207,6 @@ namespace kernel_selector {
 
             for (const auto& implementation : implementations)
             {
-                printf("%s \n", implementation->GetName().c_str());
-
                 const ParamsKey implKey = implementation->GetSupportedKey();
                 if (implKey.Support(requireKey) && implKey.TuningSupport())
                 {
@@ -272,7 +269,7 @@ namespace kernel_selector {
             {
                 kernelsData[0].kernelName = kernelName;
                 kernelsData[0].kernels[0].layerID = params.layerID;
-                autoTuner.StoreKernel(options.tuningParams.cacheFilePath, hash, kernelName, kernelsData[0].autoTuneIndex);
+                autoTuner.StoreKernel(options.tuningParams.cacheFilePath, hash, kernelName, kernelsData[0].autoTuneIndex, params.engineInfo.computeUnitsCount);
             }
         } 
 

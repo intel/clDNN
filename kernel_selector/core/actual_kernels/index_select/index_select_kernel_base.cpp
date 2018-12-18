@@ -24,25 +24,41 @@ namespace kernel_selector
     {
         JitConstants jit = MakeBaseParamsJitConstants(params);
 
-        jit.AddConstant(MakeJitConstant(toString(params.axis), ""));
+        jit.AddConstant(MakeJitConstant("AXES_NUMBER", params.axes.size()));
+
         if (params.reverse) {
             jit.AddConstant(MakeJitConstant("REVERSE", 1));
-            if (params.axis == IndexSelectAxis::BATCH)
-            {
-                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).Batch().v));
+        }
+
+        for (size_t i = 0; i < params.axes.size(); i++)
+        {
+            std::string size_name = "REVERSE_AXIS_SIZE";
+            size_t size_value = 0;
+            if (params.axes.size() > 1) {
+                std::stringstream ss;
+                ss << "REVERSE_" << toString(params.axes[i]) << "_SIZE";
+                size_name = ss.str();
             }
-            else if (params.axis == IndexSelectAxis::X)
-            {
-                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).X().v));
+            jit.AddConstant(MakeJitConstant(toString(params.axes[i]), ""));
+            if (params.reverse) {
+                if (params.axes[i] == IndexSelectAxis::BATCH)
+                {
+                    size_value = params.inputs.at(0).Batch().v;
+                }
+                else if (params.axes[i] == IndexSelectAxis::X)
+                {
+                    size_value = params.inputs.at(0).X().v;
+                }
+                else if (params.axes[i] == IndexSelectAxis::Y)
+                {
+                    size_value = params.inputs.at(0).Y().v;
+                }
+                else if (params.axes[i] == IndexSelectAxis::FEATURE)
+                {
+                    size_value = params.inputs.at(0).Feature().v;
+                }
             }
-            else if (params.axis == IndexSelectAxis::Y)
-            {
-                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).Y().v));
-            }
-            else if (params.axis == IndexSelectAxis::FEATURE)
-            {
-                jit.AddConstant(MakeJitConstant("REVERSE_AXIS_SIZE", params.inputs.at(0).Feature().v));
-            }
+            jit.AddConstant(MakeJitConstant(size_name, size_value));
         }
 
         return jit;
@@ -57,40 +73,49 @@ namespace kernel_selector
 
         std::vector<size_t> global;
         
-        if (params.reverse) 
-        {
-            if (params.axis == IndexSelectAxis::BATCH)
+        if(params.axes.size() == 1) {
+            if (params.reverse)
             {
-                global = { 1, params.inputs.at(0).Batch().v, output.Feature().v };
+                if (params.axes[0] == IndexSelectAxis::BATCH)
+                {
+                    global = { 1, params.inputs.at(0).Batch().v, output.Feature().v };
+                }
+                else if (params.axes[0] == IndexSelectAxis::X)
+                {
+                    global = { output.Batch().v, params.inputs.at(0).X().v, output.Feature().v };
+                }
+                else if (params.axes[0] == IndexSelectAxis::Y)
+                {
+                    global = { output.Batch().v, params.inputs.at(0).Y().v, output.Feature().v };
+                }
+                else if (params.axes[0] == IndexSelectAxis::FEATURE)
+                {
+                    global = { output.Batch().v, params.inputs.at(0).Feature().v, output.Y().v };
+                }
             }
-            else if (params.axis == IndexSelectAxis::X)
+            else
             {
-                global = { output.Batch().v, params.inputs.at(0).X().v, output.Feature().v };
-            }
-            else if (params.axis == IndexSelectAxis::Y)
-            {
-                global = { output.Batch().v, params.inputs.at(0).Y().v, output.Feature().v };
-            }
-            else if (params.axis == IndexSelectAxis::FEATURE)
-            {
-                global = { output.Batch().v, params.inputs.at(0).Feature().v, output.Y().v };
+                const auto indices = params.inputs.at(1).X().v;
+
+                if (params.axes[0] == IndexSelectAxis::BATCH)
+                {
+                    global = { 1, indices, output.Feature().v };
+                }
+                else if (params.axes[0] == IndexSelectAxis::X || params.axes[0] == IndexSelectAxis::Y)
+                {
+                    global = { output.Batch().v, indices, output.Feature().v };
+                }
+                else if (params.axes[0] == IndexSelectAxis::FEATURE)
+                {
+                    global = { output.Batch().v, indices, output.Y().v };
+                }
             }
         }
-        else 
+        else
         {
-            const auto indices = params.inputs.at(1).X().v;
-
-            if (params.axis == IndexSelectAxis::BATCH)
+            if (params.reverse)
             {
-                global = { 1, indices, output.Feature().v };
-            }
-            else if (params.axis == IndexSelectAxis::X || params.axis == IndexSelectAxis::Y)
-            {
-                global = { output.Batch().v, indices, output.Feature().v };
-            }
-            else if (params.axis == IndexSelectAxis::FEATURE)
-            {
-                global = { output.Batch().v, indices, output.Y().v };
+                global = { output.Batch().v, output.Y().v, output.Feature().v };
             }
         }
 

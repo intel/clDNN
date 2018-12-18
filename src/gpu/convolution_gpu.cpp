@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@ protected:
 
         // Check whether all memory elements use the same unit type (FP16 or FP32).
         CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "output memory", instance.node.get_output_layout().data_type, "");
-        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
+        // Integer signed/unsigned is ok for convoluiton
+        CLDNN_ERROR_DATA_TYPES_MISMATCH_IGNORE_SIGN(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
 
         return res;
     }
@@ -170,6 +171,8 @@ namespace{
 
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::b_fs_yx_fsv4), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::u8, format::b_fs_yx_fsv4), convolution_gpu::create);
         }
         ~attach() {}
     };

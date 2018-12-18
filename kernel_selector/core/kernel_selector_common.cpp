@@ -97,6 +97,7 @@ namespace kernel_selector
         case kernel_selector::DataLayout::byxf_af32: return "BYXF_AF32";
         case kernel_selector::DataLayout::byx8_f4: return "BYX8_F4";
         case kernel_selector::DataLayout::fs_bs_yx_bsv4_fsv32: return "FS_BS_YX_BSV4_FSV32";
+        case kernel_selector::DataLayout::b_fs_yx_fsv4:      return "B_FS_YX_FSV4";
         default: return "";
         }
     }
@@ -326,6 +327,8 @@ namespace kernel_selector
         case WeightsLayout::os_is_yx_isa8_osv8_isv4: return "OS_IS_YX_ISA8_OSV8_ISV4";
         case WeightsLayout::is_o_yx_isv32: return "IS_O_YX_ISV32";
         case WeightsLayout::os_is_y_x8_osv8_isv4: return "OS_IS_Y_X8_OSV8_ISV4";
+        case WeightsLayout::os_is_yx_osv16_isv4:  return "OS_IS_YX_OSV16_ISV4";
+
         default:
             return "";
             break;
@@ -389,7 +392,7 @@ namespace kernel_selector
         default:                           return "";
         }
     }
-    
+
     std::string toString(const Tensor::Dim& dim)
     {
         std::stringstream s;

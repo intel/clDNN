@@ -188,7 +188,7 @@ struct pooling : public primitive_base<pooling, CLDNN_PRIMITIVE_DESC(pooling)>
         : primitive_base(dto)
         , argmax(dto->argmax)
         , mode(static_cast<pooling_mode>(dto->mode))
-        , global_pooling(dto->global_pooling)
+        , global_pooling(dto->global_pooling != 0)
         , input_offset(dto->input_offset)
         , stride(dto->stride)
         , size(dto->size)

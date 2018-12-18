@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ namespace kernel_selector {
 
     std::vector<size_t> GetImageSizes(const kernel_selector::WeightsTensor& dimensions, const WeightsLayout layout);
     bool CheckImageSize(const weight_bias_params& newParams, const WeightsLayout layout);
-    bool UpdateWeightsParams(weight_bias_params& newParams, const optional_params& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams);
+    bool UpdateWeightsParams(weight_bias_params& newParams, const optional_params& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams,  const ParamsKey& paramsKey = ParamsKey());
     JitConstants GetTensorFriendlyWorkGroupsJit(const DataTensor& t);
     std::vector<size_t> GetTensorFriendlyWorkGroups(const DataTensor& t);
     std::vector<size_t> GetOptimalLocalWorkGroupSizes(std::vector<size_t> gws);

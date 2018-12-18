@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ namespace kernel_selector
             byxf_af32, // for MMAD convolution
             byx8_f4, // for MMAD convolution
             fs_bs_yx_bsv4_fsv32, // for batched MMAD
+            b_fs_yx_fsv4,        // reordering format for swizzled input for convolution using IMAD
             DataLayoutCount // NMBER OF ELEMENTS IN ENUM
         };
 
@@ -84,6 +85,7 @@ namespace kernel_selector
             is_o_yx_isv32,           // for MMAD 1x1 convolutions
             os_is_y_x8_osv8_isv4, // for MMAD convolutions
             bf_lyx_yx,               // local convolution
+            os_is_yx_osv16_isv4,     // swizzled weights for convolution using IMAD
             WeightsLayoutCount       // NMBER OF ELEMENTS IN ENUM
         };
 

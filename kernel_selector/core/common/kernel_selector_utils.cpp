@@ -25,6 +25,7 @@ namespace kernel_selector {
     {
         switch (t)
         {
+        case Datatype::UINT8:   return WeightsType::UINT8;
         case Datatype::INT8:    return WeightsType::INT8;
         case Datatype::F16:     return WeightsType::F16;
         case Datatype::F32:     return WeightsType::F32;
@@ -33,9 +34,10 @@ namespace kernel_selector {
         }
     }
 
-    static bool CheckWeights(const WeightsTensor& tensor, WeightsType reqType, std::vector<WeightsLayout> reqLayouts)
+    static bool CheckWeights(const WeightsTensor& tensor, WeightsType reqType, std::vector<WeightsLayout> reqLayouts, const ParamsKey& paramsKey)
     {
-        if (reqType != tensor.GetDType())
+        if ((reqType != tensor.GetDType()) &&
+            !(paramsKey.isEnabledDifferentInputWeightsTypes()))
         {
             return false;
         }
@@ -87,7 +89,7 @@ namespace kernel_selector {
         return true;
     }
 
-    bool UpdateWeightsParams(weight_bias_params& newParams, const optional_params& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams)
+    bool UpdateWeightsParams(weight_bias_params& newParams, const optional_params& options, std::vector<WeightsLayout> layouts, WeightsReorderParams& weightsReorderParams, const ParamsKey& paramsKey)
     {
         //validate if weights type is image and if device supports requested sizes
         for (auto& requested_layout : layouts)
@@ -101,8 +103,8 @@ namespace kernel_selector {
         const weight_bias_optional_params& optParams = static_cast<const weight_bias_optional_params&>(options);
 
         const auto dtype = DataTypeToWeightsType(newParams.inputs[0].GetDType());
-        bool bProperWeights = CheckWeights(newParams.weights, dtype, layouts);
-
+        bool bProperWeights = CheckWeights(
+                                  newParams.weights, dtype, layouts, paramsKey);
         if (!bProperWeights)
         {
             if (!optParams.allowStaticInputReordering)

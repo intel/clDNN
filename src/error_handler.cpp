@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,10 +69,13 @@ void error_on_bool(const std::string& file, int line, const std::string& instanc
     }
 }
 
-void error_on_mismatching_data_types(const std::string& file, int line, const std::string& instance_id, const std::string& data_format_1_id, data_types data_format_1, const std::string& data_format_2_id, data_types data_format_2, const std::string& additional_message)
+void error_on_mismatching_data_types(const std::string& file, int line, const std::string& instance_id, const std::string& data_format_1_id, data_types data_format_1, const std::string& data_format_2_id, data_types data_format_2, const std::string& additional_message, bool ignore_sign)
 {
     std::stringstream error_msg;
-    if (data_format_1 != data_format_2)
+    if (data_format_1 != data_format_2 &&
+        !ignore_sign &&
+         ((data_format_1 == data_types::i8 && data_format_2 == data_types::u8) ||
+          (data_format_1 == data_types::u8 && data_format_2 == data_types::i8)))
     {
         error_msg << "Data formats are incompatible." << std::endl;
         error_msg << data_format_1_id << " format is: " << data_type_traits::name(data_format_1) << ", " << data_format_2_id << " is: " << data_type_traits::name(data_format_2) << std::endl;

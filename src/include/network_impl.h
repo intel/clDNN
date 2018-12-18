@@ -39,6 +39,7 @@ struct network_impl : public refcounted_obj<network_impl>
 public:
     network_impl(const program_impl& program, bool is_internal = false);
     network_impl(engine_impl& engine, const topology_impl& topo, const build_options& options = build_options(), bool is_internal = false);
+    network_impl(engine_impl& engine, const std::set<std::shared_ptr<program_node>>& nodes, const build_options & options, bool is_internal);
 
     const program_impl& get_program() const { return *_program; }
     engine_impl& get_engine() const { return _program->get_engine(); }

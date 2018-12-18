@@ -20,8 +20,6 @@
 #include "pass_manager.h"
 #include "program_helpers.h"
 
-//ToDo remove friendship relation from program_node and program_impl
-
 post_optimize_weights::post_optimize_weights(layout_optimizer& lo_ref) : _lo(lo_ref) {}
 
 void post_optimize_weights::run(program_impl &p) {
@@ -56,7 +54,7 @@ void post_optimize_weights::optimize_weights(T& node, layout_optimizer& lo, prog
             //set generic_layer's node output layout and implementation
             auto& g_node = node.get_dependency(i);
             g_node.get_output_layout(false);
-            g_node.selected_impl = g_node.type()->choose_impl(*(p.engine), g_node);
+            g_node.selected_impl = g_node.type()->choose_impl(p.get_engine(), g_node);
         }
         //set the old output layout and do not invalidate users as change of weights will not affect output layout
         node.set_output_layout(output_layout, false);
@@ -68,20 +66,19 @@ template void post_optimize_weights::optimize_weights<fully_connected_node>(full
 
 void post_optimize_weights::run(program_impl &p, layout_optimizer& lo)
 {
-     for (auto& nm : p.nodes_map)
+     for (auto& node : p.get_processing_order())
     {
-        auto& prim = *nm.second;
-        if (prim.type() == convolution::type_id())
+        if (node->type() == convolution::type_id())
         {
-            optimize_weights(prim.as<convolution>(), lo, p);
+            optimize_weights(node->as<convolution>(), lo, p);
         }
-        else if (prim.type() == deconvolution::type_id())
+        else if (node->type() == deconvolution::type_id())
         {
-            optimize_weights(prim.as<deconvolution>(), lo, p);
+            optimize_weights(node->as<deconvolution>(), lo, p);
         }
-        else if (prim.type() == fully_connected::type_id())
+        else if (node->type() == fully_connected::type_id())
         {
-            optimize_weights(prim.as<fully_connected>(), lo, p);
+            optimize_weights(node->as<fully_connected>(), lo, p);
         }
     }
 }

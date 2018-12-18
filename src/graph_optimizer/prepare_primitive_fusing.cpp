@@ -70,22 +70,8 @@ void prepare_primitive_fusing::fuse_skip_layers(program_impl &p, program_node* n
         p.add_connection(node.input(to_fuse_index), to_fuse_with);
         p.remove_connection(node.input(to_fuse_index), node);
 
-        //replace processing_num of the node where fusing take place and eltwise
-        auto new_processing_num = node.processing_num;      //ToDo: avoid direct modifications of processing_num
-        p.processing_order.erase(p.processing_order.get_processing_iterator(to_fuse_with));
-        p.processing_order.insert(p.processing_order.get_processing_iterator(node), &to_fuse_with);
-        to_fuse_with.processing_num = new_processing_num;   //ToDo: avoid direct modifications of processing_num
-
-                                                            //make sure that new fused node's users have higher processing_num than fused node
-        for (auto user : to_fuse_with.get_users())
-        {
-            if (user->processing_num < new_processing_num)
-            {
-                p.processing_order.erase(p.processing_order.get_processing_iterator(*user));
-                p.processing_order.insert(std::next(p.processing_order.get_processing_iterator(to_fuse_with)), user);
-                user->processing_num = new_processing_num + 1; //Todo: avoid direct modifications of processing_num
-            }
-        }
+        p.get_processing_order().erase(p.get_processing_order().get_processing_iterator(to_fuse_with));
+        p.get_processing_order().insert(p.get_processing_order().get_processing_iterator(node), &to_fuse_with);
 
         if (node.get_fused_activation_func() != activation_none)
             to_fuse_with.set_fused_activation(node.get_fused_activation_func(), node.get_fused_activation_params());
@@ -105,51 +91,51 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl &p, program_node*
 {
     program_helpers::do_for_types<convolution>(*node, [&p](convolution_node& node)
     {
-        if (node.users.size() > 2)
+        if (node.get_users().size() > 2)
             return;
 
-        auto found_bn = std::find_if(node.users.begin(), node.users.end(), node_is_type<batch_norm>);
-        auto bn_node = found_bn != node.users.end() ? *found_bn : nullptr;
+        auto found_bn = std::find_if(node.get_users().begin(), node.get_users().end(), node_is_type<batch_norm>);
+        auto bn_node = found_bn != node.get_users().end() ? *found_bn : nullptr;
         if (bn_node != nullptr)
         {
-            if (bn_node->users.size() > 2)
+            if (bn_node->get_users().size() > 2)
                 return;
 
-            auto found_scale = std::find_if(bn_node->users.begin(), bn_node->users.end(), node_is_type<scale>);
-            auto sc_node = found_bn != node.users.end() ? *found_scale : nullptr;
+            auto found_scale = std::find_if(bn_node->get_users().begin(), bn_node->get_users().end(), node_is_type<scale>);
+            auto sc_node = found_bn != node.get_users().end() ? *found_scale : nullptr;
             if (sc_node != nullptr)
             {
-                int bn_index = int(std::distance(node.users.begin(), found_bn));
-                int sc_index = int(std::distance(bn_node->users.begin(), found_scale));
+                int bn_index = int(std::distance(node.get_users().begin(), found_bn));
+                int sc_index = int(std::distance(bn_node->get_users().begin(), found_scale));
                 auto scale_prim = std::static_pointer_cast<const scale>(sc_node->get_primitive());
                 auto bn_prim = std::static_pointer_cast<const batch_norm>(bn_node->get_primitive());
                 auto prim = node.get_primitive();
                 bool training = false;
 
-                if (node.users.size() == 2)
+                if (node.get_users().size() == 2)
                 {
                     training = true;
                     float zero = 0.0f;
                     layout dummy_layout(data_types::f32, format::bfyx, tensor(1, 1, 1, 1));
 
-                    auto bn_backw = node.users.begin();
+                    auto bn_backw = node.get_users().begin();
                     std::advance(bn_backw, bn_index == 0 ? 1 : 0);
                     if (!(*bn_backw)->is_type<batch_norm_grad>())
                         return;
-                    auto sc_backw = bn_node->users.begin();
+                    auto sc_backw = bn_node->get_users().begin();
                     std::advance(sc_backw, sc_index == 0 ? 1 : 0);
                     if (!(*sc_backw)->is_type<scale_grad_weights>())
                         return;
 
                     auto conv_out_prim = std::make_shared<mutable_data>(prim->id + "_fused_conv_out", memory::attach(dummy_layout, &zero, 1));
                     auto& conv_out_node = p.get_or_create(conv_out_prim);
-                    auto conv_out_mem = p.engine->allocate_memory(node.get_output_layout());
+                    auto conv_out_mem = p.get_engine().allocate_memory(node.get_output_layout());
                     conv_out_node.as<mutable_data>().attach_memory(*conv_out_mem, false);
                     p.add_intermediate(conv_out_node, **bn_backw, 1, true);
 
                     auto bn_out_prim = std::make_shared<mutable_data>(prim->id + "_fused_bn_out", memory::attach(dummy_layout, &zero, 1));
                     auto& bn_out_node = p.get_or_create(bn_out_prim);
-                    auto bn_out_mem = p.engine->allocate_memory(bn_node->get_output_layout());
+                    auto bn_out_mem = p.get_engine().allocate_memory(bn_node->get_output_layout());
                     bn_out_node.as<mutable_data>().attach_memory(*bn_out_mem, false);
                     p.add_intermediate(bn_out_node, **sc_backw, 0, true);
                 }
@@ -158,9 +144,11 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl &p, program_node*
                     scale_prim->input[1], scale_prim->bias, prim->stride, prim->dilation, prim->input_offset, bn_prim->inv_variance,
                     prim->with_activation, prim->activation_negative_slope, prim->output_padding);
                 auto& new_node = p.get_or_create(new_conv);
-                p.replace(node, new_node, false, false);
+                p.replace(node, new_node);
 
-                while (sc_node->get_dependencies().size() > 1)
+                while (sc_node->get_dependencies().size() > 1)     // ToDo: here we modify users and dependencies,
+                                                                   // It should be done through public methods in program_node/program_impl
+                                                                   // to avoid friend declarations
                 {
                     auto& dep = sc_node->get_dependency(sc_node->get_dependencies().size() - 1);
                     p.remove_connection(dep, *sc_node);
@@ -184,13 +172,13 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl &p, program_node*
 
                 if (training)
                 {
-                    auto user = std::find_if(new_node.users.begin(), new_node.users.end(),
+                    auto user = std::find_if(new_node.get_users().begin(), new_node.get_users().end(),
                         [](const program_node* node) { return node->id().find("_fused_conv_out") != std::string::npos; });
                     p.reverse_connection(new_node, **user);
-                    user = std::find_if(new_node.users.begin(), new_node.users.end(), 
+                    user = std::find_if(new_node.get_users().begin(), new_node.get_users().end(),
                         [](const program_node* node) { return node->id().find("_fused_bn_out") != std::string::npos; });
                     p.reverse_connection(new_node, **user);
-                    p.processing_order.calculate_BFS_processing_order();
+                    p.get_processing_order().calculate_BFS_processing_order();
                 }
             }
         }
@@ -199,11 +187,11 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl &p, program_node*
 
 void prepare_primitive_fusing::run(program_impl &p)
 {
-    bool is_debug = p.options.get<build_option_type::debug>()->enabled();
+    bool is_debug = p.get_options().get<build_option_type::debug>()->enabled();
 
     std::list<program_node*> conv_nodes;
-    auto itr = p.processing_order.begin(); //note we need to use iterators since currently processed element can be removed
-    while (itr != p.processing_order.end())
+    auto itr = p.get_processing_order().begin(); //note we need to use iterators since currently processed element can be removed
+    while (itr != p.get_processing_order().end())
     {
         auto node_itr = itr++;
         if ((*node_itr)->is_type<convolution>())
@@ -218,8 +206,8 @@ void prepare_primitive_fusing::run(program_impl &p)
         fuse_conv_bn_scale(p, node);
     }
 
-    itr = p.processing_order.begin();
-    while (itr != p.processing_order.end())
+    itr = p.get_processing_order().begin();
+    while (itr != p.get_processing_order().end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr);
@@ -258,8 +246,8 @@ void prepare_primitive_fusing::run(program_impl &p)
     }
 
     //This loop tries fusing several reorders one by one (if present) into one reorder
-    itr = p.processing_order.begin();
-    while (itr != p.processing_order.end())
+    itr = p.get_processing_order().begin();
+    while (itr != p.get_processing_order().end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr);
@@ -287,8 +275,8 @@ void prepare_primitive_fusing::run(program_impl &p)
         });
     }
     //This loop tries fusing eltwise (sum) with deconvolution
-    itr = p.processing_order.begin();
-    while (itr != p.processing_order.end())
+    itr = p.get_processing_order().begin();
+    while (itr != p.get_processing_order().end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr);

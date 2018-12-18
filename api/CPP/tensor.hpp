@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,6 +113,8 @@ struct format
         byx8_f4,             /// < \n format for input for MMAD convolutions
         fs_bs_yx_bsv4_fsv32, /// < \n format for batched input for primitives using MMAD
         bf_lyx_yx = cldnn_bf_lyx_yx,            /// < \n format for local convolution weights
+        b_fs_yx_fsv4,        /// < \n format for input for IMAD convolutions
+        os_is_yx_osv16_isv4, /// < \n format for weights for IMAD convolutions
         format_num = cldnn_format_format_num, ///< number of format types
         any = cldnn_format_any
     };
@@ -145,7 +147,9 @@ struct format
             { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, 0, "fbyx", "bfxy" }},
             { is_o_yx_isv32 , {1, 1, 2, 0, "byxf", "bfxy" } },
             { os_is_y_x8_osv8_isv4 , { 1, 1, 2, 0, "byxf", "bfxy" } },
-            { bf_lyx_yx,{ 1, 1, 2, 2, "bfklyx", "bfklxy" } }
+            { bf_lyx_yx,{ 1, 1, 2, 2, "bfklyx", "bfklxy" } },
+            { b_fs_yx_fsv4,{ 1, 1, 1, 0, "bfyx", "bfxy" } },
+            { os_is_yx_osv16_isv4,{ 1, 1, 1, 0, "bfxy", "bfxy?" } },
         };
         return traits.at(fmt);
     }

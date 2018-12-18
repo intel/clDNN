@@ -107,7 +107,7 @@ namespace cldnn
             else
                 do_for_types<RestOfT...>(node, rest...);
         }
-        static void merge_buffers(engine_impl::ptr engine, program_node &node, layout target_layout, size_t begin_offset, size_t end_offset);
+        static void merge_buffers(engine_impl &engine, program_node &node, layout target_layout, size_t begin_offset, size_t end_offset);
         static layout get_weights_layout(typed_program_node<cldnn::data> &data_node, int32_t split);
         static std::pair<bool, bool> are_layouts_identical(layout const& l1, layout const& l2);
     };

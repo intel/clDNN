@@ -33,7 +33,7 @@ void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl &p, T&
     {
         //if weights were optimized it is needed to use the sizes after optimization
         auto target_layout = program_helpers::get_weights_layout(node.get_dependency(dependency_offset), split);
-        program_helpers::merge_buffers(p.engine, node, target_layout, dependency_offset, dependency_offset + split);
+        program_helpers::merge_buffers(p.get_engine(), node, target_layout, dependency_offset, dependency_offset + split);
         dependency_offset++;
     }
 
@@ -42,7 +42,7 @@ void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl &p, T&
     {
         const auto& bias_layout = node.get_dependency(dependency_offset).get_output_layout();
         auto target_layout = layout(bias_layout.data_type, cldnn::format::bfyx, { 1, 1, bias_layout.size.spatial[0] * split, 1 });
-        program_helpers::merge_buffers(p.engine, node, target_layout, dependency_offset, dependency_offset + split);
+        program_helpers::merge_buffers(p.get_engine(), node, target_layout, dependency_offset, dependency_offset + split);
         dependency_offset++;
     }
 
@@ -56,7 +56,7 @@ void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl &p, T&
         {
             const auto& weights_quantization_layout = node.get_dependency(dependency_offset).get_output_layout();
             auto target_layout = layout(weights_quantization_layout.data_type, cldnn::format::bfyx, { 1, 1, weights_quantization_layout.size.batch[0] * split, 1 });
-            program_helpers::merge_buffers(p.engine, node, target_layout, dependency_offset, dependency_offset + split);
+            program_helpers::merge_buffers(p.get_engine(), node, target_layout, dependency_offset, dependency_offset + split);
             dependency_offset++;
         }
         // concatenate output callibration factors
@@ -64,7 +64,7 @@ void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl &p, T&
         {
             const auto& output_callibration_layout = node.get_dependency(dependency_offset).get_output_layout();
             auto target_layout = layout(output_callibration_layout.data_type, cldnn::format::bfyx, { 1, 1, output_callibration_layout.size.batch[0] * split, 1 });
-            program_helpers::merge_buffers(p.engine, node, target_layout, dependency_offset, dependency_offset + split);
+            program_helpers::merge_buffers(p.get_engine(), node, target_layout, dependency_offset, dependency_offset + split);
             dependency_offset++;
         }
     }
@@ -79,16 +79,15 @@ template void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre<deconvolut
 void prep_opt_depthwise_sep_post::run(program_impl &p)
 {
     //depthwise separated convolution/deconvolution optimization
-    for (auto& nm : p.nodes_map)
+    for (auto& prim : p.get_processing_order())
     {
-        auto& prim = *nm.second;
-        if (prim.type() == convolution::type_id())
+        if (prim->type() == convolution::type_id())
         {
-            optimize_depthwise_sep_pre(p, prim.as<convolution>());
+            optimize_depthwise_sep_pre(p, prim->as<convolution>());
         }
-        else if (prim.type() == deconvolution::type_id())
+        else if (prim->type() == deconvolution::type_id())
         {
-            optimize_depthwise_sep_pre(p, prim.as<deconvolution>());
+            optimize_depthwise_sep_pre(p, prim->as<deconvolution>());
         }
     }
 }

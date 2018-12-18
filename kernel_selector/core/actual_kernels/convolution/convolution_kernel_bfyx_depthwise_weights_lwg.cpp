@@ -38,6 +38,7 @@ namespace kernel_selector
         k.EnableSubGroup();
         k.EnableSubGroupShort();
         k.EnableDepthwiseSeparableOpt();
+        k.EnableDilation();
         return k;
     }
 

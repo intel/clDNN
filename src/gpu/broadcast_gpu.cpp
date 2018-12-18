@@ -53,16 +53,22 @@ namespace {
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i8,  format::yxfb), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::u8,  format::yxfb), val_fw);
+            implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i32, format::yxfb), val_fw);
+            implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i64, format::yxfb), val_fw);
 
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i8,  format::bfyx), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::u8,  format::bfyx), val_fw);
+            implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i32, format::bfyx), val_fw);
+            implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i64, format::bfyx), val_fw);
 
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf), val_fw);
             implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::u8,  format::byxf), val_fw);
+            implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i32, format::byxf), val_fw);
+            implementation_map<broadcast>::add(std::make_tuple(engine_types::ocl, data_types::i64, format::byxf), val_fw);
         }
         ~attach() = default;
     };

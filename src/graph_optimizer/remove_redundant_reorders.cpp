@@ -21,11 +21,10 @@
 
 using namespace cldnn;
 
-//ToDo remove friendship relation from program_impl (requires an access to extract_and_remove from program_impl, which is private)
 void remove_redundant_reorders::run(program_impl &p)
 {
-    auto itr = p.processing_order.begin(); //note we need to use iterators since currently processed element can be removed
-    while (itr != p.processing_order.end())
+    auto itr = p.get_processing_order().begin(); //note we need to use iterators since currently processed element can be removed
+    while (itr != p.get_processing_order().end())
     {
         auto& node = (*itr++); //post-inc to avoid invalidation due to possible erase
         if (!node->is_type<reorder>()) //only care for reorders

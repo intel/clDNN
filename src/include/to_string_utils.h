@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2017-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ inline std::string dt_to_str(data_types dt)
     switch (dt)
     {
     case data_types::i8: return "i8";
+    case data_types::u8: return "u8";
     case data_types::i32: return "i32";
     case data_types::i64: return "i64";
     case data_types::f16: return "f16";
@@ -79,6 +80,8 @@ inline std::string fmt_to_str(format fmt)
     case format::byx8_f4: return "byx8_f4";
     case format::fs_bs_yx_bsv4_fsv32: return "fs_bs_yx_bsv4_fsv32";
     case format::bf_lyx_yx: return "bf_lyx_yx";
+    case format::b_fs_yx_fsv4: return "b_fs_yx_fs4"; break;
+    case format::os_is_yx_osv16_isv4: return "os_is_yx_osv16_isv4"; break;
     default:
         return "unknown (" + std::to_string(fmt.value) + ")";
     }

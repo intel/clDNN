@@ -29,7 +29,7 @@ namespace kernel_selector
             : base_params(KernelType::INDEX_SELECT)
         {}
 
-        IndexSelectAxis axis = IndexSelectAxis::BATCH;
+        std::vector<IndexSelectAxis> axes = { IndexSelectAxis::BATCH };
         bool reverse = false;
     };
 

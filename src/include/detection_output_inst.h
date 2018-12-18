@@ -22,8 +22,6 @@
 
 #define PRIOR_BOX_SIZE 4 // Each prior-box consists of [xmin, ymin, xmax, ymax].
 #define DETECTION_OUTPUT_ROW_SIZE (3+PRIOR_BOX_SIZE) // Each detection consists of [image_id, label, confidence, xmin, ymin, xmax, ymax].
-#define DETECTION_OUTPUT_PRE_NODE_NAME "detection_output_pre"
-#define DETECTION_OUTPUT_NODE_NAME_TMP "detection_output_tmp"
 
 namespace cldnn
 {

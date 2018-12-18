@@ -35,7 +35,6 @@
 #include <sstream>
 #include <iomanip>
 
-
 using namespace cldnn;
 using namespace tests;
 
@@ -938,7 +937,6 @@ void lstm_gpu_format_test(const cldnn::format& format, int directions) {
     }
 }
 
-
 // -------------------------------------------------------
 template<typename T>
 void lstm_gpu_users_test() {
@@ -1033,6 +1031,556 @@ void lstm_gpu_users_test() {
                 for (int32_t x = 0; x < hidden_size; ++x) {
                     int32_t idx = x + hidden_size * (d + directions * ((s+1) + sequence_len * b));
                     ASSERT_NEAR(ref_hidden[b][s][d][x], output_ptr[idx], FERROR);
+                }
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------
+template<typename T>
+void lstm_gpu_concatenated_input_test(int layers, int sequence_len, int direction, 
+						              int batch_size, int input_size, int hidden_size,
+						              bool has_bias = true, bool has_initial_hidden = true, 
+						              bool has_initial_cell = true, float clip_threshold = 0, 
+						              bool input_forget = false) 
+{
+	std::cout << "Layers = " << layers << " Input Size = " << input_size << " Hidden Size = " << hidden_size
+		<< " Sequence Len = " << sequence_len << " Direction = " << direction << " Batch Size = " << batch_size << std::endl;
+	int min_random = -2, max_random = 2;
+
+	VVVVF<T> ref_input = generate_random_4d<T>(batch_size, sequence_len, 1, input_size, min_random, max_random);
+
+	std::vector<VVVVF<T>> ref_weights;
+	std::vector<VVVVF<T>> ref_recurrent;
+	std::vector<VVVVF<T>> ref_bias;
+	std::vector<VVVVF<T>> ref_hidden;
+	std::vector<VVVVF<T>> ref_cell;
+	std::vector<VVVVF<T>> ref_output;
+
+	for (int i = 0; i < layers; ++i) {
+		ref_weights.push_back(generate_random_4d<T>(1, direction, 4 * hidden_size, i == 0 ? input_size : hidden_size, min_random, max_random));
+		ref_recurrent.push_back(generate_random_4d<T>(1, direction, 4 * hidden_size, hidden_size, min_random, max_random));
+		ref_bias.push_back(generate_random_4d<T>(1, 1, direction, 4 * hidden_size, min_random, max_random));
+		ref_hidden.push_back(generate_random_4d<T>(batch_size, 1, direction, hidden_size, min_random, max_random));
+		ref_cell.push_back(generate_random_4d<T>(batch_size, 1, direction, hidden_size, min_random, max_random));
+		ref_output.push_back(VVVVF<T>(batch_size, VVVF<T>(sequence_len, VVF<T>(direction, VF<T>(hidden_size)))));
+	}
+
+	VF<T> ref_input_vec = flatten_4d<T>(cldnn::format::bfyx, ref_input);
+
+	std::vector<VF<T>> ref_weights_vec;
+	std::vector<VF<T>> ref_recurrent_vec;
+	std::vector<VF<T>> ref_bias_vec;
+	std::vector<VF<T>> ref_hidden_vec;
+	std::vector<VF<T>> ref_cell_vec;
+	for (int i = 0; i < layers; ++i) {
+		ref_weights_vec.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_weights[i]));
+		ref_recurrent_vec.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_recurrent[i]));
+		ref_bias_vec.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_bias[i]));
+		ref_hidden_vec.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_hidden[i]));
+		ref_cell_vec.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_cell[i]));
+	}
+
+	VVVVF<T> last_hidden(batch_size, VVVF<T>(1, VVF<T>(direction, VF<T>(hidden_size))));
+	VVVVF<T> last_cell(batch_size, VVVF<T>(1, VVF<T>(direction, VF<T>(hidden_size))));
+
+	lstm_reference(ref_input, ref_hidden[0], ref_cell[0], ref_weights[0], ref_recurrent[0], ref_bias[0], ref_output[0],
+		last_hidden, last_cell, has_bias, has_initial_hidden, has_initial_cell,
+		clip_threshold, input_forget, true);
+
+	for (int i = 1; i < layers; ++i) {
+		lstm_reference(ref_output[i - 1], ref_hidden[i], ref_cell[i], ref_weights[i], ref_recurrent[i],
+			ref_bias[i], ref_output[i],
+			last_hidden, last_cell, has_bias, has_initial_hidden, has_initial_cell,
+			clip_threshold, input_forget, false);
+	}
+
+	engine engine;
+
+	memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
+	set_values(input, ref_input_vec);
+
+	std::vector<memory> weights;
+	std::vector<memory> recurrent;
+	std::vector<memory> biases;
+	std::vector<memory> hidden;
+	std::vector<memory> cell;
+	for (int i = 0; i < layers; ++i) {
+		weights.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, direction, i == 0 ? input_size : hidden_size, 4 * hidden_size } }));
+		set_values(weights[i], ref_weights_vec[i]);
+		recurrent.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, direction, hidden_size, 4 * hidden_size } }));
+		set_values(recurrent[i], ref_recurrent_vec[i]);
+		if (has_bias) {
+			biases.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, 1, 4 * hidden_size, direction } }));
+			set_values(biases[i], ref_bias_vec[i]);
+		}
+		if (has_initial_hidden) {
+			hidden.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { batch_size, 1, hidden_size, direction } }));
+			set_values(hidden[i], ref_hidden_vec[i]);
+		}
+		if (has_initial_cell) {
+			cell.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { batch_size, 1, hidden_size, direction} }));
+			set_values(cell[i], ref_cell_vec[i]);
+		}
+	}
+
+	topology topology;
+	std::vector<std::pair<primitive_id, tensor>> input_ids_offsets;
+	std::vector<primitive_id> lstm_inputs;
+	std::vector<primitive_id> output_ids_offsets;
+
+	topology.add(input_layout("input", input.get_layout()));
+	cldnn::primitive_id prev_node_id;
+	
+    for (int i = 0; i < layers; ++i) {
+		std::string sid = get_string_id(i);
+		std::string lstm_id = "lstm" + sid;
+		std::string weights_id = "weights" + sid;
+		std::string recurrent_id = "recurrent" + sid;
+		std::string biases_id = "biases" + sid;
+		std::string hidden_id = "hidden" + sid;
+		std::string cell_id = "cell" + sid;
+		std::string output_crop_id = "crop:sequence:" + sid;
+
+		topology.add(data(weights_id, weights[i]));
+		topology.add(data(recurrent_id, recurrent[i]));
+		if (has_bias) topology.add(data(biases_id, biases[i]));
+		if (has_initial_hidden) topology.add(input_layout(hidden_id, hidden[i].get_layout()));
+		if (has_initial_cell) topology.add(input_layout(cell_id, cell[i].get_layout()));
+		if (i == 0) {
+            topology.add(lstm(lstm_id, { "input" }, weights_id, recurrent_id,
+				has_bias ? biases_id : "", has_initial_hidden ? hidden_id : "", has_initial_cell ? cell_id : "", "",
+				clip_threshold, input_forget, {}, {},
+				cldnn_lstm_output::cldnn_lstm_output_sequence_cell, default_offset_type));
+		}
+		else {
+			topology.add(lstm(lstm_id, { prev_node_id }, weights_id, recurrent_id,
+				has_bias ? biases_id : "", has_initial_hidden ? hidden_id : "", has_initial_cell ? cell_id : "", "",
+				clip_threshold, input_forget, {}, {},
+				cldnn_lstm_output::cldnn_lstm_output_sequence_cell, default_offset_type));
+		}
+
+        // Crop out the whole output sequence element
+		topology.add(crop(output_crop_id, lstm_id, {batch_size, sequence_len, hidden_size, direction}, {0, 0, 0, 0}));
+
+       // Save the node id to provide it as input to the next lstm layer
+		prev_node_id = output_crop_id;
+	}
+
+	network network(engine, topology);
+	network.set_input_data("input", input);
+	for (int i = 0; i < layers; ++i) {
+		std::string sid = get_string_id(i);
+		if (has_initial_hidden) network.set_input_data("hidden" + sid, hidden[i]);
+		if (has_initial_cell) network.set_input_data("cell" + sid, cell[i]);
+	}
+	auto outputs = network.execute();
+	{
+		ASSERT_EQ(outputs.size(), size_t(1));
+		size_t output_size = outputs.begin()->second.get_memory().size() / sizeof(T);
+		ASSERT_EQ(output_size, size_t(hidden_size * sequence_len * batch_size * direction));
+
+		auto output = outputs.begin()->second.get_memory();
+
+		// Get the output tensor
+		cldnn::layout output_layout = output.get_layout();
+		cldnn::tensor output_tensor = output_layout.size;
+
+		// Compare the output tensor configuration against the reference value
+		// Output tensor is configured in bfyx format
+		ASSERT_EQ(batch_size, output_tensor.batch[0]);
+		ASSERT_EQ(sequence_len, output_tensor.feature[0]);
+		ASSERT_EQ(direction, output_tensor.spatial[1]);
+		ASSERT_EQ(hidden_size, output_tensor.spatial[0]);
+
+		auto output_ptr = output.pointer<T>();
+		int32_t i = 0;
+		for (int32_t b = 0; b < batch_size; ++b) {
+			for (int32_t s = 0; s < sequence_len; ++s) {
+				for (int32_t d = 0; d < direction; ++d) {
+					for (int32_t x = 0; x < hidden_size; ++x) {
+						ASSERT_NEAR(ref_output[layers - 1][b][s][d][x], output_ptr[i++], FERROR);
+					}
+				}
+			}
+		}
+	}
+}
+
+// This test checks chained and stacked LSTM topology. The configuration allows to create 
+// LSTM topology with multiple layers and can also be chained together.
+template<typename T>
+void lstm_gpu_chain_test(int batch_size, int input_size, int hidden_size,
+                         int directions, size_t layers, size_t chains, int sequence_len,
+                         const cldnn_lstm_output& output_selection)
+{
+    int min_random = -2, max_random = 2;
+    bool has_bias = false;
+    bool has_initial_hidden = false;
+    bool has_initial_cell = false;
+    float clip_threshold = 0;
+    bool input_forget = false;
+
+    std::cout << "Layers = " << layers << " Input Size = " << input_size << " Hidden Size = " << hidden_size
+        << " Sequence Len = " << sequence_len << " Directions = " << directions << " Batch Size = " << batch_size
+        << " Output selection: " << output_selection << std::endl;
+
+    VVVVF<T> ref_input = generate_random_4d<T>(batch_size, sequence_len, 1, input_size, min_random, max_random);
+    std::vector<std::vector< VVVVF<T>>> ref_weights;
+    std::vector<std::vector< VVVVF<T>>> ref_recurrent;
+    std::vector<std::vector< VVVVF<T>>> ref_bias;
+    std::vector<std::vector< VVVVF<T>>> ref_hidden;
+    std::vector<std::vector< VVVVF<T>>> ref_cell;
+    std::vector<std::vector< VVVVF<T>>> ref_output;
+
+    // Create the 4 dimensional weight, bias, hidden, cell state and output vectors
+    for (size_t chain = 0; chain < chains; chain++) {
+
+        std::vector<VVVVF<T>> per_chain_ref_weights;
+        std::vector<VVVVF<T>> per_chain_ref_recurrent;
+        std::vector<VVVVF<T>> per_chain_ref_bias;
+        std::vector<VVVVF<T>> per_chain_ref_hidden;
+        std::vector<VVVVF<T>> per_chain_ref_cell;
+        std::vector<VVVVF<T>> per_chain_ref_output;
+
+        for (size_t layer = 0; layer < layers; layer++) {
+            per_chain_ref_weights.push_back(generate_random_4d<T>(1, directions, 4 * hidden_size, (layer == 0) ? input_size : hidden_size, min_random, max_random));
+            per_chain_ref_recurrent.push_back(generate_random_4d<T>(1, directions, 4 * hidden_size, hidden_size, min_random, max_random));
+            per_chain_ref_bias.push_back(generate_random_4d<T>(1, 1, directions, 4 * hidden_size, min_random, max_random));
+            per_chain_ref_hidden.push_back(generate_random_4d<T>(batch_size, 1, directions, hidden_size, min_random, max_random));
+            per_chain_ref_cell.push_back(generate_random_4d<T>(batch_size, 1, directions, hidden_size, min_random, max_random));
+            per_chain_ref_output.push_back(VVVVF<T>(batch_size, VVVF<T>(sequence_len, VVF<T>(directions, VF<T>(hidden_size)))));
+        }
+
+        ref_weights.push_back(per_chain_ref_weights);
+        ref_recurrent.push_back(per_chain_ref_recurrent);
+        ref_bias.push_back(per_chain_ref_bias);
+        ref_hidden.push_back(per_chain_ref_hidden);
+        ref_cell.push_back(per_chain_ref_cell);
+        ref_output.push_back(per_chain_ref_output);
+    }
+
+    VF<T> ref_input_vec;
+    std::vector<std::vector< VF<T>>> ref_weights_vec;
+    std::vector<std::vector< VF<T>>> ref_recurrent_vec;
+    std::vector<std::vector< VF<T>>> ref_bias_vec;
+    std::vector<std::vector< VF<T>>> ref_hidden_vec;
+    std::vector<std::vector< VF<T>>> ref_cell_vec;
+    std::vector<std::vector< VF<T>>> ref_output_vec;
+
+    ref_input_vec = flatten_4d<T>(cldnn::format::bfyx, ref_input);
+
+    // flatten all the 4 dimensional vectors across chains and layers
+    for (size_t chain = 0; chain < chains; chain++) {
+
+        std::vector<VF<T>> per_chain_ref_weights;
+        std::vector<VF<T>> per_chain_ref_recurrent;
+        std::vector<VF<T>> per_chain_ref_bias;
+        std::vector<VF<T>> per_chain_ref_hidden;
+        std::vector<VF<T>> per_chain_ref_cell;
+        std::vector<VF<T>> per_chain_ref_output;
+
+        for (size_t layer = 0; layer < layers; layer++) {
+            per_chain_ref_weights.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_weights[chain][layer]));
+            per_chain_ref_recurrent.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_recurrent[chain][layer]));
+            per_chain_ref_bias.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_bias[chain][layer]));
+            per_chain_ref_hidden.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_hidden[chain][layer]));
+            per_chain_ref_cell.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_cell[chain][layer]));
+            per_chain_ref_output.push_back(flatten_4d<T>(cldnn::format::bfyx, ref_output[chain][layer]));
+        }
+
+        ref_weights_vec.push_back(per_chain_ref_weights);
+        ref_recurrent_vec.push_back(per_chain_ref_recurrent);
+        ref_bias_vec.push_back(per_chain_ref_bias);
+        ref_hidden_vec.push_back(per_chain_ref_hidden);
+        ref_cell_vec.push_back(per_chain_ref_cell);
+        ref_output_vec.push_back(per_chain_ref_output);
+    }
+
+    std::vector<std::vector<VVVVF<T>>> last_hidden(chains, std::vector<VVVVF<T> >(layers, VVVVF<T>(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))))));
+    std::vector<std::vector<VVVVF<T>>> last_cell(chains, std::vector<VVVVF<T> >(layers, VVVVF<T>(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))))));
+
+    for (size_t chain = 0; chain < chains; chain++) {
+        lstm_reference(ref_input, ref_hidden[chain][0], ref_cell[chain][0], ref_weights[chain][0],
+                       ref_recurrent[chain][0], ref_bias[chain][0], ref_output[chain][0],
+                       last_hidden[chain][0], last_cell[chain][0], has_bias, 
+                       chain == 0 ? has_initial_hidden : true,
+                       chain == 0 ? has_initial_cell : true,
+                       clip_threshold, input_forget, true);
+
+        if (chain < chains - 1) 
+        {
+            ref_hidden[chain + 1][0] = last_hidden[chain][0];
+            ref_cell[chain + 1][0] = last_cell[chain][0];
+        }
+    }
+
+    for (size_t layer = 1; layer < layers; ++layer) {
+        for (size_t chain = 0; chain < chains; chain++) {
+            lstm_reference(ref_output[chain][layer - 1], ref_hidden[chain][layer], ref_cell[chain][layer],
+                           ref_weights[chain][layer], ref_recurrent[chain][layer], ref_bias[chain][layer],
+                           ref_output[chain][layer], last_hidden[chain][layer], last_cell[chain][layer], has_bias,
+                           chain == 0 ? has_initial_hidden : true,
+                           chain == 0 ? has_initial_cell : true,
+                           clip_threshold, input_forget,
+                           false);
+
+            if (chain < chains - 1)
+            {
+                ref_hidden[chain + 1][layer] = last_hidden[chain][layer];
+                ref_cell[chain + 1][layer] = last_cell[chain][layer];
+            }
+        }
+    }
+
+    engine engine;
+    tensor input_tensor = { batch_size, sequence_len, input_size, 1 };
+    layout layout = { type_to_data_type<T>::value, cldnn::format::bfyx, input_tensor };
+
+    memory input = memory::allocate(engine, layout);
+    set_values(input, ref_input_vec);
+
+    // 2-dim vectors to support chain and layers
+    std::vector<std::vector<memory>> weights;
+    std::vector<std::vector<memory>> recurrent;
+    std::vector<std::vector<memory>> biases;
+    std::vector<std::vector<memory>> hidden;
+    std::vector<std::vector<memory>> cell;
+
+    for (size_t chain = 0; chain < chains; chain++) {
+        std::vector<memory> per_chain_weights;
+        std::vector<memory> per_chain_recurrent;
+        std::vector<memory> per_chain_biases;
+        std::vector<memory> per_chain_hidden;
+        std::vector<memory> per_chain_cell;
+
+        for (size_t layer = 0; layer < layers; layer++) {
+            per_chain_weights.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {1, directions, layer == 0 ? input_size : hidden_size, 4 * hidden_size} }));
+            set_values(per_chain_weights[layer], ref_weights_vec[chain][layer]);
+
+            per_chain_recurrent.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {1, directions, hidden_size, 4 * hidden_size} }));
+            set_values(per_chain_recurrent[layer], ref_recurrent_vec[chain][layer]);
+
+            if (has_bias)
+            {
+                per_chain_biases.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {1, 1, 4 * hidden_size, directions} }));
+                set_values(per_chain_biases[layer], ref_bias_vec[chain][layer]);
+            }
+
+            if (has_initial_hidden)
+            {
+                per_chain_hidden.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {1, 1, hidden_size, directions} }));
+                set_values(per_chain_hidden[layer], ref_hidden_vec[chain][layer]);
+            }
+
+            if (has_initial_cell)
+            {
+                per_chain_cell.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {1, 1, hidden_size, directions} }));
+                set_values(per_chain_cell[layer], ref_cell_vec[chain][layer]);
+            }
+        }
+
+        weights.push_back(per_chain_weights);
+        recurrent.push_back(per_chain_recurrent);
+        biases.push_back(per_chain_biases);
+        hidden.push_back(per_chain_hidden);
+        cell.push_back(per_chain_cell);
+    }
+
+    // Start creating the topology
+    cldnn::topology topology;
+    std::vector<std::pair<primitive_id, cldnn::tensor>> input_ids_offsets;
+    std::vector<primitive_id> lstm_inputs;
+    std::vector<primitive_id> output_ids_offsets;
+
+    topology.add(input_layout("input", input.get_layout()));
+
+    for (int feature = 0; feature < sequence_len; feature++) {
+        input_ids_offsets.push_back({ get_string_id(feature), {0, feature, 0, 0} });
+        lstm_inputs.push_back("inputSplit:" + get_string_id(feature));
+    }
+    topology.add(split("inputSplit", "input", input_ids_offsets));
+
+    bool emit_last_hidden = output_selection == cldnn_lstm_output_hidden
+        || output_selection == cldnn_lstm_output_hidden_cell;
+
+    std::vector<cldnn::primitive_id> output_sequence_ids;
+    std::vector<cldnn::primitive_id> last_hidden_ids;
+    std::vector<cldnn::primitive_id> last_cell_ids;
+
+    for (size_t chain = 0; chain < chains; chain++) {
+
+        // Add all the primitives to the network
+        std::vector<cldnn::primitive_id> prev_output_sequence_ids(output_sequence_ids);
+        std::vector<cldnn::primitive_id> prev_last_hidden_ids(last_hidden_ids);
+        std::vector<cldnn::primitive_id> prev_last_cell_ids(last_cell_ids);
+
+        // Erase all the temporary primitive id containers
+        output_sequence_ids.clear();
+        last_cell_ids.clear();
+        last_hidden_ids.clear();
+
+        for (size_t layer = 0; layer < layers; layer++) {
+            std::string chain_id = get_string_id(chain);
+            std::string layer_id = get_string_id(layer);
+            std::string lstm_id = "lstm:" + chain_id + ":" + layer_id;
+            std::string weights_id = "weights:" + chain_id + ":" + layer_id;
+            std::string recurrent_id = "recurrent:" + chain_id + ":" + layer_id;
+            std::string biases_id = "biases:" + chain_id + ":" + layer_id;
+            std::string hidden_id = "hidden:" + chain_id + ":" + layer_id;
+            std::string cell_id = "cell:" + chain_id + ":" + layer_id;
+            std::string crop_seq_id = "crop:sequence:" + chain_id + ":" + layer_id;
+            std::string crop_last_cell_id = "crop:last_cell:" + chain_id + ":" + layer_id;
+            std::string crop_last_hidden_id = "crop:last_hidden:" + chain_id + ":" + layer_id;
+
+            primitive_id initial_hidden_id;
+            primitive_id initial_cell_id;
+            cldnn_lstm_output output_selection_per_layer;
+
+            topology.add(data(weights_id, weights[chain][layer]));
+            topology.add(data(recurrent_id, recurrent[chain][layer]));
+            if (has_bias) topology.add(data(biases_id, biases[chain][layer]));
+
+            if (chain == 0 && layer == 0)
+            {
+                if (has_initial_hidden) topology.add(input_layout(hidden_id, hidden[chain][layer].get_layout()));
+                if (has_initial_cell) topology.add(input_layout(cell_id, cell[chain][layer].get_layout()));
+            }
+
+            // Get the initial hidden and initial cell for each layer for each chain link
+            if (chain == 0)
+            {
+                initial_hidden_id = has_initial_hidden ? hidden_id : "";
+                initial_cell_id = has_initial_cell ? cell_id : "";
+            }
+            else
+            {
+                initial_hidden_id = prev_last_hidden_ids[layer];
+                initial_cell_id = prev_last_cell_ids[layer];
+            }
+
+            // Output selection for all the layers except the last layer has to have the sequence, 
+            // last hidden and last cell
+            if (layer < layers - 1)
+            {
+                output_selection_per_layer = cldnn_lstm_output::cldnn_lstm_output_sequence_cell;
+            }
+            else
+            {
+                // For the last layer, use the output selection provided by the user
+                output_selection_per_layer = output_selection;
+            }
+
+            if (layer == 0)
+            {
+                topology.add(lstm(lstm_id, lstm_inputs, weights_id, recurrent_id,
+                    has_bias ? biases_id : "",
+                    initial_hidden_id, initial_cell_id,
+                    "", clip_threshold, input_forget, {}, {},
+                    output_selection_per_layer, default_offset_type));
+            }
+            else
+            {
+                topology.add(lstm(lstm_id, { output_sequence_ids[layer - 1] }, weights_id, recurrent_id,
+                    has_bias ? biases_id : "",
+                    initial_hidden_id, initial_cell_id,
+                    "", clip_threshold, input_forget, {}, {},
+                    output_selection_per_layer, default_offset_type));
+            }
+
+            tensor sequence_tensor{ batch_size, sequence_len, hidden_size, directions };
+            tensor cell_tensor{ batch_size, 1, hidden_size, directions };
+            tensor last_hidden_tensor{ batch_size, 1, hidden_size, directions };
+
+            // For all the layers except the last layer, we need to crop output sequence, 
+            // last hidden and last cell.
+            // The output sequence goes into the next layer of lstm in a chain link
+            // The last cell state and last hidden go to the lstm node in the same layer
+            // next in chain            
+            topology.add(crop(crop_seq_id, lstm_id, sequence_tensor, tensor{ 0, 0, 0, 0 }));  // Add crop to get the sequence
+            topology.add(crop(crop_last_hidden_id, lstm_id, last_hidden_tensor, tensor{ 0, sequence_len - 1, 0, 0 }));  // Add crop to get the last hidden element
+            topology.add(crop(crop_last_cell_id, lstm_id, cell_tensor, tensor{ 0, sequence_len, 0, 0 }));  // Add crop to get the last cell element
+
+            // Keep a copy of the sequence, last hidden and last cell primitve id for each layer
+            output_sequence_ids.push_back(crop_seq_id);
+            last_hidden_ids.push_back(crop_last_hidden_id);
+            last_cell_ids.push_back(crop_last_cell_id);
+        }
+    }
+
+    // Creating network out of the above designed topology
+    cldnn::network network(engine, topology);
+    network.set_input_data("input", input);
+    for (size_t layer = 0; layer < layers; layer++) {
+        std::string sid = get_string_id(layer);
+        if (has_initial_hidden) network.set_input_data("hidden:000:" + sid, hidden[0][layer]); // 0 is the chain link index
+        if (has_initial_cell) network.set_input_data("cell:000:" + sid, cell[0][layer]); // 0 is the chain link index
+    }
+
+    auto outputs = network.execute();
+    for (auto itr = outputs.begin(); itr != outputs.end(); itr++)
+    {
+        auto output_tensor = itr->second.get_memory().get_layout().size;
+        primitive_id primitive_name = itr->first;
+
+        // Split the primitive id to get the chain id
+        // Eg: primitive id: crop:last_cell:XXX:YYY
+        // XXX is the chain id
+        // YYY is the layer id
+        std::string chain_str = primitive_name.substr(primitive_name.find(":", primitive_name.find(":") + 1) + 1, 5);
+        std::string layer_str = primitive_name.substr(primitive_name.find(":", primitive_name.find(":", primitive_name.find(":") + 1) + 1) + 1, 5);
+        size_t chain_id = stoi(chain_str);
+        size_t layer_id = stoi(layer_str);
+
+        cldnn::memory output_memory = itr->second.get_memory();
+        int32_t output_size = (int32_t)(itr->second.get_memory().size() / sizeof(T));
+        cldnn::tensor ref_output_tensor;
+        VVVVF<T> ref_primitive_output;
+
+        int32_t ref_batch_size = batch_size;
+        int32_t ref_hidden_size = hidden_size;
+        int32_t ref_directions = directions;
+
+        int32_t ref_seq_len = 1;
+        
+        // Set the reference output against which the primitive's output will be compared
+        if (primitive_name.find("crop:last_cell") != std::string::npos)
+        {
+            ref_primitive_output = last_cell[chain_id][layer_id];
+        }
+        else if (emit_last_hidden || primitive_name.find("crop:last_hidden") != std::string::npos)
+        {
+            ref_primitive_output = last_hidden[chain_id][layer_id];
+        }
+        else
+        {
+            ref_seq_len = sequence_len;
+            ref_primitive_output = ref_output[chain_id][layers - 1];
+        }
+
+        ref_output_tensor = { ref_batch_size, ref_seq_len, ref_hidden_size, ref_directions };
+        int32_t ref_output_size = ref_batch_size * ref_seq_len * ref_hidden_size * ref_directions;
+
+        // The number of elements in reference should match the number of elements in the primitive's output
+        ASSERT_EQ(ref_output_size, output_size);
+
+        // Compare the output tensor configuration against the reference value
+        // Output tensor is configured in bfyx format
+        ASSERT_EQ(ref_batch_size, output_tensor.batch[0]);
+        ASSERT_EQ(ref_seq_len, output_tensor.feature[0]);		// Sequence length should match
+        ASSERT_EQ(ref_directions, output_tensor.spatial[1]);	// directions should match
+        ASSERT_EQ(ref_hidden_size, output_tensor.spatial[0]);	// input size should match
+
+        auto output_ptr = output_memory.pointer<T>();
+
+        int32_t i = 0;
+        for (int32_t b = 0; b < ref_batch_size; ++b) {
+            for (int32_t s = 0; s < ref_seq_len; ++s) {
+                for (int32_t d = 0; d < ref_directions; ++d) {
+                    for (int32_t x = 0; x < ref_hidden_size; ++x) {
+                        ASSERT_NEAR(ref_primitive_output[b][s][d][x], output_ptr[i++], FERROR);
+                    }
                 }
             }
         }
@@ -1251,6 +1799,64 @@ TEST(lstm_gpu, lstm_gpu_format_fyxb_bi_f32) {
 // test for LSTM users' dependencies
 TEST(lstm_gpu, lstm_users_f32) {
     lstm_gpu_users_test<float>();
+}
+
+// Test for LSTM with concatenated input
+TEST(lstm_gpu, generic_lstm_concatenated_input) {
+    lstm_gpu_concatenated_input_test<float>(1, 2, 2, 1, 1, 1, true, true, true);
+}
+
+TEST(lstm_gpu, generic_lstm_concatenated_input_multi_layer) {
+    lstm_gpu_concatenated_input_test<float>(5, 5, 2, 1, 1, 4, true, true, true);
+}
+
+// test for LSTM with chain and stack (multilayer)
+TEST(lstm_gpu, generic_lstm_chained_unidirectional_f32) {
+    // batch size = 1
+    // input size = 2
+    // hidden size = 4
+    // directions = 1
+    // layers = 1
+    // chains = 1
+    // sequence length = 1
+    // output selection = output sequence and cell
+    lstm_gpu_chain_test<float>(1, 2, 4, 1, 1, 2, 1, cldnn_lstm_output::cldnn_lstm_output_sequence_cell);
+}
+
+TEST(lstm_gpu, generic_lstm_chained_bidirectional_f32) {
+    // batch size = 1
+    // input size = 2
+    // hidden size = 4
+    // directions = 2
+    // layers = 1
+    // chains = 1
+    // sequence length = 1
+    // output selection = output sequence and cell
+    lstm_gpu_chain_test<float>(1, 2, 4, 2, 1, 1, 1, cldnn_lstm_output::cldnn_lstm_output_sequence_cell);
+}
+
+TEST(lstm_gpu, generic_lstm_chained_no_stack_bidirectional_f32) {
+    // batch size = 2
+    // input size = 2
+    // hidden size = 4
+    // directions = 2
+    // layers = 1
+    // chains = 2
+    // sequence length = 5
+    // output selection = output sequence and cell
+    lstm_gpu_chain_test<float>(2, 2, 4, 2, 1, 2, 5, cldnn_lstm_output::cldnn_lstm_output_sequence_cell);
+}
+
+TEST(lstm_gpu, generic_lstm_chained_stacked_bidirectional_f32) {
+    // batch size = 2
+    // input size = 2
+    // hidden size = 4
+    // directions = 2
+    // layers = 4
+    // chains = 2
+    // sequence length = 5
+    // output selection = output sequence and cell
+    lstm_gpu_chain_test<float>(2, 2, 4, 2, 4, 2, 5, cldnn_lstm_output::cldnn_lstm_output_sequence_cell);
 }
 
 // TODO: Add tests for the following:

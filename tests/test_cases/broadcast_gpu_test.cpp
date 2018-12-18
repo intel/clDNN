@@ -466,3 +466,114 @@ TEST(broadcast_gpu, basic_error_on_nondiv_bc_size) {
     EXPECT_ANY_THROW(network(engine, topology));
 }
 
+TEST(broadcast_gpu_int32, basic_bfyx_1x1x1x1_to_1x1x1x3) {
+
+    constexpr auto in_size_b = 1;
+    constexpr auto in_size_f = 1;
+    constexpr auto in_size_y = 1;
+    constexpr auto in_size_x = 1;
+
+    constexpr auto bc_scale_b = 1;
+    constexpr auto bc_scale_f = 1;
+    constexpr auto bc_scale_y = 1;
+    constexpr auto bc_scale_x = 3;
+
+    constexpr auto out_size_b = bc_scale_b * in_size_b;
+    constexpr auto out_size_f = bc_scale_f * in_size_f;
+    constexpr auto out_size_y = bc_scale_y * in_size_y;
+    constexpr auto out_size_x = bc_scale_x * in_size_x;
+
+    engine engine;
+    auto input = memory::allocate(engine, { data_types::i32, format::bfyx,{ in_size_b, in_size_f, in_size_x, in_size_y } });
+
+    topology topology;
+    topology.add(
+        input_layout("input", input.get_layout())
+    );
+    topology.add(
+        broadcast("output", "input", { out_size_b, out_size_f, out_size_x, out_size_y })
+    );
+
+    std::vector<int32_t> input_data = { 32768 };
+    std::vector<int32_t> out_data = {
+        32768,  32768,  32768
+    };
+    set_values(input, input_data);
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("output").get_memory();
+    auto output_ptr = output.pointer<int32_t>();
+
+    ASSERT_EQ(out_data.size(), static_cast<std::size_t>(out_size_b * out_size_f * out_size_y * out_size_x));
+
+    for (auto b = 0; b < out_size_b; ++b) {             // B
+        for (auto f = 0; f < out_size_f; ++f) {         // F
+            for (auto y = 0; y < out_size_y; ++y) {     // Y
+                for (auto x = 0; x < out_size_x; ++x) { // X
+                    auto output_off = ((b * out_size_f + f) * out_size_y + y) * out_size_x + x; // BFYX
+
+                    EXPECT_EQ(output_ptr[output_off], out_data[output_off]);
+                }
+            }
+        }
+    }
+}
+
+TEST(broadcast_gpu_int64, basic_bfyx_1x1x1x1_to_1x1x1x3) {
+
+    constexpr auto in_size_b = 1;
+    constexpr auto in_size_f = 1;
+    constexpr auto in_size_y = 1;
+    constexpr auto in_size_x = 1;
+
+    constexpr auto bc_scale_b = 1;
+    constexpr auto bc_scale_f = 1;
+    constexpr auto bc_scale_y = 1;
+    constexpr auto bc_scale_x = 3;
+
+    constexpr auto out_size_b = bc_scale_b * in_size_b;
+    constexpr auto out_size_f = bc_scale_f * in_size_f;
+    constexpr auto out_size_y = bc_scale_y * in_size_y;
+    constexpr auto out_size_x = bc_scale_x * in_size_x;
+
+    engine engine;
+    auto input = memory::allocate(engine, { data_types::i64, format::bfyx,{ in_size_b, in_size_f, in_size_x, in_size_y } });
+
+    topology topology;
+    topology.add(
+        input_layout("input", input.get_layout())
+    );
+    topology.add(
+        broadcast("output", "input", { out_size_b, out_size_f, out_size_x, out_size_y })
+    );
+
+    std::vector<int64_t> input_data = { 2147483648 };
+    std::vector<int64_t> out_data = {
+        2147483648,  2147483648,  2147483648
+    };
+    set_values(input, input_data);
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("output").get_memory();
+    auto output_ptr = output.pointer<int64_t>();
+
+    ASSERT_EQ(out_data.size(), static_cast<std::size_t>(out_size_b * out_size_f * out_size_y * out_size_x));
+
+    for (auto b = 0; b < out_size_b; ++b) {             // B
+        for (auto f = 0; f < out_size_f; ++f) {         // F
+            for (auto y = 0; y < out_size_y; ++y) {     // Y
+                for (auto x = 0; x < out_size_x; ++x) { // X
+                    auto output_off = ((b * out_size_f + f) * out_size_y + y) * out_size_x + x; // BFYX
+
+                    EXPECT_EQ(output_ptr[output_off], out_data[output_off]);
+                }
+            }
+        }
+    }
+}

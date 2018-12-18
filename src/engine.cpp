@@ -40,6 +40,7 @@ gpu_toolkit_config convert_configuration(const engine_configuration conf)
     result.ocl_sources_dumps_dir = conf.sources_dumps_dir;
     result.priority_mode = static_cast<cldnn_priority_mode_type>(conf.priority_mode);
     result.throttle_mode = static_cast<cldnn_throttle_mode_type>(conf.throttle_mode);
+    //result.tuning_cache_path = conf.tuning_cache_path;
     return result;
 }
 
@@ -121,14 +122,24 @@ program_impl::ptr engine_impl::build_program(const topology_impl& topology, cons
     return{ new program_impl(*this, topology, options, is_internal), false };
 }
 
-network_impl::ptr engine_impl::build_network(const topology_impl& topology, const build_options& options, bool internal_network)
+program_impl::ptr engine_impl::build_program(const std::set<std::shared_ptr<program_node>>& nodes, const build_options& options, bool is_internal)
 {
-    return{ new network_impl(*this, topology, options, internal_network), false };
+    return{ new program_impl(*this, nodes, options, is_internal), false };
 }
 
-network_impl::ptr engine_impl::allocate_network(const program_impl& program, bool internal_network)
+network_impl::ptr engine_impl::build_network(const topology_impl& topology, const build_options& options, bool is_internal)
 {
-    return{ new network_impl(program, internal_network), false };
+    return{ new network_impl(*this, topology, options, is_internal), false };
+}
+
+network_impl::ptr engine_impl::build_network(const std::set<std::shared_ptr<program_node>>& nodes, const build_options& options, bool is_internal)
+{
+    return{ new network_impl(*this, nodes, options, is_internal), false };
+}
+
+network_impl::ptr engine_impl::allocate_network(const program_impl& program, bool is_internal)
+{
+    return{ new network_impl(program, is_internal), false };
 }
 
 void engine_impl::wait_for_events(std::vector<event_impl::ptr> const & events)

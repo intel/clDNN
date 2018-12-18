@@ -66,6 +66,7 @@ struct configuration
     std::string ocl_sources_dumps_dir;
     cldnn_priority_mode_type priority_mode;
     cldnn_throttle_mode_type throttle_mode;
+    std::string tuning_cache_path;
 };
 
 class gpu_toolkit;

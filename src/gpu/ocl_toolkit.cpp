@@ -226,12 +226,11 @@ void cldnn::gpu::gpu_toolkit::build_command_queues(const configuration& config)
     command_queues_builder queue_builder(_context, _device, _platform_id);
     queue_builder.set_profiling(config.enable_profiling);
     queue_builder.set_out_of_order((config.host_out_of_order && _neo_driver));
-    // TODO add check when caps will be availible (instead of cl_intelx_create_command_queue)
-    //&& extension_supported("cl_khr_create_command_queue"))
-    bool priorty_extensions = extension_supported("cl_khr_priority_hints") && extension_supported("cl_intelx_create_command_queue");
+
+    bool priorty_extensions = extension_supported("cl_khr_priority_hints") && extension_supported("cl_khr_create_command_queue");
     queue_builder.set_priority_mode(config.priority_mode, priorty_extensions);
 
-    bool throttle_extensions = extension_supported("cl_khr_throttle_hints") && extension_supported("cl_intelx_create_command_queue");
+    bool throttle_extensions = extension_supported("cl_khr_throttle_hints") && extension_supported("cl_khr_create_command_queue");
     queue_builder.set_throttle_mode(config.throttle_mode, throttle_extensions);
 
     queue_builder.build();

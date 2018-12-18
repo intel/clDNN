@@ -24,6 +24,7 @@ namespace kernel_selector {
         switch (wType)
         {
         case WeightsType::INT8: return GetTypeName<int8_t>();
+        case WeightsType::UINT8: return GetTypeName<uint8_t>();
         case WeightsType::F16:  return "half";
         case WeightsType::F32:  return GetTypeName<float>();
         default: return "";

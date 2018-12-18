@@ -37,7 +37,7 @@ layout eltwise_inst::calc_output_layout(eltwise_node const& node)
         input_node_layout.data_type == data_types::i64)
     {
         auto mode = node.get_primitive()->mode;
-        std::vector<eltwise_mode> eltwise_int_modes = { eltwise_mode::sum, eltwise_mode::sub, eltwise_mode::prod, eltwise_mode::div };
+        std::vector<eltwise_mode> eltwise_int_modes = { eltwise_mode::sum, eltwise_mode::sub, eltwise_mode::prod, eltwise_mode::div, eltwise_mode::min, eltwise_mode::max, eltwise_mode::mod };
         if (std::find(eltwise_int_modes.begin(), eltwise_int_modes.end(), mode) == eltwise_int_modes.end())
             CLDNN_ERROR_MESSAGE(node.id(), "Requested eltwise mode is not supported for integer types.");
     }

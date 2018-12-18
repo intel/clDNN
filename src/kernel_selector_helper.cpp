@@ -72,6 +72,7 @@ data_types from_weights_type(kernel_selector::weights_type dt)
     switch (dt)
     {
     case kernel_selector::weights_type::INT8:   return data_types::i8;
+    case kernel_selector::weights_type::UINT8:  return data_types::u8;
     case kernel_selector::weights_type::F16:    return data_types::f16;
     case kernel_selector::weights_type::F32:    return data_types::f32;
     default:
@@ -97,6 +98,7 @@ kernel_selector::data_layout to_data_layout(format f)
     case format::byx8_f4: return kernel_selector::data_layout::byx8_f4;
     case format::fs_bs_yx_bsv4_fsv32: return kernel_selector::data_layout::fs_bs_yx_bsv4_fsv32;
         //     case format::brfyx:          return kernel_selector::data_layout::brfyx;
+    case format::b_fs_yx_fsv4:       return kernel_selector::data_layout::b_fs_yx_fsv4;
     default:
         return kernel_selector::data_layout::bfyx;
     }
@@ -149,6 +151,7 @@ kernel_selector::weights_layout to_weights_layout(format f)
     case format::is_o_yx_isv32: return kernel_selector::weights_layout::is_o_yx_isv32;
     case format::os_is_y_x8_osv8_isv4: return kernel_selector::weights_layout::os_is_y_x8_osv8_isv4;
     case format::bf_lyx_yx:                                  return kernel_selector::weights_layout::bf_lyx_yx;
+    case format::os_is_yx_osv16_isv4:  return kernel_selector::weights_layout::os_is_yx_osv16_isv4;
     default:
         return kernel_selector::weights_layout::oi;
     }
@@ -369,6 +372,7 @@ void set_params(const program_node& node, kernel_selector::params& params)
     params.engineInfo.maxImage2dHeight = engine_info.max_image2d_height;
     params.engineInfo.deviceId = engine_info.dev_id;
     params.engineInfo.computeUnitsCount = engine_info.compute_units_count;
+    params.engineInfo.deviceCache = engine_info.device_cache;
     params.engineInfo.driverVersion = engine_info.driver_version;
     params.engineInfo.hostVersion = to_host_version(cldnn::get_version());
 }

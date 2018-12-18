@@ -43,24 +43,27 @@ namespace cldnn
         if (!node.get_reverse()) {
             auto indices_layout = node.indices().get_output_layout();
             auto indices_size = indices_layout.size.spatial[0];
-            auto axis = node.get_axis();
-            switch (axis)
+            auto axes = node.get_axes();
+            for (size_t i = 0; i < axes.size(); i++)
             {
-            case index_select_axis_name::along_b:
-                output_b = indices_size;
-                break;
-            case index_select_axis_name::along_f:
-                output_f = indices_size;
-                break;
-            case index_select_axis_name::along_x:
-                output_x = indices_size;
-                break;
-            case index_select_axis_name::along_y:
-                output_y = indices_size;
-                break;
-            default:
-                CLDNN_ERROR_MESSAGE(node.id(), "UNSUPPORTED AXIS");
-                break;
+                switch (axes[i])
+                {
+                case index_select_axis_name::along_b:
+                    output_b = indices_size;
+                    break;
+                case index_select_axis_name::along_f:
+                    output_f = indices_size;
+                    break;
+                case index_select_axis_name::along_x:
+                    output_x = indices_size;
+                    break;
+                case index_select_axis_name::along_y:
+                    output_y = indices_size;
+                    break;
+                default:
+                    CLDNN_ERROR_MESSAGE(node.id(), "UNSUPPORTED AXIS");
+                    break;
+                }
             }
         }
         return layout{ input_layout.data_type, input_layout.format, { output_b, output_f, output_x, output_y } };
@@ -73,27 +76,30 @@ namespace cldnn
 		std::stringstream primitive_description;
 
         std::string axis_str = "";
-        switch (desc->axis)
+        for (size_t i = 0; i < desc->axis.size(); i++)
         {
-        case index_select_axis_name::along_b:
-            axis_str = "along_b";
-            break;
-        case index_select_axis_name::along_f:
-            axis_str = "along_f";
-            break;
-        case index_select_axis_name::along_y:
-            axis_str = "along_y";
-            break;
-        case index_select_axis_name::along_x:
-            axis_str = "along_x";
-            break;
-        default:
-            axis_str = "not supported axis";
-            break;
+            switch (desc->axis.at(i))
+            {
+            case index_select_axis_name::along_b:
+                axis_str += "along_b, ";
+                break;
+            case index_select_axis_name::along_f:
+                axis_str += "along_f, ";
+                break;
+            case index_select_axis_name::along_y:
+                axis_str += "along_y, ";
+                break;
+            case index_select_axis_name::along_x:
+                axis_str += "along_x, ";
+                break;
+            default:
+                axis_str += "not supported axis, ";
+                break;
+            }
         }
 
         json_composite index_select_info;
-        index_select_info.add("axis", axis_str);
+        index_select_info.add("axes", axis_str);
 
         node_info->add("index_select_info", index_select_info);
 		node_info->dump(primitive_description);

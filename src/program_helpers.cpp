@@ -23,9 +23,9 @@
 namespace cldnn
 {
     //helper function for merging the weights/biases buffers on cpu side for depthwise separable convolution optimization
-    void program_helpers::merge_buffers(engine_impl::ptr engine, program_node &node, layout target_layout, size_t begin_offset, size_t end_offset)
+    void program_helpers::merge_buffers(engine_impl &engine, program_node &node, layout target_layout, size_t begin_offset, size_t end_offset)
     {
-        memory_impl::ptr data_to_allocate = engine->allocate_memory(target_layout);
+        memory_impl::ptr data_to_allocate = engine.allocate_memory(target_layout);
 
         for (size_t i = begin_offset; i < end_offset; i++)
         {
@@ -66,7 +66,9 @@ namespace cldnn
         if (l1.get_linear_size() != l2.get_linear_size())
             return{ false, false };
         if ((l1.format == format::bf8_xy16 && l2.format != format::bf8_xy16) ||
-            (l2.format == format::bf8_xy16 && l1.format != format::bf8_xy16))
+            (l2.format == format::bf8_xy16 && l1.format != format::bf8_xy16) ||
+            (l1.format == format::b_fs_yx_fsv4 && l2.format != format::b_fs_yx_fsv4) ||
+            (l2.format == format::b_fs_yx_fsv4 && l1.format != format::b_fs_yx_fsv4))
             return{ false, false };
 
         auto l1_pitch = l1.get_pitches();

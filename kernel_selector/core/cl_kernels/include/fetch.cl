@@ -307,6 +307,66 @@ inline uint FUNC(get_os_is_y_x8_osv8_isv4_index)(uint o, uint i, uint y, uint x,
         CAT(prefix, _SIZE_X),\
         CAT(prefix, _SIZE_Y))
 
+#define GET_DATA_B_FS_YX_FSV4_INDEX(prefix, o, i, y, x)\
+    FUNC_CALL(get_b_fs_yx_fsv4)(\
+        o, i, y, x,\
+        CAT(prefix, _FEATURE_NUM),\
+        CAT(prefix, _PAD_BEFORE_SIZE_Y), CAT(prefix, _SIZE_Y), CAT(prefix, _PAD_AFTER_SIZE_Y),\
+        CAT(prefix, _PAD_BEFORE_SIZE_X), CAT(prefix, _SIZE_X), CAT(prefix, _PAD_AFTER_SIZE_X))
+
+inline uint FUNC(get_b_fs_yx_fsv4)(uint o, uint i, uint y, uint x,
+                                   uint feature_num,
+                                   uint pad_before_size_y, uint size_y, uint pad_after_size_y,
+                                   uint pad_before_size_x, uint size_x, uint pad_after_size_x)
+{
+    const uint tile = 4;
+    uint id_tile = i / tile;
+    uint id      = i - id_tile * tile;
+
+    uint idx = o * (feature_num / tile) *
+                   (pad_before_size_y + size_y + pad_after_size_y) *
+                   (pad_before_size_x + size_x + pad_after_size_x) * tile
+               + id_tile * (pad_before_size_y + size_y + pad_after_size_y) *
+                           (pad_before_size_x + size_x + pad_after_size_x) * tile
+               + pad_before_size_y * (pad_before_size_x + size_x + pad_after_size_x) * tile
+               + y * (pad_before_size_x + size_x + pad_after_size_x) * tile
+               + pad_before_size_x * tile
+               + x * tile
+               + id;
+
+    return idx;
+}
+
+#define GET_FILTER_OS_IS_YX_OSV16_ISV4_INDEX(prefix, o, i, y, x)\
+    FUNC_CALL(get_os_is_yx_osv16_isv4)(\
+        o, i, y, x,\
+        CAT(prefix, _OFM_NUM),\
+        CAT(prefix, _SIZE_Y),\
+        CAT(prefix, _SIZE_X))
+
+inline uint FUNC(get_os_is_yx_osv16_isv4)(uint o, uint i, uint y, uint x,
+                                          uint feature_num,
+                                          uint size_y,
+                                          uint size_x)
+{
+    const uint otd = 16;
+    uint out_depth_tile = o / otd;
+    uint od             = o - out_depth_tile * otd;
+
+    const uint tile = 4;
+    uint id_tile = i / tile;
+    uint id      = i - id_tile * tile;
+
+    uint idx = out_depth_tile * (feature_num / tile) * size_y * size_x * otd * tile
+               + id_tile                             * size_y * size_x * otd * tile
+               + y                                            * size_x * otd * tile
+               + x                                                     * otd * tile
+               + od                                                          * tile
+               + id;
+
+    return idx;
+}
+
 #define DECLARE_SAMPLER const sampler_t imageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST
 
 #if FP16_UNIT_USED

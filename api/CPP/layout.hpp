@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,6 +98,8 @@ struct data_type_traits
         {
         case data_types::i8:
             return "i8";
+        case data_types::u8:
+            return "u8";
         case data_types::i32:
             return "i32";
         case data_types::i64:
