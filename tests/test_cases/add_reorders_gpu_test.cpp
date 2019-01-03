@@ -43,7 +43,7 @@ add_reorders optimization pass.
 
 //Input has incompatible format
 TEST(add_reorders_gpu, basic1) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::fyxb,{ 2, 2, 3, 2 } }); //format unsupported by batch_norm!
     auto mean = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -99,7 +99,7 @@ TEST(add_reorders_gpu, basic1) {
 
 //concatenation of incompatible convolutions
 TEST(add_reorders_gpu, two_convolutions_and_concatenation) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     build_opt.set_option(build_option::optimize_data(false));
 
@@ -182,7 +182,7 @@ void tile_ref(const memory& input, memory& output, tile::tile_axis axis, int num
 }
 
 TEST(add_reorders_gpu, basic_reshape_and_tile) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 1, 2, 2, 1 } });
     auto output_ref = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 1, 4, 2 } });

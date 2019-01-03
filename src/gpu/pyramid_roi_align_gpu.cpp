@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pyramidROIAlign_inst.h"
+#include "pyramid_roi_align_inst.h"
 
 #include "primitive_gpu_base.h"
 #include "implementation_map.h"
 #include "kernel_selector_helper.h"
-#include "pyramidROIAlign/pyramidROIAlign_kernel_selector.h"
-#include "pyramidROIAlign/pyramidROIAlign_kernel_base.h"
+#include "pyramid_roi_align/pyramid_roi_align_kernel_selector.h"
+#include "pyramid_roi_align/pyramid_roi_align_kernel_base.h"
 #include "error_handler.h"
-#include "pyramidROIAlign_inst.h"
+#include "pyramid_roi_align_inst.h"
 #include "network_impl.h"
 
 
@@ -31,9 +31,9 @@
 
 namespace cldnn {  namespace gpu {
 
-struct PyramidROIAlign_gpu : typed_primitive_gpu_impl<PyramidROIAlign>
+struct PyramidROIAlign_gpu : typed_primitive_gpu_impl<pyramid_roi_align>
 {
-    using parent = typed_primitive_gpu_impl<PyramidROIAlign>;
+    using parent = typed_primitive_gpu_impl<pyramid_roi_align>;
     using parent::parent;
 
     static primitive_impl* create(const pyramidROIAlign_node& arg)
@@ -51,6 +51,9 @@ struct PyramidROIAlign_gpu : typed_primitive_gpu_impl<PyramidROIAlign>
 
         auto& kernel_selector = kernel_selector::PyramidROIAlign_kernel_selector::Instance();
         auto best_kernels = kernel_selector.GetBestKernels(pyramidROIAlign_params, pyramidROIAlign_optional_params);
+
+        CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
+
         return new PyramidROIAlign_gpu(arg, best_kernels[0]);
     }
 
@@ -60,8 +63,8 @@ namespace {
     struct attach {
         attach() {
             auto val_fw = PyramidROIAlign_gpu::create;
-            implementation_map<PyramidROIAlign>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
-            implementation_map<PyramidROIAlign>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
+            implementation_map<pyramid_roi_align>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
+            implementation_map<pyramid_roi_align>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
         }
         ~attach() = default;
 

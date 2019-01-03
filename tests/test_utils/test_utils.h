@@ -40,6 +40,8 @@
 #include "api/CPP/activation.hpp"
 #include "api/CPP/pooling.hpp"
 
+#include <chrono>
+
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 namespace tests {
@@ -327,6 +329,8 @@ struct memory_desc
     size_t offset;
 };
 
+const cldnn::engine & get_test_engine();
+
 struct test_dump
 {
     const std::string create_dump_graph_dir(std::string& str_err) const;
@@ -368,7 +372,7 @@ public:
     };
 
 protected:
-    cldnn::engine engine;
+    const cldnn::engine& engine = get_test_engine();
     test_params* generic_params;
     test_dump test_info;
     cldnn::primitive* layer_params;

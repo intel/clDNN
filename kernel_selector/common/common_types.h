@@ -41,6 +41,7 @@ namespace kernel_selector
         SOFT_MAX,
         ELTWISE,
         FUSED_CONV_BN_SCALE,
+        FUSED_CONV_ELTWISE,
         TABLE_LOOKUP,
         REORDER,
         RESHAPE,

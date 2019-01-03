@@ -85,7 +85,7 @@ void generic_fully_connected_test(cldnn::format test_input_fmt, cldnn::format te
     VF<T> input_rnd_vec = flatten_4d<T>(test_input_fmt, input_rnd);
     VF<T> weights_rnd_vec = flatten_4d<T>(test_weights_fmt, weights_rnd);
 
-    engine engine;
+    const auto& engine = get_test_engine();
     tensor input_tensor(input_b, f, x, y);
     tensor weights_tensor(output_f, f, x, y);
     auto input = memory::allocate(engine, { type_to_data_type<T>::value, test_input_fmt, input_tensor });
@@ -155,7 +155,7 @@ TEST(DISABLED_fully_connected_gpu, generic_random_short) {
     std::vector<std::pair<int, int>> input_sizes = { {28, 28}, {64, 64}, {100, 100}, {227, 227}, {1000, 1}, {1, 4096} };
     VF<int> outputs_x = { 5, 16 };
 
-    engine engine;
+    const auto& engine = get_test_engine();
     bool f16_supported = !!engine.get_info().supports_fp16;
     if (!f16_supported) {
         std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
@@ -204,7 +204,7 @@ TEST(fully_connected_gpu, no_biases) {
     const int32_t input_x = 3, input_b = 1,  // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::yxfb,{ input_b, 1, input_x, 1} });
     auto weights_prim = memory::allocate(engine, { data_types::f32,format::bfyx,{ weight_b, 1, weight_x, 1 } });
@@ -262,7 +262,7 @@ TEST(fully_connected_gpu, no_biases_int8) {
     const int32_t input_x = 3, input_b = 1,  // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::bfyx,{ input_b, 1, input_x, 1 } });
     auto weights_prim = memory::allocate(engine, { data_types::i8,format::bfyx,{ weight_b, 1, weight_x, 1 } });
@@ -324,7 +324,7 @@ TEST(fully_connected_gpu, xb_f32_batch_1) {
         input_x = 3, input_b = 1,  // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate( engine, { data_types::f32, format::yxfb, { input_b, 1, input_x, 1 } });
     auto weights_prim = memory::allocate(engine, { data_types::f32,format::bfyx,{ weight_b, 1, weight_x, 1 } });
@@ -384,7 +384,7 @@ TEST(fully_connected_gpu, xb_f32_batch_2) {
         input_x = 3, input_b = 2,  // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::yxfb,{ input_b,1,input_x, 1 } });
     auto weights_prim = memory::allocate(engine, { data_types::f32,format::bfyx,{ weight_b, 1, weight_x, 1 } });
@@ -445,7 +445,7 @@ TEST(fully_connected_gpu, x_f32) {
         input_x = 3,                 // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::bfyx, { 1,1,input_x,1 } });
     //auto output_prim = memory::allocate({ memory::format::xb_f32,{ output_b,{ { output_f } },{ 1 } } });
@@ -502,7 +502,7 @@ TEST(fully_connected_gpu, yxfn_f32) {
     //  Output:
     //   10  -28.5
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 2, 2, 1 } });
     //auto output_prim = memory::allocate({ memory::format::xb_f32,{ 2 ,{ { 1 } }, 1 } });
@@ -560,7 +560,7 @@ TEST(fully_connected_gpu, xb_f32_batch_1_relu) {
         input_x = 3, input_b = 1,  // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::yxfb,{ input_b, 1, input_x, 1 } });
     //auto output_prim = memory::allocate({ memory::format::xb_f32,{ output_b,{ { output_f } },{ 1 } } });
@@ -621,7 +621,7 @@ TEST(fully_connected_gpu, xb_f32_batch_2_relu) {
         input_x = 3, input_b = 2,  // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::yxfb,{ input_b, 1, input_x, 1 } });
     //auto output_prim = memory::allocate({ memory::format::xb_f32,{ output_b,{ { output_f } },{ 1 } } });
@@ -683,7 +683,7 @@ TEST(fully_connected_gpu, x_f32_relu) {
         input_x = 3,                 // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::bfyx,{ 1,1,input_x,1 } });
     //auto output_prim = memory::allocate({ memory::format::x_f32,{ 1       ,{ { output_f } }, 1 } });
@@ -742,7 +742,7 @@ TEST(fully_connected_gpu, x_f32_relu_with_negative_slope) {
         input_x = 3,                 // size of whole input buffer
         weight_b = 4, weight_x = 3;  // size of whole weights buffer
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input_prim = memory::allocate(engine, { data_types::f32,format::bfyx,{ 1,1,input_x,1 } });
     //auto output_prim = memory::allocate({ memory::format::x_f32,{ 1       ,{ { output_f } }, 1 } });

@@ -54,7 +54,7 @@ TEST(embed_gpu, seq3num4) {
     //   0.0    0.0   0.0    0.0
     //   6.0    8.0  -2.0   -2.0
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto batch = 1;
     auto sequence_length = 3;
     auto num_output_size = 4;
@@ -120,7 +120,7 @@ TEST(embed_gpu, b2seq2num3) {
     //   -1.0   0.0   1.0   -1.0   4.0   4.0
     //    10.0  18.0  19.0  -1.0   0.0   1.0
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto batch = 2;
     auto sequence_length = 2;
     auto num_output_size = 3;

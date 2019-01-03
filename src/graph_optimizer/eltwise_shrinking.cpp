@@ -27,6 +27,10 @@ void eltwise_shrinking::run(program_impl &p)
     {
         if (node->is_type<eltwise>())
         {
+            // TODO: make fp16 work
+            if (node->get_output_layout().data_type != data_types::i8 && node->get_output_layout().data_type != data_types::f32)
+                continue;
+
             const auto eltw = std::static_pointer_cast<const eltwise>(node->get_primitive());
             // TODO: support cases which already have stride!
             if (eltw->stride.empty())
@@ -85,15 +89,6 @@ void eltwise_shrinking::run(program_impl &p)
                 }
                 if (can_shrink)
                 {
-                    // change stride on every convolution
-                    for (size_t i = 0; i < convs_to_shrink.size(); i++)
-                    {
-                        const auto conv = std::static_pointer_cast<const convolution>(convs_to_shrink[i]->get_primitive());
-                        auto c = const_cast<convolution*>(&(*conv));
-                        c->stride.spatial[0] = 1;
-                        c->stride.spatial[1] = 1;
-                        convs_to_shrink[i]->recalc_output_layout();
-                    }
                     // add stride for every eltwise's inputs to have shrinked output
                     auto e = const_cast<eltwise*>(&(*eltw));
                     for (size_t user = 0; user < node->get_users().size(); user++)
@@ -101,6 +96,18 @@ void eltwise_shrinking::run(program_impl &p)
                         e->stride.push_back({ 0,0,stride_x,stride_y });
                     }
                     node->recalc_output_layout();
+
+                    // change stride on every convolution
+                    for (size_t i = 0; i < convs_to_shrink.size(); i++)
+                    {
+                        const auto conv = std::static_pointer_cast<const convolution>(convs_to_shrink[i]->get_primitive());
+                        auto c = const_cast<convolution*>(&(*conv));
+                        c->stride.spatial[0] = 1;
+                        c->stride.spatial[1] = 1;
+                        // TODO: remove forcing "false" with_output_size if not needed
+                        c->with_output_size = false;
+                        convs_to_shrink[i]->recalc_output_layout();
+                    }
                 }
             }
         }

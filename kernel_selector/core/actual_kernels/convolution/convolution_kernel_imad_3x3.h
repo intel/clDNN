@@ -33,6 +33,7 @@ namespace kernel_selector {
         KernelsData GetCommonKernelsData(const Params& params, const optional_params& options, const std::string exeMode = DEFAULT, int autoTuneIndex = -1) const;
 
     protected:
+        virtual bool Validate(const Params& params, const optional_params& options) const override;
         JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
         DispatchData SetDefault(const convolution_params& params, int autoTuneIndex = -1) const override;
 

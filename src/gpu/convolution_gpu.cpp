@@ -36,10 +36,13 @@ protected:
     {
         bool res = parent::validate(instance);
 
+        auto outer_id = _outer.id();
+        auto data_type = instance.node.input().get_output_layout().data_type;
+
         // Check whether all memory elements use the same unit type (FP16 or FP32).
-        CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "output memory", instance.node.get_output_layout().data_type, "");
+        CLDNN_ERROR_DATA_TYPES_MISMATCH(outer_id, "Input memory", data_type, "output memory", instance.node.get_output_layout().data_type, "");
         // Integer signed/unsigned is ok for convoluiton
-        CLDNN_ERROR_DATA_TYPES_MISMATCH_IGNORE_SIGN(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
+        CLDNN_ERROR_DATA_TYPES_MISMATCH_IGNORE_SIGN(outer_id, "Input memory", data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
 
         return res;
     }

@@ -345,14 +345,6 @@ void program_impl::pre_optimize_graph(bool is_internal)
             node->get_output_layout();
     }
 
-    // shrinking eltwise if users are conv 1x1 with stride > 1 optimization
-    eltwise_shrinking eltwise_shrinking_pass;
-    eltwise_shrinking_pass.run(*this);
-
-    // trying to set stride to 1x1 by shrinking convolutions before eltwise if doable
-    eltwise_remove_stride eltwise_remove_stride_pass;
-    eltwise_remove_stride_pass.run(*this);
-
     if (options.get<build_option_type::optimize_data>()->enabled())
     {
         prepare_primitive_fusing prepare_primitive_fusing_pass;
@@ -366,6 +358,19 @@ void program_impl::pre_optimize_graph(bool is_internal)
         pre_optimize_bias pre_optimize_bias_pass(lo);
         pre_optimize_bias_pass.run(*this);
         dump_program("4_reordered_inputs", true);
+
+        // passes regarding conv + eltwise optimizations
+
+        // shrinking eltwise if users are conv 1x1 with stride > 1 optimization
+        eltwise_shrinking eltwise_shrinking_pass;
+        eltwise_shrinking_pass.run(*this);
+
+        // trying to set stride to 1x1 by shrinking convolutions before eltwise if doable
+        eltwise_remove_stride eltwise_remove_stride_pass;
+        eltwise_remove_stride_pass.run(*this);
+
+        prepare_conv_eltw_fusing prepare_conv_eltw_fusing_pass;
+        prepare_conv_eltw_fusing_pass.run(*this);
     }
 
     handle_reshape();

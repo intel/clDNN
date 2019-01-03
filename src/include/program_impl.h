@@ -40,6 +40,7 @@ struct program_impl : public refcounted_obj<program_impl>
 {
     friend class propagate_constants; // to be removed when possible
     friend class prepare_primitive_fusing; // to be removed when possible
+    friend class prepare_conv_eltw_fusing; // to be removed when possible
     friend class reorder_inputs;  // to be removed when possible
 
 public:

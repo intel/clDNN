@@ -40,7 +40,8 @@ gpu_toolkit_config convert_configuration(const engine_configuration conf)
     result.ocl_sources_dumps_dir = conf.sources_dumps_dir;
     result.priority_mode = static_cast<cldnn_priority_mode_type>(conf.priority_mode);
     result.throttle_mode = static_cast<cldnn_throttle_mode_type>(conf.throttle_mode);
-    //result.tuning_cache_path = conf.tuning_cache_path;
+    result.user_context = static_cast<cl::Context*>(conf.context);
+    result.tuning_cache_path = conf.tuning_cache_path;
     return result;
 }
 

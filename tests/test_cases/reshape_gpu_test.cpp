@@ -43,7 +43,7 @@ void verify_int(const int32_t &output_value, const int32_t &value)
 template <class ElemType>
 void generic_reshape_test(format fmt, tensor const& input_size, tensor const& reshape_size, bool in_place, padding const& input_padd = padding(), padding const& output_padd = padding())
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     //allocate input memory
     auto data_type = data_types::f32;
@@ -501,7 +501,7 @@ TEST(reshape_gpu_f32, multiple_users_with_reorder) {
     //  b1f0:  0.0
     //  b1f1:  4.0
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto batch_num = 2;
     auto feature_num = 2;
     auto x_size = 1;

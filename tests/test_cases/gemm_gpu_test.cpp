@@ -32,7 +32,7 @@ using namespace cldnn;
 using namespace ::tests;
 
 TEST(gemm_gpu, basic_bfyx_t1) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 4 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 4 } });
 
@@ -83,7 +83,7 @@ TEST(gemm_gpu, basic_bfyx_t1) {
     }
 }
 TEST(gemm_gpu, basic_bfyx_t2) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 3 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
 
@@ -131,7 +131,7 @@ TEST(gemm_gpu, basic_bfyx_t2) {
 }
 
 TEST(gemm_gpu, basic_bfyx_t1t2) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 3, 4 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 4, 1 } });
 
@@ -188,7 +188,7 @@ TEST(gemm_gpu, basic_bfyx_t1t2) {
 }
 
 TEST(gemm_gpu, basic_input3) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 3 } });
     auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
@@ -252,7 +252,7 @@ TEST(gemm_gpu, basic_input3) {
 }
 
 TEST(gemm_gpu, basic_input3_t1t2) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 3 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 2 } });
     auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
@@ -319,7 +319,7 @@ TEST(gemm_gpu, basic_input3_t1t2) {
     }
 }
 TEST(gemm_gpu, basic_input3_1) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 4 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 3 } });
     auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
@@ -389,7 +389,7 @@ TEST(gemm_gpu, basic_input3_1) {
 }
 
 TEST(gemm_gpu, basic_input3_t2) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 4 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 3, 2 } });
     auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
@@ -459,7 +459,7 @@ TEST(gemm_gpu, basic_input3_t2) {
 }
 
 TEST(gemm_gpu, basic_input3_t1) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 3 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 3 } });
     auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 4 } });
@@ -528,7 +528,7 @@ TEST(gemm_gpu, basic_input3_t1) {
 }
 
 TEST(gemm_gpu, basic_bfyx) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 4, 3 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 1, 4 } });
 
@@ -586,7 +586,7 @@ TEST(gemm_gpu, basic_bfyx) {
 }
 
 TEST(gemm_gpu, basic3_bfyx) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 5, 1, 500, 9 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 5, 1, 1, 500 } });
 
@@ -3192,7 +3192,7 @@ TEST(gemm_gpu, basic3_bfyx) {
 }
 
 TEST(gemm_gpu, basic_smarcink2) {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 3, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 3 } });
 

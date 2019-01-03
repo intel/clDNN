@@ -14,19 +14,14 @@
 
 #pragma once
 
-#include "cldnn.h"
+#include "pyramid_roi_align_kernel_base.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-    CLDNN_BEGIN_PRIMITIVE_DESC(PyramidROIAlign)
-
-    CLDNN_END_PRIMITIVE_DESC(PyramidROIAlign)
-
-    CLDNN_DECLARE_PRIMITIVE_TYPE_ID(PyramidROIAlign);
-
-
-#ifdef __cplusplus
+namespace kernel_selector {
+    class PyramidROIAlignKernelRef : public PyramidROIAlignKernelBase
+    {
+    public:
+        PyramidROIAlignKernelRef() : PyramidROIAlignKernelBase("pyramid_roi_align_gpu_ref") {}
+        KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
+        ParamsKey GetSupportedKey() const override;
+    };
 }
-#endif

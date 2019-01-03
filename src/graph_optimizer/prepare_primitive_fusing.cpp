@@ -29,6 +29,7 @@
 #include "crop_inst.h"
 #include "eltwise_inst.h"
 #include "fused_conv_bn_scale_inst.h"
+#include "fused_conv_eltwise_inst.h"
 #include "lrn_inst.h"
 #include "mutable_data_inst.h"
 #include "mvn_inst.h"
@@ -185,6 +186,149 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl &p, program_node*
     });
 }
 
+void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl &p, program_node* node)
+{
+    // make sure this convolution have only 1 user and it's eltwise
+    if (node->users.size() != 1)
+        return;
+
+    if (!(*(node->users.begin()))->is_type<eltwise>())
+        return;
+
+    convolution_node * conv_node = static_cast<convolution_node*>(node);
+    convolution & conv = const_cast<convolution&>(*conv_node->get_primitive());
+
+    // currently works only for this format
+    if ( (conv_node->get_output_layout().format != cldnn::format::fs_bs_yx_bsv4_fsv32 || conv_node->get_output_layout().data_type != cldnn::data_types::i8) &&
+         (conv_node->get_output_layout().format != cldnn::format::bfyx || conv_node->get_output_layout().data_type != cldnn::data_types::f32)
+       )
+        return;
+
+    auto weights_node_ptr = p.nodes_map.find(conv.weights[0])->second;
+    auto filter_size = weights_node_ptr->get_output_layout().size;
+
+    // make sure if this is conv 1x1 its stride is 1x1
+    if (filter_size.spatial[0] == 1 && filter_size.spatial[1] == 1)
+    {
+        if (conv.stride.spatial[0] != 1 || conv.stride.spatial[1] != 1)
+            return;
+    }
+    else
+        return;
+
+    eltwise_node * eltw_node = static_cast<eltwise_node*>(*(node->users.begin()));
+
+    // make sure eltwise have only 2 inputs
+    if (eltw_node->inputs_count() != 2)
+        return;
+
+    // only single ADD operation is currently supported
+    // TODO: enable more
+    eltwise & eltw = const_cast<eltwise&>(*eltw_node->get_primitive());
+    if (eltw.mode != eltwise_mode::sum)
+        return;
+
+    if (eltw_node->get_fused_activation_func() == activation_relu_negative_slope)
+    {
+        eltw.with_activation = true;
+        eltw.activation_negative_slope = eltw_node->get_fused_activation_params().a;
+    }
+
+    int eltw_fused_input_idx; // <-- this input gets fused with eltwise
+    int eltw_second_input_idx; // <-- this input is not fused, so we add it in kernel
+    // here we check which input gets execute as last one, and fuse it
+    if (p.processing_order.get_processing_number(&eltw_node->input(0)) < p.processing_order.get_processing_number(&eltw_node->input(1)))
+    {
+        eltw_fused_input_idx = 1;
+        eltw_second_input_idx = 0;
+    }
+    else
+    {
+        eltw_fused_input_idx = 0;
+        eltw_second_input_idx = 1;
+    }
+
+    // we check if input to fuse is convolution that we're right now processing
+    if (eltw_node->input(eltw_fused_input_idx).id() != conv.id)
+        return;
+
+    primitive_id conv_id = conv_node->id();
+
+    // get strides for other than our conv input
+    std::vector<tensor> new_eltw_strides;
+    // conv strides modified by eltwise stride
+    tensor new_conv_stride = conv.stride;
+
+    if (eltw.stride.size() == eltw_node->inputs_count())
+    {
+        // for cases when stride from eltwise must be applied into fused convolution
+        new_conv_stride.spatial[0] *= eltw.stride[eltw_fused_input_idx].spatial[0];
+        new_conv_stride.spatial[1] *= eltw.stride[eltw_fused_input_idx].spatial[1];
+        // stride from non-fused eltwise input
+        new_eltw_strides.push_back(eltw.stride[eltw_second_input_idx]);
+    }
+
+    auto fused_conv_eltw = std::make_shared<fused_conv_eltwise>(
+        conv.id + "_fused_" + eltw.id,
+        conv_node->input().id(),
+        eltw_node->input(eltw_second_input_idx).id(),
+        eltw.mode,
+        conv.weights.ref(),
+        conv.bias.ref(),
+        conv.weights_quantization_factors.ref(),
+        conv.output_calibration_factors.ref(),
+        conv.input_quantization_factor,
+        eltw.output_calibration_factors,
+        new_eltw_strides,
+        new_conv_stride,
+        conv.input_offset,
+        conv.dilation,
+        conv.with_activation,
+        conv.activation_negative_slope,
+        eltw.with_activation,
+        eltw.activation_negative_slope
+        );
+
+    auto& new_node = p.get_or_create(fused_conv_eltw);
+    p.replace(*conv_node, new_node);
+
+    // right now new node's user is eltwise, let's clear users and take eltwise's users
+    new_node.users.clear();
+    p.replace_all_usages(*eltw_node, new_node);
+
+    // TODO: do it better, now it's done in a very ugly way to have good dependency order
+    std::vector<program_node*> updated_deps;
+    updated_deps.push_back(new_node.dependencies[0]);
+
+    // add second input
+    updated_deps.push_back(&eltw_node->input(eltw_second_input_idx));
+    eltw_node->input(eltw_second_input_idx).users.push_back(&new_node);
+
+    for (size_t d = 1; d < new_node.dependencies.size(); d++)
+    {
+        updated_deps.push_back(new_node.dependencies[d]);
+    }
+
+    if (eltw_node->output_calibration_term())
+    {
+        updated_deps.push_back(&eltw_node->output_calibration_factors());
+        eltw_node->output_calibration_factors().users.push_back(&new_node);
+    }
+
+    new_node.dependencies = updated_deps;
+
+    while (eltw_node->dependencies.size() > 1)
+    {
+        auto& dep = eltw_node->get_dependency(eltw_node->get_dependencies().size() - 1);
+        p.remove_connection(dep, *eltw_node);
+    }
+
+    p.extract_and_remove(*conv_node);
+    p.extract_and_remove(*eltw_node);
+
+    new_node.recalc_output_layout();
+}
+
 void prepare_primitive_fusing::run(program_impl &p)
 {
     bool is_debug = p.get_options().get<build_option_type::debug>()->enabled();
@@ -206,8 +350,8 @@ void prepare_primitive_fusing::run(program_impl &p)
         fuse_conv_bn_scale(p, node);
     }
 
-    itr = p.get_processing_order().begin();
-    while (itr != p.get_processing_order().end())
+    itr = p.processing_order.begin();
+    while (itr != p.processing_order.end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr);
@@ -282,5 +426,27 @@ void prepare_primitive_fusing::run(program_impl &p)
         auto& node = (*node_itr);
 
         fuse_skip_layers(p, node);
+    }
+}
+
+void prepare_conv_eltw_fusing::run(program_impl &p)
+{
+    std::list<program_node*> conv_nodes;
+    auto itr = p.get_processing_order().begin(); //note we need to use iterators since currently processed element can be removed
+    while (itr != p.get_processing_order().end())
+    {
+        auto node_itr = itr++;
+        if ((*node_itr)->is_type<convolution>())
+            conv_nodes.push_back(*node_itr);
+    }
+
+    //fuse conv + eltwise after activations
+    itr = conv_nodes.begin();
+    while (itr != conv_nodes.end())
+    {
+        auto node_itr = itr++;
+        auto& node = (*node_itr);
+
+        fuse_conv_eltwise(p, node);
     }
 }

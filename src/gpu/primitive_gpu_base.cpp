@@ -27,9 +27,10 @@ namespace cldnn {
         {
             for (const auto& user : users)
             {
-                if (user->type() == detection_output::type_id() ||
-                    user->type() == prior_box::type_id() ||
-                    user->type() == proposal::type_id())
+                const auto user_type = user->type();
+                if (user_type == detection_output::type_id() ||
+                    user_type == prior_box::type_id() ||
+                    user_type == proposal::type_id())
                 {
                     return true;
                 }

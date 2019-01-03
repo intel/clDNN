@@ -97,7 +97,7 @@ void generic_eltwise_test(cldnn::format test_input_fmt, int input_b, int input_f
     VF<T> input1_rnd_vec = flatten_4d<T>(test_input_fmt, input1_rnd);
     VF<T> input2_rnd_vec = flatten_4d<T>(test_input_fmt, input2_rnd);
 
-    engine engine;
+    const auto& engine = get_test_engine();
     tensor input_tensor( input_b, input_f, input_x, input_y );
     auto input1 = memory::allocate(engine, { type_to_data_type<T>::value, test_input_fmt, input_tensor });
     auto input2 = memory::allocate(engine, { type_to_data_type<T>::value, test_input_fmt, input_tensor });
@@ -181,7 +181,7 @@ TEST(eltwise_gpu_f32, add_basic_in4x4x2x2) {
     //  f1: b0:   15  16.5  b1:  22    16.5     
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
@@ -251,7 +251,7 @@ TEST(eltwise_gpu_f32, max_basic_in4x4x4x4) {
     //  f1: b0:    5   6    b1:  2.5   5.2     
     //  f1: b0:    8   8    b1:  12    8     
     //
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
@@ -323,7 +323,7 @@ TEST(eltwise_gpu_f32, sub_basic_in4x4x4x4) {
     //  f1: b0:   -1    8.5  b1:  3.5   -2.5     
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
 
@@ -380,7 +380,7 @@ TEST(eltwise_gpu_int, basic_in4x4x4x4) {
     {
         for (auto& mode : eltwise_ops_to_test)
         {
-            engine engine;
+            const auto& engine = get_test_engine();
             auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
             auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
@@ -457,7 +457,7 @@ TEST(eltwise_gpu_f32_int, basic_in4x4x4x4) {
     {
         for (auto& mode : eltwise_ops_to_test)
         {
-            engine engine;
+            const auto& engine = get_test_engine();
             auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
             auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
@@ -544,7 +544,7 @@ TEST(eltwise_gpu_f32, prod_basic_in4x4x4x4) {
     //
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     topology topology;
@@ -614,7 +614,7 @@ TEST(eltwise_gpu_f32, max_basic_in4x4x4x4_input_padding) {
     //  f1: b0:    5   6    b1:  2.5   5.2     
     //  f1: b0:    8   8    b1:  12    8     
     //
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
@@ -688,7 +688,7 @@ TEST(eltwise_gpu_f32, add_basic_in4x4x2x2_with_coefficients) {
     //  f1: b0:   7.5  8.25  b1:  11    8.25
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
@@ -736,7 +736,7 @@ TEST(eltwise_gpu_f32, add_basic_in4x4x2x2_with_coefficients) {
 }
 
 TEST(eltwise_gpu_f32, coefficients_count_check) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
@@ -796,7 +796,7 @@ TEST(eltwise_gpu_f32, add_basic_in4x4x2x2_with_coefficients_3inputs) {
     //  f1: b0:   8.5   8.75   b1:  11    8.75
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
@@ -883,7 +883,7 @@ TEST(eltwise_gpu_f32, max_3inputs_in4x4x4x4_input_padding) {
     //  f1: b0:    5   6    b1:  2.5   7
     //  f1: b0:    9   8    b1:  12    8
     //
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
@@ -973,7 +973,7 @@ TEST(eltwise_gpu_f32, stride_test_2x2) {
     //  f1: b0: 33 35   b1:  49  51
     //  f1: b0: 41 43   b1:  57  59
     //
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 4, 4 } });
@@ -1038,7 +1038,7 @@ void run_eltwise_generic_test(cldnn::eltwise_mode mode)
     cldnn::format test_inputs_fmt = cldnn::format::bfyx;
     std::pair<int, int> input_size = { 227, 227 };
 
-    engine engine;
+    const auto& engine = get_test_engine();
     bool f16_supported = !!engine.get_info().supports_fp16;
     if (!f16_supported) {
         std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
@@ -1072,7 +1072,7 @@ TEST(DISABLED_eltwise_gpu, generic_random) {
     VF<float> slopes = { 0.0f, -0.0f, -17.19f, 1028.8f, std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() };
     std::vector<std::pair<int, int>> input_sizes = { { 100, 100 },{ 227, 227 },{ 400, 600 } };
 
-    engine engine;
+    const auto& engine = get_test_engine();
     bool f16_supported = !!engine.get_info().supports_fp16;
     if (!f16_supported) {
         std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;

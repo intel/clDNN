@@ -137,6 +137,8 @@ kernel_selector::weights_layout to_weights_layout(format f)
     case format::byxf:              return kernel_selector::weights_layout::oyxi;
     case format::yxfb:              return kernel_selector::weights_layout::yxio;
     case format::os_iyx_osv16:      return kernel_selector::weights_layout::os_iyx_osv16;
+    case format::os_iyx_osv32:      return kernel_selector::weights_layout::os_iyx_osv32;
+    case format::os_iyx_osv64:      return kernel_selector::weights_layout::os_iyx_osv64;
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::weights_layout::os_i_osv8__ai8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::weights_layout::os_i_osv16__ai8;
     case format::bs_x_bsv16:        return kernel_selector::weights_layout::os_i_osv16;
@@ -168,6 +170,8 @@ cldnn::format::type from_weights_layout(kernel_selector::weights_layout l)
     case kernel_selector::weights_layout::iyxo:            return cldnn::format::fyxb;
     case kernel_selector::weights_layout::yxio:            return cldnn::format::yxfb;
     case kernel_selector::weights_layout::os_iyx_osv16:    return cldnn::format::os_iyx_osv16;
+    case kernel_selector::weights_layout::os_iyx_osv32:    return cldnn::format::os_iyx_osv32;
+    case kernel_selector::weights_layout::os_iyx_osv64:    return cldnn::format::os_iyx_osv64;
     case kernel_selector::weights_layout::os_i_osv16:      return cldnn::format::bs_x_bsv16;
     case kernel_selector::weights_layout::os_i_osv8__ai8:  return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::weights_layout::os_i_osv16__ai8: return cldnn::format::bs_xs_xsv8_bsv16;

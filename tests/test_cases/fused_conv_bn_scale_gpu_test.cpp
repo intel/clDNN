@@ -46,7 +46,7 @@ using namespace tests;
 
 TEST(fused_conv_bn_scale_gpu, base) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
     auto weights = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
@@ -93,7 +93,7 @@ TEST(fused_conv_bn_scale_gpu, base) {
 
 TEST(fused_conv_bn_scale_gpu, fusing_scale_batch_norm) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
     auto weights = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
@@ -145,7 +145,7 @@ TEST(fused_conv_bn_scale_gpu, fusing_scale_batch_norm) {
 
 TEST(fused_conv_bn_scale_gpu, fusing_scale_batch_norm_forward_backward) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
     auto weights = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });

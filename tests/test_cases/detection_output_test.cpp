@@ -179,7 +179,7 @@ public:
         const int num_loc_classes = share_location ? 1 : this->num_classes;
         const int keep_top_k = 150;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -219,7 +219,7 @@ public:
         const int num_loc_classes = share_location ? 1 : this->num_classes;
         const int keep_top_k = 150;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -267,7 +267,7 @@ public:
         const int keep_top_k = 4;
         const int background_label_id = 0;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -321,7 +321,7 @@ public:
         const int keep_top_k = 1;
         const int background_label_id = 0;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -369,7 +369,7 @@ public:
         const int keep_top_k = 6;
         const int background_label_id = 0;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -428,7 +428,7 @@ public:
         const int top_k = 2;
         const int background_label_id = 0;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -478,7 +478,7 @@ public:
         const int keep_top_k = 10;
         const int background_label_id = -1;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -545,7 +545,7 @@ public:
         const int background_label_id = -1;
         const int top_k = 2;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -599,7 +599,7 @@ public:
         const int keep_top_k = 5;
         const int background_label_id = 0;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -656,7 +656,7 @@ public:
         const int background_label_id = 0;
         const int top_k = 2;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -707,7 +707,7 @@ public:
         const int background_label_id = -1;
         const int top_k = 2;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 2, 1, this->num_priors * 4 } });
@@ -770,7 +770,7 @@ public:
         const int32_t prior_coordinates_offset = 1;
         const bool prior_is_normalized = true;
 
-        cldnn::engine engine;
+        const auto& engine = get_test_engine();
         cldnn::memory input_location = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * num_loc_classes * 4, 1, 1 } });
         cldnn::memory input_confidence = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ this->num_of_images, this->num_priors * this->num_classes, 1, 1 } });
         cldnn::memory input_prior_box = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1, 1, 1, this->num_priors * prior_info_size } });
@@ -967,7 +967,7 @@ TYPED_TEST(detection_output_test, test_detection_output_sort_gpu)
     const unsigned score_space = ((this->num_of_images + 15) / 16) * 16;
     int input_size = this->num_of_images * num_loc_classes * this->num_priors * out_row_size + score_space;
 
-    cldnn::engine engine;
+    const auto& engine = get_test_engine();
     cldnn::memory input_buff = memory::allocate(engine, { type_to_data_type<TypeParam>::value, format::bfyx,{ 1, 1, 1, input_size } });
 
     this->init_buffer_sort(input_buff);

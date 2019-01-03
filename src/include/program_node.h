@@ -53,7 +53,8 @@ class xml_composite;
 struct program_node
 {
     friend struct program_impl;
-    friend class prepare_primitive_fusing; // to be removed when possible - it modifies users and dependencies directly
+    friend class prepare_primitive_fusing;
+    friend class prepare_conv_eltw_fusing; // to be removed when possible
     friend class propagate_constants; // to be removed
     friend class post_optimize_weights; // to be removed when possible - requires an access to selected_impl
 

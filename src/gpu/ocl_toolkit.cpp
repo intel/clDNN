@@ -71,96 +71,6 @@ ocl_error::ocl_error(cl::Error const & err) : error(err.what() + std::string(", 
 {
 }
 
-namespace {
-
-    cl_device_type convert_configuration_device_type(configuration::device_types device_type)
-    {
-        cl_device_type device_types[] = {
-                CL_DEVICE_TYPE_DEFAULT,
-                CL_DEVICE_TYPE_CPU,
-                CL_DEVICE_TYPE_GPU,
-                CL_DEVICE_TYPE_ACCELERATOR };
-        return device_types[device_type];
-    }
- 
-    bool does_device_match_config(cl::Device const& dev, configuration const& config, std::list<std::string>& reasons)
-    {
-        auto dev_name = dev.getInfo<CL_DEVICE_NAME>();
-        bool ok = true;
-
-        auto dev_type = dev.getInfo<CL_DEVICE_TYPE>();
-
-        if (dev_type != convert_configuration_device_type(config.device_type))
-        {
-            reasons.push_back(dev_name + ": invalid device type");
-            ok = false;
-        }
-
-        auto vendor_id = dev.getInfo<CL_DEVICE_VENDOR_ID>();
-        if (vendor_id != config.device_vendor)
-        {
-            reasons.push_back(dev_name + ": invalid vendor type");
-            ok = false;
-        }
-
-        if (config.host_out_of_order)
-        {
-            auto queue_properties = dev.getInfo<CL_DEVICE_QUEUE_PROPERTIES>();
-            using cmp_t = std::common_type<decltype(queue_properties), typename std::underlying_type<cl::QueueProperties>::type>::type;
-            if (!(static_cast<cmp_t>(queue_properties) & static_cast<cmp_t>(cl::QueueProperties::OutOfOrder)))
-            {
-                reasons.push_back(dev_name + ": missing out of order support");
-                ok = false;
-            }
-        }
-
-        return ok;
-    }
-}
-
-cl::Device get_gpu_device(const configuration& config, cl_platform_id& platform_id)
-{
-    std::list<std::string> reasons;
-    cl_uint n = 0;
-
-    // Get number of platforms availible
-    cl_int err = clGetPlatformIDs(0, NULL, &n);
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("clGetPlatformIDs error " + std::to_string(err));
-    }
-
-    // Get platform list
-    std::vector<cl_platform_id> platform_ids(n);
-    err = clGetPlatformIDs(n, platform_ids.data(), NULL);
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("clGetPlatformIDs error " + std::to_string(err));
-    }
-
-    for (auto& id : platform_ids)
-    {
-        cl::Platform platform = cl::Platform(id);
-        std::vector<cl::Device> devices;
-        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
-        for (auto& d : devices)
-        {
-            if (does_device_match_config(d, config, reasons))
-            {
-                platform_id = id;
-                return d;
-            }
-        }
-    }
-
-    if (reasons.empty())
-        throw std::runtime_error("Could not find any OpenCL device");
-
-    std::string error_msg = "No OpenCL device found which would match provided configuration:";
-    for (const auto& reason : reasons)
-        error_msg += "\n    " + reason;
-
-    throw std::invalid_argument(std::move(error_msg));
-}
-
 std::shared_ptr<gpu_toolkit> gpu_toolkit::create(const configuration & cfg)
 {
     struct make_shared_wa : public gpu_toolkit { make_shared_wa(const configuration& cfg) : gpu_toolkit(cfg) {} };
@@ -179,14 +89,16 @@ struct gpu_toolkit::ocl_logger
 
 gpu_toolkit::gpu_toolkit(const configuration& config) 
     : _configuration(config)
-    , _device(get_gpu_device(config, _platform_id))
+    , _ocl_builder(config)
+    , _user_context(_ocl_builder.is_user_context())
+    , _device(_ocl_builder.get_device())
     , _neo_driver(strstr(get_device_version().c_str(), "NEO") ? true : false)
-    , _context(_device)
+    , _context(_ocl_builder.get_context())
+    , _platform_id(_ocl_builder.get_platform_id())
     , _engine_info(*this)
     , _kernels_cache(*this)
 {
     _device.getInfo(CL_DEVICE_EXTENSIONS, &_extensions);
-
     build_command_queues(config);
 
     _logger = std::unique_ptr<ocl_logger>(new ocl_logger());
@@ -217,6 +129,7 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
             << "    fp16: "                << std::boolalpha << (_engine_info.supports_fp16 != 0) << "\n"
             << "    fp16 denorms: "        << std::boolalpha << (_engine_info.supports_fp16_denorms != 0) << "\n"
             << "    subgroups short: "     << std::boolalpha << (_engine_info.supports_subgroups_short != 0) << "\n"
+            << "    used defined context: "<< std::boolalpha << _user_context << "\n"
             << std::endl;
     }
 }

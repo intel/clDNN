@@ -17,7 +17,7 @@
 
 #include <api/CPP/engine.hpp>
 #include <api/CPP/input_layout.hpp>
-#include <api/CPP/pyramidROIAlign.hpp>
+#include <api/CPP/pyramid_roi_align.hpp>
 #include <api/CPP/memory.hpp>
 #include <api/CPP/topology.hpp>
 #include <api/CPP/network.hpp>
@@ -127,7 +127,7 @@ memory allocate_memory(Test_index key, const engine &engine)
 
 TEST(pyramidROIAlign_gpu, basic_functionality)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     std::vector<float> answer =
     {
@@ -157,7 +157,7 @@ TEST(pyramidROIAlign_gpu, basic_functionality)
     topo.add(input_layout(test_data[P5].parameter_name, P5_tensor.get_layout()));
     topo.add(input_layout(test_data[POOL].parameter_name, pool_size.get_layout()));
 
-    topo.add(PyramidROIAlign("pyramidROIAlign", 
+    topo.add(pyramid_roi_align("pyramidROIAlign", 
             test_data[BOXES].parameter_name, 
             test_data[IMAGE_META].parameter_name,
             test_data[P2].parameter_name,

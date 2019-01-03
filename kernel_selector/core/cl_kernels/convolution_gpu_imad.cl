@@ -18,10 +18,12 @@
 #include "include/data_types.cl"
 #include "include/imad.cl"
 
+#ifndef NON_BLOCK_LOAD
 // block loads for inputs and weights should be fastest, but compiler seems
 // to do better with a mix, regular loads for inputs and block loads for weights. 
 #define BLOCK_LOAD_INPUTS
 #define BLOCK_LOAD_WEIGHTS
+#endif
 
 // for now kernel stride is square
 #define K_WSTRIDE K_STRIDE

@@ -60,7 +60,7 @@ TEST(custom_gpu_primitive_f32, add_basic_in2x2x2x2) {
     //  f1: b0:   15  16.5  b1:  22    16.5     
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
@@ -153,7 +153,7 @@ void add_basic_in2x2x2x2_with_reorder()
     //  f1: b0:   15  16.5  b1:  22    16.5     
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -266,7 +266,7 @@ TEST(custom_gpu_primitive_f32, eltwise_add_basic_in2x2x2x2) {
     //  f1: b0:   15  16.5  b1:  22    16.5     
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -359,7 +359,7 @@ TEST(custom_gpu_primitive_f32, add_eltwise_basic_in2x2x2x2) {
     //  f1: b0:   15  16.5  b1:  22    16.5     
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -452,7 +452,7 @@ TEST(custom_gpu_primitive_f32, two_kernels_with_same_entry_point_basic_in2x2x2x2
     //  f1: b0:   15  16.5  b1:  22    16.5     
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
@@ -525,7 +525,7 @@ TEST(custom_gpu_primitive_f32, two_kernels_with_same_entry_point_basic_in2x2x2x2
 }
 
 TEST(custom_gpu_primitive_u8, add_basic_in2x2x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 2, 2, 2, 2 } });

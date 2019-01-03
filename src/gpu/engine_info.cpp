@@ -209,7 +209,6 @@ std::shared_ptr<rapidjson::Document> get_cache_from_file(uint32_t compute_units_
     }
     else
     {
-        std::cout << "[WARNING] No cache data found for your device" << std::endl;
         cacheDeviceData.Parse("{}");
     }
     return std::make_shared < rapidjson::Document>(std::move(cacheDeviceData));

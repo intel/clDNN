@@ -69,6 +69,14 @@ namespace cldnn
         void fuse_conv_bn_scale(program_impl &p, program_node* node);
     };
 
+    class prepare_conv_eltw_fusing : base_pass
+    {
+    public:
+        virtual void run(program_impl &p) override;
+    private:
+        void fuse_conv_eltwise(program_impl &p, program_node* node);
+    };
+
     class prepare_depthwise_sep_opt : base_pass
     {
     public:

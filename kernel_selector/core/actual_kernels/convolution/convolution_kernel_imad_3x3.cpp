@@ -21,9 +21,34 @@
 //
 // Kernel specific constants
 //
-#define OUT_BLOCK_HEIGHT    1
-#define OUT_BLOCK_WIDTH     7
-#define SIMD_SIZE          16
+#define SIMD_SIZE             16
+// Threshold value to calculate the block size.
+#define OUT_BLOCK_THRESHOLD   7
+// For images 7x7 it's 7 (default), for 14x14 and above it's 14.
+#define OUT_BLOCK_WIDTH       7
+// For images 7x7 it's 1 (default), for 14x14 and above it's 2.
+#define OUT_BLOCK_HEIGHT      1
+
+// Calculte actual value of OUT_BLOCK_WIDTH depending on X
+static size_t getBlockWidth(size_t X) {
+    // X must be multiple of OUT_BLOCK_THRESHOLD
+    assert(X % OUT_BLOCK_THRESHOLD == 0);
+    size_t Res = (X > OUT_BLOCK_THRESHOLD)
+                  ? OUT_BLOCK_WIDTH * 2
+                  : OUT_BLOCK_WIDTH;
+    return Res;
+}
+
+// Calculte actual value of OUT_BLOCK_HEIGHT depending on Y
+static size_t getBlockHeight(size_t Y) {
+    // Y must be multiple of OUT_BLOCK_THRESHOLD
+    assert(Y % OUT_BLOCK_THRESHOLD == 0);
+    size_t Res = (Y > OUT_BLOCK_THRESHOLD)
+                  ? OUT_BLOCK_HEIGHT * 2
+                  : OUT_BLOCK_HEIGHT;
+    return Res;
+}
+
 
 namespace kernel_selector {
 
@@ -100,8 +125,8 @@ namespace kernel_selector {
             MakeJitConstant("K_STRIDE",         params.stride.x), // X and Y must be equal
             MakeJitConstant("BATCH_SIZE",       iDims[iB].v),
             MakeJitConstant("WORKGROUP_SIZE",   "SIMD_SIZE"),
-            MakeJitConstant("OUT_BLOCK_HEIGHT", OUT_BLOCK_HEIGHT),
-            MakeJitConstant("OUT_BLOCK_WIDTH",  OUT_BLOCK_WIDTH)
+            MakeJitConstant("OUT_BLOCK_WIDTH",  getBlockWidth(iDims[iX].v)),
+            MakeJitConstant("OUT_BLOCK_HEIGHT", getBlockHeight(iDims[iY].v))
         });
 
         // FM_TILE definition
@@ -153,11 +178,13 @@ namespace kernel_selector {
         std::vector<size_t> global = {
             //globalRange[0] = ((_IW / K_STRIDE) + (OTW - 1)) / OTW;
             // number of tiles needed to cover output width
-            (((iDims[iX].v / params.stride.x) + (OUT_BLOCK_WIDTH - 1)) / OUT_BLOCK_WIDTH),
+            (((iDims[iX].v / params.stride.x) +
+                   (getBlockWidth(iDims[iX].v) - 1)) / getBlockWidth(iDims[iX].v)),
 
             //globalRange[1] = ((_IH / K_STRIDE) + (OTH - 1)) / OTH;
             // number of tiles needed to cover output height
-            (((iDims[iY].v / params.stride.y) + (OUT_BLOCK_HEIGHT - 1)) / OUT_BLOCK_HEIGHT),
+            (((iDims[iY].v / params.stride.y) +
+                   (getBlockHeight(iDims[iY].v) - 1)) / getBlockHeight(iDims[iY].v)),
 
             // globalRange[2] = (_OD * _B) + ((_B *_OD) % __WORKGROUP_SIZE);
             // round depth range up
@@ -182,6 +209,20 @@ namespace kernel_selector {
 
     } // SetDefault
 
+    bool
+    ConvolutionKernel_imad_3x3::Validate(
+            const Params&          params,
+            const optional_params& options) const
+    {
+        if (!Parent::Validate(params, options))
+        {
+            return false;
+        }
+
+        KernelData kd = KernelData::Default<convolution_params>(params);
+        convolution_params& newParams = *static_cast<convolution_params*>(kd.params.get());
+        return (newParams.filterSize.x == 3 && newParams.filterSize.y == 3);
+    }
 
     KernelsData
     ConvolutionKernel_imad_3x3::GetCommonKernelsData(
@@ -198,10 +239,19 @@ namespace kernel_selector {
         KernelData kd = KernelData::Default<convolution_params>(params);
         convolution_params& newParams = *static_cast<convolution_params*>(kd.params.get());
 
-        if (newParams.filterSize.x != 3 || newParams.filterSize.y != 3)
-        {
-            // This convolution must must have 3x3 filter size
+        if (newParams.stride.x != newParams.stride.y) {
+            // Strides must be equial
             return{};
+        }
+        else {
+            const auto& in    = newParams.inputs[0];
+            const auto& iDims = in.GetDims();
+            const int iX = DataTensor::Channelndex(
+                in.GetLayout(), Tensor::DataChannelName::X);
+            if (iDims[iX].v % OUT_BLOCK_THRESHOLD != 0) {
+                // Input size must be multiple of OUT_BLOCK_THRESHOLD
+                return{};
+            }
         }
 
         DispatchData runInfo = SetDefault(newParams, autoTuneIndex);

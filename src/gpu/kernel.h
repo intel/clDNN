@@ -69,6 +69,8 @@ public:
         memory_impl::cptr slope;
         memory_impl::cptr prev_weights_grad;
         memory_impl::cptr prev_bias_grad;
+        // used for fused primitives
+        std::vector<memory_impl::cptr> fused_op_calibration_factors;
         int32_t           split          = 0;
         float             lr;
         const kernel_selector::kernel_scalar_arguments* scalars = nullptr;

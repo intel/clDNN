@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pyramidROIAlign_kernel_ref.h"
+#include "pyramid_roi_align_kernel_ref.h"
 
 namespace kernel_selector {
     ParamsKey PyramidROIAlignKernelRef::GetSupportedKey() const

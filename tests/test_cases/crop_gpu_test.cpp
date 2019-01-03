@@ -45,7 +45,7 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_all) {
     //  Input      : 2x3x4x5
     //  Output     : 1x2x2x3
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto batch_num = 2;
     auto feature_num = 3;
@@ -93,7 +93,7 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_all_bfyx) {
     //  Input      : 6x2x4x3
     //  Output     : 3x1x2x2
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto batch_num = 6;
     auto feature_num = 2;
@@ -142,7 +142,7 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_all_fyxb) {
     //  Input      : 6x2x4x3
     //  Output     : 3x1x2x2
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto batch_num = 6;
     auto feature_num = 2;
@@ -196,7 +196,7 @@ TEST(crop_gpu, basic_in2x3x2x2_crop_offsets) {
     //  f1: b0:  5    6  -12   b1:   1.5  5.2  -13
     //  f1: b0:  7    8  -16   b1:   12   8    -17
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto batch_num = 2;
     auto feature_num = 2;
@@ -278,7 +278,7 @@ TEST(crop_gpu, basic_in1x4x1x1_split) {
 
     //  Out2:
     //  f0: 4.0
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto batch_num = 1;
     auto feature_num = 4;

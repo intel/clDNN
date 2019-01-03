@@ -75,7 +75,7 @@ TEST(memory_tests, DISABLED_network_creation_loop)
 #endif
 TEST(memory_pool, basic_non_padded_relu_pipe) {
     // 5 relu's of size 1x4x1x1
-    engine engine;
+    const cldnn::engine engine;// here we need new engine
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 1;
@@ -109,7 +109,7 @@ TEST(memory_pool, basic_non_padded_relu_and_pooling_pipe) {
     // uncomment this line to disable memory pool
     /*engine_configuration cfg{ false, false, false, std::string(), std::string(), true, std::string(),std::string(), 0, false };
     engine engine{ cfg };*/
-    engine engine;
+    const cldnn::engine engine;// here we need new engine
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 4;
@@ -147,7 +147,7 @@ TEST(memory_pool, multi_outputs_network) {
     // uncomment this line to disable memory pool
     /*engine_configuration cfg{ false, false, false, std::string(), std::string(), true, std::string(),std::string(), 0, false };
     engine engine{ cfg };*/
-    engine engine;
+    const cldnn::engine engine;// here we need new engine
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 4;

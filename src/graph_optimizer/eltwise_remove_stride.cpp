@@ -45,9 +45,13 @@ void eltwise_remove_stride::conv_stride_extend(program_impl &p, program_node& no
             if (dep->is_type<convolution>())
             {
                 conv_stride_extend(p, *dep, tensor);
+                dep->recalc_output_layout(true);
                 break;
             }
         }
+        auto c = const_cast<convolution*>(&(*conv));
+        c->with_output_size = false;
+        node.recalc_output_layout(true);
     }
     else
     {
@@ -58,7 +62,8 @@ void eltwise_remove_stride::conv_stride_extend(program_impl &p, program_node& no
             auto c = const_cast<convolution*>(&(*conv));
             c->stride.spatial[0] += tensor.spatial[0] - 1;
             c->stride.spatial[1] += tensor.spatial[1] - 1;
-            node.recalc_output_layout();
+            c->with_output_size = false;
+            node.recalc_output_layout(true);
             tensor.spatial[0] = 1;
             tensor.spatial[1] = 1;
         }
@@ -71,6 +76,10 @@ void eltwise_remove_stride::run(program_impl &p)
     {
         if (node->is_type<eltwise>())
         {
+            // TODO: make fp16 work
+            if (node->get_output_layout().data_type != data_types::i8 && node->get_output_layout().data_type != data_types::f32)
+                continue;
+
             const auto eltw = std::static_pointer_cast<const eltwise>(node->get_primitive());
             if (!eltw->stride.empty())
             {

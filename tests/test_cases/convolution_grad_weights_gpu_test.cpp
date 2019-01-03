@@ -47,7 +47,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_p
     //  8  0.5
     //  6  9
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 2, 2, 2 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
@@ -123,7 +123,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz2x2_in8x1x2x2_bfyx_stride2_p
     //  8  0.5
     //  6  9
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
@@ -195,7 +195,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_p
     //  8  0.5
     //  6  9
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 2, 2 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
@@ -257,7 +257,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_p
     //  Bias:
     //  0
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.001f;
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
 
@@ -331,7 +331,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_p
     //  8  0.5    1  2
     //  6  9      3  4
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 2, 2 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 2, 2 } });
@@ -426,7 +426,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz1x1_in1x2x5x5_bfyx_stride2_p
     //  5  6   7  8
     //  9  10 11 11
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 5, 5 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 4 } });
@@ -517,7 +517,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz2x2_in32x1x2x2_yxfb_stride1)
     // y2: x1: 0.5  0.6  0.7  0.9  1    1.1  0.7  0.9  0.1  1.9  0.6  0.5  0.4  0.1  0.1  1.7  0.5  0.4  0.5  0.6  0.7  0.8  0.8  1.7  1.8  1.2  2.1  0.5  0.2  0.9  1.5  1.6
     // y2: x2: 0.5  0.6  0.7  0.9  1    1.1  0.7  0.9  0.1  1.9  0.1  1.7  0.5  0.4  0.4  0.1  0.1  1.7  0.5  0.4  0.5  0.6  1.2  2.1  0.5  0.2  0.9  0.4  0.1  1.2  1.7  1.8
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::yxfb,{ 32, 1, 2, 2 } });
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 32, 1, 3, 3 } });
@@ -599,7 +599,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz3x3_in2x1x3x3_bfyx_stride1_p
     //  0.5  0.6  0.7  0.9  1    1.1  0.7  0.9  0.1
     //  0.7  0.8  0.8  1.7  1.8  1.2  2.1  0.5  0.2
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 3 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 3, 3 } });
@@ -681,7 +681,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz3x3_in2x1x3x3_bfyx_stride1_p
     //  0.5  0.6  0.7  0.9  1    1.1  0.7  0.9  0.1
     //  0.7  0.8  0.8  1.7  1.8  1.2  2.1  0.5  0.2
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 3 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 3, 3 } });
@@ -783,7 +783,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz7x7_in2x1x7x7_bfyx_stride1_p
     // b0:f0: 0.7  0.8  0.8  0.7  0.8  0.2  0.1    b0:f1: 0.4  0.6  0.1  0.2  0.1  0.1  0.7
     // b0:f0: 0.5  0.6  0.7  0.9  0.   0.1  0.7    b0:f1: 0.5  0.3  0.7  0.5  0.4  0.1  0.7
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 7, 7 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 7, 7 } });
@@ -929,7 +929,7 @@ TEST(convolution_grad_weights_f32_fw_gpu, basic_wsiz7x7_in2x1x7x7_bfyx_stride1_p
     // b0:f0: 0.7  0.8  0.8  0.7  0.8  0.2  0.1    b0:f1: 0.4  0.6  0.1  0.2  0.1  0.1  0.7
     // b0:f0: 0.5  0.6  0.7  0.9  0.   0.1  0.7    b0:f1: 0.5  0.3  0.7  0.5  0.4  0.1  0.7
 
-    engine engine;
+    const auto& engine = get_test_engine();
     float lr = 0.00001f;
     auto input_grad = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 7, 7 } });
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 7, 7 } });

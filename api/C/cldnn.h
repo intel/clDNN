@@ -159,7 +159,8 @@ typedef struct
     /*cldnn_priority_mode_type*/ int16_t priority_mode; ///< Priority mode (support of OpenCL priority hints in command queue).
     /*cldnn_throttle_mode_type*/ int16_t throttle_mode; ///< Throttle mode (support of throttle hints in command queue).
     uint32_t enable_memory_pool;                        ///< Enables memory usage optimization. memory objects will be reused when possible. 
-    //const char* tuning_cache_path;                      ///< Enables defining other than default path to tuning cache json file
+    void* context;
+    const char* tuning_cache_path;                      ///< Enables defining other than default path to tuning cache json 
 }  cldnn_engine_configuration;
 
 /// @brief Information about the engine returned by cldnn_get_engine_info().
@@ -277,6 +278,8 @@ typedef enum /*:int32_t*/
     cldnn_format_fyxb,          ///< format not used inside clDNN, but supported in reorder as extension for user provided formats.
     cldnn_format_os_iyx_osv16,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
                                 ///< \n \image html os_iyx_osv16.jpg
+    cldnn_format_os_iyx_osv32,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv32 - 32 values of single slice.
+    cldnn_format_os_iyx_osv64,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv64 - 64 values of single slice.
     cldnn_format_bs_xs_xsv8_bsv8, ///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice.
                                   ///< \n \image html bs_xs_xsv8_bsv8.jpg
     cldnn_format_bs_xs_xsv8_bsv16,///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv16 - 16 values of single slice.

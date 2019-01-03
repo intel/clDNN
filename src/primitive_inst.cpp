@@ -40,7 +40,8 @@ uint32_t primitive_inst::get_network_id() const
 
 event_impl::ptr primitive_inst::execute(const std::vector<event_impl::ptr>& events)
 {
-    CLDNN_ERROR_BOOL(id(), "Invalid/unset input", !_has_valid_input, "Cannot execute primitive " + id() + " with invalid/unset input");
+    const auto primitive_id = id();
+    CLDNN_ERROR_BOOL(primitive_id, "Invalid/unset input", !_has_valid_input, "Cannot execute primitive " + primitive_id + " with invalid/unset input");
     on_execute();
 
     if (_exec_deps.size() == 0)

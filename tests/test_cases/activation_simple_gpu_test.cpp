@@ -49,7 +49,7 @@ TEST(activation_f32_fw_gpu, relu_basic_yxfb) {
     //  3   -1.5  3    5    1
     //  1    1    1   -0.5  1
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
@@ -102,7 +102,7 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
     //  a: 0.5, b: 2.5
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 5, 4 } });
     auto input_params = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 1 } });
@@ -245,7 +245,7 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
 
 TEST(activation_f32_fw_gpu, basic_yxfb_asin_acos_log)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 4 } });
     set_values(input, { 0.12f, 0.56f, 0.45f, 0.789f, 0.546f, 0.999f, 0.7899f, 0.6677f});
@@ -328,7 +328,7 @@ TEST(activation_f32_fw_gpu, relu_basic_input_padding_yxfb) {
     //  3   -1.5  3    5    1
     //  1    1    1   -0.5  1
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
 
@@ -394,7 +394,7 @@ TEST(activation_f32_fw_gpu, relu_basic_output_padding_yxfb) {
     //  0    0    0    0    0    0    0    0    0    0    0
     //  0    0    0    0    0    0    0    0    0    0    0
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,

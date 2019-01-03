@@ -88,6 +88,8 @@ struct format
         fyxb = cldnn_format_fyxb, ///< format not used inside clDNN, but supported in reorder as extension for user provided formats.
         os_iyx_osv16 = cldnn_format_os_iyx_osv16, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
                                                   ///< \n \image html os_iyx_osv16.jpg
+        os_iyx_osv32 = cldnn_format_os_iyx_osv32, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv32 - 32 values of single slice.
+        os_iyx_osv64 = cldnn_format_os_iyx_osv64, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv64 - 64 values of single slice.
         bs_xs_xsv8_bsv8 = cldnn_format_bs_xs_xsv8_bsv8,  ///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice.
                                                          ///< \n \image html bs_xs_xsv8_bsv8.jpg
         bs_xs_xsv8_bsv16 = cldnn_format_bs_xs_xsv8_bsv16,///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv16 - 16 values of single slice.
@@ -129,6 +131,8 @@ struct format
             { bfyx,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
             { fyxb,{ 1, 1, 2, 0, "fyxb", "bfxy" } },
             { os_iyx_osv16, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { os_iyx_osv32,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { os_iyx_osv64,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
             { bs_xs_xsv8_bsv8, { 1, 1, 1, 0, "bx", "b?x?" } },
             { bs_xs_xsv8_bsv16,{ 1, 1, 1, 0, "bx", "b?x?" } },
             { bs_x_bsv16, { 1, 1, 1, 0, "bx", "b?x?" } },
@@ -735,6 +739,16 @@ public:
         {
             my_sizes[0] = align_to(my_sizes[0], 16);
             adjusted_coords[0] = align_to(adjusted_coords[0], 16);
+        }
+        else if (fmt == cldnn::format::os_iyx_osv32 && !is_aligned_to(my_sizes[0], 32))
+        {
+            my_sizes[0] = align_to(my_sizes[0], 32);
+            adjusted_coords[0] = align_to(adjusted_coords[0], 32);
+        }
+        else if (fmt == cldnn::format::os_iyx_osv64 && !is_aligned_to(my_sizes[0], 64))
+        {
+            my_sizes[0] = align_to(my_sizes[0], 64);
+            adjusted_coords[0] = align_to(adjusted_coords[0], 64);
         }
         else if (fmt == cldnn::format::bs_xs_xsv8_bsv8 && !(is_aligned_to(my_sizes[0], 8) && is_aligned_to(my_sizes[1], 8)))
         {

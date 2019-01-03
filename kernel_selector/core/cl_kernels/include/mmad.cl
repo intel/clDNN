@@ -134,6 +134,30 @@ inline void FUNC(sub_group_block_write_uchar8)(__global uchar* outPtr, uchar8 v)
     outPtr[idx] = v.s7; idx += get_max_sub_group_size();
 #endif
 }
+
+inline uchar8 FUNC(sub_group_block_read_uchar8)(const __global uchar* ptr)
+{
+#ifdef cl_intel_subgroups_char
+    return intel_sub_group_block_read_uc8(ptr);
+#else
+    uint idx = get_sub_group_local_id();
+
+    uchar8 ret;
+
+    ret.s0 = ptr[idx]; idx += get_max_sub_group_size();
+    ret.s1 = ptr[idx]; idx += get_max_sub_group_size();
+    ret.s2 = ptr[idx]; idx += get_max_sub_group_size();
+    ret.s3 = ptr[idx]; idx += get_max_sub_group_size();
+    ret.s4 = ptr[idx]; idx += get_max_sub_group_size();
+    ret.s5 = ptr[idx]; idx += get_max_sub_group_size();
+    ret.s6 = ptr[idx]; idx += get_max_sub_group_size();
+    ret.s7 = ptr[idx]; idx += get_max_sub_group_size();
+
+    return ret;
+
+#endif
+}
+
 //
 
 

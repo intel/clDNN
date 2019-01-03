@@ -42,7 +42,7 @@ using namespace tests;
                             ---> conv2 (to be eliminated)
 */
 TEST(trim_to_outputs, one_node_to_eliminate_case1) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     build_opt.set_option(cldnn::build_option::outputs({ "conv1" }));
     build_opt.set_option(build_option::optimize_data(false));             // to avoid adding reorders
@@ -91,7 +91,7 @@ Network structure:  input  -> conv1 (output)
                          ---> conv2 (to be eliminated along with its weights and bias)
 */
 TEST(trim_to_outputs, one_node_to_eliminate_case2) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     build_opt.set_option(cldnn::build_option::outputs({ "conv1" }));
     build_opt.set_option(build_option::optimize_data(false));             // to avoid adding reorders
@@ -148,7 +148,7 @@ Network structure:  input ---> conv1 --- ---> conv4 (output)
 Convolutions conv2, conv3 should be optimized out along with weights23 shered by conv2 and conv3.
 */
 TEST(trim_to_outputs, two_nodes_to_eliminate_case1) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     build_opt.set_option(cldnn::build_option::outputs({ "conv4" }));
     build_opt.set_option(build_option::optimize_data(false));             // to avoid adding reorders

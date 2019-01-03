@@ -14,18 +14,18 @@
 
 #pragma once
 
-#include "../C/pyramidROIAlign.h"
+#include "../C/pyramid_roi_align.h"
 #include "primitive.hpp"
 
 using namespace std;
 
 namespace cldnn {
 
-    struct PyramidROIAlign : public primitive_base<PyramidROIAlign, CLDNN_PRIMITIVE_DESC(PyramidROIAlign)>
+    struct pyramid_roi_align : public primitive_base<pyramid_roi_align, CLDNN_PRIMITIVE_DESC(pyramid_roi_align)>
     {
-        CLDNN_DECLARE_PRIMITIVE(PyramidROIAlign)
+        CLDNN_DECLARE_PRIMITIVE(pyramid_roi_align)
 
-        PyramidROIAlign(
+        pyramid_roi_align(
             const primitive_id& id,
             const primitive_id& input,
             const padding& output_padding = padding()
@@ -33,7 +33,7 @@ namespace cldnn {
          : primitive_base(id, { input }, output_padding)
         {}
 
-        PyramidROIAlign(
+        pyramid_roi_align(
             const primitive_id &id_c,
             const primitive_id &base_str,
             const primitive_id &meta_str,
@@ -51,7 +51,7 @@ namespace cldnn {
         {}
 
         /// @brief Constructs a copy from C API @CLDNN_PRIMITIVE_DESC{broadcast}
-        PyramidROIAlign(const dto* dto)
+        pyramid_roi_align(const dto* dto)
             : primitive_base(dto)
 
         {}

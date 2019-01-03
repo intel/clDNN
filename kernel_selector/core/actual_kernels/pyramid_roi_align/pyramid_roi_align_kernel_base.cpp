@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pyramidROIAlign_kernel_base.h"
+#include "pyramid_roi_align_kernel_base.h"
 #include "kernel_selector_utils.h"
 
 namespace kernel_selector {

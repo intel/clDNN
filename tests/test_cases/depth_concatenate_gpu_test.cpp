@@ -63,7 +63,7 @@ TEST(depth_concatenate_f32_gpu, test01) {
     //  0   -0.2  :f4
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input1 = memory::allocate(engine, {data_types::f32, format::yxfb, { 2,2,1,1 }});
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2,3,1,1 }});
 
@@ -123,7 +123,7 @@ void concat_basic_with_reorder()
     //  0    0  :f4
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input1 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2,2,1,1 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2,3,1,1 } });
     auto outs = { 2.0f, 3.0f, 0.0f, 1.0f, 1.0f, 4.0f, -4.0f, -7.0f, 0.0f, 0.0f };
@@ -200,7 +200,7 @@ TEST(depth_concatenate_f32_gpu, test02) {
     //  0   -0.2  :f7
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input1 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2,2,1,1 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2,3,1,1 } });
     auto input3 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2,3,1,1 } });
@@ -251,7 +251,7 @@ TEST(depth_concatenate_f32_gpu, test03_cascade_concat_opt) {
     //  Despite having concatenations one after another and connected to different non padded activation primitives,
     //  graph should remove all concatenations from execution.
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1,2,2,1 } });
 
     set_values(input1, { 16.0f, 32.0f, 128.0f, 256.0f });
@@ -305,7 +305,7 @@ TEST(depth_concatenate_f32_gpu, test03_cascade_concat_opt) {
 TEST(depth_concatenate_f32_gpu, test04_fused_relu) {
     // 2 inputs of size 3x10x10 concatenated on f axis with fused relu
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1,3,10,10 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1,3,10,10 } });
 
@@ -349,7 +349,7 @@ TEST(depth_concatenate_f32_gpu, test04_fused_relu) {
 TEST(depth_concatenate_f32_gpu, test05_different_formats) {
     // 2 inputs of size 3x10x10 concatenated on f axis 
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1,3,2,2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1,3,2,2 } });
 
@@ -399,7 +399,7 @@ TEST(depth_concatenate_f32_gpu, test05_different_formats) {
 
 TEST(depth_concatenate_i32_gpu, optimize_data01) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     auto input = memory::allocate(engine, { data_types::i32, format::bfyx,{ 1,1,1,1 } });
 
@@ -430,7 +430,7 @@ TEST(depth_concatenate_i32_gpu, optimize_data01) {
 
 TEST(depth_concatenate_i32_gpu, optimize_data02) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     auto input1 = memory::allocate(engine, { data_types::i32, format::bfyx,{ 1,1,2,2 } });
     auto input2 = memory::allocate(engine, { data_types::i32, format::bfyx,{ 1,1,2,2 } });
@@ -502,7 +502,7 @@ TEST(depth_concatenate_i32_gpu, optimize_data02) {
 
 TEST(depth_concatenate_i32_gpu, optimize_data03) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     auto input1 = memory::allocate(engine, { data_types::i32, format::bfyx,{ 1,1,2,2 } });
 
@@ -545,7 +545,7 @@ TEST(depth_concatenate_i32_gpu, optimize_data03) {
 
 TEST(depth_concatenate_i32_gpu, optimize_data04) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     auto input1 = memory::allocate(engine, { data_types::i32, format::bfyx,{ 1,1,2,2 } });
 
@@ -588,7 +588,7 @@ TEST(depth_concatenate_i32_gpu, optimize_data04) {
 
 TEST(depth_concatenate_i32_gpu, optimize_data05) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     auto input1 = memory::allocate(engine, { data_types::i32, format::bfyx,{ 1,1,2,2 } });
 
@@ -640,7 +640,7 @@ static network setup_depth_concatatenate_network(const std::vector<data_types> d
     assert(dts.size() == ts.size());
     const size_t sz = ts.size();
 
-    engine engine;
+    const auto& engine = get_test_engine();
     topology topology;
 
     std::vector<std::string> input_names;
@@ -735,7 +735,9 @@ public:
     {
         std::vector<tests::test_params*> all_generic_params;
 
-        for (cldnn::data_types dt : test_data_types())
+        auto data_types = test_data_types();
+
+        for (cldnn::data_types dt : data_types)
         for (int32_t b : test_batch_sizes)
         for (tensor & t : test_input_sizes)
         {

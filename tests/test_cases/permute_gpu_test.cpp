@@ -54,7 +54,7 @@ TEST(permute_gpu_f32, basic_bfyx_permute_0_1_3_2)
     //  f1: b0:  -15 -15 b1:   -15   -15
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 3, 2 } });
 
@@ -137,7 +137,7 @@ TEST(permute_gpu_f32, basic_yxfb_permute_3_2_0_1)
     //  b1 f1: 12    8
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
@@ -209,7 +209,7 @@ TEST(permute_gpu_f32, basic_bfyx_permute_0_1_3_2_input_padding)
     //  f1: b0:  -15 -15 b1:   -15   -15
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
 
@@ -270,7 +270,7 @@ TEST(permute_gpu_f32, basic_bfyx_permute_0_1_3_2_input_padding)
 template<data_types DType>
 void permute_test_with_reorder()
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
 

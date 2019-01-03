@@ -223,7 +223,7 @@ TEST(index_select_gpu, basic_along_b_3_executes_bfyx)
     indices: {1, 1, 4, 1}
     output: {4, 2, 3, 4}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 5;
     constexpr auto in_size_f = 2;
     constexpr auto in_size_x = 3;
@@ -299,7 +299,7 @@ TEST(index_select_gpu, basic_along_f_3_executes_bfyx)
     indices: {1, 1, 10, 1}
     output: {2, 10, 3, 3}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 2;
     constexpr auto in_size_f = 5;
     constexpr auto in_size_x = 3;
@@ -375,7 +375,7 @@ TEST(index_select_gpu, basic_along_x_3_executes_bfyx)
     indices: {1, 1, 3, 1}
     output: {3, 4, 3, 5}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 3;
     constexpr auto in_size_f = 4;
     constexpr auto in_size_x = 6;
@@ -451,7 +451,7 @@ TEST(index_select_gpu, basic_along_y_3_executes_bfyx)
     indices: {1, 1, 5, 1}
     output: {2, 4, 4, 5}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 2;
     constexpr auto in_size_f = 4;
     constexpr auto in_size_x = 4;
@@ -527,7 +527,7 @@ TEST(index_select_gpu, basic_along_b_3_executes_yxfb)
     indices: {1, 1, 4, 1}
     output: {4, 2, 3, 4}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 5;
     constexpr auto in_size_f = 2;
     constexpr auto in_size_x = 3;
@@ -604,7 +604,7 @@ TEST(index_select_gpu, basic_along_f_3_executes_yxfb)
     indices: {1, 1, 10, 1}
     output: {2, 10, 3, 3}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 2;
     constexpr auto in_size_f = 5;
     constexpr auto in_size_x = 3;
@@ -681,7 +681,7 @@ TEST(index_select_gpu, basic_along_x_3_executes_yxfb)
     indices: {1, 1, 3, 1}
     output: {3, 4, 3, 5}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 3;
     constexpr auto in_size_f = 4;
     constexpr auto in_size_x = 6;
@@ -757,7 +757,7 @@ TEST(index_select_gpu, basic_along_y_3_executes_yxfb)
     indices: {1, 1, 5, 1}
     output: {2, 4, 4, 5}
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     constexpr auto in_size_b = 2;
     constexpr auto in_size_f = 4;
     constexpr auto in_size_x = 4;
@@ -829,7 +829,7 @@ TEST(index_select_gpu, basic_along_y_3_executes_yxfb)
 
 TEST(index_select_gpu, reverse_along_b_bfyx)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 4, 2 } });
 
     std::vector<float> input_data = {
@@ -891,7 +891,7 @@ TEST(index_select_gpu, reverse_along_b_bfyx)
 
 TEST(index_select_gpu, reverse_along_f_bfyx)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 3, 4 } });
 
     std::vector<float> input_data = {
@@ -941,7 +941,7 @@ TEST(index_select_gpu, reverse_along_f_bfyx)
 
 TEST(index_select_gpu, reverse_along_y_bfyx)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 4, 3 } });
 
     std::vector<float> input_data = {
@@ -991,7 +991,7 @@ TEST(index_select_gpu, reverse_along_y_bfyx)
 
 TEST(index_select_gpu, reverse_along_x_bfyx)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 4, 3 } });
 
     std::vector<float> input_data = {
@@ -1042,7 +1042,7 @@ TEST(index_select_gpu, reverse_along_x_bfyx)
 
 TEST(index_select_gpu, reverse_along_y_yxfb)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 4, 2, 2, 2 } });
 
     std::vector<float> input_data = {
@@ -1104,7 +1104,7 @@ TEST(index_select_gpu, reverse_along_y_yxfb)
 
 TEST(index_select_gpu, reverse_along_x_yxfb)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 3, 4, 2, 1 } });
 
     std::vector<float> input_data = {
@@ -1154,7 +1154,7 @@ TEST(index_select_gpu, reverse_along_x_yxfb)
 
 TEST(index_select_gpu, reverse_along_f_yxfb)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 4, 3, 2, 1 } });
 
     std::vector<float> input_data = {
@@ -1204,7 +1204,7 @@ TEST(index_select_gpu, reverse_along_f_yxfb)
 
 TEST(index_select_gpu, reverse_along_b_yxfb)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 4, 3, 2, 1 } });
 
     std::vector<float> input_data = {
@@ -1255,7 +1255,7 @@ TEST(index_select_gpu, reverse_along_b_yxfb)
 
 TEST(index_select_gpu, reverse_along_yx_bfyx)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 4, 3 } });
 
     std::vector<float> input_data = {
@@ -1305,7 +1305,7 @@ TEST(index_select_gpu, reverse_along_yx_bfyx)
 
 TEST(index_select_gpu, reverse_along_fyx_bfyx)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 4, 3 } });
 
     std::vector<float> input_data = {
@@ -1355,7 +1355,7 @@ TEST(index_select_gpu, reverse_along_fyx_bfyx)
 
 TEST(index_select_gpu, reverse_along_bfyx_bfyx)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 3, 3, 4, 3 } });
 
     std::vector<float> input_data = {
@@ -1466,7 +1466,7 @@ TEST(index_select_gpu, reverse_along_bfyx_bfyx)
 
 TEST(index_select_gpu, reverse_along_bfx_yxfb)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 4, 3, 3, 3 } });
 
     std::vector<float> input_data = {
@@ -1577,7 +1577,7 @@ TEST(index_select_gpu, reverse_along_bfx_yxfb)
 
 TEST(index_select_gpu, reverse_along_bfyx_yxfb)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 4, 3, 3, 3 } });
 
     std::vector<float> input_data = {

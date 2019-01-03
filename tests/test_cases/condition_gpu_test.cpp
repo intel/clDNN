@@ -65,7 +65,7 @@ topology generate_simple_branch (bool branch_true_false, const primitive_id& inp
 
 
 TEST(condition_gpu, basic_equal_comp) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
@@ -118,7 +118,7 @@ TEST(condition_gpu, basic_equal_comp) {
 
 TEST(condition_gpu, basic_range_equal_comp) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input0 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
@@ -235,7 +235,7 @@ std::pair<std::vector<float>, std::vector<float>> get_values_to_compare(const cl
 
 TEST(DISABLED_condition_gpu, generic_test_true_false) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 5, 2, 5, 1 } });
@@ -348,7 +348,7 @@ TEST(condition_gpu, basic_stacked_ifs) {
         <end_if>
         <prims...>    
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
@@ -420,7 +420,7 @@ TEST(condition_gpu, basic_nested_ifs) {
     <end_if 0>
     <prims...>
     */
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
@@ -504,7 +504,7 @@ TEST(condition_gpu, basic_nested_ifs) {
 
 
 TEST(condition_gpu, negative_compare_wrong_layout) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
@@ -528,7 +528,7 @@ TEST(condition_gpu, negative_compare_wrong_layout) {
 }
 
 TEST(condition_gpu, negative_too_big_offset) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
@@ -552,7 +552,7 @@ TEST(condition_gpu, negative_too_big_offset) {
 }
 
 TEST(condition_gpu, negative_not_same_layouts) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });
@@ -583,7 +583,7 @@ TEST(condition_gpu, negative_not_same_layouts) {
 }
 
 TEST(condition_gpu, negative_same_names_within_different_networks) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options bs;
     bs.set_option(build_option::optimize_data(true));
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 4, 1 } });

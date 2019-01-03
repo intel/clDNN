@@ -59,7 +59,7 @@ TEST(reorder_gpu_f32, basic)
     //  b1 f1: 12    8
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     layout output_layout(data_types::f32, format::bfyx,{ 2,2,2,2 });
@@ -145,7 +145,7 @@ TEST(reorder_gpu_f32, basic_subtract) {
     //  b1 f1: 10    7
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32,  format::yxfb, { 2, 2, 2, 2 } });
     layout output_layout( data_types::f32, format::bfyx, {2,2,2,2} );
@@ -234,7 +234,7 @@ TEST(reorder_gpu_f32, basic_subtract_value) {
     //  b1 f1:  9.5  5.5
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     layout output_layout(data_types::f32, format::bfyx,{ 2,2,2,2 });
@@ -318,7 +318,7 @@ TEST(reorder_gpu_f16, basic_subtract_f32_output_f32) {
     //  b1 f1: 10    7
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     if (!engine.get_info().supports_fp16)
     {
@@ -413,7 +413,7 @@ TEST(reorder_gpu_f16, basic_subtract_value) {
     //  b1 f1:  9.5  5.5
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
     if (!engine.get_info().supports_fp16)
     {
         std::cout << "[ SKIPPED ] The test is skipped (cl_khr_fp16 is not supported)." << std::endl;
@@ -482,7 +482,7 @@ TEST(reorder_gpu, basic_convert_f16_f32_f16) {
     //  Output is expected to contain the same value as input in range of indices from 0x0000 to 0xF801.
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     if (!engine.get_info().supports_fp16)
     {
@@ -562,7 +562,7 @@ TEST(reorder_gpu, basic_convert_f16_f32_f16) {
 
 TEST(reorder_gpu, basic_convert_int8) {
 
-    engine engine;
+    const auto& engine = get_test_engine();
     layout in_layout = { type_to_data_type<float>::value,format::byxf,{ 1,1,3,3 } };
     layout byte_layout = { type_to_data_type<int8_t>::value, format::bfyx,{ 1,1,3,3 } };
     std::initializer_list<float> input_f = { 1.0f, -2.5f, 3.1f, -4.0f, 5.03f, -6.99f, 7.0f, -8.0f, 9.0f };
@@ -620,7 +620,7 @@ TEST(reorder_gpu, basic_convert_uint8rgbabyxf_to_fp32_bfyx) {
 	//
 	const int kernel_size = 5;
 	const int feature_size = 4;
-	engine engine;
+	const auto& engine = get_test_engine();
 
 	if (!engine.get_info().supports_fp16)
 	{
@@ -751,7 +751,7 @@ TEST(reorder_gpu_f32, basic_yxfb_to_bfyx_input_padding)
     //  f1: b0:  5    6  b1:   1.5  5.2
     //  f1: b0:  7    8  b1:   12   8
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     layout output_layout(data_types::f32, format::bfyx, { 2,2,2,2 });
@@ -830,7 +830,7 @@ TEST(reorder_gpu_f32, basic_bfyx_to_yxfb_input_padding)
     //  b1 f1: 12    8
     //
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
     layout output_layout(data_types::f32, format::yxfb, { 2,2,2,2 });
@@ -1160,7 +1160,7 @@ TEST(reorder_gpu_opt, mean_mul_val_float_to_int)
 TEST(reorder_gpu_i32, basic)
 {
     //  Test for converting data types f32->i32
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
     layout output_layout(data_types::i32, format::bfyx, { 2,2,2,2 });
@@ -1201,7 +1201,7 @@ TEST(reorder_gpu_i32, basic)
 TEST(reorder_gpu_i64, basic)
 {
     //  Test for converting data types f32->i64
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
     layout output_layout(data_types::i64, format::bfyx, { 2,2,2,2 });
@@ -1263,6 +1263,8 @@ public:
     static std::vector<std::tuple<test_params*, cldnn::primitive*>> generate_specific_test_params()
     {
         generic_test::generate_generic_test_params(all_generic_params);
+
+        const auto data_types = test_data_types();
         
         for (const auto& test_param : all_generic_params)
         {
@@ -1270,7 +1272,7 @@ public:
 
             std::vector<cldnn::layout> output_layouts = {};
 
-            for (const auto& dt : test_data_types())
+            for (const auto& dt : data_types)
             {
                 for (const auto& fmt : generic_test::test_input_formats)
                 {

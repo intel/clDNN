@@ -211,7 +211,7 @@ void generic_lstm_gemm_gpu_test(int sequence_len, int direction, int batch_size,
 
     VVVVF<T> ref_output = lstm_gemm_reference(ref_input, ref_weights, ref_recurrent, ref_bias, ref_hidden, 0, hasBias, hasHidden);
 
-    engine engine;
+    const auto& engine = get_test_engine();
     memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size,   sequence_len,  input_size,      1 } });
     memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1,            direction,     input_size,      4 * hidden_size } });
     memory recurrent = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1,            direction,     hidden_size,     4 * hidden_size } });
@@ -270,7 +270,7 @@ void generic_lstm_elt_gpu_test(int sequence_len, int direction, int batch_size, 
 
     VVVVF<T> ref_output = lstm_elt_reference(ref_tempGEMM, ref_cell, hasCell, clip_threshold, input_forget);
 
-    engine engine;
+    const auto& engine = get_test_engine();
     memory tempGEMM = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size,    direction, 4 * hidden_size, 1 } });
     memory cell = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size,    direction,     hidden_size, 1 } });
     set_values(tempGEMM, ref_tempGEMM_vec);
@@ -389,7 +389,7 @@ void generic_lstm_custom_gpu_test(int sequence_len, int direction, int batch_siz
     lstm_reference(ref_input, ref_hidden, ref_cell, ref_weights, ref_recurrent, ref_bias, ref_output, last_hidden, last_cell,
         hasBias, hasInitialHidden, hasInitialCell);
 
-    engine engine;
+    const auto& engine = get_test_engine();
     memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size, sequence_len,  input_size,       1 } });
     memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1,          direction,     input_size,       4 * hidden_size } });
     memory recurrent = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1,          direction,     hidden_size,      4 * hidden_size } });
@@ -486,7 +486,7 @@ void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batc
                         clip_threshold, input_forget, false);
     }
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
     set_values(input, ref_input_vec);
@@ -632,7 +632,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
                    last_hidden, last_cell, true, true, true,
                    0, false, true);
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
     memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, input_size , 4 * hidden_size } });
@@ -795,7 +795,7 @@ void lstm_gpu_format_test(const cldnn::format& format, int directions) {
                    last_hidden, last_cell, true, true, true,
                    0, false, true);
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     memory input = memory::allocate(engine, { type_to_data_type<T>::value,format, {batch_size, sequence_len, input_size, 1} });
     memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, input_size , 4 * hidden_size } });
@@ -973,7 +973,7 @@ void lstm_gpu_users_test() {
     VVVVF<T> last_hidden(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))));
     VVVVF<T> last_cell(batch_size, VVVF<T>(1, VVF<T>(directions, VF<T>(hidden_size))));
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
     memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, directions, input_size , 4 * hidden_size } });
@@ -1096,7 +1096,7 @@ void lstm_gpu_concatenated_input_test(int layers, int sequence_len, int directio
 			clip_threshold, input_forget, false);
 	}
 
-	engine engine;
+	const auto& engine = get_test_engine();
 
 	memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
 	set_values(input, ref_input_vec);
@@ -1334,7 +1334,7 @@ void lstm_gpu_chain_test(int batch_size, int input_size, int hidden_size,
         }
     }
 
-    engine engine;
+    const auto& engine = get_test_engine();
     tensor input_tensor = { batch_size, sequence_len, input_size, 1 };
     layout layout = { type_to_data_type<T>::value, cldnn::format::bfyx, input_tensor };
 

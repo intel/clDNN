@@ -13,19 +13,19 @@
 // limitations under the License.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include "pyramidROIAlign_inst.h"
+#include "pyramid_roi_align_inst.h"
 #include "primitive_type_base.h"
 #include "error_handler.h"
 #include "json_object.h"
 
 namespace cldnn {
-    primitive_type_id PyramidROIAlign_type_id()
+    primitive_type_id pyramid_roi_align_type_id()
     {
-        static primitive_type_base<PyramidROIAlign> instance;
+        static primitive_type_base<pyramid_roi_align> instance;
         return &instance;
     }
 
-    layout pyramidROIAlign_inst::calc_output_layout(pyramidROIAlign_node const &node)
+    layout pyramid_roi_align_inst::calc_output_layout(pyramidROIAlign_node const &node)
     {
 
         auto desc = node.get_primitive();
@@ -43,18 +43,18 @@ namespace cldnn {
         return layout{ P2_layout.data_type, P2_layout.format, { output_b, output_f, output_x, output_y } };
     }
 
-    std::string pyramidROIAlign_inst::to_string(pyramidROIAlign_node const& node)
+    std::string pyramid_roi_align_inst::to_string(pyramidROIAlign_node const& node)
     {
         auto desc = node.get_primitive();
         auto node_info = node.desc_to_json();
         std::stringstream primitive_description;
-        json_composite pyramidROIAlign_info;
-        node_info->add("pyramidROIAlign_info", pyramidROIAlign_info);
+        json_composite pyramid_roi_align_info;
+        node_info->add("pyramid_roi_align_info", pyramid_roi_align_info);
         node_info->dump(primitive_description);
         return primitive_description.str();
     }
     
-    pyramidROIAlign_inst::typed_primitive_inst(network_impl& network, pyramidROIAlign_node const& node)
+    pyramid_roi_align_inst::typed_primitive_inst(network_impl& network, pyramidROIAlign_node const& node)
         : parent(network, node)
     { }
 }

@@ -34,7 +34,7 @@ using namespace tests;
 //We expect additional reorder to be added in between "weights1" and "reshape1".
 //This situation should be handled properly by propagate constants optimization phase
 TEST(propagate_constants, copy_dependecies_from_nodes) {
-    engine engine;
+    const auto& engine = get_test_engine();
     build_options build_opt;
     build_opt.set_option(build_option::optimize_data(true));
 

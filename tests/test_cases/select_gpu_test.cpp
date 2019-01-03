@@ -29,7 +29,7 @@ using namespace tests;
 
 // select_gpu_f32
 TEST(select_gpu_f32, select_basic) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
@@ -83,7 +83,7 @@ TEST(select_gpu_f32, select_basic) {
 }
 
 TEST(select_gpu_f32, select_basic_negative) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -137,7 +137,7 @@ TEST(select_gpu_f32, select_basic_negative) {
 }
 
 TEST(select_gpu_f32, select_basic_comma) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -191,7 +191,7 @@ TEST(select_gpu_f32, select_basic_comma) {
 }
 
 TEST(select_gpu_f32, select_basic_error_input_sizes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 3, 4, 5, 6 } });
@@ -207,7 +207,7 @@ TEST(select_gpu_f32, select_basic_error_input_sizes) {
 }
 
 TEST(select_gpu_f32, select_basic_error_mask_sizes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -223,7 +223,7 @@ TEST(select_gpu_f32, select_basic_error_mask_sizes) {
 }
 
 TEST(select_gpu_f32, select_basic_error_input_types) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
@@ -238,7 +238,7 @@ TEST(select_gpu_f32, select_basic_error_input_types) {
 }
 
 TEST(select_gpu_f32, select_basic_error_input_formats) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -254,7 +254,7 @@ TEST(select_gpu_f32, select_basic_error_input_formats) {
 }
 
 TEST(select_gpu_f32, select_basic_byxf) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
@@ -308,7 +308,7 @@ TEST(select_gpu_f32, select_basic_byxf) {
 }
 
 TEST(select_gpu_f32, select_basic_mask_f16) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -362,7 +362,7 @@ TEST(select_gpu_f32, select_basic_mask_f16) {
 }
 
 TEST(select_gpu_f32, select_basic_mask_i8) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -416,7 +416,7 @@ TEST(select_gpu_f32, select_basic_mask_i8) {
 }
 
 TEST(select_gpu_f32, select_basic_mask_u8) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
@@ -470,7 +470,7 @@ TEST(select_gpu_f32, select_basic_mask_u8) {
 }
 
 TEST(select_gpu_f32, select_basic_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
@@ -516,7 +516,7 @@ TEST(select_gpu_f32, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
@@ -566,7 +566,7 @@ TEST(select_gpu_f32, select_basic_bfyx_1x1x2x2) {
 }
 
 TEST(select_gpu_f32, select_basic_byxf_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
@@ -617,7 +617,7 @@ TEST(select_gpu_f32, select_basic_byxf_1x1x2x2) {
 
 // select_gpu_f16
 TEST(select_gpu_f16, select_basic_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
@@ -667,7 +667,7 @@ TEST(select_gpu_f16, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_f16, select_basic_mask_f32_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
@@ -717,7 +717,7 @@ TEST(select_gpu_f16, select_basic_mask_f32_1x1x2x2) {
 }
 
 TEST(select_gpu_f16, select_basic_mask_i8_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
@@ -767,7 +767,7 @@ TEST(select_gpu_f16, select_basic_mask_i8_1x1x2x2) {
 }
 
 TEST(select_gpu_f16, select_basic_mask_u8_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
@@ -818,7 +818,7 @@ TEST(select_gpu_f16, select_basic_mask_u8_1x1x2x2) {
 
 // select_gpu_i8
 TEST(select_gpu_i8, select_basic_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
@@ -868,7 +868,7 @@ TEST(select_gpu_i8, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_i8, select_basic_mask_f32_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
@@ -918,7 +918,7 @@ TEST(select_gpu_i8, select_basic_mask_f32_1x1x2x2) {
 }
 
 TEST(select_gpu_i8, select_basic_mask_f16_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
@@ -968,7 +968,7 @@ TEST(select_gpu_i8, select_basic_mask_f16_1x1x2x2) {
 }
 
 TEST(select_gpu_i8, select_basic_mask_u8_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
@@ -1019,7 +1019,7 @@ TEST(select_gpu_i8, select_basic_mask_u8_1x1x2x2) {
 
 // select_gpu_u8
 TEST(select_gpu_u8, select_basic_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
@@ -1069,7 +1069,7 @@ TEST(select_gpu_u8, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_u8, select_basic_mask_f32_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
@@ -1119,7 +1119,7 @@ TEST(select_gpu_u8, select_basic_mask_f32_1x1x2x2) {
 }
 
 TEST(select_gpu_u8, select_basic_mask_f16_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
@@ -1169,7 +1169,7 @@ TEST(select_gpu_u8, select_basic_mask_f16_1x1x2x2) {
 }
 
 TEST(select_gpu_u8, select_basic_mask_i8_1x1x2x2) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
     auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });

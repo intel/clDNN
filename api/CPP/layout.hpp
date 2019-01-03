@@ -359,6 +359,14 @@ struct layout
         {
             sizes[0] = align_to(sizes[0], 16);
         }
+        else if (this->format == cldnn::format::os_iyx_osv32 && !is_aligned_to(sizes[0], 32))
+        {
+            sizes[0] = align_to(sizes[0], 32);
+        }
+        else if (this->format == cldnn::format::os_iyx_osv64 && !is_aligned_to(sizes[0], 64))
+        {
+            sizes[0] = align_to(sizes[0], 64);
+        }
         else if (this->format == cldnn::format::bs_xs_xsv8_bsv8 && !(is_aligned_to(sizes[0], 8) && is_aligned_to(sizes[2], 8)))
         {
             sizes[0] = align_to(sizes[0], 8);

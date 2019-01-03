@@ -61,6 +61,8 @@ inline std::string fmt_to_str(format fmt)
     case format::bfyx: return "bfyx";
     case format::fyxb: return "fyxb";
     case format::os_iyx_osv16: return "os_iyx_osv16";
+    case format::os_iyx_osv32: return "os_iyx_osv32";
+    case format::os_iyx_osv64: return "os_iyx_osv64";
     case format::bs_xs_xsv8_bsv8: return "bs_xs_xsv8_bsv8";
     case format::bs_xs_xsv8_bsv16: return "bs_xs_xsv8_bsv16";
     case format::bs_x_bsv16: return "bs_x_bsv16";

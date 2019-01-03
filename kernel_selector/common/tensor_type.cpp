@@ -55,6 +55,8 @@ namespace kernel_selector
             {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::iyxo
             {  2,  3,  1,  0, -1, -1 }, // WeightsLayout::yxio
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv16
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv32
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv64
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv16_rotate_180
             { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv8__ai8
             { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv16__ai8
@@ -275,6 +277,14 @@ namespace kernel_selector
             case os_iyx_osv16_rotate_180:
                 assert(newDims.size() == 4);
                 newDims[3] = RoundUp(newDims[3], 16);
+                break;
+            case os_iyx_osv32:
+                assert(newDims.size() == 4);
+                newDims[3] = RoundUp(newDims[3], 32);
+                break;
+            case os_iyx_osv64:
+                assert(newDims.size() == 4);
+                newDims[3] = RoundUp(newDims[3], 64);
                 break;
             case os_i_osv8__ai8:
                 assert(newDims.size() == 2);

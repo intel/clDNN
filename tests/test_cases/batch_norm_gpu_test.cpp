@@ -50,7 +50,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2) {
     //  f1: 107.0624
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 2, 1, 1 } });
@@ -133,7 +133,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_scale_shift) {
 
 
 
-	engine engine;
+	const auto& engine = get_test_engine();
 
 	auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
 	auto mean = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -220,7 +220,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_calc) {
     //  f1: 107.0624
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
     auto inv_variance = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -289,7 +289,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_calc_no_inv_var) {
     //  f1: 107.0624
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
 
@@ -364,7 +364,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_calc_scale_shift) {
 	//  f1: 5.0
 
 
-	engine engine;
+	const auto& engine = get_test_engine();
 
 	auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
 	auto mean = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -456,7 +456,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_calc_scale_shift_no_
     //  f1: 5.0
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
     auto scale = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -545,7 +545,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_outputs) {
 	//  f1: 5.0
 
 
-	engine engine;
+	const auto& engine = get_test_engine();
 
 	auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
 	auto mean_out = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -651,7 +651,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_outputs_no_inv_var) 
     //  f1: 5.0
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
     auto mean_out = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -728,7 +728,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_outputs_no_inv_var) 
 }
 
 TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_outputs_error_out_type) {
-	engine engine;
+	const auto& engine = get_test_engine();
 
 	auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
 	auto mean_out = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -752,7 +752,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_outputs_error_out_ty
 }
 
 TEST(batch_normalization_gpu, basic_in2x3x2x2_with_var_mean_outputs_error_non_equal_types) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
     auto mean_out = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
@@ -796,7 +796,7 @@ TEST(batch_normalization_gpu, basic_in2x2x3x2_bfyx) {
     //  f1: 107.0624
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 1, 1 } });
@@ -877,7 +877,7 @@ TEST(batch_normalization_gpu, basic_in2x2x3x2_bfyx_padding) {
     //  f1: 107.0624
 
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 2, 1, 1 } });
@@ -938,7 +938,7 @@ TEST(batch_normalization_gpu, basic_in2x2x3x2_bfyx_padding) {
 }
 
 TEST(batch_normalization_gpu, basic_to_string) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
 
@@ -994,7 +994,7 @@ TEST(batch_normalization_gpu, basic_to_string) {
 
 
 TEST(batch_normalization_gpu, basic_in2x3x2x2_yxfb_scale_shift_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 1, 1, 1 } });
@@ -1062,7 +1062,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_yxfb_scale_shift_different_shapes)
 }
 
 TEST(batch_normalization_gpu, basic_in2x3x2x2_yxfb_scale_shift_different_shapes_input_layouts) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 1, 1, 1 } });
@@ -1134,7 +1134,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_yxfb_scale_shift_different_shapes_
 }
 
 TEST(batch_normalization_gpu, basic_in2x3x2x2_yxfb_with_var_mean_outputs_no_inv_var_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 3, 2 } });
     auto mean_out = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 1, 1, 1 } });
@@ -1211,7 +1211,7 @@ TEST(batch_normalization_gpu, basic_in2x3x2x2_yxfb_with_var_mean_outputs_no_inv_
 }
 
 TEST(batch_normalization_gpu, basic_in2x2x3x2_byxf_scale_shift_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 2, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 1, 1, 1 } });
@@ -1286,7 +1286,7 @@ TEST(batch_normalization_gpu, basic_in2x2x3x2_byxf_scale_shift_different_shapes)
 }
 
 TEST(batch_normalization_gpu, basic_in2x2x3x2_byxf_with_var_mean_outputs_no_inv_var_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 2, 3, 2 } });
     auto mean_out = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 1, 1, 1 } });
@@ -1371,7 +1371,7 @@ TEST(batch_normalization_gpu, basic_in2x2x3x2_byxf_with_var_mean_outputs_no_inv_
 
 
 TEST(batch_normalization_gpu, basic_in2x3x5x2_yxfb_scale_shift_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 5, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::yxfb,{ 5, 1, 1, 1 } });
@@ -1514,7 +1514,7 @@ TEST(batch_normalization_gpu, basic_in2x3x5x2_yxfb_scale_shift_different_shapes)
 }
 
 TEST(batch_normalization_gpu, basic_in2x3x5x2_yxfb_with_var_mean_outputs_no_inv_var_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 5, 3, 2 } });
     auto mean_out = memory::allocate(engine, { data_types::f32, format::yxfb,{ 5, 1, 1, 1 } });
@@ -1666,7 +1666,7 @@ TEST(batch_normalization_gpu, basic_in2x3x5x2_yxfb_with_var_mean_outputs_no_inv_
 }
 
 TEST(batch_normalization_gpu, basic_in2x2x3x5_byxf_scale_shift_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 5, 3, 2 } });
     auto mean = memory::allocate(engine, { data_types::f32, format::byxf,{ 5, 1, 1, 1 } });
@@ -1767,7 +1767,7 @@ TEST(batch_normalization_gpu, basic_in2x2x3x5_byxf_scale_shift_different_shapes)
 }
 
 TEST(batch_normalization_gpu, basic_in2x2x3x5_byxf_with_var_mean_outputs_no_inv_var_different_shapes) {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 5, 3, 2 } });
     auto mean_out = memory::allocate(engine, { data_types::f32, format::byxf,{ 5, 1, 1, 1 } });
@@ -1879,7 +1879,7 @@ TEST(batch_normalization_gpu, basic_in2x2x3x5_byxf_with_var_mean_outputs_no_inv_
 
 TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b1c2h2w2)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     tensor input_shape = { 1, 2, 2, 2 };
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });
@@ -1975,7 +1975,7 @@ TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b1c2h2w2)
 
 TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b2c2h2w1)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     tensor input_shape = { 2, 2, 1, 2 };
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });
@@ -2078,7 +2078,7 @@ TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b2c2h2w1)
 
 TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_inference_b2c2h2w1)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     tensor input_shape = { 2, 2, 1, 2 };
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });
@@ -2173,7 +2173,7 @@ TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_inference_b2c2h2w1)
 
 TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b2c2h2w1_different_shapes)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     tensor input_shape = { 2, 2, 1, 2 };
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });
@@ -2276,7 +2276,7 @@ TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b2c2h2w1_different_shapes)
 
 TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_inference_b2c2h2w1_different_shapes)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     tensor input_shape = { 2, 2, 1, 2 };
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });
@@ -2371,7 +2371,7 @@ TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_inference_b2c2h2w1_differen
 
 TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b2c5h2w1_different_shapes)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     tensor input_shape = { 2, 5, 1, 2 };
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });
@@ -2512,7 +2512,7 @@ TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b2c5h2w1_different_shapes)
 
 TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_inference_b2c5h2w1_different_shapes)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
 
     tensor input_shape = { 2, 5, 1, 2 };
     auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });

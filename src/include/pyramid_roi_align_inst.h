@@ -13,16 +13,16 @@
 // limitations under the License.
 
 #pragma once
-#include "api/CPP/pyramidROIAlign.hpp"
+#include "api/CPP/pyramid_roi_align.hpp"
 #include "primitive_inst.h"
 
 #include <memory>
 
 namespace cldnn {
     template <>
-    struct typed_program_node<PyramidROIAlign> : public typed_program_node_base<PyramidROIAlign>
+    struct typed_program_node<pyramid_roi_align> : public typed_program_node_base<pyramid_roi_align>
     {
-        using parent = typed_program_node_base<PyramidROIAlign>;
+        using parent = typed_program_node_base<pyramid_roi_align>;
 
     public:
         typed_program_node(std::shared_ptr<primitive> prim, program_impl& prog)
@@ -39,12 +39,12 @@ namespace cldnn {
         program_node& pool_size() const { return get_dependency(6); }
     };
 
-    using pyramidROIAlign_node = typed_program_node<PyramidROIAlign>;
+    using pyramidROIAlign_node = typed_program_node<pyramid_roi_align>;
 
     template <>
-    class typed_primitive_inst<PyramidROIAlign> : public typed_primitive_inst_base<PyramidROIAlign>
+    class typed_primitive_inst<pyramid_roi_align> : public typed_primitive_inst_base<pyramid_roi_align>
     {
-        using parent = typed_primitive_inst_base<PyramidROIAlign>;
+        using parent = typed_primitive_inst_base<pyramid_roi_align>;
 
     public:
         static layout calc_output_layout(pyramidROIAlign_node const& node);
@@ -60,5 +60,5 @@ namespace cldnn {
         memory_impl& pool_size() const { return dep_memory(6); }
     };
 
-    using pyramidROIAlign_inst = typed_primitive_inst<PyramidROIAlign>;
+    using pyramid_roi_align_inst = typed_primitive_inst<pyramid_roi_align>;
 }

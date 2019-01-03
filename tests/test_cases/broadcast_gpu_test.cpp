@@ -68,7 +68,7 @@ TEST(broadcast_gpu, basic_yxfb_1x1x2x3_to_1x2x2x9) {
     constexpr auto out_size_y = bc_scale_y * in_size_y;
     constexpr auto out_size_x = bc_scale_x * in_size_x;
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, {data_types::f32, format::yxfb, {in_size_b, in_size_f, in_size_x, in_size_y}});
 
     topology topology;
@@ -130,7 +130,7 @@ TEST(broadcast_gpu, basic_bfyx_4x2x2x2_to_8x2x6x4) {
     constexpr auto out_size_y = bc_scale_y * in_size_y;
     constexpr auto out_size_x = bc_scale_x * in_size_x;
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, {data_types::f32, format::bfyx, {in_size_b, in_size_f, in_size_x, in_size_y}});
 
     topology topology;
@@ -332,7 +332,7 @@ TEST(broadcast_gpu, basic_byxf_2x3x4x5_to_10x12x12x10) {
     constexpr auto out_size_y = bc_scale_y * in_size_y;
     constexpr auto out_size_x = bc_scale_x * in_size_x;
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, {data_types::f32, format::byxf, {in_size_b, in_size_f, in_size_x, in_size_y}});
 
     topology topology;
@@ -393,7 +393,7 @@ TEST(broadcast_gpu, basic_bfyx_2x1x1x5_to_2x13x11x5) {
     constexpr auto out_size_y = bc_scale_y * in_size_y;
     constexpr auto out_size_x = bc_scale_x * in_size_x;
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, {data_types::f32, format::bfyx, {in_size_b, in_size_f, in_size_x, in_size_y}});
 
     topology topology;
@@ -449,7 +449,7 @@ TEST(broadcast_gpu, basic_error_on_nondiv_bc_size) {
     constexpr auto out_size_y = in_size_y;
     constexpr auto out_size_x = 7;
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, {data_types::f32, format::yxfb, {in_size_b, in_size_f, in_size_x, in_size_y}});
 
     topology topology;
@@ -483,7 +483,7 @@ TEST(broadcast_gpu_int32, basic_bfyx_1x1x1x1_to_1x1x1x3) {
     constexpr auto out_size_y = bc_scale_y * in_size_y;
     constexpr auto out_size_x = bc_scale_x * in_size_x;
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::i32, format::bfyx,{ in_size_b, in_size_f, in_size_x, in_size_y } });
 
     topology topology;
@@ -539,7 +539,7 @@ TEST(broadcast_gpu_int64, basic_bfyx_1x1x1x1_to_1x1x1x3) {
     constexpr auto out_size_y = bc_scale_y * in_size_y;
     constexpr auto out_size_x = bc_scale_x * in_size_x;
 
-    engine engine;
+    const auto& engine = get_test_engine();
     auto input = memory::allocate(engine, { data_types::i64, format::bfyx,{ in_size_b, in_size_f, in_size_x, in_size_y } });
 
     topology topology;

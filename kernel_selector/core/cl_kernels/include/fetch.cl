@@ -340,12 +340,12 @@ inline uint FUNC(get_b_fs_yx_fsv4)(uint o, uint i, uint y, uint x,
 #define GET_FILTER_OS_IS_YX_OSV16_ISV4_INDEX(prefix, o, i, y, x)\
     FUNC_CALL(get_os_is_yx_osv16_isv4)(\
         o, i, y, x,\
-        CAT(prefix, _OFM_NUM),\
+        CAT(prefix, _IFM_NUM),\
         CAT(prefix, _SIZE_Y),\
         CAT(prefix, _SIZE_X))
 
 inline uint FUNC(get_os_is_yx_osv16_isv4)(uint o, uint i, uint y, uint x,
-                                          uint feature_num,
+                                          uint input_feature_num,
                                           uint size_y,
                                           uint size_x)
 {
@@ -357,11 +357,11 @@ inline uint FUNC(get_os_is_yx_osv16_isv4)(uint o, uint i, uint y, uint x,
     uint id_tile = i / tile;
     uint id      = i - id_tile * tile;
 
-    uint idx = out_depth_tile * (feature_num / tile) * size_y * size_x * otd * tile
-               + id_tile                             * size_y * size_x * otd * tile
-               + y                                            * size_x * otd * tile
-               + x                                                     * otd * tile
-               + od                                                          * tile
+    uint idx = out_depth_tile * (input_feature_num / tile) * size_y * size_x * otd * tile
+               + id_tile                                   * size_y * size_x * otd * tile
+               + y                                                  * size_x * otd * tile
+               + x                                                           * otd * tile
+               + od                                                                * tile
                + id;
 
     return idx;

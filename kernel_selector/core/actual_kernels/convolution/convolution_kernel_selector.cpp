@@ -16,9 +16,11 @@
 
 #include "convolution_kernel_selector.h"
 #include "convolution_kernel_bfyx_ref.h"
+#include "convolution_kernel_bfyx_1x1_opt.h"
 #include "convolution_kernel_bfyx_gemm_like.h"
 #include "convolution_kernel_bfyx_direct_10_12_16.h"
 #include "convolution_kernel_bfyx_os_iyx_osv16.h"
+#include "convolution_kernel_bfyx_os_iyx_osv16_2_sg.h"
 #include "convolution_kernel_yxfb_ref.h"
 #include "convolution_kernel_yxfb_yxio_b16.h"
 #include "convolution_kernel_yxfb_yxio_b8.h"
@@ -47,15 +49,19 @@
 #include "convolution_kernel_mmad_32x32sg_slm_int8.h"
 #include "convolution_kernel_byx8_f4__fs_bs_yx_bsv4_fsv32.h"
 #include "convolution_kernel_imad_3x3.h"
+#include "convolution_kernel_imad_1x1.h"
 
 namespace kernel_selector 
 {
     convolution_kernel_selector::convolution_kernel_selector()
     {
         Attach<ConvolutionKernel_bfyx_Ref>();
+        Attach<convolution_kernel_bfyx_1x1_opt>();
         Attach<ConvolutionKernel_bfyx_GEMMLike>();
         Attach<ConvolutionKernel_bfyx_Direct_10_10_12>();
         Attach<ConvolutionKernel_bfyx_os_iyx_osv16>();
+        // commented out to not get in our way, will enable in future after autotuning
+//        Attach<ConvolutionKernel_bfyx_os_iyx_osv16_2_sg>();
         Attach<ConvolutionKernel_yxfb_Ref>();
         Attach<ConvolutionKernel_yxfb_yxio_b16>();
         Attach<ConvolutionKernel_yxfb_yxio_b8>();
@@ -75,7 +81,7 @@ namespace kernel_selector
         Attach<ConvolutionKernel_bfyx_depthwise_weights_lwg>();
         Attach<ConvolutionKernel_mmad_slm_2x14_rep4>();
         Attach<ConvolutionKernel_mmad_slm_7x7_rep4>();
-        Attach<ConvolutionKernel_mmad_32x32sg_slm_int8>();
+//        Attach<ConvolutionKernel_mmad_32x32sg_slm_int8>();
         Attach<ConvolutionKernel_mmad_32x32sg_128x128wg_slm_int8>();
         Attach<ConvolutionKernel_mmad_32x32sg_224x128wg_slm_int8>();
         Attach<ConvolutionKernel_byxf_fs_bs_yx_bsv4_fsv32>();
@@ -84,6 +90,7 @@ namespace kernel_selector
         Attach<ConvolutionKernel_mmad_batched_block_1x1>();
         //Attach<ConvolutionKernel_Tutorial>(); //In order to use this implementation for tutorial purposes please uncomment this line
         Attach<ConvolutionKernel_imad_3x3>();
+        Attach<ConvolutionKernel_imad_1x1>();
     }
 
     KernelsData convolution_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const

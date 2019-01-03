@@ -61,7 +61,7 @@ void check_feature_map(cldnn::pointer<T> output_ptr, std::vector<T> &input_vec, 
 template<typename T>
 void split_test(int batch_num, int feature_num, int x_size, int y_size, std::vector<cldnn::tensor> split_offsets)
 {
-    engine engine;
+    const auto& engine = get_test_engine();
     cldnn::tensor reference_input_size = { batch_num, feature_num, x_size, y_size };
 
     cldnn::memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, reference_input_size });
@@ -320,7 +320,7 @@ TEST(split_gpu, basic_in2x3x2x2_split_feature_bfyx) {
     //  id: "out1", offsets: { 0, 1, 0, 0 }
     //  id: "out2", offsets: { 0, 2, 0, 0 }
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto batch_num = 6;
     auto feature_num = 3;
@@ -367,7 +367,7 @@ TEST(split_gpu, basic_in2x3x2x2_split_scale_feature_bfyx) {
     //  id: "out2", offsets: { 0, 2, 0, 0 }
     //  Additional scale layer at the end
 
-    engine engine;
+    const auto& engine = get_test_engine();
 
     auto batch_num = 6;
     auto feature_num = 3;

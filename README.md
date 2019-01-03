@@ -45,6 +45,10 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 12.1
+	- gtests code refactor
+	- buildbreak fix
+	
 ### Drop 12.0
     New features:
     - pyramidRoiAlign primitive

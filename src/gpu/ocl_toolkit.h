@@ -17,16 +17,13 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-// we want exceptions
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
-#define CL_HPP_TARGET_OPENCL_VERSION 120
-#include <cl2_wrapper.h>
+#include "ocl_builder.h"
 
 #include "api/CPP/profiling.hpp"
 #include "kernels_cache.h"
 #include "engine_info.h"
 #include "event_impl.h"
+#include "confiugration.h"
 
 #include <memory>
 #include <chrono>
@@ -35,7 +32,6 @@ namespace cldnn {
     typedef cl::vector<cl::vector<unsigned char>> kernels_binaries_vector;
     typedef cl::vector<kernels_binaries_vector> kernels_binaries_container;	
 namespace gpu {
-
 typedef  CL_API_ENTRY cl_command_queue(CL_API_CALL *pfn_clCreateCommandQueueWithPropertiesINTEL)(
     cl_context context,
     cl_device_id device,
@@ -46,27 +42,6 @@ class ocl_error : public error
 {
 public:
     ocl_error(cl::Error const& err);
-};
-
-struct configuration
-{
-    enum device_types { default_device = 0, cpu, gpu, accelerator };
-
-    configuration();
-
-    bool enable_profiling;
-    bool meaningful_kernels_names;
-    bool dump_custom_program;
-    device_types device_type;
-    uint32_t device_vendor;
-    std::string compiler_options;
-    std::string single_kernel_name;
-    bool host_out_of_order;
-    std::string log;
-    std::string ocl_sources_dumps_dir;
-    cldnn_priority_mode_type priority_mode;
-    cldnn_throttle_mode_type throttle_mode;
-    std::string tuning_cache_path;
 };
 
 class gpu_toolkit;
@@ -151,6 +126,8 @@ public:
 
 private:
     configuration _configuration;
+    ocl_builder _ocl_builder;
+    bool _user_context = false;
     cl::Device _device;
     bool _neo_driver = false;
     cl::Context _context;
