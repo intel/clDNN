@@ -254,22 +254,62 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
 
             try
             {
-                cl::Program program(_context.context(), sources);
-                program.build({ _context.device() }, program_source.options.c_str());
+                std::shared_ptr<cl::Program> program;
+                if(getenv("clDNN_CACHE_DIR")){
+                    cl::Program::Binaries binaries;
+                    std::string full_source;
+                    for(size_t i=0; i<sources.size(); i++) {
+                        full_source += sources[i];
+                    }
+                    std::hash<std::string> hash_fn;
+                    std::string source_hash = std::to_string(hash_fn(full_source));
+                    for(size_t i=0; ; ++i){
+                        std::ifstream binary_stream(std::string(getenv("clDNN_CACHE_DIR")) + source_hash + std::to_string(i) + ".clbin", std::ios::binary);
+                        if(binary_stream.good())
+                            binaries.push_back(std::vector<unsigned char>(std::istreambuf_iterator<char>(binary_stream), {}));
+                        else
+                            break;
+                    }
+                    if(binaries.size() > 0) {
+                        program = std::make_shared<cl::Program>(cl::Program(_context.context(), {_context.device()}, binaries));
+                        program->build({_context.device()}, program_source.options.c_str());
+                    }
+                    else{
+                        program = std::make_shared<cl::Program>(cl::Program(_context.context(), sources));
+                        program->build({ _context.device() }, program_source.options.c_str());
+                        try {
+                            auto program_binaries = program->getInfo<CL_PROGRAM_BINARIES>();
+                            for (size_t i = 0; i < program_binaries.size(); ++i){
+                                std::ofstream binary_stream(std::string(getenv("clDNN_CACHE_DIR")) + source_hash + std::to_string(i) + ".clbin", std::ios::binary);
+                                if(binary_stream.good())
+                                    binary_stream.write((char*)(program_binaries[i].data()), program_binaries[i].size());
+                                else
+                                    continue;
+                            }
+                        }
+                        catch(std::exception& e){
+                            std::cout << __FILE__ << ":" << __LINE__ << ": Error while caching Programs: " << e.what() << std::endl;
+                        }
+                    }
+                }
+                else{
+                    program = std::make_shared<cl::Program>(cl::Program(_context.context(), sources));
+                    program->build({ _context.device() }, program_source.options.c_str());
+                }
                 ///Store kernels for serialization process.
-                _context.store_binaries(program.getInfo<CL_PROGRAM_BINARIES>());
+                _context.store_binaries(program->getInfo<CL_PROGRAM_BINARIES>());
 
                 if (dump_sources && dump_file.good())
                 {
                     dump_file << "\n/* Build Log:\n";
-                    for (auto& p : program.getBuildInfo<CL_PROGRAM_BUILD_LOG>())
+                    for (auto& p : program->getBuildInfo<CL_PROGRAM_BUILD_LOG>())
                         dump_file << p.second << "\n";
 
                     dump_file << "*/\n";
                 }
 
                 cl::vector<cl::Kernel> kernels;
-                program.createKernels(&kernels);
+                program->createKernels(&kernels);
 
                 for (auto& k : kernels)
                 {
