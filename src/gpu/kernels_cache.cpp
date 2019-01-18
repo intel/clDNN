@@ -288,7 +288,9 @@ kernels_cache::kernels_map kernels_cache::build_program(const program_code& prog
                             }
                         }
                         catch(std::exception& e){
-                            std::cout << __FILE__ << ":" << __LINE__ << ": Error while caching Programs: " << e.what() << std::endl;
+                            if (dump_sources && dump_file.good())
+                                dump_file << __FILE__ << ":" << __LINE__ << ": Error while caching Programs: " << e.what() << std::endl;
+
                         }
                     }
                 }
