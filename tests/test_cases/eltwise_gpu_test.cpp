@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include <api/CPP/network.hpp>
 #include <api/CPP/engine.hpp>
 #include <api/CPP/reorder.hpp>
+#include <api/CPP/data.hpp>
 #include "test_utils/test_utils.h"
 
 namespace cldnn
@@ -1033,6 +1034,237 @@ TEST(eltwise_gpu_f32, stride_test_2x2) {
     }
 }
 
+TEST(eltwise_gpu_f32, broadcast_test_in4x4x2x2) {
+    //  Input2   : 2x1x1
+    //  Input  : 2x2x2x2
+    //  Output : 2x2x2x2
+
+    //  Input:
+    //  f0: b0:  1    2  b1:   0    0
+    //  f0: b0:  3    4  b1:   0.5 -0.5
+    //  f1: b0:  5    6  b1:   1.5  5.2
+    //  f1: b0:  7    8  b1:   12   8
+    //
+    //  Input2
+    //  f0: b0: 0.5  b1: 2.5
+    //  f1: b0: 0.5  b1: 2.5
+    //
+    //  Output:
+    //  f0: b0:   1.5  7    b1:  2.5   7
+    //  f0: b0:   18   2    b1:  17.5  6
+    //  f1: b0:   5.5  8    b1:   4    9.2
+    //  f1: b0:   15  16.5  b1:  22    16.5
+    //
+
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 1, 1 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(eltwise("eltwise", { "input", "input2" }, eltwise_mode::sum));
+
+    set_values(input, {
+        1.f,   0.f, 5.f, 1.5f,
+        2.f,   0.f, 6.f, 5.2f,
+        3.f,  0.5f, 7.f, 12.f,
+        4.f, -0.5f, 8.f,  8.f
+    });
+
+    set_values(input2, {
+        0.5f,   2.5f,  0.5f,  2.5f
+    });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    auto outputs = network.execute();
+
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "eltwise");
+
+    auto output = outputs.at("eltwise").get_memory();
+
+    float answers[16] = {
+        1.5f,   2.5f,   5.5f,   4.f,
+        2.5f,   2.5f,   6.5f,   7.7f,
+        3.5f,    3.f,   7.5f,  14.5f,
+        4.5f,    2.f,   8.5f,  10.5f };
+
+    auto output_ptr = output.pointer<float>();
+
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
+}
+
+
+template <typename T>
+int8_t eltwise_bool_execute(cldnn::eltwise_mode mode, T x, T y) {
+    switch (mode) {
+    case eltwise_mode::eq:
+        return x == y;
+    case eltwise_mode::ne:
+        return x != y;
+    case eltwise_mode::lt:
+        return x < y;
+    case eltwise_mode::le:
+        return x <= y;
+    case eltwise_mode::gt:
+        return x > y;
+    case eltwise_mode::ge:
+        return x >= y;
+    case eltwise_mode::logic_and:
+        return x && y;
+    case eltwise_mode::logic_or:
+        return x || y;
+    default:
+        return (int8_t)0;
+    }
+}
+
+template <typename T>
+VVVVF<int8_t> eltwise_bool_reference(VVVVF<T> &input1, VVVVF<T> &input2,
+    cldnn::eltwise_mode mode, int input_padding_y = 0,
+    int input_padding_x = 0, int output_padding_y = 0,
+    int output_padding_x = 0) {
+
+    size_t padding_y = input_padding_y + output_padding_y;
+    size_t padding_x = input_padding_x + output_padding_x;
+    size_t output_b = input1.size();
+    size_t output_f = input1[0].size();
+    size_t output_y = input1[0][0].size() + 2 * padding_y;
+    size_t output_x = input1[0][0][0].size() + 2 * padding_x;
+    VVVVF<int8_t> output(output_b, VVVF<int8_t>(output_f, VVF<int8_t>(output_y, VF<int8_t>(output_x))));
+
+    T res;
+    for (size_t b = 0; b < output_b; ++b) {
+        for (size_t f = 0; f < output_f; ++f) {
+            for (size_t y = 0; y < input1[0][0].size(); ++y) {
+                for (size_t x = 0; x < input1[0][0][0].size(); ++x) {
+                    res = eltwise_bool_execute<T>(mode, input1[b][f][y][x], input2[b][f][y][x]);
+                    output[b][f][y + padding_y][x + padding_x] = res;
+                }
+            }
+        }
+    }
+    return output;
+}
+
+template <typename T>
+void generic_eltwise_bool_test(cldnn::format test_input_fmt, int input_b, int input_f, int input_y, int input_x, cldnn::eltwise_mode mode,
+    int input_padding_y, int input_padding_x, int output_padding_y, int output_padding_x) {
+
+    int min_random = -2, max_random = 2;
+    VVVVF<T> input1_rnd = generate_random_4d<T>(input_b, input_f, input_y, input_x, min_random, max_random);
+    VVVVF<T> input2_rnd = generate_random_4d<T>(input_b, input_f, input_y, input_x, min_random, max_random);
+    VF<T> input1_rnd_vec = flatten_4d<T>(test_input_fmt, input1_rnd);
+    VF<T> input2_rnd_vec = flatten_4d<T>(test_input_fmt, input2_rnd);
+
+    const auto& engine = get_test_engine();
+    tensor input_tensor( input_b, input_f, input_x, input_y );
+    auto input1 = memory::allocate(engine, { type_to_data_type<T>::value, test_input_fmt, input_tensor });
+    auto input2 = memory::allocate(engine, { type_to_data_type<T>::value, test_input_fmt, input_tensor });
+    set_values(input1, input1_rnd_vec);
+    set_values(input2, input2_rnd_vec);
+
+    topology topology;
+    topology.add(input_layout("input1", input1.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(reorder("reorder1", "input1", input1.get_layout().with_padding({{ 0, 0, input_padding_x, input_padding_y }, 0 })));
+    topology.add(eltwise("eltwise", {"reorder1", "input2"}, mode, false, 0.f, { { 0, 0, output_padding_x, output_padding_y }, 0 }));
+
+    network network(engine, topology);
+    network.set_input_data("input1", input1);
+    network.set_input_data("input2", input2);
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "eltwise");
+
+    auto output_memory = outputs.at("eltwise").get_memory();
+    auto output_layout = output_memory.get_layout();
+    auto output_ptr = output_memory.pointer<int8_t>();
+
+    VVVVF<int8_t> output_cpu = eltwise_bool_reference<T>(input1_rnd, input2_rnd, mode, input_padding_y, input_padding_x, output_padding_y, output_padding_x);
+    EXPECT_EQ(output_layout.format.value, test_input_fmt.value);
+    tensor output_tensor = output_layout.get_buffer_size();
+    int y_size = output_tensor.spatial[1];
+    int x_size = output_tensor.spatial[0];
+    int f_size = output_tensor.feature[0];
+    int b_size = output_tensor.batch[0];
+    EXPECT_EQ(y_size, (int)output_cpu[0][0].size());
+    EXPECT_EQ(x_size, (int)output_cpu[0][0][0].size());
+    EXPECT_EQ(f_size, (int)output_cpu[0].size());
+    EXPECT_EQ(b_size, (int)output_cpu.size());
+
+    bool test_is_correct = true;
+    VF<int8_t> output_cpu_vec = flatten_4d<int8_t>(test_input_fmt, output_cpu);
+    for (size_t i = 0; i < output_cpu_vec.size(); ++i) {
+        if (output_cpu_vec[i] != output_ptr[i]) {
+            test_is_correct = false;
+            break;
+        }
+    }
+    EXPECT_EQ(test_is_correct, true) << std::endl
+        << "failing test parameters:" << std::endl
+        << "input_b = " << input_b << std::endl
+        << "input_f = " << input_f << std::endl
+        << "input_y = " << input_y << std::endl
+        << "input_x = " << input_x << std::endl
+        << "eltwise_mode = " << (int)mode << std::endl
+        << "input_padding_y = " << input_padding_y << std::endl
+        << "input_padding_x = " << input_padding_x << std::endl
+        << "output_padding_y = " << output_padding_y << std::endl
+        << "output_padding_x = " << output_padding_x << std::endl
+        << "type = " << (sizeof(T) == 1 ? "int8" : "int32") << std::endl;
+}
+
+void run_eltwise_bool_generic_test(cldnn::eltwise_mode mode)
+{
+    cldnn::format test_inputs_fmt = cldnn::format::bfyx;
+    std::pair<int, int> input_size = { 227, 227 };
+
+    generic_eltwise_bool_test<int32_t>(test_inputs_fmt, 1, 1, input_size.first, input_size.second, mode, 0, 0, 0, 0);
+    generic_eltwise_bool_test<int8_t>(test_inputs_fmt, 1, 1, input_size.first, input_size.second, mode, 0, 0, 0, 0);
+}
+
+TEST(eltwise_gpu_bool, eltwise_eq) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::eq);
+}
+
+TEST(eltwise_gpu_bool, eltwise_ne) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::ne);
+}
+
+TEST(eltwise_gpu_bool, eltwise_lt) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::lt);
+}
+
+TEST(eltwise_gpu_bool, eltwise_le) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::le);
+}
+
+TEST(eltwise_gpu_bool, eltwise_gt) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::gt);
+}
+
+TEST(eltwise_gpu_bool, eltwise_ge) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::ge);
+}
+
+TEST(eltwise_gpu_bool, eltwise_and) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::logic_and);
+}
+
+TEST(eltwise_gpu_bool, eltwise_or) {
+    run_eltwise_bool_generic_test(cldnn::eltwise_mode::logic_or);
+}
+
+
 void run_eltwise_generic_test(cldnn::eltwise_mode mode)
 {
     cldnn::format test_inputs_fmt = cldnn::format::bfyx;
@@ -1063,6 +1295,295 @@ TEST(eltwise_gpu, eltwise_pow) {
 
 TEST(eltwise_gpu, eltwise_mod) {
     run_eltwise_generic_test(cldnn::eltwise_mode::mod);
+}
+
+
+TEST(eltwise_gpu, b_fs_yx_fsv4_w_callib) {
+    int B_array[] = {   1,   4,   16,   32, 0 };  // Batch
+    int F_array[] = { 256, 512, 1024, 2048, 0 };  // Features
+    int I_array[] = {  56,  28,   14,   14, 0 };  // Input MxM data sizes
+
+    for (int j = 0; F_array[j]; j++) {
+        const auto& engine = get_test_engine();
+
+        int in_B = B_array[j];
+        int in_F = F_array[j];
+
+        int in_X = I_array[j],
+            in_Y = in_X;
+
+        // Input data init
+        std::vector<char> Data(in_B * in_F * in_X * in_Y);
+        for (size_t i = 0; i < Data.size(); i++)
+            Data[i] = static_cast<char>(i);
+        std::vector<char> DataGold(Data);
+
+        // Expected "gold" output and IMAD output.
+        std::vector<char>  vGoldOutput;
+        std::vector<char>  vTestOutput;
+
+        // Mem initialization
+        // This is user data, no kernels here
+        auto input1 = memory::allocate(engine,
+                                      { data_types::i8,
+                                          format::bfyx,
+                                          { in_B, in_F, in_X, in_Y } });
+        std::vector<char> data_i1(DataGold);
+        set_values(input1, std::move(data_i1));
+        auto input2 = memory::allocate(engine,
+                                      { data_types::i8,
+                                          format::bfyx,
+                                          { in_B, in_F, in_X, in_Y } });
+        std::vector<char> data_i2(DataGold);
+        set_values(input2, std::move(data_i2));
+
+        auto callib = memory::allocate(engine,
+                                       { data_types::f32,
+                                         format::bfyx,
+                                         { 1, in_F, 1, 1 } });
+        std::vector<float> data_c(in_F);
+        float sign = 1;
+        for (size_t i = 0; i < data_c.size(); i++) {
+            data_c[i] = ((i + 1) % 7) ? sign : -sign;
+            sign *= (float)1.0123;
+        }
+        set_values(callib, std::move(data_c));
+
+        // "Golden" Eltwise
+        {
+            topology topology;
+
+            auto eltw = eltwise("eltw_GOLD",
+                                "input1", "input2",
+                                "callib",
+                                eltwise_mode::sum, true);
+
+            // Create a topology
+            topology.add(input_layout("input1", input1.get_layout()),
+                         input_layout("input2", input2.get_layout()),
+                         eltw);
+
+            topology.add(data("callib", callib));
+
+            // Network processing
+            network network(engine, topology);
+            network.set_input_data("input1", input1);
+            network.set_input_data("input2", input2);
+            auto outputs = network.execute();
+
+            // Validation
+            auto searchC = outputs.find("eltw_GOLD");
+            EXPECT_NE(searchC, outputs.end());
+            auto output = outputs.begin()->second.get_memory();
+            auto output_ptr = output.pointer<char>();
+            vGoldOutput.reserve(output_ptr.size());
+            for (size_t i = 0; i < output_ptr.size(); i++)
+                vGoldOutput.push_back(output_ptr[i]);
+        }
+
+        // "IMAD" Eltwise
+        {
+            topology topology;
+
+            // Reorder (a-ka swizzelling) input to MMAD/IMAD Pooling format
+            topology.add(reorder("reorder1_Swizzelled",
+                                 "input1",
+                                 layout(data_types::i8,
+                                        format::b_fs_yx_fsv4,
+                                        { in_B, in_F, in_X, in_Y })),
+                         reorder("reorder2_Swizzelled",
+                                  "input2",
+                                  layout(data_types::i8,
+                                         format::b_fs_yx_fsv4,
+                                         { in_B, in_F, in_X, in_Y })));
+
+            auto eltw = eltwise("eltw_IMAD",
+                                "reorder1_Swizzelled", "reorder2_Swizzelled",
+                                "callib",
+                                eltwise_mode::sum, true);
+
+            topology.add(input_layout("input1", input1.get_layout()),
+                         input_layout("input2", input2.get_layout()),
+                         eltw);
+
+            topology.add(data("callib", callib));
+
+            // Back reordering (a-ka unswizzelling) output from MMAD/IMAD pooling
+            topology.add(reorder("reorder_UnSwizzelled",
+                                 "eltw_IMAD",
+                                 layout(data_types::i8,
+                                        format::bfyx,
+                                        { in_B, in_F, in_X, in_Y })));
+
+            // Network processing
+            network network(engine, topology);
+            network.set_input_data("input1", input1);
+            network.set_input_data("input2", input2);
+            auto outputs = network.execute();
+
+            // Validation
+            auto searchC = outputs.find("reorder_UnSwizzelled");
+            EXPECT_NE(searchC, outputs.end());
+            auto output = outputs.begin()->second.get_memory();
+            auto output_ptr = output.pointer<char>();
+            vTestOutput.reserve(output_ptr.size());
+            for (size_t i = 0; i < output_ptr.size(); i++)
+                vTestOutput.push_back(output_ptr[i]);
+        }
+
+        // Result validation
+        ASSERT_TRUE(vGoldOutput.size() == vTestOutput.size());
+        for (size_t i = 0; i < vGoldOutput.size(); i++)
+            ASSERT_TRUE(vTestOutput[i] == vGoldOutput[i]);
+    } // for (int j = 0; F_array[j]; j++)
+}
+
+TEST(eltwise_gpu, b_fs_yx_fsv4_wo_callib) {
+    //
+    // Input data
+    const int BATCH = 1;
+    const int in_B = BATCH;
+
+    const auto& engine = get_test_engine();
+
+    int in_F = 256;
+
+    int in_X = 56,
+        in_Y = in_X;
+
+    // Input data init
+    std::vector<char> Data(in_B * in_F * in_X * in_Y);
+    for (size_t i = 0; i < Data.size(); i++)
+        Data[i] = static_cast<char>(i);
+    std::vector<char> DataGold(Data);
+
+    // Mem initialization
+    // This is user data, no kernels here
+    auto input1 = memory::allocate(engine,
+                                   { data_types::i8,
+                                       format::bfyx,
+                                       { in_B, in_F, in_X, in_Y } });
+    std::vector<char> data_i1(DataGold);
+    for (size_t i = 0; i < data_i1.size(); i++) data_i1[i] = data_i1[i] + 1;
+    set_values(input1, std::move(data_i1));
+
+    auto input2 = memory::allocate(engine,
+                                  { data_types::i8,
+                                      format::bfyx,
+                                      { in_B, in_F, in_X, in_Y } });
+    std::vector<char> data_i2(DataGold);
+    for (size_t i = 0; i < data_i2.size(); i++) data_i2[i] = data_i2[i] + 2;
+    set_values(input2, std::move(data_i2));
+
+    auto input3 = memory::allocate(engine,
+                                  { data_types::i8,
+                                      format::bfyx,
+                                      { in_B, in_F, in_X, in_Y } });
+    std::vector<char> data_i3(DataGold);
+    for (size_t i = 0; i < data_i3.size(); i++) data_i3[i] = data_i3[i] + 3;
+    set_values(input3, std::move(data_i3));
+
+    cldnn::eltwise_mode mode[] = { cldnn::eltwise_mode::min,
+                                   cldnn::eltwise_mode::max,
+                                   cldnn::eltwise_mode::sum };
+
+    for (int i = 0; i < 3; i++) {
+        // Expected "gold" output and IMAD output.
+        std::vector<char>  vGoldOutput;
+        std::vector<char>  vTestOutput;
+
+        // "Golden" Eltwise
+        {
+            topology topology;
+
+            auto eltw = eltwise("eltw_GOLD",
+                                { "input1", "input2", "input3" },
+                                mode[i], true);
+
+            // Create a topology
+            topology.add(input_layout("input1", input1.get_layout()),
+                         input_layout("input2", input2.get_layout()),
+                         input_layout("input3", input3.get_layout()),
+                         eltw);
+
+            // Network processing
+            network network(engine, topology);
+            network.set_input_data("input1", input1);
+            network.set_input_data("input2", input2);
+            network.set_input_data("input3", input3);
+            auto outputs = network.execute();
+
+            // Validation
+            auto searchC = outputs.find("eltw_GOLD");
+            EXPECT_NE(searchC, outputs.end());
+            auto output = outputs.begin()->second.get_memory();
+            auto output_ptr = output.pointer<char>();
+            vGoldOutput.reserve(output_ptr.size());
+            for (size_t i = 0; i < output_ptr.size(); i++)
+                vGoldOutput.push_back(output_ptr[i]);
+        }
+
+        // "IMAD" Eltwise
+        {
+            topology topology;
+
+            // Reorder (a-ka swizzelling) input to MMAD/IMAD Pooling format
+            topology.add(reorder("reorder1_Swizzelled",
+                                 "input1",
+                                 layout(data_types::i8,
+                                        format::b_fs_yx_fsv4,
+                                        { in_B, in_F, in_X, in_Y })),
+                         reorder("reorder2_Swizzelled",
+                                 "input2",
+                                 layout(data_types::i8,
+                                        format::b_fs_yx_fsv4,
+                                        { in_B, in_F, in_X, in_Y })),
+                         reorder("reorder3_Swizzelled",
+                                 "input3",
+                                 layout(data_types::i8,
+                                        format::b_fs_yx_fsv4,
+                                        { in_B, in_F, in_X, in_Y })));
+
+            auto eltw = eltwise("eltw_IMAD",
+                                { "reorder1_Swizzelled",
+                                  "reorder2_Swizzelled",
+                                  "reorder3_Swizzelled" },
+                                mode[i], true);
+
+            topology.add(input_layout("input1", input1.get_layout()),
+                         input_layout("input2", input2.get_layout()),
+                         input_layout("input3", input3.get_layout()),
+                         eltw);
+
+            // Back reordering (a-ka unswizzelling) output from MMAD/IMAD pooling
+            topology.add(reorder("reorder_UnSwizzelled",
+                                 "eltw_IMAD",
+                                 layout(data_types::i8,
+                                     format::bfyx,
+                                     { in_B, in_F, in_X, in_Y })));
+
+            // Network processing
+            network network(engine, topology);
+            network.set_input_data("input1", input1);
+            network.set_input_data("input2", input2);
+            network.set_input_data("input3", input3);
+            auto outputs = network.execute();
+
+            // Validation
+            auto searchC = outputs.find("reorder_UnSwizzelled");
+            EXPECT_NE(searchC, outputs.end());
+            auto output = outputs.begin()->second.get_memory();
+            auto output_ptr = output.pointer<char>();
+            vTestOutput.reserve(output_ptr.size());
+            for (size_t i = 0; i < output_ptr.size(); i++)
+                vTestOutput.push_back(output_ptr[i]);
+        }
+
+        // Result validation
+        ASSERT_TRUE(vGoldOutput.size() == vTestOutput.size());
+        for (size_t i = 0; i < vGoldOutput.size(); i++)
+            ASSERT_TRUE(vTestOutput[i] == vGoldOutput[i]);
+    }
 }
 
 TEST(DISABLED_eltwise_gpu, generic_random) {

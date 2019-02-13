@@ -82,7 +82,7 @@ inline VF<T> flatten_4d(cldnn::format input_format, VVVVF<T> &data) {
     size_t b = data[0].size();
     size_t c = data[0][0].size();
     size_t d = data[0][0][0].size();
-    VF<T> vec(a * b * c * d, 0.0f);
+    VF<T> vec(a * b * c * d, (T)(0.0f));
     size_t idx = 0;
 
     switch (input_format.value) {

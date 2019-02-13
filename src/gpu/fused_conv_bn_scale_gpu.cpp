@@ -32,9 +32,9 @@ struct fused_conv_bn_scale_gpu : typed_primitive_gpu_impl<fused_conv_bn_scale>
 
 protected:
 
-    virtual bool validate(typed_primitive_inst<fused_conv_bn_scale>& instance) const override
+    virtual bool validate_impl(const typed_primitive_inst<fused_conv_bn_scale>& instance) const override
     {
-        bool res = parent::validate(instance);
+        bool res = true;
 
         // Check whether all memory elements use the same unit type (FP16 or FP32).
         CLDNN_ERROR_DATA_TYPES_MISMATCH(_outer.id(), "Input memory", instance.node.input().get_output_layout().data_type, "output memory", instance.node.get_output_layout().data_type, "");

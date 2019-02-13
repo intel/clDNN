@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ namespace kernel_selector {
         k.EnableInt8Quantization();
         k.EnableOutputCalibration();
         k.EnableEltwiseStride();
+        k.EnableEltwiseBroadcast();
         return k;
     }
 
@@ -57,7 +58,8 @@ namespace kernel_selector {
             if (params.inputs[i].GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32)
                 return false;
         }
-        if (params.output.GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32)
+        if (params.output.GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32 ||
+            params.output.GetLayout() == DataLayout::b_fs_yx_fsv4)
             return false;
 
         return true;

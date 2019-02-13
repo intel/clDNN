@@ -20,6 +20,10 @@
 #include "api/CPP/memory.hpp"
 #include <api/CPP/input_layout.hpp>
 #include "api/CPP/concatenation.hpp"
+#include "api/CPP/convolution.hpp"
+#include "api/CPP/data.hpp"
+#include "api/CPP/pooling.hpp"
+#include "api/CPP/upsampling.hpp"
 #include <api/CPP/topology.hpp>
 #include <api/CPP/network.hpp>
 #include <api/CPP/engine.hpp>
@@ -246,6 +250,41 @@ TEST(depth_concatenate_f32_gpu, test02) {
     EXPECT_FLOAT_EQ(-0.2f, output_ptr[15]);
 }
 
+TEST(concatenate_f32_gpu, test_concatenation_of_pool_and_unpool)
+{
+    engine engine;
+    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
+    auto weights = memory::allocate(engine, { data_types::f32,format::bfyx,{ 1, 1, 2, 1 } });
+
+    set_values(input1, { 16.0f, 32.0f, 128.0f, 256.0f });
+    set_values(weights, { .1f, .2f });
+    topology topology;
+    topology.add(input_layout("input1", input1.get_layout()));
+    topology.add(pooling("pool1", "input1",
+        cldnn::pooling_mode::max,
+        { 1,1,2,1 },          /*kernel*/
+        { 1,1,1,1 }           /*stride*/
+    ));
+    topology.add(upsampling("unpool1", "input1", 1, 0, upsampling_sample_type::nearest));
+    topology.add(concatenation("concat1", { "pool1", "unpool1" }, cldnn::concatenation::along_x));
+    topology.add(data("weights", weights)),
+    topology.add(convolution("conv", "concat1", { "weights" }));
+
+    cldnn::build_options options;
+    options.set_option(cldnn::build_option::optimize_data(true));
+    network network(engine, topology, options);
+    network.set_input_data("input1", input1);
+
+    auto outputs = network.execute({});
+    auto output = outputs.at("conv").get_memory();
+    std::vector<float> out_ref = { 6.4f, 8.f, 51.2f, 64.f };
+    auto output_ptr = output.pointer<float>();
+    for (int i=0; i<4; i++)
+    {
+        EXPECT_NEAR(output_ptr[i], out_ref[i], 1e-3);
+    }
+}
+
 TEST(depth_concatenate_f32_gpu, test03_cascade_concat_opt) {
     //  Test for cascade concatenation optimization.
     //  Despite having concatenations one after another and connected to different non padded activation primitives,
@@ -344,7 +383,6 @@ TEST(depth_concatenate_f32_gpu, test04_fused_relu) {
             EXPECT_FLOAT_EQ(input2_vec[i - input_element_count] < 0.0f ? 0.0f : input2_vec[i - input_element_count], output_ptr[i]);
     }
 }
-
 
 TEST(depth_concatenate_f32_gpu, test05_different_formats) {
     // 2 inputs of size 3x10x10 concatenated on f axis 

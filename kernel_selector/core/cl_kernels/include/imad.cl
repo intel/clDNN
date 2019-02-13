@@ -30,34 +30,5 @@ inline int FUNC(imad_SW)(int acc, char4 input, char4 weight) __attribute__((over
     return acc;
 }
 
-// ## PROCESS PPC BEGIN (DPAS)
-
-#if IMAD_SUPPORTED == 1
-
-inline int FUNC(__imad)(int c, char4 a, char4 b) __attribute__((overloadable)) {
-    int __builtin_IB_dp4a_ss(int c, int a, int b) __attribute__((const));
-	return __builtin_IB_dp4a_ss(c, as_int(a), as_int(b));
-}
-inline int FUNC(__imad)(int c, uchar4 a, uchar4 b) __attribute__((overloadable)) {
-    int __builtin_IB_dp4a_uu(int c, int a, int b) __attribute__((const));
-	return __builtin_IB_dp4a_uu(c, as_int(a), as_int(b));
-}
-inline int FUNC(__imad)(int c, char4 a, uchar4 b) __attribute__((overloadable)) {
-    int __builtin_IB_dp4a_su(int c, int a, int b) __attribute__((const));
-	return __builtin_IB_dp4a_su(c, as_int(a), as_int(b));
-}
-inline int FUNC(__imad)(int c, uchar4 a, char4 b) __attribute__((overloadable)) {
-    int __builtin_IB_dp4a_us(int c, int a, int b) __attribute__((const));
-	return __builtin_IB_dp4a_us(c, as_int(a), as_int(b));
-}
-#define IMAD(_O, _I, _W) FUNC_CALL(__imad)(_O, _I, _W)
-
-
-#else
-// ## PROCESS PPC END
 
 #define IMAD(_O, _I, _W) FUNC_CALL(imad_SW)(_O, _I, _W)
-
-// ## PROCESS PPC BEGIN (DPAS)
-#endif
-// ## PROCESS PPC END

@@ -125,7 +125,6 @@ private:
     float conv_input_qf;
     float conv_output_qf;
     float eltw_output_qf;
-    bool eltw_output_cf; // to know if we have calibration factors
 };
 
 using fused_conv_eltwise_node = typed_program_node<fused_conv_eltwise>;

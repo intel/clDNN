@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1536,6 +1536,133 @@ TEST(pooling_forward_gpu, yxfb_average_without_padding_i3x3_w2x2_s3x3_o1x1_fp16)
 TEST(pooling_forward_gpu, yxfb_average_without_padding_i1x1_w3x3_s1x1_o1x1_fp16)
 {
     generic_average_wo_padding_test<FLOAT16>(format::yxfb, spatial(1, 1), spatial(1, 1), spatial(3, 3), tensor{ 0,0,1,1 }, tensor{ 0,0,-1,-1 });
+}
+
+TEST(pooling_forward_gpu, b_fs_yx_fsv4)
+{
+    int B_array[] = {  16,    4, 0 };  // Batch
+    int F_array[] = {  64, 2048, 0 };  // Features
+    int I_array[] = { 112,    7, 0 };  // Input MxM data sizes
+    int W_array[] = {   7,    3, 0 };  // Filter (a-ka weights) sizes
+    int S_array[] = {   1,    2, 0 };  // Strides
+    for (int j = 0; F_array[j]; j++) {
+        int in_B = B_array[j];
+
+        int in_F = F_array[j];
+
+        int in_X = I_array[j],
+            in_Y = in_X;
+
+        int W_X = W_array[j],
+            W_Y = W_X;
+
+        int S_X = S_array[j],
+            S_Y = S_X;
+
+        // Input data init
+        std::vector<char> Data(in_B * in_F * in_X * in_Y);
+        for (size_t i = 0; i < Data.size(); i++)
+            Data[i] = static_cast<char>(i);
+        std::vector<char> DataGold(Data);
+
+        // Expected "gold" output and IMAD output.
+        std::vector<char>  vGoldOutput;
+        std::vector<char>  vTestOutput;
+
+        engine   engine;
+
+        // "Golden" Pooling
+        {
+            // Mem initialization
+            // This is user data, no kernels here
+            auto input = memory::allocate(engine,
+                                          { data_types::i8,
+                                              format::bfyx,
+                                              { in_B, in_F, in_X, in_Y } });
+            set_values(input, std::move(DataGold));
+
+            auto pool = pooling("pool_GOLD",
+                                 "input",
+                                 pooling_mode::max,
+                                 { 1, 1, W_X, W_Y },  // kernel_size
+                                 { 1, 1, S_X, S_Y }); // stride
+
+            // Create a topology with a simple Convolution layer
+            topology topology(input_layout("input", input.get_layout()),
+                              pool);
+
+            // Network processing
+            network network(engine, topology);
+            network.set_input_data("input", input);
+            //network_exe(network, vGoldOutput, "pool_GOLD");
+            auto outputs = network.execute();
+            auto searchC = outputs.find("pool_GOLD");
+            ASSERT_FALSE(searchC == outputs.end());
+            auto output = outputs.begin()->second.get_memory();
+            auto output_ptr = output.pointer<char>();
+            vGoldOutput.reserve(output_ptr.size());
+            for (size_t i = 0; i < output_ptr.size(); i++)
+                vGoldOutput.push_back(output_ptr[i]);
+        }
+
+        //
+        // IMAD Pooling
+        //
+        {
+            topology topology;
+
+            // Mem initialization
+            // This is user data, no kernels here
+            auto input = memory::allocate(engine,
+                                          { data_types::i8,
+                                              format::bfyx,
+                                              { in_B, in_F, in_X, in_Y } });
+            set_values(input, std::move(Data));
+
+            // Add input to topology
+            topology.add(
+                input_layout("input", input.get_layout()));
+
+            // Reorder (a-ka swizzelling) input to MMAD/IMAD Pooling format
+            topology.add(reorder("reorder_Swizzelled",
+                         "input",
+                         layout(data_types::i8,
+                                format::b_fs_yx_fsv4,
+                                { in_B, in_F, in_X, in_Y })));
+
+            // Add Convoluiton to topology
+            topology.add(pooling("pool_IMAD",
+                                 "reorder_Swizzelled",
+                                 pooling_mode::max,
+                                 { 1, 1, W_X, W_Y },  // kernel_size
+                                 { 1, 1, S_X, S_Y })); // stride
+
+            // Back reordering (a-ka unswizzelling) output from MMAD/IMAD pooling
+            topology.add(reorder("reorder_UnSwizzelled",
+                                 "pool_IMAD",
+                                 layout(data_types::i8,
+                                        format::bfyx,
+                                        { in_B, in_F, in_X, in_Y })));
+
+            network network(engine, topology);
+            network.set_input_data("input", input);
+            //network_exe(network, vTestOutput, "reorder_UnSwizzelled");
+            auto outputs = network.execute();
+            auto searchC = outputs.find("reorder_UnSwizzelled");
+            ASSERT_FALSE(searchC == outputs.end());
+            auto output = outputs.begin()->second.get_memory();
+            auto output_ptr = output.pointer<char>();
+            vTestOutput.reserve(output_ptr.size());
+            for (size_t i = 0; i < output_ptr.size(); i++)
+                vTestOutput.push_back(output_ptr[i]);
+        }
+
+        // Result validation
+        ASSERT_TRUE(vGoldOutput.size() == vTestOutput.size());
+        for (size_t i = 0; i < vGoldOutput.size(); i++)
+            ASSERT_TRUE(vTestOutput[i] == vGoldOutput[i]);
+
+    } // for (int j = 0; F_array[j]; i++)
 }
 
 

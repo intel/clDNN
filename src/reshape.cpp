@@ -33,7 +33,28 @@ primitive_type_id reshape_type_id()
 layout reshape_inst::calc_output_layout(reshape_node const& node)
 {
     auto input_layout = node.input().get_non_padded_output_layout();
-    input_layout.size = node.get_primitive()->output_shape;
+    auto sizes = node.get_primitive()->output_shape.sizes();
+    auto input_sizes = input_layout.size.sizes();
+    size_t need_recalc = 0;
+    uint32_t shape_count = 1;
+
+    for (size_t i = 0; i < sizes.size(); i++) {
+        if (sizes[i] == -1) {
+            if (need_recalc) {
+                CLDNN_ERROR_MESSAGE(node.id(), "Only one dimension of the new shape can be -1");
+            }
+            need_recalc = i;
+            continue;
+        }
+        if (sizes[i] == 0) {
+            sizes[i] = input_sizes[i];
+        }
+        shape_count *= sizes[i];
+    }
+    if (need_recalc)
+        sizes[need_recalc] = (int)input_layout.size.count() / shape_count;
+
+    input_layout.size = tensor(sizes);
     return input_layout;
 }
 

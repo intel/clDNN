@@ -39,6 +39,7 @@ namespace kernel_selector
         k.EnableDilation();
         k.EnableDepthwiseSeparableOpt();
         k.DisableTuning();
+        k.EnableGroupedConvolution();
         return k;
     }
 

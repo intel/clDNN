@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,26 +29,22 @@
 // For images 7x7 it's 1 (default), for 14x14 and above it's 2.
 #define OUT_BLOCK_HEIGHT      1
 
-// Calculte actual value of OUT_BLOCK_WIDTH depending on X
-static size_t getBlockWidth(size_t X) {
-    // X must be multiple of OUT_BLOCK_THRESHOLD
-    assert(X % OUT_BLOCK_THRESHOLD == 0);
-    size_t Res = (X > OUT_BLOCK_THRESHOLD)
-                  ? OUT_BLOCK_WIDTH * 2
-                  : OUT_BLOCK_WIDTH;
-    return Res;
-}
+static void getOutBlock_WH(size_t inW, size_t Stride, size_t Pad, size_t& outW, size_t& outH)
+{
+    outW = OUT_BLOCK_WIDTH * 2;
+    outH = OUT_BLOCK_HEIGHT * 2;
 
-// Calculte actual value of OUT_BLOCK_HEIGHT depending on Y
-static size_t getBlockHeight(size_t Y) {
-    // Y must be multiple of OUT_BLOCK_THRESHOLD
-    assert(Y % OUT_BLOCK_THRESHOLD == 0);
-    size_t Res = (Y > OUT_BLOCK_THRESHOLD)
-                  ? OUT_BLOCK_HEIGHT * 2
-                  : OUT_BLOCK_HEIGHT;
-    return Res;
-}
+    if ((inW <= OUT_BLOCK_THRESHOLD) ||
+        (outW * Stride + Pad > SIMD_SIZE)) {
+        outW = OUT_BLOCK_WIDTH;
+        outH = OUT_BLOCK_HEIGHT;
+    }
+    if (outW * Stride + Pad > SIMD_SIZE) {
+        outW = outH = 4;
+    }
 
+    assert(outW * Stride + Pad <= SIMD_SIZE);
+} // getOutBlock_WH
 
 namespace kernel_selector {
 
@@ -92,8 +88,10 @@ namespace kernel_selector {
         auto mem_consts = Parent::GetJitConstants(params, kd);
 
         const auto& input = params.inputs[0];
+        const auto& output = params.output;
 
         const auto& iDims   = input.GetDims();
+        const auto& oDims = output.GetDims();
         const auto& weights = params.weights;
         const auto& wDims   = weights.GetDims();
         const int iX  = DataTensor::Channelndex(
@@ -106,27 +104,37 @@ namespace kernel_selector {
                             input.GetLayout(), Tensor::DataChannelName::FEATURE);
         const int wOD = WeightsTensor::Channelndex(
                             weights.GetLayout(), Tensor::WeightsChannelName::OFM);
+        const int oX = DataTensor::Channelndex(
+            output.GetLayout(), Tensor::DataChannelName::X);
+        const int oY = DataTensor::Channelndex(
+            output.GetLayout(), Tensor::DataChannelName::Y);
         mem_consts.AddConstants({
             MakeJitConstant("_IMAD_DEFINES",   1),
             //MakeJitConstant("SCALE_FACTOR",     m_ScaleFactor), //(255.0f / 700000.0f);
             MakeJitConstant("_IW",              iDims[iX].v),
             MakeJitConstant("_IH",              iDims[iY].v),
-            MakeJitConstant("_ID",              iDims[iF].v),
+            MakeJitConstant("_ID",              RoundUp(iDims[iF].v, 4)),
             MakeJitConstant("IWPAD",            iDims[iX].pad.before + iDims[iX].pad.after),
             MakeJitConstant("IHPAD",            iDims[iY].pad.before + iDims[iY].pad.after),
-            MakeJitConstant("_OW",              iDims[iX].v),
-            MakeJitConstant("_OH",              iDims[iY].v),
+            MakeJitConstant("_OW",              oDims[oX].v),
+            MakeJitConstant("_OH",              oDims[oY].v),
             MakeJitConstant("_OD",              wDims[wOD].v),
-            MakeJitConstant("OWPAD",            0),
-            MakeJitConstant("OHPAD",            0),
+            MakeJitConstant("OWPAD",            oDims[oX].pad.before + oDims[oX].pad.after),
+            MakeJitConstant("OHPAD",            oDims[oY].pad.before + oDims[oY].pad.after),
             MakeJitConstant("SIMD_SIZE",        SIMD_SIZE),
             MakeJitConstant("K_HEIGHT",         wDims[iY].v),
             MakeJitConstant("K_WIDTH",          wDims[iX].v),
             MakeJitConstant("K_STRIDE",         params.stride.x), // X and Y must be equal
             MakeJitConstant("BATCH_SIZE",       iDims[iB].v),
             MakeJitConstant("WORKGROUP_SIZE",   "SIMD_SIZE"),
-            MakeJitConstant("OUT_BLOCK_WIDTH",  getBlockWidth(iDims[iX].v)),
-            MakeJitConstant("OUT_BLOCK_HEIGHT", getBlockHeight(iDims[iY].v))
+        });
+
+        size_t obw, obh;
+        getOutBlock_WH(iDims[iX].v, params.stride.x, iDims[iX].pad.before + iDims[iX].pad.after,
+                       obw, obh);
+        mem_consts.AddConstants({
+            MakeJitConstant("OUT_BLOCK_WIDTH",  obw),
+            MakeJitConstant("OUT_BLOCK_HEIGHT", obh)
         });
 
         // FM_TILE definition
@@ -175,16 +183,18 @@ namespace kernel_selector {
         const int wOD = WeightsTensor::Channelndex(
                             weights.GetLayout(), Tensor::WeightsChannelName::OFM);
 
+        size_t otw, oth;
+        getOutBlock_WH(iDims[iX].v, params.stride.x, iDims[iX].pad.before + iDims[iX].pad.after,
+                       otw, oth);
+
         std::vector<size_t> global = {
             //globalRange[0] = ((_IW / K_STRIDE) + (OTW - 1)) / OTW;
             // number of tiles needed to cover output width
-            (((iDims[iX].v / params.stride.x) +
-                   (getBlockWidth(iDims[iX].v) - 1)) / getBlockWidth(iDims[iX].v)),
+            (((iDims[iX].v / params.stride.x) + (otw - 1)) / otw),
 
             //globalRange[1] = ((_IH / K_STRIDE) + (OTH - 1)) / OTH;
             // number of tiles needed to cover output height
-            (((iDims[iY].v / params.stride.y) +
-                   (getBlockHeight(iDims[iY].v) - 1)) / getBlockHeight(iDims[iY].v)),
+            (((iDims[iY].v / params.stride.y) + (oth - 1)) / oth),
 
             // globalRange[2] = (_OD * _B) + ((_B *_OD) % __WORKGROUP_SIZE);
             // round depth range up
@@ -221,7 +231,28 @@ namespace kernel_selector {
 
         KernelData kd = KernelData::Default<convolution_params>(params);
         convolution_params& newParams = *static_cast<convolution_params*>(kd.params.get());
-        return (newParams.filterSize.x == 3 && newParams.filterSize.y == 3);
+
+        if (newParams.stride.x != newParams.stride.y) {
+            // Strides must be equial
+            return false;
+        }
+        else if ((newParams.filterSize.x != m_FilterSizeX) ||
+                 (newParams.filterSize.y != m_FilterSizeY)) {
+            // Kernel does not support such filter size
+            return false;
+        }
+        else {
+            const auto& in = newParams.inputs[0];
+            const auto& iDims = in.GetDims();
+            const int iX = DataTensor::Channelndex(
+                in.GetLayout(), Tensor::DataChannelName::X);
+            if (iDims[iX].v % OUT_BLOCK_THRESHOLD != 0) {
+                // Input size must be multiple of OUT_BLOCK_THRESHOLD
+                return false;
+            }
+        }
+
+        return true;
     }
 
     KernelsData
@@ -238,24 +269,7 @@ namespace kernel_selector {
 
         KernelData kd = KernelData::Default<convolution_params>(params);
         convolution_params& newParams = *static_cast<convolution_params*>(kd.params.get());
-
-        if (newParams.stride.x != newParams.stride.y) {
-            // Strides must be equial
-            return{};
-        }
-        else {
-            const auto& in    = newParams.inputs[0];
-            const auto& iDims = in.GetDims();
-            const int iX = DataTensor::Channelndex(
-                in.GetLayout(), Tensor::DataChannelName::X);
-            if (iDims[iX].v % OUT_BLOCK_THRESHOLD != 0) {
-                // Input size must be multiple of OUT_BLOCK_THRESHOLD
-                return{};
-            }
-        }
-
         DispatchData runInfo = SetDefault(newParams, autoTuneIndex);
-
         if (!CheckWorkGroups(runInfo))
         {
             // Internal Error - wrong calculation of global/local work group sizes

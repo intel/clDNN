@@ -81,6 +81,11 @@ namespace kernel_selector
             k.EnableLocalConvolution();
         }
 
+        if (groups > 1 && !depthwise_separable_opt)
+        {
+            k.EnableGroupedConvolution();
+        }
+
         return k;
     }
 }

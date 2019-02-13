@@ -37,9 +37,10 @@ namespace kernel_selector {
 		k.EnableTensorPitches();
 		k.EnableBiasPerFeature();
 		k.EnableBatching();
-		k.EnableInt8Quantization();
-		k.EnableOutputCalibration();
+		k.EnableFusedConvEltwInt8Quantization();
+		k.EnableFusedConvEltwOutputCalibration();
 		k.DisableTuning();
+        k.EnableFusedConvEltwiseRWOutOpt();
 		return k;
 	}
 
@@ -171,18 +172,21 @@ namespace kernel_selector {
         jit.AddConstant(MakeJitConstant("OUT_F_BLOCK_PITCH", out_f_block_pitch));
         jit.AddConstant(MakeJitConstant("OUT_OFFSET", out_offset));
 
-        // for second input
-        const size_t in2_x_pitch = 32 * 4;
-        const size_t in2_y_pitch = 32 * 4 * params.inputs[1].X().LogicalDimPadded();
-        const size_t in2_b_block_pitch = in2_y_pitch * params.inputs[1].Y().LogicalDimPadded();
-        const size_t in2_f_block_pitch = in2_b_block_pitch * ((params.inputs[1].Batch().v + 3) / 4);
-        const size_t in2_offset = in2_x_pitch * params.inputs[1].X().pad.before + in2_y_pitch * params.inputs[1].Y().pad.before;
+        if (!params.second_input_in_output)
+        {
+            // for second input
+            const size_t in2_x_pitch = 32 * 4;
+            const size_t in2_y_pitch = 32 * 4 * params.inputs[1].X().LogicalDimPadded();
+            const size_t in2_b_block_pitch = in2_y_pitch * params.inputs[1].Y().LogicalDimPadded();
+            const size_t in2_f_block_pitch = in2_b_block_pitch * ((params.inputs[1].Batch().v + 3) / 4);
+            const size_t in2_offset = in2_x_pitch * params.inputs[1].X().pad.before + in2_y_pitch * params.inputs[1].Y().pad.before;
 
-        jit.AddConstant(MakeJitConstant("IN2_X_PITCH", in2_x_pitch));
-        jit.AddConstant(MakeJitConstant("IN2_Y_PITCH", in2_y_pitch));
-        jit.AddConstant(MakeJitConstant("IN2_B_BLOCK_PITCH", in2_b_block_pitch));
-        jit.AddConstant(MakeJitConstant("IN2_F_BLOCK_PITCH", in2_f_block_pitch));
-        jit.AddConstant(MakeJitConstant("IN2_OFFSET", in2_offset));
+            jit.AddConstant(MakeJitConstant("IN2_X_PITCH", in2_x_pitch));
+            jit.AddConstant(MakeJitConstant("IN2_Y_PITCH", in2_y_pitch));
+            jit.AddConstant(MakeJitConstant("IN2_B_BLOCK_PITCH", in2_b_block_pitch));
+            jit.AddConstant(MakeJitConstant("IN2_F_BLOCK_PITCH", in2_f_block_pitch));
+            jit.AddConstant(MakeJitConstant("IN2_OFFSET", in2_offset));
+        }
 
         if (!params.eltw.stride.empty())
         {

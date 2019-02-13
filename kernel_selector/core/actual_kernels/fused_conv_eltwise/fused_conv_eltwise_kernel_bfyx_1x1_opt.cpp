@@ -34,7 +34,8 @@ namespace kernel_selector {
         k.EnableBiasPerFeature();
         k.EnableNonBiasTerm();
         k.EnableBatching();
-        k.EnableSplitSupport();
+        k.EnableFusedConvEltwSplitSupport();
+        k.EnableFusedConvEltwiseRWOutOpt(); // data for second input are already in output
         return k;
 	}
 
@@ -180,7 +181,7 @@ namespace kernel_selector {
             jit.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", 1));
         }
 
-		return jit;
+        return jit;
 	}
 
     KernelsData fused_conv_eltwise_kernel_bfyx_1x1_opt::GetKernelsData(const Params& params, const optional_params& options) const

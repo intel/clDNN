@@ -131,6 +131,7 @@ namespace kernel_selector
                             uint32_t quantization : 1;
                             uint32_t calibration : 1;
                             uint32_t local : 1;
+                            uint32_t grouped : 1;
                         } conv;
                         struct fc_t {} fc;
                         struct softmax_t 
@@ -176,6 +177,7 @@ namespace kernel_selector
                         struct eltwise_t
                         {
                             uint32_t stride : 1;
+                            uint32_t broadcast : 1;
                         } eltwise;
                         struct lstm_gemm_t {
                             uint32_t bias : 1;
@@ -184,6 +186,21 @@ namespace kernel_selector
                         struct lstm_elt_t {
                             uint32_t cell : 1;
                         } lstm_elt;
+                        struct fused_conv_eltw_t {
+                            // conv
+                            uint32_t split : 1;
+                            uint32_t dilation : 1;
+                            uint32_t depthwise_separable_opt : 1;
+                            uint32_t transposed : 1;
+                            uint32_t quantization : 1;
+                            uint32_t calibration : 1;
+                            uint32_t local : 1;
+                            uint32_t grouped : 1;
+                            // eltw
+                            uint32_t stride : 1;
+                            // fused conv eltw
+                            uint32_t rw_out_opt : 1;
+                        } fused_conv_eltw;
                     } dedicated;
                 } val;
                 uint64_t raw;
@@ -269,18 +286,32 @@ namespace kernel_selector
         void EnablePoolKernelDividerMode(KernelDividerMode m);
         void EnablePoolType(PoolType t);
         void EnablePoolRemainder(PoolRemainder r);
+
         void EnableSplitSupport() { key.restrict.val.dedicated.conv.split = 1; }
         void EnableDilation() { key.restrict.val.dedicated.conv.dilation = 1; }
         void EnableDepthwiseSeparableOpt() { key.restrict.val.dedicated.conv.depthwise_separable_opt = 1; }
         void EnableLocalConvolution() { key.restrict.val.dedicated.conv.local = 1; }
+        void EnableGroupedConvolution() { key.restrict.val.dedicated.conv.grouped = 1; }
         void EnableTranspose() { key.restrict.val.dedicated.conv.transposed = 1; }
         void EnableInt8Quantization() { key.restrict.val.dedicated.conv.quantization = 1; }
         void EnableOutputCalibration() { key.restrict.val.dedicated.conv.calibration = 1; }
+        
+        void EnableFusedConvEltwSplitSupport() { key.restrict.val.dedicated.fused_conv_eltw.split = 1; }
+        void EnableFusedConvEltwDilation() { key.restrict.val.dedicated.fused_conv_eltw.dilation = 1; }
+        void EnableFusedConvEltwDepthwiseSeparableOpt() { key.restrict.val.dedicated.fused_conv_eltw.depthwise_separable_opt = 1; }
+        void EnableFusedConvEltwLocalConvolution() { key.restrict.val.dedicated.fused_conv_eltw.local = 1; }
+        void EnableFusedConvEltwGroupedConvolution() { key.restrict.val.dedicated.fused_conv_eltw.grouped = 1; }
+        void EnableFusedConvEltwTranspose() { key.restrict.val.dedicated.fused_conv_eltw.transposed = 1; }
+        void EnableFusedConvEltwInt8Quantization() { key.restrict.val.dedicated.fused_conv_eltw.quantization = 1; }
+        void EnableFusedConvEltwOutputCalibration() { key.restrict.val.dedicated.fused_conv_eltw.calibration = 1; }
+        void EnableFusedConvEltwEltwiseStride();
+
         void EnableWinogradReorder() { key.restrict.val.dedicated.reorder.winograd = 1; }
         void EnableSoftmaxDim(SoftmaxDim d);
         void EnableConcatAxis(ConcatAxis a);
         void EnableUpSamplingSampleType(SampleType a);
         void EnableEltwiseStride();
+        void EnableEltwiseBroadcast() { key.restrict.val.dedicated.eltwise.broadcast = 1; }
         void EnableLSTMGEMMBias() { key.restrict.val.dedicated.lstm_gemm.bias = 1; }
         void EnableLSTMGEMMHidden() { key.restrict.val.dedicated.lstm_gemm.hidden = 1; }
         void EnableLSTMEltCell() { key.restrict.val.dedicated.lstm_elt.cell = 1; }
@@ -290,6 +321,7 @@ namespace kernel_selector
         void EnableArgMaxMinAxis(ArgMaxMinAxis a);
         void EnableLookUpTableIndicesFormat(Datatype a);
         void EnableIndexSelectAxis(IndexSelectAxis a);
+        void EnableFusedConvEltwiseRWOutOpt();
         bool Support(const ParamsKey& k) const;
         bool TuningSupport() const
         {

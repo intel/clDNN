@@ -61,6 +61,15 @@ namespace kernel_selector {
         return { 1,1,1 };
     }
 
+    std::vector<WeightsLayout> ConvolutionKernel_mmad_batched_block::GetSupportedWeightLayouts(const convolution_params& cp) const
+    {
+        auto block = get_out_block_size(cp);
+        if (block.out_depth == 4)
+            return { WeightsLayout::os_is_yx_isa8_osv8_isv4_swizzled_by_4 };
+        else
+            return { WeightsLayout::os_is_yx_isa8_osv8_isv4 };
+    }
+
     bool ConvolutionKernel_mmad_batched_block::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o) ||

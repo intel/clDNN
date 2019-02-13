@@ -33,6 +33,7 @@ namespace kernel_selector
         uSize    dilation;
         uSize    padding;
         uint32_t split = 1;
+        uint32_t groups = 1;
         bool     depthwise_separable_opt = false;
         bool     fused_eltwise = false;
 
@@ -56,6 +57,11 @@ namespace kernel_selector
             if (depthwise_separable_opt)
             {
                 k.EnableDepthwiseSeparableOpt();
+            }
+
+            if (groups > 1 && !depthwise_separable_opt)
+            {
+                k.EnableGroupedConvolution();
             }
 
             return k;

@@ -347,6 +347,11 @@ namespace kernel_selector {
         }
     }
 
+    void ParamsKey::EnableFusedConvEltwEltwiseStride()
+    {
+        key.restrict.val.dedicated.fused_conv_eltw.stride = 1;
+    }
+
     void ParamsKey::EnableEltwiseStride()
     {
         key.restrict.val.dedicated.eltwise.stride = 1;
@@ -403,6 +408,11 @@ namespace kernel_selector {
             key.restrict.val.dedicated.lookt.indicesF32 = 1;
         else
             key.restrict.val.dedicated.lookt.indicesOther = 1;
+    }
+
+    void ParamsKey::EnableFusedConvEltwiseRWOutOpt()
+    {
+        key.restrict.val.dedicated.fused_conv_eltw.rw_out_opt = 1;
     }
 
     bool ParamsKey::Support(const ParamsKey& k) const

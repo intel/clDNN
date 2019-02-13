@@ -58,6 +58,15 @@ namespace kernel_selector {
         return { 1,1,1 };
     }
 
+    std::vector<WeightsLayout> ConvolutionKernel_mmad_batched_block_1x1::GetSupportedWeightLayouts(const convolution_params& cp) const
+    {
+        auto block = get_out_block_size(cp);
+        if (block.out_depth == 4)
+            return { WeightsLayout::os_is_yx_isa8_osv8_isv4_swizzled_by_4 };
+        else
+            return { WeightsLayout::os_is_yx_isa8_osv8_isv4 };
+    }
+
     bool ConvolutionKernel_mmad_batched_block_1x1::Validate(const Params& p, const optional_params& o) const
     {
         if (!ConvolutionKernelBase::Validate(p, o) ||
@@ -77,7 +86,7 @@ namespace kernel_selector {
 
         // if block sizes are 1x1, then this algorithm is probably not the best
         auto block = get_out_block_size(cp);
-        if (block.out_width == 1 && block.out_height == 1)
+        if (block.out_depth != 4)
             return false;
 
         if (cp.output.X().v % block.out_width != 0)

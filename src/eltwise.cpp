@@ -30,26 +30,43 @@ primitive_type_id eltwise_type_id()
 
 layout eltwise_inst::calc_output_layout(eltwise_node const& node)
 {
-    auto input_node_layout = node.input().get_non_padded_output_layout();
+    auto input_node0_layout = node.input(0).get_non_padded_output_layout();
+    auto input_node1_layout = node.input(0).get_non_padded_output_layout();
+    auto mode = node.get_primitive()->mode;
+
     //list of operations supported for integer types
-    if (input_node_layout.data_type == data_types::i8 ||
-        input_node_layout.data_type == data_types::i32 ||
-        input_node_layout.data_type == data_types::i64)
+    if (input_node0_layout.data_type == data_types::i8 ||
+        input_node0_layout.data_type == data_types::i32 ||
+        input_node0_layout.data_type == data_types::i64)
     {
-        auto mode = node.get_primitive()->mode;
-        std::vector<eltwise_mode> eltwise_int_modes = { eltwise_mode::sum, eltwise_mode::sub, eltwise_mode::prod, eltwise_mode::div, eltwise_mode::min, eltwise_mode::max, eltwise_mode::mod };
+        std::vector<eltwise_mode> eltwise_int_modes = { eltwise_mode::sum, eltwise_mode::sub, eltwise_mode::prod, eltwise_mode::div, eltwise_mode::min, eltwise_mode::max, eltwise_mode::mod, eltwise_mode::eq, eltwise_mode::ne, eltwise_mode::lt, eltwise_mode::le, eltwise_mode::gt, eltwise_mode::ge, eltwise_mode::logic_and, eltwise_mode::logic_or };
         if (std::find(eltwise_int_modes.begin(), eltwise_int_modes.end(), mode) == eltwise_int_modes.end())
             CLDNN_ERROR_MESSAGE(node.id(), "Requested eltwise mode is not supported for integer types.");
+    }
+
+    // Logic and comparison operations should return i8 for any inputs
+    std::vector<eltwise_mode> eltwise_bool_modes = { eltwise_mode::eq, eltwise_mode::ne, eltwise_mode::lt, eltwise_mode::le, eltwise_mode::gt, eltwise_mode::ge, eltwise_mode::logic_and, eltwise_mode::logic_or };
+    if (std::find(eltwise_bool_modes.begin(), eltwise_bool_modes.end(), mode) != eltwise_bool_modes.end())
+    {
+        input_node0_layout.data_type = data_types::i8;
+        if (node.get_primitive()->with_activation)
+            CLDNN_ERROR_MESSAGE(node.id(), "Activations are not supported for logical operations.");
     }
 
     auto eltw = std::static_pointer_cast<const eltwise>((node.get_primitive()));
     if (!eltw->stride.empty())
     {
         // we can safely use only first stride, since we're using first input, and input / stride should give exact same value for every input
-        input_node_layout.size.spatial[0] /= eltw->stride[0].spatial[0];
-        input_node_layout.size.spatial[1] /= eltw->stride[0].spatial[1];
+        input_node0_layout.size.spatial[0] /= eltw->stride[0].spatial[0];
+        input_node0_layout.size.spatial[1] /= eltw->stride[0].spatial[1];
+        return input_node0_layout;
     }
-    return input_node_layout;
+    else 
+    {
+        auto&& new_size = tensor::max(input_node0_layout.size, input_node1_layout.size);
+        return { input_node0_layout.data_type, input_node0_layout.format, new_size };
+    }
+
 }
 
 static inline std::string stringify_vector(const std::vector<float>& v)
@@ -104,6 +121,30 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
     case eltwise_mode::mod:
             str_mode = "mod";
             break;
+    case eltwise_mode::eq:
+            str_mode = "equal";
+            break;
+    case eltwise_mode::ne:
+            str_mode = "not equal";
+            break;
+    case eltwise_mode::lt:
+            str_mode = "less";
+            break;
+    case eltwise_mode::le:
+            str_mode = "less-or-equal";
+            break;
+    case eltwise_mode::gt:
+            str_mode = "greater";
+            break;
+    case eltwise_mode::ge:
+            str_mode = "greater-or-equal";
+            break;
+    case eltwise_mode::logic_and:
+            str_mode = "and";
+            break;
+    case eltwise_mode::logic_or:
+            str_mode = "or";
+            break;
     default:
             str_mode = "not supported mode";
             break;
@@ -133,22 +174,8 @@ std::string eltwise_inst::to_string(eltwise_node const& node)
 eltwise_inst::typed_primitive_inst(network_impl& network, eltwise_node const& node)
     :parent(network, node)
 {
-    auto input_layout = node.input().get_output_layout();
-    auto batch_size = input_layout.size.batch[0];
-    auto feature_size = input_layout.size.feature[0];
-
-    auto input_batch_size = input_layout.size.batch[0];
-    auto input_feature_size = input_layout.size.feature[0];
-
-    if (batch_size != 1)
-    {
-        CLDNN_ERROR_NOT_EQUAL(node.id(), "Eltwise batch size", batch_size, "input batch size", input_batch_size, "");
-    }
-
-    if (feature_size != 1)
-    {
-        CLDNN_ERROR_NOT_EQUAL(node.id(), "Eltwise feature size", feature_size, "input feature size", input_feature_size, "");
-    }
+    auto input0_layout = node.input(0).get_output_layout();
+    auto input1_layout = node.input(1).get_output_layout();
 
     // check for stride
     auto prim = node.get_primitive();
@@ -173,6 +200,13 @@ eltwise_inst::typed_primitive_inst(network_impl& network, eltwise_node const& no
             if(in_y_div_stride_y != out_y)
                 CLDNN_ERROR_NOT_EQUAL(node.id(), "Eltwise inputyx / stride_y", in_y_div_stride_y, "Eltwise output_y", out_y, "");
         }
+    }
+    else
+    {
+        CLDNN_ERROR_TENSOR_SIZES_NOT_DIVIDABLE(node.id(), "Broadcast sizes", node.get_output_layout().size, "input0 sizes", input0_layout.size,
+            "Input tensors are not broadcastable to the same shape");
+        CLDNN_ERROR_TENSOR_SIZES_NOT_DIVIDABLE(node.id(), "Broadcast sizes", node.get_output_layout().size, "input1 sizes", input1_layout.size,
+            "Input tensors are not broadcastable to the same shape");
     }
 }
 }

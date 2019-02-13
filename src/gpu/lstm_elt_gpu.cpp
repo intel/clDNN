@@ -47,12 +47,6 @@ protected:
         return args;
     }
 
-    virtual bool validate(typed_primitive_inst<lstm_elt>& instance) const override
-    {
-        bool res = parent::validate(instance);
-
-        return res;
-    }
 public:
 
     static primitive_impl* create(const lstm_elt_node& arg)

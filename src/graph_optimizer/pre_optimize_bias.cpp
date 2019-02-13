@@ -25,9 +25,9 @@
 
 using namespace cldnn;
 
-pre_optimize_bias::pre_optimize_bias(layout_optimizer& lo_ref) : _lo(lo_ref) {}
+pre_optimize_bias::pre_optimize_bias(layout_optimizer& lo_ref) : base_pass("pre_optimize_bias"), _lo(lo_ref) {}
 
-void pre_optimize_bias::run(program_impl &p) {
+void pre_optimize_bias::run(program_impl& p) {
     run(p, _lo);
 }
 
@@ -61,7 +61,7 @@ template void pre_optimize_bias::optimize_bias<fully_connected_node>(fully_conne
 template void pre_optimize_bias::optimize_bias<embed_node>(embed_node& node, layout_optimizer& lo, program_impl& p);
 
 
-void pre_optimize_bias::run(program_impl &p, layout_optimizer& lo)
+void pre_optimize_bias::run(program_impl& p, layout_optimizer& lo)
 {
     for (auto& prim : p.get_processing_order())
     {

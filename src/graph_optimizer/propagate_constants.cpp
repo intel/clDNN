@@ -23,12 +23,11 @@
 #include "network_impl.h"
 #include "data_inst.h"
 
-#include "api/CPP/input_layout.hpp"
 
 using namespace cldnn;
 
 //ToDo remove friendship relation from  program_node and program_impl
-void propagate_constants::run(program_impl &p)
+void propagate_constants::run(program_impl& p)
 {
     for (auto& node : p.get_processing_order())
     {
@@ -145,7 +144,7 @@ std::list<std::pair<primitive_id, memory_impl::ptr>> propagate_constants::calcul
     return ret;
 }
 
-void propagate_constants::handle_constant(program_impl &prog, program_node& node)
+void propagate_constants::handle_constant(program_impl& prog, program_node& node)
 {
     if (!node.is_type<data>())
     {
@@ -155,7 +154,7 @@ void propagate_constants::handle_constant(program_impl &prog, program_node& node
     }
 }
 
-void propagate_constants::add_constant(program_impl &prog, program_node& node)
+void propagate_constants::add_constant(program_impl& prog, program_node& node)
 {
     if (node.is_type<data>())
         return;
@@ -170,7 +169,7 @@ void propagate_constants::add_constant(program_impl &prog, program_node& node)
     add_deps_to_tpl(prog, node.get_dependencies());
 }
 
-void propagate_constants::add_deps_to_tpl(program_impl &prog, const std::vector<program_node*>& deps)
+void propagate_constants::add_deps_to_tpl(program_impl& prog, const std::vector<program_node*>& deps)
 {
     /*
     Nodes can share dependencies, if we already have dep in tpl, don't add it again.

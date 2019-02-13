@@ -62,14 +62,14 @@ public:
     std::vector<primitive_id> get_all_primitive_ids() const;
     std::vector<primitive_id> get_all_primitive_org_ids() const;
     void execute(const std::vector<event_impl::ptr>& events);
-
+    void validate_primitives();
     // Implementation specific calls
     std::shared_ptr<primitive_inst> get_primitive(const primitive_id& id);
     std::string get_primitive_info(const primitive_id& id) const;
     const event_impl::ptr& get_primitive_event(const primitive_id& id) const { return _events.at(id); }
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<primitive_id>& ids);
     std::vector<std::shared_ptr<primitive_inst>> get_primitives(const std::vector<program_node*>& nodes);
-    event_impl::ptr execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<event_impl::ptr>& events);
+    void execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<event_impl::ptr>& events);
     void allocate_primitives();
     void build_insts_deps();
     uint32_t get_id() const { return net_id; }

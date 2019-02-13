@@ -37,7 +37,7 @@ namespace kernel_selector {
         k.EnableBiasPerFeature();
         k.EnableNonBiasTerm();
         k.EnableBatching();
-        k.EnableSplitSupport();
+        k.EnableFusedConvEltwSplitSupport();
         return k;
 	}
 

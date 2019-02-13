@@ -76,6 +76,7 @@ inline std::string fmt_to_str(format fmt)
     case format::image_2d_weights_winograd_6x3_s1_fbxyb: return "image_2d_weights_winograd_6x3_s1_fbxyb";
     case format::image_2d_weights_winograd_6x3_s1_xfbyb: return "image_2d_weights_winograd_6x3_s1_xfbyb";
     case format::os_is_yx_isa8_osv8_isv4: return "os_is_yx_isa8_osv8_isv4";
+    case format::os_is_yx_isa8_osv8_isv4_swizzled_by_4: return "os_is_yx_isa8_osv8_isv4_swizzled_by_4";
     case format::is_o_yx_isv32: return "is_o_yx_isv32";
     case format::os_is_y_x8_osv8_isv4: return "os_is_y_x8_osv8_isv4";
     case format::byxf_af32: return "byxf_af32";

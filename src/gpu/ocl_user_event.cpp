@@ -27,6 +27,7 @@ void user_event::set_impl()
     static_cast<cl::UserEvent&&>(get()).setStatus(CL_COMPLETE);
     _duration = std::unique_ptr<cldnn::instrumentation::profiling_period_basic>(
                             new cldnn::instrumentation::profiling_period_basic(_timer.uptime()));
+    _attached = true;
 }
 
 bool user_event::get_profiling_info_impl(std::list<cldnn_profiling_interval>& info) {

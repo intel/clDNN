@@ -64,6 +64,8 @@ namespace kernel_selector
             base_activation_params activation;
         } eltw;
 
+        bool second_input_in_output = false;
+
         virtual std::string to_string() const override;
         virtual ParamsKey GetParamsKey() const override;
     };

@@ -32,7 +32,9 @@ public:
         : parent(prim, prog)
         , split(this->get_primitive()->split())
         , depthwise_sep_opt(false)
+        , groups(this->get_primitive()->groups)
     {
+        support_padding(true);
     }
 
     
@@ -41,6 +43,9 @@ public:
 
     void set_depthwise_sep_opt(bool node_depthwise_sep_opt) { depthwise_sep_opt = node_depthwise_sep_opt; }
     bool get_depthwise_sep_opt() const { return depthwise_sep_opt; }
+
+    void set_groups(uint32_t node_groups) { groups = node_groups; }
+    uint32_t get_groups() const { return groups; }
 
     program_node& input() const { return get_dependency(0); }
 
@@ -88,6 +93,7 @@ public:
 private:
     int32_t split;
     bool depthwise_sep_opt;
+    uint32_t groups;
 };
 
 using deconvolution_node = typed_program_node<deconvolution>;
@@ -106,21 +112,28 @@ public:
 
     memory_impl& weights_memory(size_t index) const
     {
-        if (static_cast<int32_t>(index) >= node.get_split())
-            throw std::range_error("weights offset too big");
-
-        return dep_memory(1 + index);
+        if (node.get_groups() == 1) {
+            if (static_cast<int32_t>(index) >= node.get_split())
+                throw std::range_error("weights offset too big");
+            return dep_memory(1 + index);
+        }
+        else { // all weights are in one buffer
+            return dep_memory(1);
+        }
     }
 
     memory_impl& bias_memory(size_t index) const
     {
-        if (argument.bias.size() == 0 && static_cast<int32_t>(index) >= node.get_split())
-            throw std::range_error("no bias data");
-
-        if (static_cast<int32_t>(index) > node.get_split())
-            throw std::range_error("bias offset too big");
-
-        return dep_memory(1 + node.get_split() + index);
+        if (node.get_groups() == 1) {
+            if (argument.bias.size() == 0 && static_cast<int32_t>(index) >= node.get_split())
+                throw std::range_error("no bias data");
+            if (static_cast<int32_t>(index) > node.get_split())
+                throw std::range_error("bias offset too big");
+            return dep_memory(1 + node.get_split() + index);
+        }
+        else { // all bias are in one buffer
+            return dep_memory(2);
+        }
     }
 
     bool bias_term() const

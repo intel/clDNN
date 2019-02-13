@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,14 @@ namespace
         case eltwise_mode::min: return kernel_selector::eltwise_mode::MIN;
         case eltwise_mode::pow: return kernel_selector::eltwise_mode::POW;
         case eltwise_mode::mod: return kernel_selector::eltwise_mode::MODULU;
+        case eltwise_mode::eq: return kernel_selector::eltwise_mode::EQ;
+        case eltwise_mode::ne: return kernel_selector::eltwise_mode::NE;
+        case eltwise_mode::lt: return kernel_selector::eltwise_mode::LT;
+        case eltwise_mode::le: return kernel_selector::eltwise_mode::LE;
+        case eltwise_mode::gt: return kernel_selector::eltwise_mode::GT;
+        case eltwise_mode::ge: return kernel_selector::eltwise_mode::GE;
+        case eltwise_mode::logic_and: return kernel_selector::eltwise_mode::LOGIC_AND;
+        case eltwise_mode::logic_or: return kernel_selector::eltwise_mode::LOGIC_OR;
         default:
             return kernel_selector::eltwise_mode::ADD;
         }
@@ -115,6 +123,10 @@ public:
                     ew_params.layoutBased = true;
             }
         }
+        else if (!ew_params.inputs[0].SameDimsSizes(ew_params.inputs[1]))
+        {
+            ew_params.broadcast = true;
+        }
 
         if (primitive->output_calibration_factors.size() > 0 || primitive->output_quantization_factor != 1.0f)
         {
@@ -161,7 +173,9 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::i64, format::byxf), eltwise_gpu::create },
                 // MMAD
                 { std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), eltwise_gpu::create },
-                { std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), eltwise_gpu::create }
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::b_fs_yx_fsv4), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::u8, format::b_fs_yx_fsv4), eltwise_gpu::create }
             });
         }
         ~attach() {}

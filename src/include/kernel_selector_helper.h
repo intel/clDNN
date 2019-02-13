@@ -166,18 +166,33 @@ inline params_t get_default_params(const arg_t& arg, uint32_t split = 1)
 }
 
 template <typename params_t, typename arg_t>
-inline params_t get_weights_bias_default_params(const arg_t& arg, uint32_t split = 1)
+inline params_t get_weights_bias_default_params(const arg_t& arg, uint32_t split = 1, uint32_t groups = 1)
 {
     params_t params = get_default_params<params_t>(arg, split);
-
     const auto& weights_layout = arg.weights().get_output_layout();
-    params.weights = convert_weights_tensor(weights_layout);
+    if (groups == 1) {
+        params.weights = convert_weights_tensor(weights_layout);
+    }
+    else {
+        params.weights = convert_weights_tensor(layout(weights_layout.data_type, weights_layout.format,
+            { weights_layout.size.batch[0]/(int)groups, weights_layout.size.feature[0], weights_layout.size.spatial[0], weights_layout.size.spatial[1] }
+        ));
+    }
 
     if (arg.bias_term())
     {
         const auto& bias_layout = arg.bias().get_output_layout();
         // bias per output is not supported on cldnn
-        params.bias.push_back(convert_data_tensor(bias_layout).FlattenFeatureAndSpatials());
+        if (groups == 1) {
+            params.bias.push_back(convert_data_tensor(bias_layout).FlattenFeatureAndSpatials());        }
+        else {
+            params.bias.push_back(convert_data_tensor(
+                layout(
+                    bias_layout.data_type, bias_layout.format,
+                    { bias_layout.size.batch[0], bias_layout.size.feature[0], bias_layout.size.spatial[0]/(int)groups, bias_layout.size.spatial[1] }
+                )).FlattenFeatureAndSpatials()
+            );
+        }
     }
 
     return params;

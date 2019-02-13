@@ -50,12 +50,6 @@ protected:
         return args;
     }
 
-    virtual bool validate(typed_primitive_inst<lstm_gemm>& instance) const override
-    {
-        bool res = parent::validate(instance);
-
-        return res;
-    }
 public:
 
     static primitive_impl* create(const lstm_gemm_node& arg)

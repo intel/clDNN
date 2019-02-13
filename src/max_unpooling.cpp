@@ -28,6 +28,12 @@ primitive_type_id max_unpooling_type_id()
     return &instance;
 }
 
+max_unpooling_node::typed_program_node(const std::shared_ptr<max_unpooling> prim, program_impl& prog) 
+    : parent(prim, prog)
+{
+    can_share_buffer(false); // for max_unpooling initial zero values are significant
+}
+
 layout max_unpooling_inst::calc_output_layout(max_unpooling_node const& node)
 {
     auto desc = node.get_primitive();

@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016-2018 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ namespace kernel_selector
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4
+            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4_swizzled_by_4
             {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::is_o_yx_isv32
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_y_x8_osv8_isv4
             {  0,  1,  2,  3,  4,  5 }, // WeightsLayout::bf_lyx_yx
@@ -314,6 +315,11 @@ namespace kernel_selector
                 newDims[3] = RoundUp(newDims[3], 8);
                 newDims[2] = RoundUp(newDims[2], 32);
                 break;
+            case os_is_yx_isa8_osv8_isv4_swizzled_by_4:
+                assert(newDims.size() == 4);
+                newDims[3] = RoundUp(newDims[3], 32);
+                newDims[2] = RoundUp(newDims[2], 32);
+                break;
             case is_o_yx_isv32:
                 assert(newDims.size() == 4);
                 newDims[0] = RoundUp(newDims[0], 32);
@@ -323,6 +329,12 @@ namespace kernel_selector
                 newDims[2] = RoundUp(newDims[2], 4);
                 newDims[3] = RoundUp(newDims[3], 8);
                 newDims[0] = RoundUp(newDims[0], 8);
+                break;
+            case os_is_yx_osv16_isv4:
+                assert(newDims.size() == 4);
+                newDims[2] = RoundUp(newDims[2], 4);
+                newDims[3] = RoundUp(newDims[3], 16);
+                break;
             default:
                 break;
             }
@@ -351,7 +363,7 @@ namespace kernel_selector
                 ret[3].pitch     = ret[2].v * ret[2].pitch;
                 ret[2].pad.after = newDims[2] - ret[2].v;
             }
-            else if (l == os_is_yx_isa8_osv8_isv4)
+            else if (l == os_is_yx_isa8_osv8_isv4 || l == os_is_yx_isa8_osv8_isv4_swizzled_by_4)
             {
                 ret[0].pitch = 256;
                 ret[1].pitch = ret[0].pitch * ret[0].v;

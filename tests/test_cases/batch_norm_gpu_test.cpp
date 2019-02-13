@@ -2642,3 +2642,65 @@ TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_inference_b2c5h2w1_differen
         EXPECT_NEAR(sum, 0, 1e-5F);
     }
 }
+
+TEST(ngraph_batch_normalization_gpu, batchnorm_fprop_b1c2h2w2_no_bn_output)
+{
+    engine engine;
+
+    tensor input_shape = { 1, 2, 2, 2 };
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, input_shape });
+    tensor mean_shape = { feature(2) };
+    auto mean = memory::allocate(engine, { data_types::f32, format::bfyx, mean_shape });
+    tensor var_shape = { feature(2) };
+    auto variance = memory::allocate(engine, { data_types::f32, format::bfyx, var_shape });
+    tensor gamma_shape = { feature(2) };
+    auto gamma = memory::allocate(engine, { data_types::f32, format::bfyx, gamma_shape });
+    tensor beta_shape = { feature(2) };
+    auto beta = memory::allocate(engine, { data_types::f32, format::bfyx, beta_shape });
+
+    float eps = 0.001f;
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(data("gamma", gamma));
+    topology.add(data("beta", beta));
+    topology.add(mutable_data("mean", mean));
+    topology.add(mutable_data("variance", variance));
+    topology.add(batch_norm("batch_norm", "input", eps, "mean", "variance", "gamma", "beta"));
+
+    set_values<float>(input, {
+        0.54881352f,
+        0.71518934f,
+        0.60276335f,
+        0.54488319f,
+
+        0.42365479f,
+        0.64589411f,
+        0.4375872f,
+        0.89177299f
+    });
+
+    set_values<float>(gamma, { 1.f, 1.f });
+    set_values<float>(beta, { 0.f, 0.f });
+
+    std::vector<float> expected_mean = { 0.602912f, 0.599727f };
+    std::vector<float> expected_variance = { 0.00472505f, 0.0361782f };
+
+    build_options bo;
+    bo.set_option(build_option::outputs({ "mean", "variance" }));
+    network network(engine, topology, bo);
+
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+
+    for (int j = 0; j < 2; ++j) { //F
+        auto meanp = mean.pointer<float>();
+        auto varp = variance.pointer<float>();
+        float meanf = meanp[j];
+        float varf = varp[j];
+
+        EXPECT_NEAR(meanf, expected_mean[j], 1e-5F);
+        EXPECT_NEAR(varf, expected_variance[j], 1e-5F);
+    }
+}

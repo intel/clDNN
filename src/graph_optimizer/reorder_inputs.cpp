@@ -32,13 +32,13 @@ using namespace cldnn;
 
 //ToDo remove friendship relation from program_impl
 
-reorder_inputs::reorder_inputs(layout_optimizer& lo_ref) : _lo(lo_ref) {}
+reorder_inputs::reorder_inputs(layout_optimizer& lo_ref) : base_pass("reorder_inputs"), _lo(lo_ref) {}
 
-void reorder_inputs::run(program_impl &p) {
+void reorder_inputs::run(program_impl& p) {
     run(p, _lo);
 }
 
-void reorder_inputs::run(program_impl &p, layout_optimizer& lo)
+void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
 {
     //first pass to set layout optimization_attributes for topology
     for (auto& node : p.get_processing_order())

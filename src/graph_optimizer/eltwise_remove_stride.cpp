@@ -27,7 +27,7 @@
 
 using namespace cldnn;
 
-void eltwise_remove_stride::conv_stride_extend(program_impl &p, program_node& node, cldnn::tensor &tensor)
+void eltwise_remove_stride::conv_stride_extend(program_impl& p, program_node& node, cldnn::tensor& tensor)
 {
     // make sure we have only 1 user
     if (node.get_users().size() > 1)
@@ -70,7 +70,7 @@ void eltwise_remove_stride::conv_stride_extend(program_impl &p, program_node& no
     }
 }
 
-void eltwise_remove_stride::run(program_impl &p)
+void eltwise_remove_stride::run(program_impl& p)
 {
     for (auto& node : p.get_processing_order())
     {
@@ -78,7 +78,12 @@ void eltwise_remove_stride::run(program_impl &p)
         {
             // TODO: make fp16 work
             if (node->get_output_layout().data_type != data_types::i8 && node->get_output_layout().data_type != data_types::f32)
-                continue;
+            {
+                if (node->get_output_layout().data_type != data_types::f16 || node->get_output_layout().format != format::yxfb)
+                {
+                    continue;
+                }
+            }
 
             const auto eltw = std::static_pointer_cast<const eltwise>(node->get_primitive());
             if (!eltw->stride.empty())

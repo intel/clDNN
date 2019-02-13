@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -179,6 +179,8 @@ namespace {
             // MMAD
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), pooling_gpu::create);
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::b_fs_yx_fsv4), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::u8, format::b_fs_yx_fsv4), pooling_gpu::create);
         }
         ~attach() {}
     };

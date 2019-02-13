@@ -19,7 +19,6 @@
 
 #include "ocl_builder.h"
 
-#include "api/CPP/profiling.hpp"
 #include "kernels_cache.h"
 #include "engine_info.h"
 #include "event_impl.h"
@@ -44,6 +43,7 @@ public:
     ocl_error(cl::Error const& err);
 };
 
+class events_pool;
 class gpu_toolkit;
 
 class context_holder
@@ -58,40 +58,16 @@ protected:
 
 };
 
-struct profiling_period_event : instrumentation::profiling_period
-{
-    profiling_period_event(const cl::Event& event, cl_profiling_info start, cl_profiling_info end)
-        : _event(event)
-        , _start(start)
-        , _end(end)
-    {}
-
-    std::chrono::nanoseconds value() const override
-    {
-        cl_ulong start_nanoseconds;
-        _event.getProfilingInfo(_start, &start_nanoseconds);
-        cl_ulong end_nanoseconds;
-        _event.getProfilingInfo(_end, &end_nanoseconds);
-        return std::chrono::nanoseconds(static_cast<long long>(end_nanoseconds - start_nanoseconds));
-    }
-
-private:
-    cl::Event _event;
-    cl_profiling_info _start;
-    cl_profiling_info _end;
-};
-
 class gpu_toolkit : public std::enable_shared_from_this<gpu_toolkit>
 {
     friend class context_holder;
 
 protected:
     gpu_toolkit(const configuration& aconfiguration = configuration());
-
 public:
     static std::shared_ptr<gpu_toolkit> create(const configuration& cfg = configuration());
     const cl::Context& context() const { return _context; }
-    const cl::Device& device() const { return _device; }
+    const cl::Device& device() const { return _ocl_builder.get_device(); }
     const cl::CommandQueue& queue() const { return _command_queue; }
     
     const configuration& get_configuration() const { return _configuration; }
@@ -115,6 +91,8 @@ public:
     event_impl::ptr enqueue_kernel(cl::Kernel const& kern, cl::NDRange const& global, cl::NDRange const& local, std::vector<event_impl::ptr> const& deps);
     event_impl::ptr enqueue_marker(std::vector<event_impl::ptr> const& deps);
     event_impl::ptr group_events(std::vector<event_impl::ptr> const& deps);
+    event_impl::ptr create_user_event(bool set);
+    void release_events_pool();
 
     void flush();
     void release_pending_memory();
@@ -123,12 +101,10 @@ public:
     void log(uint64_t id, std::string const& msg);
     bool logging_enabled() const { return !_configuration.log.empty(); }
     bool is_neo_driver() { return _neo_driver; }
-
 private:
     configuration _configuration;
     ocl_builder _ocl_builder;
     bool _user_context = false;
-    cl::Device _device;
     bool _neo_driver = false;
     cl::Context _context;
     cl::CommandQueue _command_queue;
@@ -140,6 +116,7 @@ private:
 
     std::atomic<uint64_t> _queue_counter{ 0 };
     std::atomic<uint64_t> _last_barrier{ 0 };
+    std::unique_ptr<events_pool> _events_pool;
     cl::Event _last_barrier_ev;
 
     std::string _extensions;
@@ -152,7 +129,7 @@ private:
     bool _output_event = false;
     std::ofstream& open_log();
 
-    std::string get_device_version() { return _device.getInfo<CL_DEVICE_VERSION>(); }
+    std::string get_device_version() { return _ocl_builder.get_device().getInfo<CL_DEVICE_VERSION>(); }
 
     void build_command_queues(const configuration& config);
 };

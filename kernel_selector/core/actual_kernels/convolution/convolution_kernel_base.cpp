@@ -61,10 +61,11 @@ namespace kernel_selector
             MakeJitConstant("STRIDE",                       params.stride),
             MakeJitConstant("PADDING",                      params.padding),
             MakeJitConstant("DILATION",                     params.dilation),
-            MakeJitConstant("FILTER_ARRAY_NUM",             params.split),
+            MakeJitConstant("FILTER_ARRAY_NUM",             params.split * params.groups),
             MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
             MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      params.depthwise_separable_opt),
             MakeJitConstant("QUANTIZATION_TERM",            params.int8_quantization),
+            MakeJitConstant("GROUPED",                      (params.groups > 1) ? 1 : 0),
         });
 
         if (params.int8_quantization)

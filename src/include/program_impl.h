@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,17 +32,23 @@ struct topology_impl;
 struct primitive_impl;
 struct program_node;
 class layout_optimizer;
-
+class pass_manager;
+class program_impl_wrapper;
 /*
     cldnn_program implementation
 */
 struct program_impl : public refcounted_obj<program_impl>
 {
-    friend class propagate_constants; // to be removed when possible
-    friend class prepare_primitive_fusing; // to be removed when possible
-    friend class prepare_conv_eltw_fusing; // to be removed when possible
-    friend class reorder_inputs;  // to be removed when possible
-
+    friend class calculate_prior_boxes;             // to be removed when possible
+    friend class graph_initializations;             // to be removed when possible
+    friend class prepare_padding;                   // to be removed when possible
+    friend class propagate_constants;               // to be removed when possible
+    friend class prepare_primitive_fusing;          // to be removed when possible
+    friend class prepare_conv_eltw_fusing;          // to be removed when possible
+    friend class prepare_conv_eltw_read_write_opt;  // to be removed when possible
+    friend class reorder_inputs;                    // to be removed when possible
+    friend class program_impl_wrapper;              // this class is intended to extend the interface of program_impl for 
+                                                    // the usage within tests_core_internal project only
 public:
     struct nodes_ordering
     {
@@ -53,7 +59,7 @@ public:
         const_iterator end() const { return _processing_order.end(); }
         const_iterator get_processing_iterator(program_node& node) const;
         void calc_processing_order_visit(program_node* node);
-        void calc_processing_order(program_impl &p);
+        void calc_processing_order(program_impl& p);
         int32_t get_processing_number(program_node* node) const { return get_processing_number(get_processing_iterator(*node)); }
         int32_t get_processing_number(const_iterator iter) const { return 1+(int32_t)std::distance(begin(), iter); }
         void calculate_BFS_processing_order();
@@ -87,9 +93,10 @@ public:
 
         T* elem;
     };
-    program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal);
+    program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal, bool no_optimizations=false);
     /* constructor used to build a program from subset of nodes of other program (used in propagate_constants) */
     program_impl(engine_impl& engine_ref, std::set<std::shared_ptr<program_node>> const &nodes, build_options const& options, bool is_internal);
+    ~program_impl();
     engine_impl& get_engine() const { return *engine; }
     const build_options& get_options() const { return options; }
     std::list<program_node*>& get_inputs() { return inputs; }     // ToDo: redesign trim to ouptut pass to make it const as_well as get_engine and get options 
@@ -111,11 +118,15 @@ public:
 
     // Inserts given program_node 'node' as an intermediate node between 'next' and it's
     //  dependency at 'prev_idx' index.
-    void add_intermediate(program_node& node, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep = true);
+    void add_intermediate(program_node& node, program_node& next, size_t prev_idx,
+                          bool connect_int_node_with_old_dep = true,
+                          bool move_usrs_of_prev_to_node = false);
 
     // Gets or creates program_node for given primitive 'prim' and inserts it as an intermediate
     // node between 'next' and it's dependency at 'prev_idx' index.
-    void add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx, bool connect_int_node_with_old_dep = true);
+    void add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx, 
+        bool connect_int_node_with_old_dep = true,
+        bool move_usrs_of_prev_to_node = false);
 
     //removes a node from the graph and deletes it afterwards,
     //prereq: node cannot be marked as output and has to have exactly one dependency
@@ -125,17 +136,22 @@ public:
     //returns if 'node' has been removed
     bool remove_if_dangling(program_node& node);
 
+    void mark_if_constant(program_node& node);
+    // mark if the node is in data flow assuming that all dependencies are marked properly
+    void mark_if_data_flow(program_node& node);
+    //Reverses connection - user becomes dependency.
+
     void remove_nodes(std::list<program_node*>& to_remove);
+    void dump_program(const char* stage, bool with_full_info, std::function<bool(program_node const&)> const& filter = nullptr) const;
 
 private:
     uint32_t prog_id = 0;
-
     engine_impl::ptr engine;
     build_options options;
-
     std::list<program_node*> inputs;
     std::vector<program_node*> outputs;
     nodes_ordering processing_order;
+    std::unique_ptr<pass_manager> pm;
 
     std::map<primitive_id, std::shared_ptr<program_node>> nodes_map;
     std::list<primitive_id> optimized_out;
@@ -153,38 +169,24 @@ private:
     void init_graph();
     void set_options();
 
+    void run_graph_compilation();
     void pre_optimize_graph(bool is_internal);
     void post_optimize_graph(bool is_internal);
-    void compile_graph();
     void cleanup();
-
-    /*
-    ** Initialization functions
-    */
-    void set_outputs();
-    void calc_prior_boxes();
 
     /*
     ** Analysis functions
     */
-    void mark_constants();
-    void mark_data_flow();
     // TODO: Remove once we will get full support for input/output padding in all primitive implementations.
     bool analyze_output_size_handling_need();
 
     // handle split, deconvolution and upsampling
-    void add_split_outputs();
-    void replace_nodes();
-    void handle_detection_output();
-    void handle_lstm();
     void handle_reshape();
-    // ToDo: rewrite above methods in the same style, that is: handle_<primitive_name>(), is it possible to avoid iterating over all nodes several times?
 
     /*
     ** Optimization functions
     */
     void apply_needed_padding(program_node& node, program_node& prev_node, const padding& needed_padding);
-    void prepare_padding(bool output_size_handling_enabled);
 
     /*
     ** Memory pool functions
@@ -198,8 +200,8 @@ private:
     /*
     ** Utilities
     */
-
-    //Reverses connection - user becomes dependency.
+    void add_split_outputs();
+    // mark if the node is constant assuming that all dependencies are marked properly
     void reverse_connection(program_node& dep_node, program_node& user_node);
 
     void add_connection(program_node& prev, program_node& next);
@@ -215,8 +217,6 @@ private:
     //old_node - node which will be replaced
     //new_node - node which will replace the old one
     void replace(program_node& old_node, program_node& new_node);
-
-    void dump_program(const char* stage, bool with_full_info, std::function<bool(program_node const&)> const& filter = nullptr) const;
 };
 
 }
