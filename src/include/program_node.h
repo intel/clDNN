@@ -29,6 +29,7 @@ namespace cldnn
 
 struct program_impl;
 class reorder_inputs;
+class graph_initializations;
 
 template <class T>
 struct typed_program_node;
@@ -52,11 +53,14 @@ class xml_composite;
 */
 struct program_node
 {
-    friend struct program_impl;
-    friend class prepare_primitive_fusing;
-    friend class prepare_conv_eltw_fusing; // to be removed when possible
-    friend class propagate_constants; // to be removed
-    friend class post_optimize_weights; // to be removed when possible - requires an access to selected_impl
+    friend struct program_impl;                     // to be removed when possible
+    friend class compile_graph;                     // to be removed when possible
+    friend class graph_initializations;             // to be removed when possible
+    friend class prepare_primitive_fusing;          // to be removed when possible
+    friend class prepare_conv_eltw_fusing;          // to be removed when possible
+    friend class prepare_conv_eltw_read_write_opt;  // to be removed when possible
+    friend class propagate_constants;               // to be removed when possible
+    friend class post_optimize_weights;             // to be removed when possible - requires an access to selected_impl
 
     template <class PType>
     friend struct typed_program_node;
@@ -185,14 +189,25 @@ public:
         return fused_activation.additional_params;
     }
 
+    // check/set if the node can be optimized out (removed from the network)
     bool can_be_optimized() const { return optimized; }
     void can_be_optimized(bool opt) { optimized = opt; }
+
+    // check/set if the node's buffer can be shared during the memory pool optimization
+    bool can_share_buffer() const { return share_buffer; }
+    void can_share_buffer(bool share) { share_buffer = share; }
+
+    // check/set if the node support padding in x,y,b and f
+    bool support_padding() const { return _support_padding; }
+    void support_padding(bool support) { _support_padding = support; }
 
     primitive_id get_org_primitive_id() const { return org_id; }
 
     bool is_constant() const { return constant; }
-    //returns true if this node is within main data flow of the network (i.e. it does not describe helper data like convolution's weights etc.)
+    
+    // returns true if this node is within main data flow of the network (i.e. it does not describe helper data like convolution's weights etc.)
     bool is_in_data_flow() const { return data_flow; }
+
     //conversion from generic to specific
     template <class To, class..., class = typename std::enable_if<!std::is_same<To, primitive>::value>::type>
     typed_program_node<To>& as()
@@ -254,6 +269,8 @@ protected:
     bool output = false;
     uint8_t user_mark = 0;
     bool optimized = false;
+    bool share_buffer = true;
+    bool _support_padding = false;
 
     mutable bool has_reused_memory = false;
     mutable uint32_t reused_memory_color = 0;
@@ -277,6 +294,7 @@ namespace details
     struct api_typed_program_node_base : public program_node
     {
         static_assert(meta::is_api_primitive<PType>::value, "PType should name a non-const, non-volatile type derived from cldnn::primitive but not from cldnn::internal_primitive");
+        friend class cldnn::graph_initializations;
         friend struct cldnn::program_impl;
         friend class cldnn::reorder_inputs;
     public:

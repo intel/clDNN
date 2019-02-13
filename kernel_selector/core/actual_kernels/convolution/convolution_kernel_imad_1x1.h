@@ -27,23 +27,11 @@ namespace kernel_selector {
     {
     public:
         using Parent = ConvolutionKernel_imad_3x3;
-        ConvolutionKernel_imad_1x1() {}
+        ConvolutionKernel_imad_1x1() : ConvolutionKernel_imad_3x3(1, 1) {}
         virtual ~ConvolutionKernel_imad_1x1() {}
 
-        virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
-        KernelsData GetCommonKernelsData(const Params& params, const optional_params& options, const std::string exeMode = DEFAULT, int autoTuneIndex = -1) const;
-
     protected:
-        virtual bool Validate(const Params& params, const optional_params& options) const override;
+        // For 3x3 based IMAD convolution only 'GetJitConstants' method is required
         JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
-        DispatchData SetDefault(const convolution_params& params, int autoTuneIndex = -1) const override;
-
-        std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override
-        {
-            return{
-                WeightsLayout::os_is_yx_osv16_isv4
-            };
-        }
     };
 }

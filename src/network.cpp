@@ -51,7 +51,7 @@ network_impl::network_impl(const program_impl& program, bool is_internal)
     check_names();
     build_insts_deps();
     build_exec_order();
-
+    validate_primitives();
     _program->dump_memory_pool();
 }
 
@@ -63,6 +63,15 @@ network_impl::network_impl(engine_impl& engine, const topology_impl& topo, const
 network_impl::network_impl(engine_impl& engine, const std::set<std::shared_ptr<program_node>>& nodes, const build_options& options, bool is_internal)
     : network_impl(*engine.build_program(nodes, options, is_internal), is_internal)
 {
+}
+
+void network_impl::validate_primitives()
+{
+    for (auto const& prim : _exec_order)
+    {
+        bool valid = prim->validate();
+        CLDNN_ERROR_NOT_EQUAL(prim->id(), "validate", valid, "", true, "has not a valid instance.");
+    }
 }
 
 void network_impl::reset_execution(bool wait)
@@ -257,6 +266,11 @@ void network_impl::execute(const std::vector<refcounted_obj_ptr<event_impl>>& ev
         prim.second->reset_output_change();
     }
 
+    for (auto& event : _events)
+    {
+        event.second->reset();
+    }
+
     // Using output of previouse network as input to another one may cause hazard (in OOOQ mode) if user would not 
     // provide proper event to execution. Flushing pipeline should prevent this kind of issues. 
     // In scenarios with a big number of very small networks it can provide performance drop.
@@ -326,7 +340,7 @@ std::vector<std::shared_ptr<primitive_inst>> network_impl::get_primitives(const 
     return result;
 }
 
-refcounted_obj_ptr<event_impl> network_impl::execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<refcounted_obj_ptr<event_impl>>& events)
+void network_impl::execute_primitive(const std::shared_ptr<primitive_inst>& primitive, const std::vector<refcounted_obj_ptr<event_impl>>& events)
 {
     auto id = primitive->id();
     auto it = _events.find(id);
@@ -338,9 +352,7 @@ refcounted_obj_ptr<event_impl> network_impl::execute_primitive(const std::shared
         ev = primitive->execute(events);
     else
         ev = get_engine().create_user_event(true);
-
     _events.insert({ id, ev });
-    return ev;
 }
 
 void network_impl::allocate_primitive_instance(program_node const& node)
@@ -359,5 +371,4 @@ void network_impl::allocate_primitive_instance(program_node const& node)
             _data_outputs.push_back(inst);
     }
 }
-
 }

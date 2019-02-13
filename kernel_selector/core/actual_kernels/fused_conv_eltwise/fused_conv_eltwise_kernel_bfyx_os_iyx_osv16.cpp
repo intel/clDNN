@@ -66,9 +66,10 @@ namespace kernel_selector
         k.EnableBiasPerOutput();
         k.EnableNonBiasTerm();
         k.EnableBatching();
-        k.EnableSplitSupport();
-        k.EnableDilation();
-        k.EnableTranspose();
+        k.EnableFusedConvEltwSplitSupport();
+        k.EnableFusedConvEltwDilation();
+        k.EnableFusedConvEltwTranspose();
+        k.EnableFusedConvEltwiseRWOutOpt(); // data for second input are already in output
         return k;
     }
 

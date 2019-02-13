@@ -18,54 +18,59 @@
 
 #include "pass_manager.h"
 
+//ToDo: remove those include with the appropriate code below once we will have support for multiple outputs of a primitive
+#include "batch_norm_inst.h"
+#include "max_unpooling_inst.h"
+#include "pooling_inst.h"
+
 using namespace cldnn;
 
 //This pass optimizes out nodes which have no impact on outputs
-//ToDo remove friendship relation from  program_node and program_impl
-void trim_to_outputs::run(program_impl &p) 
+void trim_to_outputs::run(program_impl& p)
 {
-        const size_t actual_nodes = p.get_processing_order().size();
-        if (!actual_nodes) //degenerated case but can happen
-            return;
+    const size_t actual_nodes = p.get_processing_order().size();
+    if (!actual_nodes) //degenerated case but can happen
+        return;
 
-        if (p.get_outputs().size() == actual_nodes)
-            return;
+    if (p.get_outputs().size() == actual_nodes)
+        return;
 
-        //do backward bfs starting from all outputs
-        std::list<const std::vector<program_node*>*> stack = { &(p.get_outputs()) };
-        while (!stack.empty())
+    //do backward bfs starting from all outputs
+    std::list<const std::vector<program_node*>*> stack = { &(p.get_outputs()) };
+
+    std::vector<program_node*> special_nodes;
+    for (auto& node : p.get_processing_order())
+    {
+        if (node->is_type<input_layout>() ||  //input layout may become disconnected during prior boxes calculations so it may have not been marked at this place but we don't want to remove it
+            node->is_type<max_unpooling>() || // ToDo: remove this after support for multi-outputs in primitives will be implemented.
+            node->is_type<batch_norm>() ||
+            (node->is_type<pooling>() && node->as<pooling>().get_primitive()->mode == pooling_mode::max_with_argmax))
+                special_nodes.push_back(node);
+    }
+    stack.push_back(&special_nodes);
+
+    while (!stack.empty())
+    {
+        auto nodes_list = stack.front();
+        stack.pop_front();
+
+        for (auto& node : *nodes_list)
         {
-            auto nodes_list = stack.front();
-            stack.pop_front();
-
-            for (auto& node : *nodes_list)
+            if (!node->is_marked())
             {
-                if (!node->is_marked())
-                {
-                    node->mark();
-                    if (!node->get_dependencies().empty())
-                        stack.push_back(&node->get_dependencies());
-                }
+                node->mark();
+                if (!node->get_dependencies().empty())
+                    stack.push_back(&node->get_dependencies());
             }
         }
+    }
 
-        //all not-marked nodes should be removed
-        //dependency: trim_to_outputs manipulates optimized_out and nodes_map which are private in program_impl
-        std::list<program_node*> to_rem;
-        for (auto& node : p.get_processing_order())
-        {
-            if (node->is_type<input_layout>()) //input layout may become disconnected during prior boxes calculations so it may have not been marked at this place but we don't want to remove it
-                node->mark();
-            else if (!node->is_marked())
-                to_rem.push_back(node);
-        }
-
-        p.remove_nodes(to_rem);
-
-        //unmark all nodes
-        //ToDo: mark()/unmark() methods might cause hidden dependencies in between optimization passes. They shoud be encapsulated within the opt pass itself.
-        for (auto& node : p.get_processing_order())
-        {
-            node->unmark();
-        }
+    //all not-marked nodes should be removed
+    std::list<program_node*> to_rem;
+    for (auto& node : p.get_processing_order())
+    {
+        if (!node->is_marked())
+            to_rem.push_back(node);
+    }
+    p.remove_nodes(to_rem);
 }

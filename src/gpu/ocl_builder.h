@@ -32,7 +32,7 @@ namespace gpu {
     public:
         ocl_builder(const configuration& config);
         cl::Context get_context() const { return _context; }
-        cl::Device get_device() const { return _device; }
+        const cl::Device &get_device() const { return _device; }
         cl_platform_id get_platform_id() const { return _platform_id; }
         bool is_user_context() const { return _is_user_context; }
 

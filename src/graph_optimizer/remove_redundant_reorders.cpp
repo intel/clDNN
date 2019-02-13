@@ -21,7 +21,7 @@
 
 using namespace cldnn;
 
-void remove_redundant_reorders::run(program_impl &p)
+void remove_redundant_reorders::run(program_impl& p)
 {
     auto itr = p.get_processing_order().begin(); //note we need to use iterators since currently processed element can be removed
     while (itr != p.get_processing_order().end())

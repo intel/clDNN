@@ -86,6 +86,9 @@ struct eltw_data
     cldnn_tensor_arr stride;
 } eltw;
 
+/// @brief Is optimization that output contains data from second input ON ?
+bool second_input_in_output = false;
+
 CLDNN_END_PRIMITIVE_DESC(fused_conv_eltwise)
 
 CLDNN_DECLARE_PRIMITIVE_TYPE_ID(fused_conv_eltwise);

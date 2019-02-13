@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -297,6 +297,16 @@ namespace kernel_selector {
             unit_max_func = "max";
             unit_min_func = "min";
             break;
+        case Datatype::UINT8:
+            unit_type = "uchar";
+            unit_max_val = "UCHAR_MAX";
+            unit_min_val = "0";
+            unit_val_one = "(uchar) 1";
+            unit_val_zero = "(uchar) 0";
+            to_unit_type = "convert_uchar(v)";
+            unit_max_func = "max";
+            unit_min_func = "min";
+            break;
         case Datatype::INT32:
             unit_type = "int";
             unit_max_val = "INT_MAX";
@@ -304,6 +314,16 @@ namespace kernel_selector {
             unit_val_one = "(int) 1";
             unit_val_zero = "(int) 0";
             to_unit_type = "convert_int(v)";
+            unit_max_func = "max";
+            unit_min_func = "min";
+            break;
+        case Datatype::UINT32:
+            unit_type = "uint";
+            unit_max_val = "UINT_MAX";
+            unit_min_val = "0";
+            unit_val_one = "(uint) 1";
+            unit_val_zero = "(uint) 0";
+            to_unit_type = "convert_uint(v)";
             unit_max_func = "max";
             unit_min_func = "min";
             break;
@@ -370,12 +390,16 @@ namespace kernel_selector {
         bool bInt8Used = params.output.GetDType() == Datatype::INT8;
         bool bInt32Used = params.output.GetDType() == Datatype::INT32;
         bool bInt64Used = params.output.GetDType() == Datatype::INT64;
+        bool bUInt8Used = params.output.GetDType() == Datatype::UINT8;
+        bool bUInt32Used = params.output.GetDType() == Datatype::INT32;
         for (const auto& i : params.inputs)
         {
             bFP16Used |= i.GetDType() == Datatype::F16;
             bInt8Used |= i.GetDType() == Datatype::INT8;
             bInt32Used |= i.GetDType() == Datatype::INT32;
             bInt64Used |= i.GetDType() == Datatype::INT64;
+            bUInt8Used |= i.GetDType() == Datatype::UINT8;
+            bUInt32Used |= i.GetDType() == Datatype::UINT32;
         }
 
         JitConstants jit{
@@ -386,6 +410,8 @@ namespace kernel_selector {
             MakeJitConstant("INT8_UNIT_USED",       bInt8Used),
             MakeJitConstant("INT32_UNIT_USED",      bInt32Used),
             MakeJitConstant("INT64_UNIT_USED",      bInt64Used),
+            MakeJitConstant("UINT8_UNIT_USED",      bUInt8Used),
+            MakeJitConstant("UINT32_UNIT_USED",     bUInt32Used),
             MakeJitConstant("GRADIENT",             params.gradient),
         };
 
@@ -404,6 +430,14 @@ namespace kernel_selector {
         else if (bInt64Used)
         {
             jit.Merge(MakeUnitTypeJitConstants(Datatype::INT64));
+        }
+        else if (bUInt8Used)
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::UINT8));
+        }
+        else if (bUInt32Used)
+        {
+            jit.Merge(MakeUnitTypeJitConstants(Datatype::UINT32));
         }
         else
         {

@@ -49,38 +49,43 @@ namespace kernel_selector
 
         if (conv.split > 1)
         {
-            k.EnableSplitSupport();
+            k.EnableFusedConvEltwSplitSupport();
         }
 
         if (conv.dilation.x != 1 ||
             conv.dilation.y != 1)
         {
-            k.EnableDilation();
+            k.EnableFusedConvEltwDilation();
         }
 
         if (conv.depthwise_separable_opt)
         {
-            k.EnableDepthwiseSeparableOpt();
+            k.EnableFusedConvEltwDepthwiseSeparableOpt();
         }
 
         if (conv.transposed)
         {
-            k.EnableTranspose();
+            k.EnableFusedConvEltwTranspose();
         }
 
         if (conv.int8_quantization)
         {
-            k.EnableInt8Quantization();
+            k.EnableFusedConvEltwInt8Quantization();
         }
 
         if (conv.output_calibration)
         {
-            k.EnableOutputCalibration();
+            k.EnableFusedConvEltwOutputCalibration();
         }
 
         if (conv.local_convolution)
         {
-            k.EnableLocalConvolution();
+            k.EnableFusedConvEltwLocalConvolution();
+        }
+
+        if (second_input_in_output)
+        {
+            k.EnableFusedConvEltwiseRWOutOpt();
         }
 
         return k;
@@ -155,6 +160,8 @@ namespace kernel_selector
 
         JitConstants eltw_activations = MakeActivationJitConstants(params.eltw.activation, "_ELTW");
         mem_consts.Merge(eltw_activations);
+
+        mem_consts.AddConstant(MakeJitConstant("IN_OUT_OPT", params.second_input_in_output ? 1 : 0));
 
         std::vector<uint32_t> unrollLoopParams{
             params.conv.filterSize.x,
@@ -318,7 +325,14 @@ namespace kernel_selector
         FillCLKernelData(kernel, runInfo, params.engineInfo, finalKernelName, jit, entryPoint, exeMode, true, !newParams.bias.empty(), 1, newParams.conv.int8_quantization, newParams.conv.output_calibration);
         kernel.arguments.push_back({ ArgumentDescriptor::Types::SPLIT, 0 });
         // eltwise's second input
-        kernel.arguments.push_back({ArgumentDescriptor::Types::INPUT, 1 });
+        if(newParams.second_input_in_output)
+        {
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::OUTPUT, 0 });
+        }
+        else
+        {
+            kernel.arguments.push_back({ ArgumentDescriptor::Types::INPUT, 1 });
+        }
         if (!newParams.eltw.output_calibration_factors.empty())
             kernel.arguments.push_back({ArgumentDescriptor::Types::OUTPUT_CALIBRATION_FACTORS, 1});
 

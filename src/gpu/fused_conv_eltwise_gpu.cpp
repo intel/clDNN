@@ -32,9 +32,9 @@ struct fused_conv_eltwise_gpu : typed_primitive_gpu_impl<fused_conv_eltwise>
 
 protected:
 
-    virtual bool validate(typed_primitive_inst<fused_conv_eltwise>& instance) const override
+    virtual bool validate_impl(const typed_primitive_inst<fused_conv_eltwise>& instance) const override
     {
-        bool res = parent::validate(instance);
+        bool res = true;
 
         auto outer_id = _outer.id();
         auto data_type = instance.node.input().get_output_layout().data_type;
@@ -88,7 +88,10 @@ public:
         // conv params
         auto fused_params = get_weights_bias_default_params<kernel_selector::fused_conv_eltwise_params>(arg, actual_split);
         // add second input for eltwise
-        fused_params.inputs.push_back(convert_data_tensor(arg.input(1).get_output_layout()));
+        if (!static_cast<const fused_conv_eltwise*>(arg.get_primitive().get())->second_input_in_output)
+        {
+            fused_params.inputs.push_back(convert_data_tensor(arg.input(1).get_output_layout()));
+        }
 
         auto& conv_params = fused_params.conv;
         auto& eltw_params = fused_params.eltw;
@@ -112,6 +115,8 @@ public:
 
         fused_params.conv.depthwise_separable_opt = depthwise_separable_opt;
         fused_params.conv.transposed = transposed;
+
+        fused_params.second_input_in_output = primitive->second_input_in_output;
 
         conv_params.local_convolution = weights_size.local[0] > 1 || weights_size.local[1] > 1;
         conv_params.split = split;
@@ -197,6 +202,8 @@ namespace{
     struct attach {
         attach() {
             implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), fused_conv_eltwise_gpu::create);
+            implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), fused_conv_eltwise_gpu::create);
+            implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), fused_conv_eltwise_gpu::create);
             // MMAD
             implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), fused_conv_eltwise_gpu::create);
         }

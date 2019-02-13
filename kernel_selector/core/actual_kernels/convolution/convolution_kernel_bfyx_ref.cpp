@@ -47,6 +47,7 @@ namespace kernel_selector {
         k.EnableOutputCalibration();
         k.DisableTuning();
         k.EnableLocalConvolution();
+        k.EnableGroupedConvolution();
         return k;
     }
 

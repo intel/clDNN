@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -775,4 +775,122 @@ TEST(fully_connected_gpu, x_f32_relu_with_negative_slope) {
     EXPECT_EQ(-0.125f, output_ptr[1]);
     EXPECT_EQ(0.75f, output_ptr[2]);
     EXPECT_EQ(-0.1f, output_ptr[3]);
+}
+
+TEST(fully_connected_gpu, b_fs_yx_fsv4)
+{
+    const auto& engine = get_test_engine();
+
+    const int in_B = 2;
+    const int in_F = 2048;
+    const int in_Y = 1;
+    const int in_X = 1;
+
+    const int W_B = 1000;
+    const int W_F = in_F;
+    const int W_Y = in_Y;
+    const int W_X = in_X;
+
+    // Input data
+    std::vector<char> Data(in_F * in_B); // in_X=in_Y=1
+    std::generate(Data.begin(), Data.end(), [i = 0]() mutable { return i++ % 9; });
+    auto input = memory::allocate(engine, {data_types::i8, format::bfyx, {in_B, in_F, in_X, in_Y}});
+    set_values(input, std::move(Data));
+
+    // Create a topology
+    topology topology(input_layout("input", input.get_layout()));
+
+    // Reorder
+    topology.add(reorder("reorder_in",
+                         "input",
+                         layout(data_types::i8, format::b_fs_yx_fsv4, {in_B, in_F, in_X, in_Y})));
+
+    // Weights
+    std::vector<char> Weights(W_B * W_F);
+    std::generate(Weights.begin(), Weights.end(), [W_F, i = 0]() mutable {
+        return i % 2 ? -(i++) / W_F - 1 : (i++) / W_F + 1;
+    });
+    auto weights_gold =
+        memory::allocate(engine, {data_types::i8, format::bfyx, {W_B, W_F, W_X, W_Y}});
+    auto weights_imad =
+        memory::allocate(engine, {data_types::i8, format::bfyx, {W_B, W_F, W_X, W_Y}});
+    set_values(weights_gold, Weights);
+    set_values(weights_imad, std::move(Weights));
+    topology.add(data("weights_gold", weights_gold), data("weights_imad", weights_imad));
+
+    // Bias, Callibraiton, Quantization
+    std::vector<float> vB(in_F), vC(in_F), vQ(in_F);
+    std::generate(vB.begin(), vB.end(), [x = 0.1f]() mutable {
+        x += 0.01f;
+        if (x >= 0.9f)
+            x = 0.1f;
+        return x;
+    });
+    std::generate(vC.begin(), vC.end(), [x = 0.2f]() mutable {
+        x += 0.01f;
+        if (x >= 0.9f)
+            x = 0.2f;
+        return x;
+    });
+    std::generate(vQ.begin(), vQ.end(), [x = 0.3f]() mutable {
+        x += 0.01f;
+        if (x >= 0.9f)
+            x = 0.3f;
+        return x;
+    });
+    auto bias_gold = memory::allocate(engine, {data_types::f32, format::bfyx, {1, 1, in_F, 1}});
+    auto bias_imad = memory::allocate(engine, {data_types::f32, format::bfyx, {1, 1, in_F, 1}});
+    auto callib_gold = memory::allocate(engine, {data_types::f32, format::bfyx, {1, 1, in_F, 1}});
+    auto callib_imad = memory::allocate(engine, {data_types::f32, format::bfyx, {1, 1, in_F, 1}});
+    auto quant_gold = memory::allocate(engine, {data_types::f32, format::bfyx, {1, 1, in_F, 1}});
+    auto quant_imad = memory::allocate(engine, {data_types::f32, format::bfyx, {1, 1, in_F, 1}});
+    set_values(bias_gold, vB);
+    set_values(bias_imad, std::move(vB));
+    set_values(callib_gold, vC);
+    set_values(callib_imad, std::move(vC));
+    set_values(quant_gold, vQ);
+    set_values(quant_imad, std::move(vQ));
+    topology.add(data("bias_gold", bias_gold),
+                 data("callib_gold", callib_gold),
+                 data("quant_gold", quant_gold));
+    topology.add(data("bias_imad", bias_imad),
+                 data("callib_imad", callib_imad),
+                 data("quant_imad", quant_imad));
+
+    // Fully connected
+    fully_connected fullc_gold(
+        "fullc_gold", "input", "weights_gold", {"bias_gold"}, {"quant_gold"}, {"callib_gold"}, 1.0f);
+    fully_connected fullc_imad(
+        "fullc_imad", "reorder_in", "weights_imad", {"bias_imad"}, {"quant_imad"}, {"callib_imad"}, 1.0f);
+    topology.add(fullc_gold, fullc_imad);
+
+    // Output reorder
+    auto reorder_gold =
+        reorder("reorder_gold", fullc_gold, layout(data_types::i8, format::bfyx, {in_B, W_B, 1, 1}));
+    auto reorder_imad =
+        reorder("reorder_imad", fullc_imad, layout(data_types::i8, format::bfyx, {in_B, W_B, 1, 1}));
+    topology.add(reorder_gold, reorder_imad);
+
+    // Network build
+    build_options build_opt;
+    build_opt.set_option(build_option::optimize_data(true));
+    network network(engine, topology, build_opt);
+
+    // Network execuiton
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+
+    auto out_gold = outputs.find("reorder_gold");
+    auto out_test = outputs.find("reorder_imad");
+
+    ASSERT_NE(out_gold, outputs.end());
+    ASSERT_NE(out_test, outputs.end());
+    auto gold_ptr = out_gold->second.get_memory().pointer<char>();
+    auto test_ptr = out_test->second.get_memory().pointer<char>();
+
+    ASSERT_EQ(gold_ptr.size(), test_ptr.size());
+    for (size_t i = 0; i < gold_ptr.size(); i++)
+    {
+        ASSERT_EQ(gold_ptr[i], test_ptr[i]);
+    }
 }

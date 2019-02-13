@@ -31,6 +31,7 @@
 #include <api/CPP/data.hpp>
 #include "instrumentation.h"
 #include <boost/filesystem.hpp>
+#include <test_utils/float16.h>
 
 #include <sstream>
 #include <iomanip>
@@ -103,7 +104,9 @@ VVVVF<T> lstm_gemm_reference(VVVVF<T>& input, VVVVF<T>& weights, VVVVF<T>& recur
 
 template <typename T>
 VVVVF<T> lstm_elt_reference(VVVVF<T>& tempGEMM, VVVVF<T>& cell,
-                     bool hasCell = true, float clip_threshold = 0, bool input_forget = false, size_t dir = 0) {
+                            bool hasCell = true, float clip_threshold = 0, 
+                            bool input_forget = false, size_t dir = 0) 
+{        
     size_t hidden_size = tempGEMM[0][0][0].size() / 4;
     size_t batch_size = tempGEMM.size();
     VVVVF<T> tempOut(batch_size, VVVF<T>(2, VVF<T>(1, VF<T>(hidden_size))));
@@ -114,16 +117,28 @@ VVVVF<T> lstm_elt_reference(VVVVF<T>& tempGEMM, VVVVF<T>& cell,
         T *ot = &tempGEMM[b][0][0][off.ot];
         T *ft = &tempGEMM[b][0][0][off.ft];
         T *zt = &tempGEMM[b][0][0][off.zt];
+        
         for (size_t h = 0; h < hidden_size; ++h) {
-            T val = sigmoid(clip(it[h], clip_threshold)) * std::tanh((float)clip(zt[h], clip_threshold));
+            
+            // Convert all inputs to float for all the elementwise operations. This is done to immitate 
+            // how lstm kernel is performing the elementwise operations.
+            float fp32_it = (float)it[h];
+            float fp32_ot = (float)ot[h];
+            float fp32_ft = (float)ft[h];
+            float fp32_zt = (float)zt[h];
+            float val = sigmoid(clip(fp32_it, clip_threshold)) * std::tanh(clip(fp32_zt, clip_threshold));
+
             if (input_forget) {
-                val *= (1 - ft[h]);
+                val *= (1 - fp32_ft);
             }
             if (hasCell) {
-                val += cell[b][0][dir][h] * sigmoid(clip(ft[h], clip_threshold));
+                val += (float)cell[b][0][dir][h] * sigmoid(clip(fp32_ft, clip_threshold));
             }
-            tempOut[b][0][0][h] = std::tanh((float)val) * sigmoid(ot[h]);
-            tempOut[b][1][0][h] = val;
+        
+            // Convert back to output data type before storing it into the output buffer. Currently, the output
+            // data type may be float or FLOAT16 (half)
+            tempOut[b][0][0][h] = (T)(std::tanh(val) * sigmoid(fp32_ot));           
+            tempOut[b][1][0][h] = (T)val;
         }
     }
     return tempOut;
@@ -155,10 +170,14 @@ void print(const std::string& s, VVVVF<T>& input) {
 // tempGEMM  = [    batch,         1,               1, 4 * hidden_size ] temporary output
 // output    = [    batch,  sequence,       direction,     hidden_size ] output
 template <typename T>
-void lstm_reference(VVVVF<T>& input, VVVVF<T>& hidden, VVVVF<T>& cell, VVVVF<T>& weights, VVVVF<T>& recurrent, VVVVF<T>& bias,
-    VVVVF<T>& output, VVVVF<T>& last_hidden, VVVVF<T>& last_cell,
-    bool hasBias = true, bool hasInitialHidden = true, bool hasInitialCell = true,
-    float clip_threshold = 0, bool input_forget = false, bool scramble_input = true) {
+void lstm_reference(VVVVF<T>& input, VVVVF<T>& hidden, VVVVF<T>& cell, 
+                    VVVVF<T>& weights, VVVVF<T>& recurrent, VVVVF<T>& bias,
+                    VVVVF<T>& output, VVVVF<T>& last_hidden, 
+                    VVVVF<T>& last_cell, bool hasBias = true, 
+                    bool hasInitialHidden = true, bool hasInitialCell = true,
+                    float clip_threshold = 0, bool input_forget = false, 
+                    bool scramble_input = true) 
+{
     size_t sequence_len = input[0].size();
     size_t dir_len = weights[0].size();
     size_t batch = input.size();
@@ -211,12 +230,23 @@ void generic_lstm_gemm_gpu_test(int sequence_len, int direction, int batch_size,
 
     VVVVF<T> ref_output = lstm_gemm_reference(ref_input, ref_weights, ref_recurrent, ref_bias, ref_hidden, 0, hasBias, hasHidden);
 
+    constexpr auto dt = std::is_same<T, float>::value ? data_types::f32 : data_types::f16;
     const auto& engine = get_test_engine();
-    memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size,   sequence_len,  input_size,      1 } });
-    memory weights = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1,            direction,     input_size,      4 * hidden_size } });
-    memory recurrent = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1,            direction,     hidden_size,     4 * hidden_size } });
-    memory biases = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ 1,            1,             4 * hidden_size, direction } });
-    memory hidden = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size,   direction,     hidden_size,     1 } });
+    
+    // If the input is of fp16 type then, the memory will be allocated as such
+    if (!engine.get_info().supports_fp16)
+    {
+        if (dt == data_types::f16)
+        {
+            return;
+        }
+    }
+
+    memory input = memory::allocate(engine, { dt, format::bfyx,     { batch_size,   sequence_len,  input_size,      1 } });
+    memory weights = memory::allocate(engine, { dt, format::bfyx,   { 1,            direction,     input_size,      4 * hidden_size } });
+    memory recurrent = memory::allocate(engine, { dt, format::bfyx, { 1,            direction,     hidden_size,     4 * hidden_size } });
+    memory biases = memory::allocate(engine, { dt, format::bfyx,    { 1,            1,             4 * hidden_size, direction } });
+    memory hidden = memory::allocate(engine, { dt, format::bfyx,    { batch_size,   direction,     hidden_size,     1 } });
 
     set_values(input, ref_input_vec);
     set_values(weights, ref_weights_vec);
@@ -251,13 +281,13 @@ void generic_lstm_gemm_gpu_test(int sequence_len, int direction, int batch_size,
     int i = 0;
     for (int b = 0; b < batch_size; ++b) {
         for (int x = 0; x < 4 * hidden_size; ++x)
-            EXPECT_EQ(ref_output[b][0][0][x], output_ptr[i++]);
+            EXPECT_FLOAT_EQ(ref_output[b][0][0][x], output_ptr[i++]);
     }
 }
 
 template<typename T>
 void generic_lstm_elt_gpu_test(int sequence_len, int direction, int batch_size, int input_size, int hidden_size, bool hasCell = true,
-    float clip_threshold = 0.f, bool input_forget = false) {
+    T clip_threshold = (T)0.f, bool input_forget = false) {
     // tempGEMM  = [        1, direction,           batch, 4 * hidden_size ] input
     // cell      = [        1, direction,           batch,     hidden_size ] optional
     // output    = [        2, direction,           batch,     hidden_size ] output concat[hidden, cell]
@@ -269,10 +299,26 @@ void generic_lstm_elt_gpu_test(int sequence_len, int direction, int batch_size, 
     VF<T> ref_cell_vec = flatten_4d<T>(cldnn::format::bfyx, ref_cell);
 
     VVVVF<T> ref_output = lstm_elt_reference(ref_tempGEMM, ref_cell, hasCell, clip_threshold, input_forget);
-
+    
+    // We observe some mismatch in down-converting from fp32 to fp16 
+    // between the reference implementation and opencl kernel. This can be 
+    // a simple rounding error. Thus, for fp16 we are increasing our tolerance
+    // to error from 1E-4 to 1E-2
+    constexpr float ferror = std::is_same<T, float>::value ? (float)1E-4 : (float)1E-2;  
+    constexpr auto dt = std::is_same<T, float>::value ? data_types::f32 : data_types::f16;
     const auto& engine = get_test_engine();
-    memory tempGEMM = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size,    direction, 4 * hidden_size, 1 } });
-    memory cell = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx,{ batch_size,    direction,     hidden_size, 1 } });
+    
+    // If the input is of fp16 type then, the memory will be allocated as such
+    if (!engine.get_info().supports_fp16)  
+    {
+        if (dt == data_types::f16)
+        {
+            return;
+        }
+    }
+
+    memory tempGEMM = memory::allocate(engine, { dt, format::bfyx,{ batch_size,    direction, 4 * hidden_size, 1 } });
+    memory cell = memory::allocate(engine, { dt, format::bfyx,{ batch_size,    direction,     hidden_size, 1 } });
     set_values(tempGEMM, ref_tempGEMM_vec);
     set_values(cell, ref_cell_vec);
 
@@ -299,7 +345,7 @@ void generic_lstm_elt_gpu_test(int sequence_len, int direction, int batch_size, 
             for (int x = 0; x < hidden_size; ++x)
             {
                 auto idx = b * 2 * hidden_size + j * hidden_size + x;
-                EXPECT_NEAR(ref_output[b][j][0][x], output_ptr[idx], FERROR);
+                ASSERT_NEAR(ref_output[b][j][0][x], output_ptr[idx] , ferror);
             }
         }
     }
@@ -435,7 +481,7 @@ void generic_lstm_custom_gpu_test(int sequence_len, int direction, int batch_siz
 template<typename T>
 void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batch_size, int input_size, int hidden_size,
                             bool hasBias = true, bool hasInitialHidden = true, bool hasInitialCell = true,
-                            float clip_threshold = 0, bool input_forget = false) {
+                            T clip_threshold = 0, bool input_forget = false) {
     std::cout << "Layers = " << layers << " Input Size = " << input_size << " Hidden Size = " << hidden_size
             << " Sequence Len = " << sequence_len << " Direction = " << direction << " Batch Size = " << batch_size << std::endl;
     int min_random = -2, max_random = 2;
@@ -486,9 +532,24 @@ void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batc
                         clip_threshold, input_forget, false);
     }
 
+    // We observe some mismatch in down-converting from fp32 to fp16 
+    // between the reference implementation and opencl kernel. This can be 
+    // a simple rounding error. Thus, for fp16 we are increasing our tolerance
+    // to error from 1E-4 to 1E-2
+    constexpr float ferror = std::is_same<T, float>::value ? (float)1E-4 : (float)1E-2;
+    constexpr auto dt = std::is_same<T, float>::value ? data_types::f32 : data_types::f16;
     const auto& engine = get_test_engine();
 
-    memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, {batch_size, sequence_len, input_size, 1} });
+    // If the input is of fp16 type then, the memory will be allocated as such
+    if (!engine.get_info().supports_fp16)
+    {
+        if (dt == data_types::f16)
+        {
+            return;
+        }
+    }
+
+    memory input = memory::allocate(engine, { dt, format::bfyx, {batch_size, sequence_len, input_size, 1} });
     set_values(input, ref_input_vec);
 
     std::vector<memory> weights;
@@ -497,20 +558,20 @@ void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batc
     std::vector<memory> hidden;
     std::vector<memory> cell;
     for(int i = 0; i < layers; ++i) {
-        weights.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, direction, i==0 ? input_size : hidden_size, 4 * hidden_size } }));
+        weights.push_back(memory::allocate(engine, { dt, format::bfyx, { 1, direction, i==0 ? input_size : hidden_size, 4 * hidden_size } }));
         set_values(weights[i], ref_weights_vec[i]);
-        recurrent.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, direction, hidden_size, 4 * hidden_size } }));
+        recurrent.push_back(memory::allocate(engine, { dt, format::bfyx, { 1, direction, hidden_size, 4 * hidden_size } }));
         set_values(recurrent[i], ref_recurrent_vec[i]);
         if (hasBias) {
-            biases.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { 1, 1, 4 * hidden_size, direction } }));
+            biases.push_back(memory::allocate(engine, { dt, format::bfyx, { 1, 1, 4 * hidden_size, direction } }));
             set_values(biases[i], ref_bias_vec[i]);
         }
         if (hasInitialHidden) {
-            hidden.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { batch_size, 1, hidden_size, direction } }));
+            hidden.push_back(memory::allocate(engine, { dt, format::bfyx, { batch_size, 1, hidden_size, direction } }));
             set_values(hidden[i], ref_hidden_vec[i]);
         }
         if (hasInitialCell) {
-            cell.push_back(memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, { batch_size, 1, hidden_size, direction} }));
+            cell.push_back(memory::allocate(engine, { dt, format::bfyx, { batch_size, 1, hidden_size, direction} }));
             set_values(cell[i], ref_cell_vec[i]);
         }
     }
@@ -588,7 +649,7 @@ void generic_lstm_gpu_test(int layers, int sequence_len, int direction, int batc
             for (int32_t s = 0; s < sequence_len; ++s) {
                 for (int32_t d = 0; d < direction; ++d) {
                     for (int32_t x = 0; x <  hidden_size; ++x) {
-                        ASSERT_NEAR(ref_output[layers-1][b][s][d][x], output_ptr[i++], FERROR);
+                        ASSERT_NEAR(ref_output[layers - 1][b][s][d][x], output_ptr[i++], ferror);
                     }
                 }
             }
@@ -630,7 +691,7 @@ void lstm_gpu_output_test(const cldnn_lstm_output& output_selection, int directi
 
     lstm_reference(ref_input, ref_hidden, ref_cell, ref_weights, ref_recurrent, ref_bias, ref_output,
                    last_hidden, last_cell, true, true, true,
-                   0, false, true);
+                   (T)0, false, true);
 
     const auto& engine = get_test_engine();
 
@@ -793,7 +854,7 @@ void lstm_gpu_format_test(const cldnn::format& format, int directions) {
 
     lstm_reference(ref_input, ref_hidden, ref_cell, ref_weights, ref_recurrent, ref_bias, ref_output,
                    last_hidden, last_cell, true, true, true,
-                   0, false, true);
+                   (T)0, false, true);
 
     const auto& engine = get_test_engine();
 
@@ -1857,6 +1918,119 @@ TEST(lstm_gpu, generic_lstm_chained_stacked_bidirectional_f32) {
     // sequence length = 5
     // output selection = output sequence and cell
     lstm_gpu_chain_test<float>(2, 2, 4, 2, 4, 2, 5, cldnn_lstm_output::cldnn_lstm_output_sequence_cell);
+}
+
+// FP16 Half precision tests
+TEST(lstm_gemm_gpu, generic_lstm_gemm_test_f16) {
+    generic_lstm_gemm_gpu_test<FLOAT16>(1, 1, 3, 6, 2, true, true);
+}
+
+TEST(lstm_gemm_gpu, generic_lstm_gemm_no_bias_f16) {
+    generic_lstm_gemm_gpu_test<FLOAT16>(1, 1, 3, 6, 2, false, true);
+}
+
+TEST(lstm_gemm_gpu, generic_lstm_gemm_no_hidden_f16) {
+    generic_lstm_gemm_gpu_test<FLOAT16>(1, 1, 3, 6, 2, true, false);
+}
+
+TEST(lstm_gemm_gpu, generic_lstm_gemm_no_hidden_bias_f16) {
+    generic_lstm_gemm_gpu_test<FLOAT16>(1, 1, 3, 6, 2, false, false);
+}
+
+TEST(lstm_elt_gpu, generic_lstm_elt_test_clip_f16) {
+    generic_lstm_elt_gpu_test<FLOAT16>(1, 1, 4, 6, 3, true, 0.3f);
+}
+
+TEST(lstm_elt_gpu, generic_lstm_elt_test_input_forget_f16) {
+    generic_lstm_elt_gpu_test<FLOAT16>(1, 1, 4, 6, 3, true, 0.f, 1);
+}
+
+TEST(lstm_elt_gpu, generic_lstm_elt_test_clip_input_forget_f16) {
+    generic_lstm_elt_gpu_test<FLOAT16>(1, 1, 4, 6, 3, true, 0.5f, 1);
+}
+
+TEST(lstm_elt_gpu, generic_lstm_elt_test_f16) {
+    generic_lstm_elt_gpu_test<FLOAT16>(1, 1, 4, 6, 3, true);
+}
+
+TEST(lstm_elt_gpu, generic_lstm_elt_no_cell_f16) {
+    generic_lstm_elt_gpu_test<FLOAT16>(1, 1, 4, 6, 3, false);
+}
+
+TEST(lstm_gpu, generic_lstm_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 3, 3, 2, true, true, true);
+}
+
+TEST(lstm_gpu, generic_lstm_no_bias_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 3, 3, 2, false, true, true);
+}
+
+TEST(lstm_gpu, generic_lstm_no_hidden_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 5, 4, 3, true, false, true);
+}
+
+TEST(lstm_gpu, generic_lstm_no_bias_hidden_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 5, 4, 3, false, false, true);
+}
+
+TEST(lstm_gpu, generic_lstm_no_cell_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 5, 4, 3, true, true, false);
+}
+
+TEST(lstm_gpu, generic_lstm_no_bias_cell_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 5, 4, 3, false, true, false);
+}
+
+TEST(lstm_gpu, generic_lstm_no_hidden_cell_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 5, 4, 3, true, false, false);
+}
+
+TEST(lstm_gpu, generic_lstm_no_bias_hidden_cell_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 5, 4, 3, false, false, false);
+}
+
+TEST(lstm_gpu, generic_lstm_clip_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 3, 3, 2, true, true, true, 0.3f, 0);
+}
+
+TEST(lstm_gpu, generic_lstm_input_forget_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 3, 3, 2, true, true, true, 0.f, 1);
+}
+
+TEST(lstm_gpu, generic_lstm_clip_input_forget_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 3, 3, 2, true, true, true, 0.3f, 1);
+}
+
+TEST(lstm_gpu, generic_lstm_offset_order_ifoz_f16) {
+    default_offset_type = cldnn_lstm_offset_order_ifoz;
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 1, 3, 3, 2, true, true, true);
+    default_offset_type = cldnn_lstm_offset_order_iofz;
+}
+
+TEST(lstm_gpu, generic_lstm_canonical_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 1, 1, 1, 1, 1, true, true, true);
+}
+
+// bidirectional support
+TEST(lstm_gpu, generic_lstm_bi_bias_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 2, 2, 3, 4, true, false, false);
+}
+
+TEST(lstm_gpu, generic_lstm_bi_bias_hidden_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 2, 2, 3, 4, true, true, false);
+}
+
+TEST(lstm_gpu, generic_lstm_bi_bias_hidden_cell_f16) {
+    generic_lstm_gpu_test<FLOAT16>(1, 7, 2, 2, 3, 4, true, true, true);
+}
+
+// multi-layer support
+TEST(lstm_gpu, generic_lstm_stacked_seq_f16) {
+    generic_lstm_gpu_test<FLOAT16>(4, 7, 1, 3, 3, 2, true, true, true);
+}
+
+TEST(lstm_gpu, generic_lstm_stacked_bi_f16) {
+    generic_lstm_gpu_test<FLOAT16>(4, 7, 2, 3, 3, 2, true, true, true);
 }
 
 // TODO: Add tests for the following:

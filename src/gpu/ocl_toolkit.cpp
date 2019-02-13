@@ -19,6 +19,7 @@
 #include "ocl_base_event.h"
 #include "ocl_user_event.h"
 #include "command_queues_builder.h"
+#include "events_pool.h"
 
 #include <cassert>
 #include <iomanip>
@@ -91,14 +92,14 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
     : _configuration(config)
     , _ocl_builder(config)
     , _user_context(_ocl_builder.is_user_context())
-    , _device(_ocl_builder.get_device())
     , _neo_driver(strstr(get_device_version().c_str(), "NEO") ? true : false)
     , _context(_ocl_builder.get_context())
     , _platform_id(_ocl_builder.get_platform_id())
     , _engine_info(*this)
     , _kernels_cache(*this)
-{
-    _device.getInfo(CL_DEVICE_EXTENSIONS, &_extensions);
+    , _events_pool(new events_pool())
+{ 
+    _ocl_builder.get_device().getInfo(CL_DEVICE_EXTENSIONS, &_extensions);
     build_command_queues(config);
 
     _logger = std::unique_ptr<ocl_logger>(new ocl_logger());
@@ -134,9 +135,9 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
     }
 }
 
-void cldnn::gpu::gpu_toolkit::build_command_queues(const configuration& config)
+void gpu_toolkit::build_command_queues(const configuration& config)
 {
-    command_queues_builder queue_builder(_context, _device, _platform_id);
+    command_queues_builder queue_builder(_context, _ocl_builder.get_device(), _platform_id);
     queue_builder.set_profiling(config.enable_profiling);
     queue_builder.set_out_of_order((config.host_out_of_order && _neo_driver));
 
@@ -192,14 +193,13 @@ event_impl::ptr gpu_toolkit::enqueue_kernel(cl::Kernel const& kern, cl::NDRange 
 
         log(_queue_counter + 1, msg);
     }
-
-    return{ new base_event(shared_from_this(), ret_ev, ++_queue_counter), false };
+    return _events_pool->get_from_base_pool(shared_from_this(), ret_ev, ++_queue_counter);
 }
 
 event_impl::ptr gpu_toolkit::enqueue_marker(std::vector<event_impl::ptr> const& deps)
 {
     if (deps.empty())
-        return{ new user_event(shared_from_this(), true), false };
+        return _events_pool->get_from_user_pool(shared_from_this(), true);
 
     if (!_configuration.host_out_of_order)
     {
@@ -230,19 +230,28 @@ event_impl::ptr gpu_toolkit::enqueue_marker(std::vector<event_impl::ptr> const& 
 
         if (logging_enabled())
             log(_queue_counter + 1, "Marker with dependencies: " + events_list_to_string(deps));
-
-        return{ new base_event(shared_from_this(), ret_ev, ++_queue_counter), false };
+        return _events_pool->get_from_base_pool(shared_from_this(), ret_ev, ++_queue_counter);
     }
     else
     {
         sync_events(deps);
-        return{ new base_event(shared_from_this(), _last_barrier_ev, _last_barrier), false };
+        return _events_pool->get_from_base_pool(shared_from_this(), _last_barrier_ev, _last_barrier);
     }
 }
 
 event_impl::ptr gpu_toolkit::group_events(std::vector<event_impl::ptr> const& deps)
+{ 
+    return _events_pool->get_from_group_pool(shared_from_this(), deps);
+}
+
+event_impl::ptr gpu_toolkit::create_user_event(bool set)
 {
-    return{ new base_events(shared_from_this(), deps), false };
+    return _events_pool->get_from_user_pool(shared_from_this(), set);
+}
+
+void gpu_toolkit::release_events_pool()
+{
+    _events_pool.reset();
 }
 
 void gpu_toolkit::flush()

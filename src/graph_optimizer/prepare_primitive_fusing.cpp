@@ -42,7 +42,7 @@
 #include "upsampling_inst.h"
 
 
-void prepare_primitive_fusing::fuse_skip_layers(program_impl &p, program_node* node)
+void prepare_primitive_fusing::fuse_skip_layers(program_impl& p, program_node* node)
 {
     program_helpers::do_for_types<eltwise>(*node, [&p](eltwise_node& node)
     {
@@ -88,7 +88,7 @@ static bool node_is_type(program_node* n)
     return n->is_type<T>();
 }
 
-void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl &p, program_node* node)
+void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl& p, program_node* node)
 {
     program_helpers::do_for_types<convolution>(*node, [&p](convolution_node& node)
     {
@@ -186,7 +186,7 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl &p, program_node*
     });
 }
 
-void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl &p, program_node* node)
+void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* node)
 {
     // make sure this convolution have only 1 user and it's eltwise
     if (node->users.size() != 1)
@@ -200,7 +200,8 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl &p, program_node* 
 
     // currently works only for this format
     if ( (conv_node->get_output_layout().format != cldnn::format::fs_bs_yx_bsv4_fsv32 || conv_node->get_output_layout().data_type != cldnn::data_types::i8) &&
-         (conv_node->get_output_layout().format != cldnn::format::bfyx || conv_node->get_output_layout().data_type != cldnn::data_types::f32)
+         (conv_node->get_output_layout().format != cldnn::format::bfyx || conv_node->get_output_layout().data_type != cldnn::data_types::f32) &&
+         (conv_node->get_output_layout().format != cldnn::format::yxfb || conv_node->get_output_layout().data_type != cldnn::data_types::f16)
        )
         return;
 
@@ -329,7 +330,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl &p, program_node* 
     new_node.recalc_output_layout();
 }
 
-void prepare_primitive_fusing::run(program_impl &p)
+void prepare_primitive_fusing::run(program_impl& p)
 {
     bool is_debug = p.get_options().get<build_option_type::debug>()->enabled();
 
@@ -341,13 +342,49 @@ void prepare_primitive_fusing::run(program_impl &p)
         if ((*node_itr)->is_type<convolution>())
             conv_nodes.push_back(*node_itr);
     }
-    itr = conv_nodes.begin();
-    while (itr != conv_nodes.end())
+
+    // Disabled due to kernel being not optimized
+    //itr = conv_nodes.begin();
+    //while (itr != conv_nodes.end())
+    //{
+    //    auto node_itr = itr++;
+    //    auto& node = (*node_itr);
+
+    //    fuse_conv_bn_scale(p, node);
+    //}
+
+    //This loop tries fusing several reorders one by one (if present) into one reorder
+    itr = p.get_processing_order().begin();
+    while (itr != p.get_processing_order().end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr);
 
-        fuse_conv_bn_scale(p, node);
+        if (node->is_output())
+            continue;
+
+        program_helpers::do_for_types<reorder>(*node, [&p, is_debug](reorder_node& node)
+        {
+            auto& input = node.input();
+
+            //Restrictions:
+            // - inputs cannot be padded
+            // - primitives input cannot be output
+            // - input was optimized
+            if (node.has_padded_dependency() || (input.is_output() && !is_debug) || node.get_dependencies().size() != 1 ||
+                input.can_be_optimized())
+                return;
+
+            // - check if previous node is reorder with 1 user (and if the layouts are the same - remove reorder)
+            // - do not fuse if current node has mean subtract
+            if (input.get_users().size() != 1 ||
+                (!input.is_type<reorder>() && input.get_output_layout() != node.get_users().front()->get_output_layout()) ||
+                node.has_mean() || !node.get_primitive()->subtract_per_feature.empty())
+                return;
+
+            input.set_output_layout(node.get_output_layout(), false);
+            p.extract_and_remove(node);
+        });
     }
 
     itr = p.processing_order.begin();
@@ -389,35 +426,6 @@ void prepare_primitive_fusing::run(program_impl &p)
         });
     }
 
-    //This loop tries fusing several reorders one by one (if present) into one reorder
-    itr = p.get_processing_order().begin();
-    while (itr != p.get_processing_order().end())
-    {
-        auto node_itr = itr++;
-        auto& node = (*node_itr);
-
-        program_helpers::do_for_types<reorder>(*node, [&p, is_debug](reorder_node& node)
-        {
-            auto& input = node.input();
-
-            //Restrictions:
-            // - inputs cannot be padded
-            // - primitives input cannot be output
-            // - input was optimized
-            if (node.has_padded_dependency() || (input.is_output() && !is_debug) || node.get_dependencies().size() != 1 ||
-                input.can_be_optimized())
-                return;
-
-            // - check if previous node is reorder with 1 user
-            // - do not fuse if current node has mean subtract
-            if (input.get_users().size() != 1 || !input.is_type<reorder>() ||
-                node.has_mean() || !node.get_primitive()->subtract_per_feature.empty())
-                return;
-
-            input.set_output_layout(node.get_output_layout(), false);
-            p.extract_and_remove(node);
-        });
-    }
     //This loop tries fusing eltwise (sum) with deconvolution
     itr = p.get_processing_order().begin();
     while (itr != p.get_processing_order().end())
@@ -429,7 +437,7 @@ void prepare_primitive_fusing::run(program_impl &p)
     }
 }
 
-void prepare_conv_eltw_fusing::run(program_impl &p)
+void prepare_conv_eltw_fusing::run(program_impl& p)
 {
     std::list<program_node*> conv_nodes;
     auto itr = p.get_processing_order().begin(); //note we need to use iterators since currently processed element can be removed
@@ -448,5 +456,90 @@ void prepare_conv_eltw_fusing::run(program_impl &p)
         auto& node = (*node_itr);
 
         fuse_conv_eltwise(p, node);
+    }
+}
+
+void prepare_conv_eltw_read_write_opt::conv_eltwise_read_write_opt(program_impl& p, program_node* node)
+{
+    fused_conv_eltwise_node * fused_conv_eltw_node = static_cast<fused_conv_eltwise_node*>(node);
+    program_node * second_input_node = &fused_conv_eltw_node->get_dependency(1);
+    // output layouts must match
+    if (fused_conv_eltw_node->get_output_layout() != second_input_node->get_output_layout()) // check whole layout
+    {
+        return;
+    }
+    
+    // buffer shared between primitives, if second input is mutable data, then we can reuse this memory
+    auto shared_buffer_mem = second_input_node->is_type<mutable_data>() ? second_input_node->as<mutable_data>().get_attached_memory_ptr() : p.get_engine().allocate_memory(node->get_output_layout());
+
+    float zero = 0.0f;
+    layout dummy_layout(data_types::f32, format::bfyx, tensor(1, 1, 1, 1));
+    
+    // this one is the first one to write data to
+    auto rw_output_prim0 = std::make_shared<mutable_data>(fused_conv_eltw_node->id() + "_RW_OPT_use", memory::attach(dummy_layout, &zero, 1));
+    // this one already expects data to be inside
+    auto rw_output_prim1 = std::make_shared<mutable_data>(fused_conv_eltw_node->id() + "_RW_OPT_reuse", memory::attach(dummy_layout, &zero, 1));
+
+    auto& rw_output_node0 = p.get_or_create(rw_output_prim0);
+    auto& rw_output_node1 = p.get_or_create(rw_output_prim1);
+
+    rw_output_node0.as<mutable_data>().attach_memory(*shared_buffer_mem, false);
+    rw_output_node1.as<mutable_data>().attach_memory(*shared_buffer_mem, false);
+
+    // add connection between second input node -> rw_output_node0 -> node
+    p.add_intermediate(rw_output_node0, *node, 1, true);
+    // replace other connections with rw_output_node0
+    auto itr = second_input_node->users.begin();
+    while (itr != second_input_node->users.end())
+    {
+        auto& usage = (*itr++);
+        if (usage->id() != rw_output_node0.id() && usage->id() != node->id())
+        {
+            usage->replace_dependency(*second_input_node, rw_output_node0);
+        }
+    }
+    // add connection between node -> rw_output_node1 -> after nodes
+    //first find index in our first user's dependency
+    size_t dep_idx = 0;
+    for (auto dep : (*(node->users.begin()))->dependencies)
+    {
+        if (dep->id() == node->id())
+            break;
+        dep_idx++;
+    }
+    p.add_intermediate(rw_output_node1, **(node->users.begin()), dep_idx, true);
+    // replace other connections with rw_output_node1
+    itr = node->users.begin();
+    while (itr != node->users.end())
+    {
+        auto& usage = (*itr++);
+        if (usage->id() != rw_output_node1.id() && usage->id() != node->id())
+        {
+            usage->replace_dependency(*node, rw_output_node1);
+        }
+    }
+    fused_conv_eltwise* prim = const_cast<fused_conv_eltwise*>((fused_conv_eltw_node->get_primitive().get()));
+    prim->second_input_in_output = true;
+}
+
+void prepare_conv_eltw_read_write_opt::run(program_impl& p)
+{
+    std::list<program_node*> fused_conv_eltw_nodes;
+    auto itr = p.get_processing_order().begin(); //note we need to use iterators since currently processed element can be removed
+    while (itr != p.get_processing_order().end())
+    {
+        auto node_itr = itr++;
+        if ((*node_itr)->is_type<fused_conv_eltwise>())
+            fused_conv_eltw_nodes.push_back(*node_itr);
+    }
+
+    //fuse conv + eltwise after activations
+    itr = fused_conv_eltw_nodes.begin();
+    while (itr != fused_conv_eltw_nodes.end())
+    {
+        auto node_itr = itr++;
+        auto& node = (*node_itr);
+
+        conv_eltwise_read_write_opt(p, node);
     }
 }

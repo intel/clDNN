@@ -169,7 +169,7 @@ KERNEL(fused_conv_eltwise_gpu_bfyx_1x1_opt)(
     //--------------------------------------------------------------------
     // eltwise with eltwise activation phase
     //--------------------------------------------------------------------
-
+    #if IN_OUT_OPT != 1
     for(uint bd = 0; bd < OUT_BLOCK_DEPTH/2; bd++)
     {
         for(uint br = 0; br < OUT_BLOCK_HEIGHT; br++)
@@ -182,6 +182,7 @@ KERNEL(fused_conv_eltwise_gpu_bfyx_1x1_opt)(
             }
         }
     }
+    #endif
 
     //--------------------------------------------------------------------
     // output phase
@@ -194,34 +195,58 @@ KERNEL(fused_conv_eltwise_gpu_bfyx_1x1_opt)(
             uint dst_index = GET_DATA_INDEX(OUTPUT, b, f + (bd + ifm_offset) * SIMD_SIZE + get_sub_group_local_id(), group_y + br, group_x);
             uint out_vstore_offset = 0;
             #if (OUT_BLOCK_WIDTH >= 8)
-            float8 tmp = (float8)(dotProd0[out_vstore_offset + 0 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 1 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 2 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 3 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 4 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 5 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 6 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 7 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)]);
-            vstore8(tmp, 0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
-            out_vstore_offset += 8;
+            {
+                float8 tmp = (float8)(dotProd0[out_vstore_offset + 0 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 1 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 2 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 3 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 4 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 5 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 6 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 7 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)]);
+#if IN_OUT_OPT == 1
+                float8 tmp2 = vload8(0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
+                tmp += tmp2;
+                tmp = ACTIVATION_ELTW(tmp, NL_M_ELTW, NL_N_ELTW);
+#endif
+                vstore8(tmp, 0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
+                out_vstore_offset += 8;
+            }
             #endif
             #if (OUT_BLOCK_WIDTH % 8) > 3
-            float4 tmp = (float4)(dotProd0[out_vstore_offset + 0 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 1 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 2 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                  dotProd0[out_vstore_offset + 3 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)]);
-            vstore4(tmp, 0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
-            out_vstore_offset += 4;
+            {
+                float4 tmp = (float4)(dotProd0[out_vstore_offset + 0 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 1 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 2 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                      dotProd0[out_vstore_offset + 3 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)]);
+#if IN_OUT_OPT == 1
+                float4 tmp2 = vload4(0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
+                tmp += tmp2;
+                tmp = ACTIVATION_ELTW(tmp, NL_M_ELTW, NL_N_ELTW);
+#endif
+                vstore4(tmp, 0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
+                out_vstore_offset += 4;
+            }
             #endif
             #if (OUT_BLOCK_WIDTH % 4) > 1
-            float2 tmp2 = (float2)(dotProd0[out_vstore_offset + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
-                                 dotProd0[out_vstore_offset+1 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)]);
-            vstore2(tmp2, 0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
-            out_vstore_offset += 2;
+            {
+                float2 tmp = (float2)(dotProd0[out_vstore_offset + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)],
+                                       dotProd0[out_vstore_offset+1 + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)]);
+#if IN_OUT_OPT == 1
+                float2 tmp2 = vload2(0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
+                tmp += tmp2;
+                tmp = ACTIVATION_ELTW(tmp, NL_M_ELTW, NL_N_ELTW);
+#endif
+                vstore2(tmp, 0, output + dst_index + out_vstore_offset * OUTPUT_X_PITCH);
+                out_vstore_offset += 2;
+            }
             #endif
-            //dst_index += 4 * OUTPUT_X_PITCH;
             for(uint bc = out_vstore_offset; bc < OUT_BLOCK_WIDTH; bc++)
             {
+#if IN_OUT_OPT == 1
+                dotProd0[bc + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)] += output[dst_index + bc * OUTPUT_X_PITCH];
+                dotProd0[bc + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)] = ACTIVATION_ELTW(dotProd0[bc + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)], NL_M_ELTW, NL_N_ELTW);
+#endif                
                 output[dst_index + bc * OUTPUT_X_PITCH] = dotProd0[bc + OUT_BLOCK_WIDTH * (br + OUT_BLOCK_HEIGHT * bd)];
             }
         }

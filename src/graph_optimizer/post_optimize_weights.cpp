@@ -25,15 +25,15 @@
 namespace cldnn
 {
 
-post_optimize_weights::post_optimize_weights(layout_optimizer& lo_ref) : _lo(lo_ref) {}
+post_optimize_weights::post_optimize_weights(layout_optimizer& lo_ref) : base_pass("post_optimize_weights"), _lo(lo_ref) {}
 
-void post_optimize_weights::run(program_impl &p) {
+void post_optimize_weights::run(program_impl& p) {
     run(p, _lo);
 }
 
 //function which prepares given primitive for weights optimization
 template <typename T>
-void post_optimize_weights::optimize_weights(T& node, layout_optimizer& lo, program_impl &p)
+void post_optimize_weights::optimize_weights(T& node, layout_optimizer& lo, program_impl& p)
 {
     auto weights_offset = node.get_primitive()->input.size();
     auto bias_offset = weights_offset + program_helpers::wrap_if_single(node.get_primitive()->weights).size();
@@ -68,7 +68,7 @@ void post_optimize_weights::optimize_weights(T& node, layout_optimizer& lo, prog
 
 //function which prepares given primitive for weights optimization
 template <>
-void post_optimize_weights::optimize_weights<fused_conv_eltwise_node>(fused_conv_eltwise_node& node, layout_optimizer& lo, program_impl &p)
+void post_optimize_weights::optimize_weights<fused_conv_eltwise_node>(fused_conv_eltwise_node& node, layout_optimizer& lo, program_impl& p)
 {
     auto weights_offset = node.get_primitive()->input.size();
     auto bias_offset = weights_offset + program_helpers::wrap_if_single(node.get_primitive()->conv.weights).size();
@@ -101,11 +101,11 @@ void post_optimize_weights::optimize_weights<fused_conv_eltwise_node>(fused_conv
     }
 }
 
-template void post_optimize_weights::optimize_weights<convolution_node>(convolution_node& node, layout_optimizer& lo, program_impl &p);
-template void post_optimize_weights::optimize_weights<deconvolution_node>(deconvolution_node& node, layout_optimizer& lo, program_impl &p);
-template void post_optimize_weights::optimize_weights<fully_connected_node>(fully_connected_node& node, layout_optimizer& lo, program_impl &p);
+template void post_optimize_weights::optimize_weights<convolution_node>(convolution_node& node, layout_optimizer& lo, program_impl& p);
+template void post_optimize_weights::optimize_weights<deconvolution_node>(deconvolution_node& node, layout_optimizer& lo, program_impl& p);
+template void post_optimize_weights::optimize_weights<fully_connected_node>(fully_connected_node& node, layout_optimizer& lo, program_impl& p);
 
-void post_optimize_weights::run(program_impl &p, layout_optimizer& lo)
+void post_optimize_weights::run(program_impl& p, layout_optimizer& lo)
 {
      for (auto& node : p.get_processing_order())
     {

@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 
 using namespace cldnn;
 
-void eltwise_shrinking::run(program_impl &p)
+void eltwise_shrinking::run(program_impl& p)
 {
     std::vector<program_node*> convs_to_shrink;
 
@@ -29,7 +29,12 @@ void eltwise_shrinking::run(program_impl &p)
         {
             // TODO: make fp16 work
             if (node->get_output_layout().data_type != data_types::i8 && node->get_output_layout().data_type != data_types::f32)
-                continue;
+            {
+                if (node->get_output_layout().data_type != data_types::f16 || node->get_output_layout().format != format::yxfb)
+                {
+                    continue;
+                }
+            }
 
             const auto eltw = std::static_pointer_cast<const eltwise>(node->get_primitive());
             // TODO: support cases which already have stride!
@@ -45,6 +50,18 @@ void eltwise_shrinking::run(program_impl &p)
                     // currently we can shrink only if users are convolutions
                     if (!user->is_type<convolution>())
                     {
+                        can_shrink = false;
+                        break;
+                    }
+
+                    if (user->get_output_layout().format == format::b_fs_yx_fsv4)
+                    {
+                        // Workaround for VIS-1079
+                        // Currently, we don't have "conv + eltwise" optimization for
+                        // IMAD and it blocks us to run the whole ResNet-50.i8 topology in IMAD.
+                        // As workaround, this optimization will be temporary switched off for
+                        // "format == b_fs_yx_fsv4"(IMAD specific data layout).
+                        // TODO: Please, remove this code, when VIS - 1079 will be done.
                         can_shrink = false;
                         break;
                     }

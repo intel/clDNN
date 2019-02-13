@@ -52,7 +52,11 @@ KERNEL(convolution)(
 #else
     const uint in_split_offset = split_idx * INPUT0_FEATURE_PITCH * FILTER_IFM_NUM;
 #endif
+#if GROUPED && !DEPTHWISE_SEPARABLE_OPT
+    const uint filter_offset = f*FILTER_OFM_PITCH + split_idx * FILTER_LENGTH;
+#else
     const uint filter_offset = f*FILTER_OFM_PITCH;
+#endif
     const uint input_offset = b*INPUT0_BATCH_PITCH + INPUT0_OFFSET + in_split_offset;
 #ifdef LOCAL_CONVOLUTION
     const int local_offset = FILTER_SIZE_X * FILTER_SIZE_Y * (x + OUTPUT_SIZE_X * y);
@@ -91,10 +95,15 @@ KERNEL(convolution)(
     }
 
 #if BIAS_TERM
+#if GROUPED && !DEPTHWISE_SEPARABLE_OPT
+    const uint bias_offset = split_idx * BIAS_LENGTH;
+#else
+    const uint bias_offset = 0;
+#endif
 #if   BIAS_PER_OUTPUT
-    const uint bias_index = GET_DATA_INDEX(BIAS, b, f, y, x);
+    const uint bias_index = bias_offset + GET_DATA_INDEX(BIAS, b, f, y, x);
 #elif BIAS_PER_OFM
-    const uint bias_index = f;
+    const uint bias_index = bias_offset + f;
 #endif
 #if QUANTIZATION_TERM
 #if CALIBRATION_TERM

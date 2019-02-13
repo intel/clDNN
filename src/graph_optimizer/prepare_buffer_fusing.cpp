@@ -18,6 +18,7 @@
 
 #include "api/CPP/eltwise.hpp"
 #include "api/CPP/pooling.hpp"
+#include "api/CPP/upsampling.hpp"
 #include "primitive_inst.h"
 #include "activation_inst.h"
 #include "concatenation_inst.h"
@@ -34,7 +35,7 @@ using namespace cldnn;
 
 //ToDo remove friendship relation from  program_node 
 
-void prepare_buffer_fusing::run(program_impl &p)
+void prepare_buffer_fusing::run(program_impl& p)
 {
     bool is_debug = p.get_options().get<build_option_type::debug>()->enabled();
     auto itr = p.get_processing_order().begin();
@@ -48,13 +49,16 @@ void prepare_buffer_fusing::run(program_impl &p)
 
         program_helpers::do_for_types<concatenation>(*node, [&p, is_debug](concatenation_node& node)
         {
-            // buffer fusing should not be performed if one of inputs produces padded output since
-            // it could break desired memory alignment. On the other hand, if this node uses all inputs
-            // exclusively (see check above) they should not have output padding set since concatenation
-            // does not ask for any.
-            if (node.has_padded_dependency())
-                return;
-
+            // we need to avoid mixing padded and unpadded buffer 
+            bool all_dependencies_padded = true;
+            bool all_dependencies_unpadded = true;
+            for (auto& input : node.get_dependencies()) {
+                layout l = input->get_output_layout();
+                if (static_cast<bool>(l.data_padding))
+                    all_dependencies_unpadded = false;
+                else 
+                    all_dependencies_padded = false;
+            }
             auto concat_axis = node.get_primitive()->axis;
             auto padd = node.get_output_layout().data_padding;
 
@@ -81,9 +85,9 @@ void prepare_buffer_fusing::run(program_impl &p)
                     //also, if an input is marked as network output, prevent optimizations which would affect a form of its output (unless debug flag is set)
                     // todo: in future, if this case is problem, it can be optimized further to enable buffer fusing
                     //       per single input rather than all/none
-                    // + restrict input types to pooling, convolution and activation only due to problems with output padding on b and f
-                    if ((!input->is_type<pooling>() && !input->is_type<convolution>() && !input->is_type<activation>() && !input->is_type<concatenation>() && !input->is_type<crop>() && !input->is_type<scale>()) ||
-                        (input->is_output() && !is_debug) ||
+                    // + restrict input types to those which support padding on x,y,b and f
+                    if (!input->support_padding() ||
+                       (input->is_output() && !is_debug) ||
                         input->get_users().size() > 2)
                         return;
 
@@ -96,13 +100,6 @@ void prepare_buffer_fusing::run(program_impl &p)
                         if (user_count != 1) // user_cout == 0 means that input will be used only by concatenations, so we cannot apply concat in place for it
                             return;
                     }
-
-                    //check only for spatial paddings. Accept feature and batch
-                    if (input->get_output_layout().data_padding.lower_size().spatial[0] != 0 ||
-                        input->get_output_layout().data_padding.upper_size().spatial[0] != 0 ||
-                        input->get_output_layout().data_padding.lower_size().spatial[1] != 0 ||
-                        input->get_output_layout().data_padding.upper_size().spatial[1] != 0)
-                        return;
                 }
 
                 //apply concatenation in place optimization
@@ -144,6 +141,12 @@ void prepare_buffer_fusing::run(program_impl &p)
             }
 
             node.can_be_optimized(true);
+            for (auto dep : node.get_users())
+            {
+                dep->can_share_buffer(false);
+            }
+            if (!all_dependencies_padded && !all_dependencies_unpadded)
+                node.can_share_buffer(false);
         });
 
         // zero copy

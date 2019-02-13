@@ -17,7 +17,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include "memory_gpu.h"
+#include "ocl_toolkit.h"
+#include "memory_impl.h"
 #include "kernels_cache.h"
 #include "event_impl.h"
 

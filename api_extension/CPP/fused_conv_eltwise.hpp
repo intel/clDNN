@@ -124,6 +124,8 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
         conv.with_output_size = dto->conv.with_output_size != 0;
         conv.output_size = dto->conv.output_size;
 
+        second_input_in_output = dto->second_input_in_output;
+
         if (!dto->conv.split || (conv.weights.size() != conv.bias.size() && conv.bias.size() != 0) || dto->conv.split != conv.weights.size())
             throw std::invalid_argument("Invalid convolution dto: bad split value");
     }
@@ -193,6 +195,8 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
     /// @brief On how many cards split the computation to.
     int32_t split() const { return static_cast<int32_t>(conv.weights.size()); }
 
+    /// @brief Is optimization that output contains data from second input ON ?
+    bool second_input_in_output = false;
 protected:
     primitive_id_arr _conv_weights;
     primitive_id_arr _conv_bias;
@@ -248,6 +252,8 @@ protected:
         dto.eltw.with_activation = eltw.with_activation;
         dto.eltw.activation_negative_slope = eltw.activation_negative_slope;
         dto.eltw.stride = tensor_vector_to_arr(_eltw_stride);
+
+        dto.second_input_in_output = second_input_in_output;
     }
 };
 /// @}

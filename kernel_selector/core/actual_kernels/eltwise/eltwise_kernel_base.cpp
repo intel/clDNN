@@ -31,6 +31,14 @@ namespace kernel_selector
         case EltwiseMode::MAX:
         case EltwiseMode::POW:
         case EltwiseMode::MODULU:
+        case EltwiseMode::EQ:
+        case EltwiseMode::NE:
+        case EltwiseMode::LT:
+        case EltwiseMode::LE:
+        case EltwiseMode::GT:
+        case EltwiseMode::GE:
+        case EltwiseMode::LOGIC_AND:
+        case EltwiseMode::LOGIC_OR:
             return 2;
         case EltwiseMode::SQRT:
         case EltwiseMode::RSQRT:
@@ -57,6 +65,11 @@ namespace kernel_selector
         if (!stride.empty())
         {
             k.EnableEltwiseStride();
+        }
+
+        if (broadcast)
+        {
+            k.EnableEltwiseBroadcast();
         }
 
         return k;
@@ -114,6 +127,7 @@ namespace kernel_selector
         jit.AddConstants({
             MakeJitConstant("ELTWISE_LAYOUT_BASED", params.layoutBased),
             MakeJitConstant("QUANTIZATION_TERM",    params.int8_quantization),
+            MakeJitConstant("ELTWISE_BROADCAST",    params.broadcast),
         });
 
         if (params.int8_quantization)
@@ -248,10 +262,18 @@ namespace kernel_selector
 
             switch (ew.mode)
             {
-            case EltwiseMode::ADD:      op += input0_str + " + " + input1_str; break;
-            case EltwiseMode::SUB:      op += input0_str + " - " + input1_str; break;
-            case EltwiseMode::MUL:      op += input0_str + " * " + input1_str; break;
-            case EltwiseMode::DIV:      op += input0_str + " / " + input1_str; break;
+            case EltwiseMode::ADD:         op += input0_str + " + " + input1_str; break;
+            case EltwiseMode::SUB:         op += input0_str + " - " + input1_str; break;
+            case EltwiseMode::MUL:         op += input0_str + " * " + input1_str; break;
+            case EltwiseMode::DIV:         op += input0_str + " / " + input1_str; break;
+            case EltwiseMode::EQ:          op += input0_str + " == " + input1_str; break;
+            case EltwiseMode::NE:          op += input0_str + " != " + input1_str; break;
+            case EltwiseMode::LT:          op += input0_str + " < " + input1_str; break;
+            case EltwiseMode::LE:          op += input0_str + " <= " + input1_str; break;
+            case EltwiseMode::GT:          op += input0_str + " > " + input1_str; break;
+            case EltwiseMode::GE:          op += input0_str + " >= " + input1_str; break;
+            case EltwiseMode::LOGIC_AND:   op += input0_str + " && " + input1_str; break;
+            case EltwiseMode::LOGIC_OR:    op += input0_str + " || " + input1_str; break;
             case EltwiseMode::MODULU:
             case EltwiseMode::MIN:
             case EltwiseMode::MAX:

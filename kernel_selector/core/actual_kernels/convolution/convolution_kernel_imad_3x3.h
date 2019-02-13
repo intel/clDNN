@@ -25,6 +25,10 @@ namespace kernel_selector {
     public:
         using Parent = ConvolutionKernelBase;
         ConvolutionKernel_imad_3x3() : ConvolutionKernelBase("convolution_gpu_imad") {}
+        ConvolutionKernel_imad_3x3(size_t FilterSizeX, size_t FilterSizeY)
+            : ConvolutionKernelBase("convolution_gpu_imad"),
+              m_FilterSizeX(FilterSizeX),
+              m_FilterSizeY(FilterSizeY) {}
         virtual ~ConvolutionKernel_imad_3x3() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
@@ -43,5 +47,12 @@ namespace kernel_selector {
                 WeightsLayout::os_is_yx_osv16_isv4
             };
         }
+
+    protected:
+        // This class is base one for several similar classes with different
+        // filter sizes. That's why the actual filters sizes must be explicitly
+        // specified.
+        size_t m_FilterSizeX = 3;
+        size_t m_FilterSizeY = 3;
     };
 }

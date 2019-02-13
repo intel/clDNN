@@ -36,12 +36,8 @@ namespace kernel_selector
         k.EnableOutputDataType(Datatype::INT64);
 
         k.EnableInputLayout(DataLayout::bfyx);
-        k.EnableInputLayout(DataLayout::yxfb);
-        k.EnableInputLayout(DataLayout::byxf);
 
         k.EnableOutputLayout(DataLayout::bfyx);
-        k.EnableOutputLayout(DataLayout::yxfb);
-        k.EnableOutputLayout(DataLayout::byxf);
 
         k.EnableTensorOffset();
         k.EnableTensorPitches();

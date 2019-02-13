@@ -40,6 +40,7 @@ namespace kernel_selector
         bool     local_convolution = false;
         float    input_quantization_factor = 1.0f;
         float    output_quantization_factor = 1.0f;
+        uint32_t groups = 1;
 
         MultiDataTensor weights_quantization_factors;
         MultiDataTensor output_calibration_factors;

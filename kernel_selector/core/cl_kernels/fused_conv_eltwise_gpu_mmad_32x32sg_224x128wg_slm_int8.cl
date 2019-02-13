@@ -40,6 +40,7 @@ inline uint FUNC(calculate_output_offset_to_account_padding)(uint cOffset)
     return padded_offset;
 }
 
+#if IN_OUT_OPT != 1
 inline uint FUNC(calculate_eltw_input_offset_based_on_output_offset_account_padding)(uint cOffset, uint strideX, uint strideY)
 {
     uint tmp_idx = cOffset;
@@ -67,6 +68,7 @@ inline uint FUNC(calculate_eltw_input_offset_based_on_output_offset_account_padd
 
     return padded_offset;
 }
+#endif
 
 inline void FUNC(mmad_32x32_int8)(  __local uint* l_tileA, const uint l_offsetTileA,
                                     __local int8* l_tileB, const uint l_offsetTileB_col0,
@@ -318,7 +320,9 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
     {
         // begin of account for output PADDING
         uint padded_offset = FUNC_CALL(calculate_output_offset_to_account_padding)(cOffset);
+#if IN_OUT_OPT != 1
         uint eltw_second_input_offset = FUNC_CALL(calculate_eltw_input_offset_based_on_output_offset_account_padding)(cOffset, ELTW_STRIDE_X, ELTW_STRIDE_Y);
+#endif
         // end of account for padding
 
         // B0 F0..31
@@ -334,7 +338,11 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
 
         // do ELTWISE
         {
+#if IN_OUT_OPT == 1
+            uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &g_outC_uchar[padded_offset]);
+#else
             uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &((const __global uchar*)input2)[eltw_second_input_offset]);
+#endif
             int8 sum;
             for(uint s = 0; s < 8; s++)
             {
@@ -354,7 +362,9 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
 		FUNC_CALL(sub_group_block_write_uchar8)(&g_outC_uchar[padded_offset], regC_uchar8[offset_uc8]);
         cOffset += sizeof(uchar8) * SG_SIZE;
         padded_offset += sizeof(uchar8) * SG_SIZE;
+#if IN_OUT_OPT != 1
         eltw_second_input_offset += sizeof(uchar8) * SG_SIZE;
+#endif
         offset_uc8++;
 
         // B2 F0..31
@@ -370,7 +380,11 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
 
         // do ELTWISE
         {
+#if IN_OUT_OPT == 1
+            uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &g_outC_uchar[padded_offset]);
+#else
             uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &((const __global uchar*)input2)[eltw_second_input_offset]);
+#endif
             int8 sum;
             for(uint s = 0; s < 8; s++)
             {
@@ -393,7 +407,9 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
 
         // now we need to calculate again for other x
         padded_offset = FUNC_CALL(calculate_output_offset_to_account_padding)(cOffset);
+#if IN_OUT_OPT != 1
         eltw_second_input_offset = FUNC_CALL(calculate_eltw_input_offset_based_on_output_offset_account_padding)(cOffset, ELTW_STRIDE_X, ELTW_STRIDE_Y);
+#endif
         //
 
         regC_uchar8[offset_uc8].s0 = as_uchar(ACTIVATION( convert_char(round(( (float)(regC[0 * 4 + i].s4) * quant_f.s0 * I_QF + bias_f.s0) * calib_f.s0)), NL_M, NL_N));
@@ -408,7 +424,11 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
 
         // do ELTWISE
         {
+#if IN_OUT_OPT == 1
+            uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &g_outC_uchar[padded_offset]);
+#else
             uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &((const __global uchar*)input2)[eltw_second_input_offset]);
+#endif
             int8 sum;
             for(uint s = 0; s < 8; s++)
             {
@@ -428,7 +448,9 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
 		FUNC_CALL(sub_group_block_write_uchar8)(&g_outC_uchar[padded_offset], regC_uchar8[offset_uc8]);
         cOffset += sizeof(uchar8) * SG_SIZE;
         padded_offset += sizeof(uchar8) * SG_SIZE;
+#if IN_OUT_OPT != 1
         eltw_second_input_offset += sizeof(uchar8) * SG_SIZE;
+#endif
         offset_uc8++;
 
         regC_uchar8[offset_uc8].s0 = as_uchar(ACTIVATION( convert_char(round(( (float)(regC[0 * 4 + i].s6) * quant_f.s0 * I_QF + bias_f.s0) * calib_f.s0)), NL_M, NL_N));
@@ -443,7 +465,11 @@ KERNEL(Kernel_GEMM_MMAD8_32x32SG_224x128WG_SLM_INT8_fused_eltwise)
 
         // do ELTWISE
         {
+#if IN_OUT_OPT == 1
+            uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &g_outC_uchar[padded_offset]);
+#else
             uchar8 eltw_input2 = FUNC_CALL(sub_group_block_read_uchar8)( &((const __global uchar*)input2)[eltw_second_input_offset]);
+#endif
             int8 sum;
             for(uint s = 0; s < 8; s++)
             {

@@ -270,7 +270,35 @@ inline uint FUNC(get_os_is_yx_isa8_osv8_isv4_index)(uint o, uint i, uint y, uint
         CAT(prefix, _OFM_NUM),                                                  \
         CAT(prefix, _OFFSET))
 
+inline uint FUNC(get_os_is_yx_isa8_osv8_isv4_swizzled_by_4_index)(uint o, uint i, uint y, uint x, uint size_x, uint size_y, uint size_ifm, uint size_ofm, uint offset)
+{
+    const uint o_swizzled = (o % 4) * 8 + ((o % 32) / 4) + (o / 32) * 32;
 
+    const uint f_32_aligned = ((size_ifm + 31)/32) * 32;
+	const uint isv2_idx = i % 4;
+	const uint osv_idx = o_swizzled % 8;
+	const uint isv1_idx = (i / 4) % 8;
+	const uint is_idx = i / 32;
+	const uint os_idx = o_swizzled / 8;
+
+	size_t idx = offset + isv2_idx + 4 * (osv_idx + 8 * isv1_idx);
+	idx += x * 4 * 8 * 8;
+	idx += y * size_x * 4 * 8 * 8;
+	idx += is_idx * size_y * size_x * 4 * 8 * 8;
+	idx += os_idx * (f_32_aligned/32) * size_y * size_x * 4 * 8 * 8;
+
+    return idx;
+}
+
+#define GET_FILTER_OS_IS_YX_ISA8_OSV8_ISV4_SWIZZLED_BY_4_INDEX(prefix, o, i, y, x) \
+	FUNC_CALL(get_os_is_yx_isa8_osv8_isv4_swizzled_by_4_index)(                    \
+        o, i, y, x, CAT(prefix, _SIZE_X ),                                      \
+        CAT(prefix, _SIZE_Y),                                                \
+        CAT(prefix, _IFM_NUM),                                                  \
+        CAT(prefix, _OFM_NUM),                                                  \
+        CAT(prefix, _OFFSET))
+
+        
 inline uint FUNC(get_is_o_yx_isv32_index)(uint o, uint i, uint y, uint x, uint i_size, uint o_size, uint x_size, uint y_size)
 {
     const uint i_aligned_to_32 = ((i_size + 31) / 32) * 32;
@@ -323,7 +351,9 @@ inline uint FUNC(get_b_fs_yx_fsv4)(uint o, uint i, uint y, uint x,
     uint id_tile = i / tile;
     uint id      = i - id_tile * tile;
 
-    uint idx = o * (feature_num / tile) *
+    const uint feature_num_aligned4 = ((feature_num + 3) / 4) * 4;
+
+    uint idx = o * (feature_num_aligned4 / tile) *
                    (pad_before_size_y + size_y + pad_after_size_y) *
                    (pad_before_size_x + size_x + pad_after_size_x) * tile
                + id_tile * (pad_before_size_y + size_y + pad_after_size_y) *
@@ -340,14 +370,14 @@ inline uint FUNC(get_b_fs_yx_fsv4)(uint o, uint i, uint y, uint x,
 #define GET_FILTER_OS_IS_YX_OSV16_ISV4_INDEX(prefix, o, i, y, x)\
     FUNC_CALL(get_os_is_yx_osv16_isv4)(\
         o, i, y, x,\
-        CAT(prefix, _IFM_NUM),\
-        CAT(prefix, _SIZE_Y),\
+        CAT(prefix, _IFM_PITCH),\
+        CAT(prefix, _OFM_PITCH),\
         CAT(prefix, _SIZE_X))
 
 inline uint FUNC(get_os_is_yx_osv16_isv4)(uint o, uint i, uint y, uint x,
-                                          uint input_feature_num,
-                                          uint size_y,
-                                          uint size_x)
+                                          uint i_size,
+                                          uint o_size,
+                                          uint x_size)
 {
     const uint otd = 16;
     uint out_depth_tile = o / otd;
@@ -357,11 +387,11 @@ inline uint FUNC(get_os_is_yx_osv16_isv4)(uint o, uint i, uint y, uint x,
     uint id_tile = i / tile;
     uint id      = i - id_tile * tile;
 
-    uint idx = out_depth_tile * (input_feature_num / tile) * size_y * size_x * otd * tile
-               + id_tile                                   * size_y * size_x * otd * tile
-               + y                                                  * size_x * otd * tile
-               + x                                                           * otd * tile
-               + od                                                                * tile
+    uint idx = out_depth_tile * (o_size / tile) * otd * tile
+               + id_tile               * i_size * otd * tile
+               + y                     * x_size * otd * tile
+               + x                              * otd * tile
+               + od                                   * tile
                + id;
 
     return idx;

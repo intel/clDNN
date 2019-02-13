@@ -59,7 +59,7 @@ public:
     refcounted_obj_ptr<event_impl> create_user_event(bool set = false);
     void wait_for_events(std::vector<event_impl::ptr> const& events);
 
-    refcounted_obj_ptr<program_impl> build_program(const topology_impl& topology, const build_options& options, bool is_internal = false);
+    refcounted_obj_ptr<program_impl> build_program(const topology_impl& topology, const build_options& options, bool is_internal = false, bool no_optimizations = false);
     refcounted_obj_ptr<program_impl> build_program(const std::set<std::shared_ptr<program_node>>& nodes, const build_options & options, bool is_internal);
     void compile_program(program_impl& prog);
 

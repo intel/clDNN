@@ -21,10 +21,17 @@
 
 
 template <typename T>
-void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl &p, T& node)
+void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl& p, T& node)
 {
     if (!node.get_depthwise_sep_opt())
         return;
+
+    if (node.get_groups() > 1) {
+        if (node.get_groups() >= 16) {
+            node.set_groups(1);  // use one kernel
+        }
+        return; // no concatenations requered
+    }
 
     const auto& split = node.get_primitive()->split();
 
@@ -73,10 +80,10 @@ void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl &p, T&
         //override node split, as only one kernel will be executed
         node.set_split(1);
 }
-template void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre<convolution_node>(program_impl &p, convolution_node& node);
-template void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre<deconvolution_node>(program_impl &p, deconvolution_node& node);
+template void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre<convolution_node>(program_impl& p, convolution_node& node);
+template void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre<deconvolution_node>(program_impl& p, deconvolution_node& node);
 
-void prep_opt_depthwise_sep_post::run(program_impl &p)
+void prep_opt_depthwise_sep_post::run(program_impl& p)
 {
     //depthwise separated convolution/deconvolution optimization
     for (auto& prim : p.get_processing_order())

@@ -212,6 +212,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
         }
     }
 
+#if IN_OUT_OPT != 1
     // eltwise part
     uint eltw_addr = INPUT1_OFFSET;
     eltw_addr += batch_idx * INPUT1_BATCH_PITCH;
@@ -225,6 +226,7 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
         }
     }
     // end of eltwise part
+#endif
 
 #ifdef LEFTOVERS
     if (feature_idx < OUTPUT_FEATURE_NUM)
@@ -235,7 +237,13 @@ KERNEL(convolution_gpu_bfyx_os_iyx_osv16)(
             for(uint c = 0; c < OUTPUT_BLOCK_WIDTH; c++) {
                 // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
                 if(!(oc + c >= OUTPUT_SIZE_X))
+                {
+#if IN_OUT_OPT == 1
+                    out[r * OUTPUT_BLOCK_WIDTH + c] += output[out_addr + r * OUTPUT_Y_PITCH + c];
+                    out[r * OUTPUT_BLOCK_WIDTH + c] = ACTIVATION_ELTW(out[r * OUTPUT_BLOCK_WIDTH + c], NL_M_ELTW, NL_N_ELTW);
+#endif
                     output[out_addr + r * OUTPUT_Y_PITCH + c] = out[r * OUTPUT_BLOCK_WIDTH + c];
+                }
             }
         }
     }

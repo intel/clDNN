@@ -26,7 +26,7 @@ using namespace cldnn;
 //We should check this and add reshape to be compliant with this.
 //
 //Example: batch_norm primitive requires that mean/variance/scale/shift is shape {1, X, 1, 1}
-void add_reshape_to_primitives::run(program_impl &p)
+void add_reshape_to_primitives::run(program_impl& p)
 {
     auto processing_order = p.get_processing_order();
 

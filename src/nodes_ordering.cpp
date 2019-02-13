@@ -39,7 +39,7 @@ namespace cldnn
 
     //DFS to sort nodes topologically
     //any topological sort of nodes is required for further optimizations
-    void program_impl::nodes_ordering::calc_processing_order(program_impl &p)
+    void program_impl::nodes_ordering::calc_processing_order(program_impl& p)
     {
         _processing_order.clear();
         for (auto input : p.get_inputs())

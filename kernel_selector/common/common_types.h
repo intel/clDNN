@@ -248,7 +248,15 @@ namespace kernel_selector
         MODULU,
         SQRT,
         RSQRT,
-        ASSIGN
+        ASSIGN,
+        EQ,
+        NE,
+        LT,
+        LE,
+        GT,
+        GE,
+        LOGIC_AND,
+        LOGIC_OR
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

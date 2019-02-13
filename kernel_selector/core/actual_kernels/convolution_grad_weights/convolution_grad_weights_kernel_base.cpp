@@ -57,6 +57,7 @@ namespace kernel_selector
             MakeJitConstant("FILTER_ARRAY_NUM",             cp.split),
             MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
             MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      cp.depthwise_separable_opt),
+            MakeJitConstant("OUTPUT_GRAD_W",                cp.output_grad_w),
         });
 
         return jit;

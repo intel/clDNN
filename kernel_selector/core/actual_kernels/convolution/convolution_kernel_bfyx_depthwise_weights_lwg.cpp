@@ -15,7 +15,7 @@
 */
 
 #include "convolution_kernel_bfyx_depthwise_weights_lwg.h"
- 
+
 namespace kernel_selector 
 {
     ParamsKey ConvolutionKernel_bfyx_depthwise_weights_lwg::GetSupportedKey() const
@@ -53,10 +53,9 @@ namespace kernel_selector
        const convolution_params& cp = static_cast<const convolution_params&>(p);
        if (!cp.depthwise_separable_opt)
            return false;
-
        if ((cp.filterSize.x > 4) ||
            (cp.filterSize.y > 4) ||
-           (cp.inputs[0].Feature().v != cp.split))
+           ((cp.inputs[0].Feature().v != cp.split) && (cp.inputs[0].Feature().v != cp.groups)))
        {
            return false;
        }

@@ -54,7 +54,7 @@ namespace kernel_selector
     {
         bool b16_layout = false;
         b16_layout |= t.GetLayout() == DataLayout::bs_f_bsv8__af8;
-        b16_layout |= DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::BATCH) == 0 && (t.Batch().v == 8); // TODO - check f alignment to 8
+        b16_layout |= DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::BATCH) == 0 && (t.Batch().v == 8);
         return b16_layout;
     }
 
@@ -84,11 +84,14 @@ namespace kernel_selector
         const bool bProperBatch =
             params.inputs[0].Batch().v >= 8 &&
             params.inputs[0].Batch().v % 8 == 0;
+        const bool bProperFeature =
+            params.inputs[0].Feature().v >= 8 &&
+            params.inputs[0].Feature().v % 8 == 0;
         const bool bProperInput = check_input_layout(params.inputs[0]);
         const bool bProperOutput = check_output_layout(params.output);
         const bool bSupportedLayout = optParams.allowInputReordering || bProperInput;
 
-        if (!bProperBatch || !bSupportedLayout || !bProperOutput)
+        if (!bProperBatch || !bProperFeature || !bSupportedLayout || !bProperOutput)
         {
             return false;
         }

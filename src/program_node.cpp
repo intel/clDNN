@@ -269,3 +269,4 @@ void details::internal_program_node_base::set_implementation(std::unique_ptr<pri
 {
     selected_impl = std::move(impl);
 }
+

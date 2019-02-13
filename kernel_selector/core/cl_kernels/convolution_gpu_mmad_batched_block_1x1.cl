@@ -39,7 +39,11 @@ KERNEL(convolution_mmad_batched_block_1x1)(
     const uint x = get_global_id(0) * OUT_BLOCK_WIDTH;
     const uint y = get_global_id(1) * OUT_BLOCK_HEIGHT;
 
+#if WEIGHTS_PER_WORKITEM == 4
+    const uint f = (get_group_id(2) * 32 + get_sub_group_local_id() * 4) % FILTER_OFM_ALIGNED;
+#else
     const uint f = ((get_group_id(2) * WEIGHTS_PER_WORKITEM * 8) + get_sub_group_local_id() ) % FILTER_OFM_ALIGNED;
+#endif
     const uint b_block = (get_group_id(2) * 8 * WEIGHTS_PER_WORKITEM) / FILTER_OFM_ALIGNED;
 
     int4 dotProd[OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT * WEIGHTS_PER_WORKITEM] = { 0 };
@@ -106,10 +110,18 @@ KERNEL(convolution_mmad_batched_block_1x1)(
 __attribute__((opencl_unroll_hint(WEIGHTS_PER_WORKITEM)))
 for(uint w = 0; w < WEIGHTS_PER_WORKITEM; w++)
 {
+#if WEIGHTS_PER_WORKITEM == 4
+    float quant_f = quantizations[f + w];
+    float bias_f = biases[f + w];
+#if CALIBRATION_TERM
+    float calib_f = calibrations[f + w];
+#endif
+#else
     float quant_f = quantizations[f + w * 8];
     float bias_f = biases[f + w * 8];
 #if CALIBRATION_TERM
     float calib_f = calibrations[f + w * 8];
+#endif
 #endif
     __attribute__((opencl_unroll_hint(OUT_BLOCK_HEIGHT)))
     for(uint h = 0; h < OUT_BLOCK_HEIGHT; h++)
@@ -138,19 +150,26 @@ for(uint h = 0; h < OUT_BLOCK_HEIGHT; h++)
     for(uint o = 0; o < OUT_BLOCK_WIDTH; o++)
     {
         const uint dst_index = GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(OUTPUT, b_block*4, f, y + h, x + o);
+        
+#if WEIGHTS_PER_WORKITEM == 4
+        uint4 to_output;
         __attribute__((opencl_unroll_hint(4)))
         for(uint b = 0; b < 4; b++)
         {
-            #if WEIGHTS_PER_WORKITEM == 4
-                char4 out;
-                const uint out_idx = o + OUT_BLOCK_WIDTH * h;
-                out[0] = ACTIVATION(convert_char(dotProd[out_idx][b]), NL_M, NL_N);
-                out[1] = ACTIVATION(convert_char(dotProd[out_idx + OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT][b]), NL_M, NL_N);
-                out[2] = ACTIVATION(convert_char(dotProd[out_idx + OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT * 2][b]), NL_M, NL_N);
-                out[3] = ACTIVATION(convert_char(dotProd[out_idx + OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT * 3][b]), NL_M, NL_N);
-
-                intel_sub_group_block_write_uc4((__global uchar*)(output + dst_index + b * 32), as_uchar4(out));
-            #elif WEIGHTS_PER_WORKITEM == 2
+            char4 out;
+            const uint out_idx = o + OUT_BLOCK_WIDTH * h;
+            out[0] = ACTIVATION(convert_char(dotProd[out_idx][b]), NL_M, NL_N);
+            out[1] = ACTIVATION(convert_char(dotProd[out_idx + OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT][b]), NL_M, NL_N);
+            out[2] = ACTIVATION(convert_char(dotProd[out_idx + OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT * 2][b]), NL_M, NL_N);
+            out[3] = ACTIVATION(convert_char(dotProd[out_idx + OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT * 3][b]), NL_M, NL_N);
+            to_output[b] = as_uint(out);
+        }
+        intel_sub_group_block_write4((__global uint*)(output + dst_index), to_output);
+#else
+        __attribute__((opencl_unroll_hint(4)))
+        for(uint b = 0; b < 4; b++)
+        {
+            #if WEIGHTS_PER_WORKITEM == 2
                 char2 out;
                 const uint out_idx = o + OUT_BLOCK_WIDTH * h;
                 out[0] = ACTIVATION(convert_char(dotProd[out_idx][b]), NL_M, NL_N);
@@ -168,6 +187,8 @@ for(uint h = 0; h < OUT_BLOCK_HEIGHT; h++)
             }
             #endif
         }
+
+#endif
     }
 }
 

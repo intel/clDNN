@@ -33,7 +33,7 @@ If not than required reorder is added to the network.
 /*
 Add a reorder in between node and usr with reorder_layout as layout
 */
-void add_required_reorders::add_reorder(program_impl &p, program_node* node, program_node* usr, layout reorder_layout)
+void add_required_reorders::add_reorder(program_impl& p, program_node* node, program_node* usr, layout reorder_layout)
 {
 
     auto new_reorder = std::make_shared<reorder>(node->id() + "_reorder_" + usr->id(),
@@ -55,7 +55,7 @@ void add_required_reorders::add_reorder(program_impl &p, program_node* node, pro
     p.add_intermediate(new_reorder_node, *usr, idx);
 }
 
-void add_required_reorders::run(program_impl &p)
+void add_required_reorders::run(program_impl& p)
 {
     auto usr_itr = p.get_processing_order().begin();
     while (usr_itr != p.get_processing_order().end())

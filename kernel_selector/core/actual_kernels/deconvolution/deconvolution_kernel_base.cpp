@@ -57,7 +57,8 @@ namespace kernel_selector
             MakeJitConstant("FILTER_ARRAY_NUM",             dp.split),
             MakeJitConstant("INPUT0_OFFSET_WITH_PADDING",   input_offset_with_padding),
             MakeJitConstant("DEPTHWISE_SEPARABLE_OPT",      dp.depthwise_separable_opt),
-            MakeJitConstant("FUSED_ELTWISE",                dp.fused_eltwise)
+            MakeJitConstant("FUSED_ELTWISE",                dp.fused_eltwise),
+            MakeJitConstant("GROUPED",                      (dp.groups > 1) ? 1 : 0)
         });
 
         return jit;
