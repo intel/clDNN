@@ -78,6 +78,7 @@ inline std::string fmt_to_str(format fmt)
     case format::os_is_yx_isa8_osv8_isv4: return "os_is_yx_isa8_osv8_isv4";
     case format::os_is_yx_isa8_osv8_isv4_swizzled_by_4: return "os_is_yx_isa8_osv8_isv4_swizzled_by_4";
     case format::is_o_yx_isv32: return "is_o_yx_isv32";
+    case format::is_o32_yx_isv32_swizzled_by_4: return "is_o32_yx_isv32_swizzled_by_4";
     case format::os_is_y_x8_osv8_isv4: return "os_is_y_x8_osv8_isv4";
     case format::byxf_af32: return "byxf_af32";
     case format::byx8_f4: return "byx8_f4";

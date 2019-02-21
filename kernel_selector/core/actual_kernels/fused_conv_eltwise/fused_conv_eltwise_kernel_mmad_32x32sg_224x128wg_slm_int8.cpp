@@ -172,6 +172,10 @@ namespace kernel_selector {
         jit.AddConstant(MakeJitConstant("OUT_F_BLOCK_PITCH", out_f_block_pitch));
         jit.AddConstant(MakeJitConstant("OUT_OFFSET", out_offset));
 
+        bool out_padding = output.X().pad.Total() != 0 || output.Y().pad.Total() != 0;
+        jit.AddConstant(MakeJitConstant("OUT_WITH_PADDING", out_padding));
+
+        bool eltw_padding = false;
         if (!params.second_input_in_output)
         {
             // for second input
@@ -186,7 +190,15 @@ namespace kernel_selector {
             jit.AddConstant(MakeJitConstant("IN2_B_BLOCK_PITCH", in2_b_block_pitch));
             jit.AddConstant(MakeJitConstant("IN2_F_BLOCK_PITCH", in2_f_block_pitch));
             jit.AddConstant(MakeJitConstant("IN2_OFFSET", in2_offset));
+
+            eltw_padding = params.inputs[1].X().pad.Total() != 0 || params.inputs[1].Y().pad.Total() != 0;;
         }
+        else
+        {
+            eltw_padding = out_padding;
+        }
+
+        jit.AddConstant(MakeJitConstant("ELTW_WITH_PADDING", eltw_padding));
 
         if (!params.eltw.stride.empty())
         {
@@ -204,7 +216,7 @@ namespace kernel_selector {
 
 	KernelsData fused_conv_eltwise_kernel_mmad_32x32sg_224x128wg_slm_int8::GetKernelsData(const Params& params, const optional_params& options) const
 	{
-        KernelsData kd = GetCommonKernelsData(params, options, " -Dcl_intel_subgroups_char");
+        KernelsData kd = GetCommonKernelsData(params, options);
         if (!kd.empty())
 			kd[0].estimatedTime = FORCE_PRIORITY_1; //_3 
 		return kd;

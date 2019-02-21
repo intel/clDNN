@@ -32,6 +32,8 @@
 #else
 #include <unistd.h>
 #include <limits.h>
+#include <link.h>
+#include <dlfcn.h>
 #endif
 
 #include <fstream>
@@ -162,29 +164,22 @@ std::shared_ptr<rapidjson::Document> get_cache_from_file(uint32_t compute_units_
     if (tuning_cache_path.compare("cache.json") == 0)
     {
 #ifdef _WIN32
-        char path[260];
-        GetModuleFileNameA(NULL, path, 2048);
+        char path[MAX_PATH];
+        HMODULE hm = NULL;
+        GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            (LPCSTR)&get_cache_from_file, &hm);
+        GetModuleFileName(hm, path, sizeof(path));
         std::string bin_path(path);
         tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("\\")) + "\\cache.json";
 #else
-        char arg1[260];
-        char path[260] = { 0 };
-        sprintf(arg1, "/proc/%d/exe", getpid());
-        auto check = readlink(arg1, path, sizeof(path));
-
-        if (check != -1)
-        {
-            std::string bin_path(path);
-            tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("/")) + "/cache.json";
-            
-            std::ifstream file_check(tuning_cache_path);
-            if (!file_check.good())
-                tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("/")) + "/lib/cache.json";
-            file_check.close();
-        }
+        Dl_info dl_info;
+        dladdr((void *)get_cache_from_file, &dl_info);
+        std::string path(dl_info.dli_fname);
+        tuning_cache_path = path.substr(0, path.find_last_of('/'));
+        tuning_cache_path += "/cache.json";
 #endif
     }
-    
     rapidjson::Document cacheFile;
     rapidjson::Document cacheDeviceData;
     auto computeUnits = std::to_string(compute_units_count);

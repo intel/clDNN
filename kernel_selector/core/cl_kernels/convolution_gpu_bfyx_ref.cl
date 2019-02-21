@@ -52,15 +52,6 @@ KERNEL(convolution)(
 #else
     const uint in_split_offset = split_idx * INPUT0_FEATURE_PITCH * FILTER_IFM_NUM;
 #endif
-#if GROUPED && !DEPTHWISE_SEPARABLE_OPT
-    const uint filter_offset = f*FILTER_OFM_PITCH + split_idx * FILTER_LENGTH;
-#else
-    const uint filter_offset = f*FILTER_OFM_PITCH;
-#endif
-    const uint input_offset = b*INPUT0_BATCH_PITCH + INPUT0_OFFSET + in_split_offset;
-#ifdef LOCAL_CONVOLUTION
-    const int local_offset = FILTER_SIZE_X * FILTER_SIZE_Y * (x + OUTPUT_SIZE_X * y);
-#endif
     for (uint k = 0; k < FILTER_IFM_NUM; ++k)
     {
         for (uint j = 0; j < FILTER_SIZE_Y ; ++j)
@@ -77,11 +68,17 @@ KERNEL(convolution)(
 
                     if(!zero_x)
                     {
-                        uint input_idx = input_offset + (uint)input_offset_x*INPUT0_X_PITCH + (uint)input_offset_y*INPUT0_Y_PITCH + k*INPUT0_FEATURE_PITCH;
+                        uint input_idx =
+                            GET_DATA_INDEX(
+                                INPUT0, b, k, input_offset_y, input_offset_x)
+                            + in_split_offset;
+                        uint filter_idx = GET_FILTER_INDEX(FILTER, f, k, j, i);
+#if GROUPED && !DEPTHWISE_SEPARABLE_OPT
+                        filter_idx += split_idx * FILTER_LENGTH;
+#endif
 #ifdef LOCAL_CONVOLUTION
-                        uint filter_idx = filter_offset + k*FILTER_IFM_PITCH + j*FILTER_Y_PITCH + i*FILTER_X_PITCH + local_offset;
-#else
-                        uint filter_idx = filter_offset + k*FILTER_IFM_PITCH + j*FILTER_Y_PITCH + i*FILTER_X_PITCH;
+                        filter_idx += FILTER_SIZE_X * FILTER_SIZE_Y
+                            * (x + OUTPUT_SIZE_X * y);
 #endif
 #if QUANTIZATION_TERM
                         dotProd += (int)input[input_idx] * (int)weights[filter_idx];

@@ -34,6 +34,8 @@ apply_adam_node::typed_program_node(const std::shared_ptr<apply_adam> prim, prog
 }
 layout apply_adam_inst::calc_output_layout(apply_adam_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for apply_adam_node!");
     return node.input().get_non_padded_output_layout();
 }
 

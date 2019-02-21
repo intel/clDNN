@@ -30,6 +30,9 @@ primitive_type_id detection_output_type_id()
 
 layout detection_output_inst::calc_output_layout(detection_output_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for "
+              "detection_output_node!");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Detection output layer input number", node.get_dependencies().size(), "expected number of inputs", static_cast<size_t>(3), "");
 
     auto input_layout = node.location().get_output_layout();
@@ -172,6 +175,9 @@ primitive_type_id detection_output_sort_type_id()
 
 layout detection_output_sort_inst::calc_output_layout(detection_output_sort_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for "
+              "detection_output_sort_node!");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Detection output layer input number", node.get_dependencies().size(), "expected number of inputs", static_cast<size_t>(1), "");
 
     auto input_layout = node.input().get_output_layout();

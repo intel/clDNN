@@ -31,7 +31,7 @@
 
 namespace cldnn {  namespace gpu {
 
-struct PyramidROIAlign_gpu : typed_primitive_gpu_impl<pyramid_roi_align>
+struct pyramid_roi_align_gpu : typed_primitive_gpu_impl<pyramid_roi_align>
 {
     using parent = typed_primitive_gpu_impl<pyramid_roi_align>;
     using parent::parent;
@@ -54,7 +54,7 @@ struct PyramidROIAlign_gpu : typed_primitive_gpu_impl<pyramid_roi_align>
 
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
-        return new PyramidROIAlign_gpu(arg, best_kernels[0]);
+        return new pyramid_roi_align_gpu(arg, best_kernels[0]);
     }
 
 };
@@ -62,7 +62,7 @@ struct PyramidROIAlign_gpu : typed_primitive_gpu_impl<pyramid_roi_align>
 namespace {
     struct attach {
         attach() {
-            auto val_fw = PyramidROIAlign_gpu::create;
+            auto val_fw = pyramid_roi_align_gpu::create;
             implementation_map<pyramid_roi_align>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), val_fw);
             implementation_map<pyramid_roi_align>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw);
         }

@@ -46,26 +46,17 @@ void prepare_primitive_fusing::fuse_skip_layers(program_impl& p, program_node* n
 {
     program_helpers::do_for_types<eltwise>(*node, [&p](eltwise_node& node)
     {
-        bool skippable = false;
-        int index = 0;
         if (node.get_primitive()->mode != eltwise_mode::sum || node.inputs_count() != 2)
             return;
 
-        if (node.input(0).is_type<deconvolution>())
+        // both inputs should be deconvolutions
+        if (!(node.input(0).is_type<deconvolution>() && node.input(1).is_type<deconvolution>()))
         {
-            skippable = true;
-        }
-        else if (node.input(1).is_type<deconvolution>())
-        {
-            skippable = true;
-            index = 1;
-        }
-
-        if (!skippable)
             return;
+        }
 
-        auto& to_fuse_with = node.input(index);
-        int to_fuse_index = index == 0 ? 1 : 0;
+        auto& to_fuse_with = node.input(0);
+        int to_fuse_index = 1;
 
         //remove dependencies and users of elwtise that is going to be extracted
         p.add_connection(node.input(to_fuse_index), to_fuse_with);
@@ -189,7 +180,9 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl& p, program_node*
 void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* node)
 {
     // make sure this convolution have only 1 user and it's eltwise
-    if (node->users.size() != 1)
+    // maek sure convolution is not an output
+    if (node->users.size() != 1 ||
+        node->is_output())
         return;
 
     if (!(*(node->users.begin()))->is_type<eltwise>())
@@ -220,7 +213,9 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
     eltwise_node * eltw_node = static_cast<eltwise_node*>(*(node->users.begin()));
 
     // make sure eltwise have only 2 inputs
-    if (eltw_node->inputs_count() != 2)
+    // make sure eltwise is not an output
+    if (eltw_node->inputs_count() != 2 ||
+        eltw_node->is_output())
         return;
 
     // only single ADD operation is currently supported
@@ -324,9 +319,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
         p.remove_connection(dep, *eltw_node);
     }
 
-    p.extract_and_remove(*conv_node);
     p.extract_and_remove(*eltw_node);
-
     new_node.recalc_output_layout();
 }
 

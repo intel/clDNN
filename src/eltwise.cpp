@@ -30,6 +30,8 @@ primitive_type_id eltwise_type_id()
 
 layout eltwise_inst::calc_output_layout(eltwise_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for eltwise_inst_node!");
     auto input_node0_layout = node.input(0).get_non_padded_output_layout();
     auto input_node1_layout = node.input(0).get_non_padded_output_layout();
     auto mode = node.get_primitive()->mode;

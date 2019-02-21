@@ -15,6 +15,34 @@
 #include "include/data_types.cl"
 #include "include/mmad.cl"
 
+#define SCALE 0.11f
+
+#ifdef LIGHTWEIGHT_QUANTIZATION
+
+#define QUANTIZATION \
+    slm_write0.s0 = convert_uchar_sat((float)outvec.s0 * SCALE + bias_f);\
+    slm_write0.s1 = convert_uchar_sat((float)outvec.s1 * SCALE + bias_f);\
+    slm_write0.s2 = convert_uchar_sat((float)outvec.s2 * SCALE + bias_f);\
+    slm_write0.s3 = convert_uchar_sat((float)outvec.s3 * SCALE + bias_f);
+
+#elif NO_QUANTIZATION
+
+#define QUANTIZATION(idx) \
+    slm_write0.s0 = convert_uchar_sat(outvec.s0);\
+    slm_write0.s1 = convert_uchar_sat(outvec.s1);\
+    slm_write0.s2 = convert_uchar_sat(outvec.s2);\
+    slm_write0.s3 = convert_uchar_sat(outvec.s3);
+
+#else
+
+#define QUANTIZATION \
+    slm_write0.s0 = as_uchar(ACTIVATION(convert_char(round(((float)(outvec.s0) * quant_f * I_QF + bias_f) * calib_f)), NL_M, NL_N));\
+    slm_write0.s1 = as_uchar(ACTIVATION(convert_char(round(((float)(outvec.s1) * quant_f * I_QF + bias_f) * calib_f)), NL_M, NL_N));\
+    slm_write0.s2 = as_uchar(ACTIVATION(convert_char(round(((float)(outvec.s2) * quant_f * I_QF + bias_f) * calib_f)), NL_M, NL_N));\
+    slm_write0.s3 = as_uchar(ACTIVATION(convert_char(round(((float)(outvec.s3) * quant_f * I_QF + bias_f) * calib_f)), NL_M, NL_N));
+
+#endif
+
 // mapping to clDNN
 #define _MMAD_4x8(C, A, B) MMAD_4x8(A, B, C)
 #define _OD OUTPUT_FEATURE_NUM
@@ -915,3 +943,6 @@ __global int8* weights,
 				output_write += 4*8;
 			}
 } //end of kernel
+
+#undef SCAL
+#undef QUANTIZATION

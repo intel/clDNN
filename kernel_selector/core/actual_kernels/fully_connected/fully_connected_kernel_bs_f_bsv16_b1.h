@@ -26,8 +26,7 @@ namespace kernel_selector {
         FullyConnected_bs_f_bsv16_b1() : FullyConnectedKernelBase("fully_connected_gpu_bs_f_bsv16_b1") {}
 
         KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        ParamsKey GetSupportedKey() const override;
-    
+
     protected:
         struct DispatchData : public FullyConnectedKernelBase::DispatchData
         {
@@ -48,6 +47,7 @@ namespace kernel_selector {
             uint32_t    filter_chunk_prefetch_size;
         };
 
+        ParamsKey GetSupportedKey() const override;
         JitConstants GetJitConstants(const fully_connected_params& params, const FullyConnectedKernelBase::DispatchData& kd) const override;
         std::unique_ptr<FullyConnectedKernelBase::DispatchData> SetDefault(const fully_connected_params& arg, int autoTuneIndex = -1) const override;
     };

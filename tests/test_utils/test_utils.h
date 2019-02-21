@@ -21,6 +21,7 @@
 #include "api/CPP/memory.hpp"
 #include "api/CPP/tensor.hpp"
 #include "api/CPP/program.hpp"
+#include "api/CPP/network.hpp"
 #include <iostream>
 #include <limits>
 #include <random>
@@ -226,6 +227,24 @@ void set_random_values(const cldnn::memory& mem, bool sign = false, unsigned sig
     for (auto it = ptr.begin(); it != ptr.end(); ++it)
     {   
         *it = rnd_generators::gen_number<T>(gen, significand_bit, sign, false, scale);
+    }
+}
+
+
+// Tries to construct a network, checking if an expected error appears
+inline void check_exception_massage(const cldnn::engine& engine, cldnn::topology& topology, std::string msg_to_find)
+{
+    try {
+        cldnn::network(engine, topology);
+    }
+    catch (std::exception & exc) {
+        std::string msg(exc.what());
+        if (msg.find(msg_to_find) != std::string::npos) {
+            throw;
+        }
+        else {
+            printf("%s\n", exc.what());
+        }
     }
 }
 
@@ -451,7 +470,7 @@ inline void PrintTupleTo(const std::tuple<tests::test_params*, cldnn::primitive*
     else if (primitive->type == cldnn::reorder::type_id())
     {
         auto reorder = static_cast<cldnn::reorder*>(primitive);
-        str << "Output data type: " << cldnn::data_type_traits::name(reorder->output_data_type) << " Mean: " << reorder->mean << "Subtract per feature: " << "TODO" /*std::vector<float> subtract_per_feature*/;
+        str << "Output data type: " << cldnn::data_type_traits::name(*reorder->output_data_type) << " Mean: " << reorder->mean << "Subtract per feature: " << "TODO" /*std::vector<float> subtract_per_feature*/;
     }
     else if (primitive->type == cldnn::normalize::type_id())
     {

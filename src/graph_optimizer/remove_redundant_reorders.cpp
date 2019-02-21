@@ -77,10 +77,11 @@ void remove_redundant_reorders::run(program_impl& p)
         if (!optimize)
             continue;
 
-        for (auto remove_reorder_node : r_nodes_to_remove)
+        auto rem_itr = r_nodes_to_remove.begin();
+        while (rem_itr != r_nodes_to_remove.end())
         {
+            auto remove_reorder_node = *rem_itr++;
             auto& r_node = remove_reorder_node->as<reorder>();
-
             //mark as optimized
             r_node.can_be_optimized(true);
             r_node.requires_reinterpret(!ident.first);

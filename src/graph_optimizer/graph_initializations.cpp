@@ -92,12 +92,10 @@ namespace cldnn
                             = (reference_input_size.raw[dimension] == 0) ? output_layout_size.raw[dimension] : reference_input_size.raw[dimension];
                     }
 
-                    //update crop primitive and add connections
+                    //update crop primitive
                     node_ptr->set_output_padding(output_layout.data_padding);
                     auto crop_prim = node_ptr->as<crop>().typed_desc();
                     crop_prim->reference_input = reference_input_size;
-
-                    p.add_connection(node->get_dependency(0), *node_ptr);
                 }
 
                 //remove input->split connection and remove original split node

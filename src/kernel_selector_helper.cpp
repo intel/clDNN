@@ -153,6 +153,7 @@ kernel_selector::weights_layout to_weights_layout(format f)
     case format::os_is_yx_isa8_osv8_isv4:                    return kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4;
     case format::os_is_yx_isa8_osv8_isv4_swizzled_by_4:      return kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4_swizzled_by_4;
     case format::is_o_yx_isv32: return kernel_selector::weights_layout::is_o_yx_isv32;
+    case format::is_o32_yx_isv32_swizzled_by_4: return kernel_selector::weights_layout::is_o32_yx_isv32_swizzled_by_4;
     case format::os_is_y_x8_osv8_isv4: return kernel_selector::weights_layout::os_is_y_x8_osv8_isv4;
     case format::bf_lyx_yx:                                  return kernel_selector::weights_layout::bf_lyx_yx;
     case format::os_is_yx_osv16_isv4:  return kernel_selector::weights_layout::os_is_yx_osv16_isv4;
@@ -187,6 +188,7 @@ cldnn::format::type from_weights_layout(kernel_selector::weights_layout l)
     case kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4:                return cldnn::format::os_is_yx_isa8_osv8_isv4;
     case kernel_selector::weights_layout::os_is_yx_isa8_osv8_isv4_swizzled_by_4:  return cldnn::format::os_is_yx_isa8_osv8_isv4_swizzled_by_4;
     case kernel_selector::weights_layout::is_o_yx_isv32:                          return cldnn::format::is_o_yx_isv32;
+    case kernel_selector::weights_layout::is_o32_yx_isv32_swizzled_by_4: return cldnn::format::is_o32_yx_isv32_swizzled_by_4;
     case kernel_selector::weights_layout::os_is_y_x8_osv8_isv4: return cldnn::format::os_is_y_x8_osv8_isv4;
     case kernel_selector::weights_layout::bf_lyx_yx:                              return cldnn::format::bf_lyx_yx;
     default:

@@ -31,7 +31,9 @@ namespace cldnn
 
 	layout embed_inst::calc_output_layout(embed_node const& node)
 	{
-		auto input_layout = node.input().get_output_layout();
+        assert((bool)node.get_primitive()->output_data_type == false
+               && "Output data type forcing is not supported for embed_node!");
+        auto input_layout = node.input().get_output_layout();
 		auto desc = node.get_primitive();
 		auto weights_layout = node.weights().get_output_layout();
 

@@ -27,9 +27,9 @@ namespace kernel_selector {
         virtual ~ConvolutionKernel_byxf_fs_bs_yx_bsv4_fsv32() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
 
     protected:
+        virtual ParamsKey GetSupportedKey() const override;
         ConvolutionKernelBase::DispatchData SetDefault(const convolution_params& arg, int) const override;
         virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override
         {

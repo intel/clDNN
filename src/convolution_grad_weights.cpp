@@ -31,6 +31,9 @@ primitive_type_id convolution_grad_weights_type_id()
 
 layout convolution_grad_weights_inst::calc_output_layout(convolution_grad_weights_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for "
+              "convolution_grad_weights_node!");
     //output buffer will not be used in this primitive unless output gradient weights is set
     auto input_grad_layout_size = node.input(0).get_output_layout();
     tensor output_sizes = { 1, 1, 1, 1 };

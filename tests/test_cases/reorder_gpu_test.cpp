@@ -1340,7 +1340,7 @@ public:
         assert(mean == "");
         assert(subtract_per_feature.size() == 0);
         
-        auto output = memory::allocate(engine, cldnn::layout(reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
+        auto output = memory::allocate(engine, cldnn::layout(*reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
 
         cldnn::pointer<InputType> input_mem = inputs[0].pointer<InputType>();
         cldnn::pointer<OutputType> output_mem = output.pointer<OutputType>();
@@ -1359,7 +1359,7 @@ public:
     {
         if (generic_params->data_type == data_types::f32)
         {
-            if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
+            if (*layer_params->output_data_type == data_types::f32)
             {
                 return generate_reference_typed<float, float>(inputs);
             }
@@ -1370,7 +1370,7 @@ public:
         }
         else
         {
-            if (((cldnn::reorder*)layer_params)->output_data_type == data_types::f32)
+            if (*layer_params->output_data_type == data_types::f32)
             {
                 return generate_reference_typed<FLOAT16, float>(inputs);
             }

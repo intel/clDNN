@@ -31,6 +31,9 @@ primitive_type_id fused_conv_eltwise_type_id()
 
 layout fused_conv_eltwise_inst::calc_output_layout(fused_conv_eltwise_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for "
+              "fused_conv_eltwise_node!");
     auto desc = node.get_primitive();
 
     auto input_layout = node.input().get_output_layout();

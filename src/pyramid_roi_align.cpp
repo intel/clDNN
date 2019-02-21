@@ -27,6 +27,9 @@ namespace cldnn {
 
     layout pyramid_roi_align_inst::calc_output_layout(pyramidROIAlign_node const &node)
     {
+        assert((bool)node.get_primitive()->output_data_type == false
+               && "Output data type forcing is not supported for "
+                  "pyramidROIAlign_node!");
 
         auto desc = node.get_primitive();
 

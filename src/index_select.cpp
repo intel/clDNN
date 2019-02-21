@@ -30,7 +30,10 @@ namespace cldnn
 
 	layout index_select_inst::calc_output_layout(index_select_node const& node)
 	{
-		auto desc = node.get_primitive();
+        assert((bool)node.get_primitive()->output_data_type == false
+               && "Output data type forcing is not supported for "
+                  "index_select_node!");
+        auto desc = node.get_primitive();
 
         auto input_layout = node.input().get_output_layout();
         

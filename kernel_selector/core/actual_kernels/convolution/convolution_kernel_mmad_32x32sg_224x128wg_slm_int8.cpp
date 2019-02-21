@@ -171,13 +171,16 @@ namespace kernel_selector {
         jit.AddConstant(MakeJitConstant("OUT_F_BLOCK_PITCH", out_f_block_pitch));
         jit.AddConstant(MakeJitConstant("OUT_OFFSET", out_offset));
 
-		return jit;
+        bool out_padding = output.X().pad.Total() != 0 || output.Y().pad.Total() != 0;
+        jit.AddConstant(MakeJitConstant("OUT_WITH_PADDING", out_padding));
+        
+        return jit;
 	}
 
 	KernelsData ConvolutionKernel_mmad_32x32sg_224x128wg_slm_int8::GetKernelsData(const Params& params, const optional_params& options) const
 	{
-		KernelsData kd = GetCommonKernelsData(params, options);
-		if (!kd.empty())
+        KernelsData kd = GetCommonKernelsData(params, options);
+        if (!kd.empty())
 			kd[0].estimatedTime = FORCE_PRIORITY_1; //_3 
 		return kd;
 	}

@@ -39,6 +39,40 @@ enum class data_types : size_t
     f32 = cldnn_f32,
 };
 
+class optional_data_type
+{
+    // Must be the same as the undrelying type of `data_types`.
+    using storage_type = size_t;
+
+    // Implicitly assumes that this value is not used in the `data_types`.
+    static constexpr auto non_specified_type =
+        std::numeric_limits<storage_type>::max();
+
+public:
+    optional_data_type()
+        : storage(non_specified_type)
+    {}
+
+    optional_data_type(data_types type)
+        : storage(static_cast<storage_type>(type))
+    {}
+
+    operator bool() const { return storage != non_specified_type; }
+
+    // Similarly to std::optional does *not* verify that the object has the type
+    // set. Unlike it, though, returns the value instead of pointer/reference.
+    data_types operator*() const { return static_cast<data_types>(storage); }
+
+    optional_data_type& operator=(const data_types new_type)
+    {
+        storage = static_cast<storage_type>(new_type);
+        return *this;
+    }
+
+private:
+    storage_type storage;
+};
+
 /// Converts C++ type to @ref data_types .
 template <typename T> struct type_to_data_type;
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -421,6 +455,11 @@ struct layout
         }
         else if (this->format == cldnn::format::is_o_yx_isv32 && !(is_aligned_to(sizes[1], 32)))
         {
+            sizes[1] = align_to(sizes[1], 32);
+        }
+        else if (this->format == cldnn::format::is_o32_yx_isv32_swizzled_by_4 && (!is_aligned_to(sizes[1], 32) || !(is_aligned_to(sizes[0], 32))))
+        {
+            sizes[0] = align_to(sizes[0], 32);
             sizes[1] = align_to(sizes[1], 32);
         }
         else if (this->format == cldnn::format::os_is_y_x8_osv8_isv4)

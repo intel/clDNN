@@ -37,6 +37,8 @@ primitive_type_id condition_type_id()
 */
 layout condition_inst::calc_output_layout(condition_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for condition_node!");
     node.set_branches();
 
     auto branch_true_output = node.get_branch_true()->get_outputs();

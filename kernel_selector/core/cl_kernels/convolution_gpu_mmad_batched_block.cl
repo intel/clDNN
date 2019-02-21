@@ -15,6 +15,37 @@
 #include "include/fetch.cl"
 #include "include/mmad.cl"
 
+#define SCALE 0.11f
+
+#ifdef LIGHTWEIGHT_QUANTIZATION
+    
+#define QUANTIZATION \
+    uchar4 out;\
+    out[0] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 0][b] * SCALE + bias_f.s0);\
+    out[1] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 1][b] * SCALE + bias_f.s1);\
+    out[2] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 2][b] * SCALE + bias_f.s2);\
+    out[3] = convert_uchar_sat((float)dotProd[o + OUT_BLOCK_WIDTH * 3][b] * SCALE + bias_f.s3);
+
+#elif NO_QUANTIZATION
+
+#define QUANTIZATION \
+    uchar4 out;\
+    out[0] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 0][b]);\
+    out[1] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 1][b]);\
+    out[2] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 2][b]);\
+    out[3] = convert_uchar_sat(dotProd[o + OUT_BLOCK_WIDTH * 3][b]);
+
+#else
+
+#define QUANTIZATION \
+    char4 out;\
+    out[0] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 0][b] * quant_f.s0 * I_QF + bias_f.s0) * calib_f.s0)), NL_M, NL_N);\
+    out[1] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 1][b] * quant_f.s1 * I_QF + bias_f.s1) * calib_f.s1)), NL_M, NL_N);\
+    out[2] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 2][b] * quant_f.s2 * I_QF + bias_f.s2) * calib_f.s2)), NL_M, NL_N);\
+    out[3] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 3][b] * quant_f.s3 * I_QF + bias_f.s3) * calib_f.s3)), NL_M, NL_N);
+
+#endif
+
 #define FILTER_IFM_MMAD_NUM ((FILTER_IFM_NUM + 31) / 32)
 #define FILTER_OFM_MMAD_NUM ((FILTER_OFM_NUM + 7) / 8)
 #define FILTER_IFM_ALIGNED (FILTER_IFM_MMAD_NUM * 32)
@@ -118,12 +149,7 @@ for(uint o = 0; o < OUT_BLOCK_WIDTH; o++)
     __attribute__((opencl_unroll_hint(4)))
     for(uint b = 0; b < 4; b++)
     {
-        char4 out;
-        out[0] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 0][b] * quant_f.s0 * I_QF + bias_f.s0) * calib_f.s0)), NL_M, NL_N);
-        out[1] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 1][b] * quant_f.s1 * I_QF + bias_f.s1) * calib_f.s1)), NL_M, NL_N);
-        out[2] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 2][b] * quant_f.s2 * I_QF + bias_f.s2) * calib_f.s2)), NL_M, NL_N);
-        out[3] = ACTIVATION(convert_char(round(((float)dotProd[o + OUT_BLOCK_WIDTH * 3][b] * quant_f.s3 * I_QF + bias_f.s3) * calib_f.s3)), NL_M, NL_N);
-
+        QUANTIZATION;
         to_output[b] = as_uint(out);
     }
     intel_sub_group_block_write4((__global uint*)(output + dst_index), to_output);
@@ -163,3 +189,6 @@ for(uint w = 0; w < WEIGHTS_PER_WORKITEM; w++)
 #undef FILTER_OFM_MMAD_NUM
 #undef FILTER_IFM_ALIGNED
 #undef FILTER_OFM_ALIGNED
+
+#undef SCALE
+#undef QUANTIZATION

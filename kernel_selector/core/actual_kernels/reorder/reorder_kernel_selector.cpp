@@ -31,7 +31,7 @@ namespace kernel_selector {
         Attach<ReorderFromWinograd2x3Kernel>();
         Attach<ReorderToWinograd2x3Kernel>();
         Attach<ReorderKernel_to_yxfb_batched>();
-        Attach<reorder_kernel_byxf_f32_to_byx8_f4_i8>();
+        //Attach<reorder_kernel_byxf_f32_to_byx8_f4_i8>(); // Slower than default!
     }
 
     KernelsData reorder_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const

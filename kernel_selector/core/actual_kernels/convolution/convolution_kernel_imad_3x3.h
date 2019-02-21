@@ -32,11 +32,11 @@ namespace kernel_selector {
         virtual ~ConvolutionKernel_imad_3x3() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        virtual ParamsKey GetSupportedKey() const override;
 
         KernelsData GetCommonKernelsData(const Params& params, const optional_params& options, const std::string exeMode = DEFAULT, int autoTuneIndex = -1) const;
 
     protected:
+        virtual ParamsKey GetSupportedKey() const override;
         virtual bool Validate(const Params& params, const optional_params& options) const override;
         JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
         DispatchData SetDefault(const convolution_params& params, int autoTuneIndex = -1) const override;

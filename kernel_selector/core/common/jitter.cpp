@@ -290,7 +290,7 @@ namespace kernel_selector {
         case Datatype::INT8:
             unit_type = "char";
             unit_max_val = "CHAR_MAX";
-            unit_min_val = "-UNIT_VAL_MAX";
+            unit_min_val = "CHAR_MIN";
             unit_val_one = "(char) 1";
             unit_val_zero = "(char) 0";
             to_unit_type = "convert_char(v)";
@@ -310,7 +310,7 @@ namespace kernel_selector {
         case Datatype::INT32:
             unit_type = "int";
             unit_max_val = "INT_MAX";
-            unit_min_val = "-UNIT_VAL_MAX";
+            unit_min_val = "INT_MIN";
             unit_val_one = "(int) 1";
             unit_val_zero = "(int) 0";
             to_unit_type = "convert_int(v)";
@@ -330,7 +330,7 @@ namespace kernel_selector {
         case Datatype::INT64:
             unit_type = "long";
             unit_max_val = "LONG_MAX";
-            unit_min_val = "-UNIT_VAL_MAX";
+            unit_min_val = "LONG_MIN";
             unit_val_one = "(long) 1";
             unit_val_zero = "(long) 0";
             to_unit_type = "convert_long(v)";

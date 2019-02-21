@@ -29,9 +29,9 @@ namespace kernel_selector {
 		virtual ~fused_conv_eltwise_kernel_gemm() {}
 
 		virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-		virtual ParamsKey GetSupportedKey() const override;
 
 	protected:
+		virtual ParamsKey GetSupportedKey() const override;
         std::vector<WeightsLayout> GetSupportedWeightLayouts(const fused_conv_eltwise_params&) const override;
         std::string GetKernelName(const fused_conv_eltwise_params& params) const override;
         bool NeedPaddedInput() const override { return true; }

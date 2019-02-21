@@ -27,9 +27,9 @@ namespace kernel_selector {
         FullyConnected_bf_io_GEMM() : Parent("fully_connected_gpu_bf_io_gemm") {}
 
         KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        ParamsKey GetSupportedKey() const override;
 
     protected:
+        ParamsKey GetSupportedKey() const override;
         std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params, int autoTuneIndex = -1) const override;
         JitConstants GetJitConstants(const fully_connected_params& params, const DispatchData& kd) const override;
     };

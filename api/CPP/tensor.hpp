@@ -111,6 +111,7 @@ struct format
         os_is_yx_isa8_osv8_isv4,                        /// format for weights for MMAD convolution
         os_is_yx_isa8_osv8_isv4_swizzled_by_4, /// format for weights for MMAD convolution
         is_o_yx_isv32, /// format for weights for 1x1 MMAD convolutions
+        is_o32_yx_isv32_swizzled_by_4, /// format for weights for 1x1 MMAD convolutions
         os_is_y_x8_osv8_isv4, /// format for weights for 1x1 MMAD convolutions
         byxf_af32,           /// < \n format for input for primitives using MMAD
         byx8_f4,             /// < \n format for input for MMAD convolutions
@@ -152,6 +153,7 @@ struct format
             { byx8_f4 , { 1, 1, 2, 0, "byxf", "bfyx"} },
             { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, 0, "fbyx", "bfxy" }},
             { is_o_yx_isv32 , {1, 1, 2, 0, "byxf", "bfxy" } },
+            { is_o32_yx_isv32_swizzled_by_4 , {1,1,2,0,"byxf", "bfxy" } },
             { os_is_y_x8_osv8_isv4 , { 1, 1, 2, 0, "byxf", "bfxy" } },
             { bf_lyx_yx,{ 1, 1, 2, 2, "bfklyx", "bfklxy" } },
             { b_fs_yx_fsv4,{ 1, 1, 1, 0, "bfyx", "bfxy" } },
@@ -797,6 +799,13 @@ public:
         else if (fmt == cldnn::format::is_o_yx_isv32 && !(is_aligned_to(my_sizes[1], 32)))
         {
             my_sizes[1] = align_to(my_sizes[1], 32);
+            adjusted_coords[1] = align_to(adjusted_coords[1], 32);
+        }
+        else if (fmt == cldnn::format::is_o32_yx_isv32_swizzled_by_4 && (!is_aligned_to(my_sizes[1], 32) || !is_aligned_to(my_sizes[0], 32)))
+        {
+            my_sizes[0] = align_to(my_sizes[0], 32);
+            my_sizes[1] = align_to(my_sizes[1], 32);
+            adjusted_coords[0] = align_to(adjusted_coords[0], 32);
             adjusted_coords[1] = align_to(adjusted_coords[1], 32);
         }
         else if (fmt == cldnn::format::os_is_y_x8_osv8_isv4)

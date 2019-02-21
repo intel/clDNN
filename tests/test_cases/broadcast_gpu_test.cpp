@@ -90,21 +90,6 @@ void start_broadcast_test(data_types cldnn_data_type, std::vector<size_t> output
     }
 }
 
-void check_exception_massage(const engine& engine, topology& topology, std::string msg_to_find) {
-    try {
-        network(engine, topology);
-    }
-    catch (std::exception & exc) {
-        std::string msg(exc.what());
-        if (msg.find(msg_to_find) != std::string::npos) {
-            throw;
-        }
-        else {
-            printf("%s\n", exc.what());
-        }
-    }
-}
-
 TEST(broadcast_gpu_float, bfyx_1_to_5_w_b_axes_0) {
     std::vector<float> golden_data = {1.0, 1.0, 1.0, 1.0, 1.0};
     start_broadcast_test<float>(data_types::f32, {5}, {1}, {0}, golden_data);
