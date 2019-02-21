@@ -86,6 +86,7 @@ namespace kernel_selector
             os_is_yx_isa8_osv8_isv4, // for MMAD convolution
             os_is_yx_isa8_osv8_isv4_swizzled_by_4, // for MMAD convolution swizzled from ofm 0..7 to 0,4,8,12,16,20,24,28, 1,5...
             is_o_yx_isv32,           // for MMAD 1x1 convolutions
+            is_o32_yx_isv32_swizzled_by_4,           // for MMAD 1x1 convolutions swizzled from ofm 0..7 to 0,4,8,12,16,20,24,28, 1,5...
             os_is_y_x8_osv8_isv4, // for MMAD convolutions
             bf_lyx_yx,               // local convolution
             os_is_yx_osv16_isv4,     // swizzled weights for convolution using IMAD

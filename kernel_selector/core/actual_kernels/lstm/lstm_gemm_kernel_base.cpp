@@ -55,7 +55,7 @@ namespace kernel_selector
 
         KernelData kd = KernelData::Default<lstm_gemm_params>(params, orgParams.inputs.size());
 
-        float effiency = FORCE_PRIORITY_1;
+        float effiency = FORCE_PRIORITY_9;
         const auto& input = orgParams.inputs[0];
 
         auto newParams = orgParams;

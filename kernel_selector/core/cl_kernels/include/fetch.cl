@@ -315,6 +315,24 @@ inline uint FUNC(get_is_o_yx_isv32_index)(uint o, uint i, uint y, uint x, uint i
         CAT(prefix, _SIZE_X),\
         CAT(prefix, _SIZE_Y))
 
+inline uint FUNC(get_is_o32_yx_isv32_swizzled_by_4_index)(uint o, uint i, uint y, uint x, uint i_size, uint o_size, uint x_size, uint y_size)
+{
+    const uint o_aligned_to_32 = ((o_size + 31) / 32) * 32;
+    const uint o_swizzled = (o % 4) * 8 + ((o % 32) / 4) + (o / 32) * 32;
+    const uint i_aligned_to_32 = ((i_size + 31) / 32) * 32;
+    const uint i_val = i % 32;
+    const uint i_slice = i / 32;
+    const size_t idx = i_val + 32* (x + x_size * (y + y_size * (o_swizzled + o_aligned_to_32 * i_slice) ) );
+    return idx;
+}
+
+#define GET_FILTER_IS_O32_YX_ISV32_SWIZZLED_BY_4(prefix, o, i, y, x)\
+    FUNC_CALL(get_is_o32_yx_isv32_swizzled_by_4_index)(\
+        o, i, y, x, CAT(prefix, _IFM_NUM),\
+        CAT(prefix, _OFM_NUM),\
+        CAT(prefix, _SIZE_X),\
+        CAT(prefix, _SIZE_Y))
+
 inline uint FUNC(get_os_is_y_x8_osv8_isv4_index)(uint o, uint i, uint y, uint x, uint i_size, uint o_size, uint x_size, uint y_size)
 {
     const uint i_aligned_to_4 = ((i_size + 3) / 4) * 4;

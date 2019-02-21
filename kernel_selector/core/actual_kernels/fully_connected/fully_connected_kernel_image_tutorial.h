@@ -28,9 +28,9 @@ namespace kernel_selector {
         FullyConnected_image_tutorial() : Parent("fully_connected_gpu_image_tutorial") {}
 
         KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        ParamsKey GetSupportedKey() const override;
-        
+
     protected:
+        ParamsKey GetSupportedKey() const override;
         std::unique_ptr<DispatchData> SetDefault(const fully_connected_params& params, int autoTuneIndex = -1) const override;
     };
 }

@@ -304,6 +304,7 @@ typedef enum /*:int32_t*/
     cldnn_format_os_is_yx_isa8_osv8_isv4, /// < \n format for weights for MMAD convolutions, stored as ((aligned_to_8(O)/8) * (aligned_to_32(I)/32) * Y * X * ( 8 ) * ( 8 ) * ( 4 )
     cldnn_format_os_is_yx_isa8_osv8_isv4_swizzled_by_4, /// < \n format for weights for MMAD convolutions
     cldnn_format_is_o_yx_isv32, /// < \n format for weights for 1x1 MMAD convolutions 
+    cldnn_format_is_o32_yx_isv32_swizzled_by_4, /// < \n format for weights for 1x1 MMAD convolutions
     cldnn_format_os_is_y_x8_osv8_isv4, /// < n\ format for weights for MMAD convolutions
     cldnn_bf_lyx_yx,                      /// < \n format for local convolution weights
     cldnn_format_b_fs_yx_fsv4,            /// < \n format for input for IMAD convolutions
@@ -399,6 +400,13 @@ typedef struct
     const cldnn_primitive_id* data; ///< Pointer to ids array.
     size_t size;                    ///< Number of ids in the array.
 } cldnn_primitive_id_arr;
+
+typedef struct
+{
+    cldnn_data_type data_type;
+    // No bool type available...
+    char enabled;
+} cldnn_optional_data_type;
 
 /// @brief Custom primitive kernel source code
 typedef const char*  cldnn_kernel_code;
@@ -500,7 +508,8 @@ typedef enum cldnn_reorder_mean_mode_t
     cldnn_primitive_type_id type; /**< @brief Primitive type identificator. */\
     cldnn_primitive_id id;        /**< @brief Primitive id unique within a topology. */\
     cldnn_primitive_id_arr input; /**< @brief Input primitives ids. */\
-    cldnn_padding output_padding; /**< @brief Output padding information. */
+    cldnn_padding output_padding; /**< @brief Output padding information. */\
+    cldnn_optional_data_type output_data_type; /**< @brief If specified, describes an explicit change of the output precision of the primitive. */
 
 /// @brief Close primitive descriptor definition.
 #define CLDNN_END_PRIMITIVE_DESC(PType) };

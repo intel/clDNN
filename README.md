@@ -45,6 +45,20 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 13.1
+    New features:
+    - added max mode for contract primitive
+    - added one_hot primitive
+    - optional explicit output data type support for all primitives
+    Bug fixes:
+    - fix for graph optimizer (crop primitive)
+    - fix for processing order (deconvolution primitive)
+    - fix for convolution-eltwise primitive
+    UX:
+    - cache.json is searched in to library directory
+    Performance:
+    - optimizations for lstm_gemm primitive
+
 ### Drop 13.0
     New features:
     - events pool

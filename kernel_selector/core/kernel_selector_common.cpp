@@ -329,6 +329,7 @@ namespace kernel_selector
         case WeightsLayout::os_is_yx_isa8_osv8_isv4: return "OS_IS_YX_ISA8_OSV8_ISV4";
         case WeightsLayout::os_is_yx_isa8_osv8_isv4_swizzled_by_4: return "OS_IS_YX_ISA8_OSV8_ISV4_SWIZZLED_BY_4";
         case WeightsLayout::is_o_yx_isv32: return "IS_O_YX_ISV32";
+        case WeightsLayout::is_o32_yx_isv32_swizzled_by_4: return "IS_O32_YX_ISV32_SWIZZLED_BY_4";
         case WeightsLayout::os_is_y_x8_osv8_isv4: return "OS_IS_Y_X8_OSV8_ISV4";
         case WeightsLayout::os_is_yx_osv16_isv4:  return "OS_IS_YX_OSV16_ISV4";
 

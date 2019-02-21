@@ -139,7 +139,7 @@ TEST(convolution_grad_input_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_pad
     }
 }
 
-TEST(convolution_grad_input_f32_fw_gpu, basic_wsiz2x2_in2x2x1x2_bfyx_stride2_fusion) {
+TEST(convolution_grad_input_f32_fw_gpu, DISABLED_basic_wsiz2x2_in2x2x1x2_bfyx_stride2_fusion) {
     //  Filter : 2x2
     //  Input  : 2x2x1x2
     //  Output : 2x2x1x2

@@ -74,6 +74,7 @@ namespace kernel_selector
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4_swizzled_by_4
             {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::is_o_yx_isv32
+            {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::is_o32_yx_isv32_swizzled_by_4
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_y_x8_osv8_isv4
             {  0,  1,  2,  3,  4,  5 }, // WeightsLayout::bf_lyx_yx
             {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_osv16_isv4
@@ -323,6 +324,11 @@ namespace kernel_selector
             case is_o_yx_isv32:
                 assert(newDims.size() == 4);
                 newDims[0] = RoundUp(newDims[0], 32);
+                break;
+            case is_o32_yx_isv32_swizzled_by_4:
+                assert(newDims.size() == 4);
+                newDims[0] = RoundUp(newDims[0], 32);
+                newDims[3] = RoundUp(newDims[3], 32);
                 break;
             case os_is_y_x8_osv8_isv4:
                 assert(newDims.size() == 4);

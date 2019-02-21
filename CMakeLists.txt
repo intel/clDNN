@@ -1038,6 +1038,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         SET_RAW
           -Wl,-z,noexecstack,-z,relro,-z,now
       )
+  list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "dl") 
 endif()
 
 if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^Clang$"))
@@ -1052,6 +1053,7 @@ if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^C
     )
 
   list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "c++" "c++abi" "supc++")
+  list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "dl")
 endif()
 
 unset(__CLDNN_LinkerFlagName)

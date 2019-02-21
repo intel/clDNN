@@ -1665,6 +1665,24 @@ TEST(lstm_gemm_gpu, generic_lstm_gemm_no_hidden_bias_f32) {
     generic_lstm_gemm_gpu_test<float>(1, 1, 3, 6, 2, false, false);
 }
 
+// LSTM GEMM tests to test LSTM GEMMV kernel implementation
+TEST(lstm_gemm_gpu, gemv_bfyx_1x64_lstm_gemm_test_f32) {
+    generic_lstm_gemm_gpu_test<float>(5, 1, 1, 1024, 1024, true, true);
+}
+
+TEST(lstm_gemm_gpu, gemv_bfyx_1x64_lstm_gemm_no_bias_f32) {
+    generic_lstm_gemm_gpu_test<float>(1, 1, 1, 256, 2, false, true);
+}
+
+TEST(lstm_gemm_gpu, gemv_bfyx_1x64_lstm_gemm_no_hidden_f32) {
+    generic_lstm_gemm_gpu_test<float>(1, 1, 1, 64, 2, true, false);
+}
+
+TEST(lstm_gemm_gpu, gemv_bfyx_1x64_lstm_gemm_no_hidden_bias_f32) {
+    generic_lstm_gemm_gpu_test<float>(1, 1, 1, 64, 2, false, false);
+}
+
+// LSTM ELT Tests
 TEST(lstm_elt_gpu, generic_lstm_elt_test_clip_f32) {
     generic_lstm_elt_gpu_test<float>(1, 1, 4, 6, 3, true, 0.3f);
 }

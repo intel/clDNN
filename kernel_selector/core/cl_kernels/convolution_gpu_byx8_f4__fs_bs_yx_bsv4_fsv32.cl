@@ -24,6 +24,25 @@
 #define OUT_BLOCK_HEIGHT 4
 #define WEIGHTS_PER_WORKITEM 4 // currently needs to be set to 4, check output stage and float4 on quantizations etc.
 
+#define SCALE 0.11f
+
+#ifdef LIGHTWEIGHT_QUANTIZATION
+
+#define QUANTIZATION \
+    out[w] = convert_uchar_sat((float)dotProd[w*OUT_BLOCK_HEIGHT + h][i] * SCALE + bias_f[w]);
+
+#elif NO_QUANTIZATION
+
+#define QUANTIZATION \
+    out[w] = convert_uchar_sat(dotProd[w*OUT_BLOCK_HEIGHT + h][i]);
+
+#else
+
+#define QUANTIZATION \
+    out[w] = as_uchar( ACTIVATION( convert_char( round( ( (float)dotProd[w*OUT_BLOCK_HEIGHT + h][i] * quant_f[w] * I_QF + bias_f[w]) * calib_f[w])), NL_M, NL_N));
+
+#endif
+
 __attribute__((intel_reqd_sub_group_size(8)))
 KERNEL(convolution_gpu_byx8_f4_fs_bs_yx_bsv4_fsv32)(
     __global INPUT0_TYPE* input, 
@@ -67,7 +86,7 @@ KERNEL(convolution_gpu_byx8_f4_fs_bs_yx_bsv4_fsv32)(
                 for(uint h = 0; h < OUT_BLOCK_HEIGHT; h++)
                 {
                     uint input_idx = GET_DATA_BYX8_F4_INDEX(INPUT0, b, k * 4, input_offset_y + h * STRIDE_SIZE_Y, input_x + i * 8);
-                    int2 _input_data_01 = as_int2(intel_sub_group_block_read2((__global uint*)(input + input_idx)));;
+                    int2 _input_data_01 = as_int2(intel_sub_group_block_read2((__global uint*)(input + input_idx)));
                     int _input_data_2 = as_int(intel_sub_group_block_read((__global uint*)(input + input_idx + 8 * 8)));
 
                     act_reg[h][0] = _input_data_01[0];
@@ -114,19 +133,13 @@ for(uint h = 0; h < OUT_BLOCK_HEIGHT; h++)
 
     #if WEIGHTS_PER_WORKITEM == 4
     
-        char4 out;
+        uchar4 out;
         __attribute__((opencl_unroll_hint(WEIGHTS_PER_WORKITEM)))
         for(uint w = 0; w < WEIGHTS_PER_WORKITEM; w++)
         {
-        #if CALIBRATION_TERM
-            out[w] = convert_char(round(((float)dotProd[w*OUT_BLOCK_HEIGHT + h][i] * quant_f[w] * I_QF + bias_f[w]) * calib_f[w]));
-        #else  // CALIBRATION_TERM
-            out[w] = convert_char(round(((float)dotProd[w*OUT_BLOCK_HEIGHT + h][i] * quant_f[w] * I_QF + bias_f[w]) * O_QF));
-        #endif // CALIBRATION_TERM
-            
-            out[w] = ACTIVATION(out[w], NL_M, NL_N);
+            QUANTIZATION;
         }
-        intel_sub_group_block_write_uc4((__global uchar*)(output + dst_index + 32 * 4 * i), as_uchar4(out));
+        intel_sub_group_block_write_uc4((__global uchar*)(output + dst_index + 32 * 4 * i), out);
     
     #else
     
@@ -152,3 +165,6 @@ for(uint h = 0; h < OUT_BLOCK_HEIGHT; h++)
 
 #undef FILTER_SIZE_X_SLICES
 #undef FILTER_IFM_SLICES
+
+#undef SCALE
+#undef QUANTIZATION

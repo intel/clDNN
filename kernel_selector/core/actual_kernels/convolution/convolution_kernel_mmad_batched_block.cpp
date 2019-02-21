@@ -149,7 +149,7 @@ namespace kernel_selector {
 
     KernelsData ConvolutionKernel_mmad_batched_block::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        KernelsData kd = GetCommonKernelsData(params, options, " -Dcl_intel_subgroups_char");
+        KernelsData kd = GetCommonKernelsData(params, options);
         if(!kd.empty())
             kd[0].estimatedTime = FORCE_PRIORITY_5;
         return kd;

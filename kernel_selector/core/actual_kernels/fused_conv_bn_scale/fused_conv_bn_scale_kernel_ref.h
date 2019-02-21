@@ -29,9 +29,9 @@ namespace kernel_selector {
         virtual ~fused_conv_bn_scale_kernel_ref() {}
 
         KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        ParamsKey GetSupportedKey() const override;
 
     protected:
+        ParamsKey GetSupportedKey() const override;
         std::vector<WeightsLayout> GetSupportedWeightLayouts(const fused_conv_bn_scale_params&) const override
         {
             return{

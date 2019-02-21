@@ -31,6 +31,8 @@ primitive_type_id gemm_type_id()
 
 layout gemm_inst::calc_output_layout(gemm_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for gemm_node!");
     auto input1_layout = node.input(0).get_output_layout();
     auto input2_layout = node.input(1).get_output_layout();
     bool transpose_input1 = node.get_primitive()->transpose_input1;

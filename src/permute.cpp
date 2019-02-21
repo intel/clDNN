@@ -58,6 +58,8 @@ static std::vector<uint16_t> get_permute_order(permute_node const& node, format:
 
 layout permute_inst::calc_output_layout(permute_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for permute_node!");
     auto input_layout = node.input().get_output_layout();
     auto permute_order = node.get_primitive()->permute_order;
     auto input_sizes_ordered = input_layout.size.sizes(input_layout.format);

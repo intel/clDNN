@@ -71,7 +71,7 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
             auto reorder_prim = input_node.as<reorder>().typed_desc();
             auto& reorder_input = input_node.get_dependency(0);
             auto reorder_layout = input_node.get_output_layout();
-            reorder_layout.data_type = reorder_prim->output_data_type;
+            reorder_layout.data_type = *reorder_prim->output_data_type;
             new_input = lo.get_reorder(
                 reorder_layout,
                 reorder_prim->id,
@@ -84,7 +84,7 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
             {
                 auto reorder_input_layout = reorder_input.get_output_layout();
 
-                auto opt_layout = layout(new_input->output_data_type, new_input->output_format, reorder_input_layout.size);
+                auto opt_layout = layout(*new_input->output_data_type, new_input->output_format, reorder_input_layout.size);
                 if (reorder_input_layout == opt_layout) //reorder 'breaks' optimal format
                 {
                     if (reorder_prim->subtract_per_feature.empty() &&

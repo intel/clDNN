@@ -30,6 +30,8 @@ primitive_type_id pooling_type_id()
 
 layout pooling_inst::calc_output_layout(parent::typed_node const& node)
 {
+    assert((bool)node.get_primitive()->output_data_type == false
+           && "Output data type forcing is not supported for pooling_node!");
     auto desc = node.get_primitive();
 
     auto input_layout = node.input().get_output_layout();
