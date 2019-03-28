@@ -198,7 +198,6 @@ layout prior_box_inst::calc_output_layout(prior_box_node const& node)
            && "Output data type forcing is not supported for prior_box_node!");
     auto desc = node.get_primitive();
     auto input_layout = node.input().get_output_layout();
-    assert(input_layout.size.spatial.size() == 2);
 
     const int layer_width = input_layout.size.spatial[0];
     const int layer_height = input_layout.size.spatial[1];

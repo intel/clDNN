@@ -45,6 +45,36 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 14.0
+    New features:
+    - 3 spatial dimensions support in convolution primitive (3D convolution)
+    - reverse primitive
+    - arg_max_min support for i8/s8/i32/i64 types
+    - concatenation support for bfzyx (5D) format
+    Bug fixes:
+    - fixes in primitive fusing pass (for i8/s8 types)
+    - fixes in graph optimizer (reshape primitive)
+    - overflow/underflow fixes for eltwise (i8/s8)
+    - fixes for convolution-eltwise primitive
+    - fixes for convolution primitive (depth-wise case)
+    - perf fixes for events pool
+    - fixes for pooling primitive (u8)
+    - fixes for deconvolution primitive
+    - fixes for fc primitive
+    - fixes for batch_norm primitive
+    UX:
+    - refactored and cleaned up JIT constants generation mechanism
+    - refactored kernel selection mechanism
+    - removed legacy device info mechanism
+    Performance:
+    - convolution primitive optimizations (for byxf, for MMAD-based, for byxf fp16, for bfyx fp16)
+    - fc primitive optimizations (for byxf)
+    - pooling primitive optimizations (for byxf, bfyx)
+    - convolution-relu primitive fusing (i8 -> s8 case)
+    - eltwise primitive optimizations (for byxf)
+    - fused convolution-eltwise primitive optimizations (IMAD-based)
+    - block-based optimizations for fp16 primitives
+
 ### Drop 13.1
     New features:
     - added max mode for contract primitive

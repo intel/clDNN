@@ -21,6 +21,7 @@
 
 #include <sstream>
 #include <cmath>
+#include <algorithm>
 
 
 namespace kernel_selector {
@@ -98,6 +99,7 @@ protected:
     JitConstant(const std::string& name):_name(name){}
 
 public:
+    std::string GetJitName() { return _name; }
     virtual JitDefinitions GetDefinitions() const = 0;
     virtual ~JitConstant() {}
 };
@@ -168,6 +170,7 @@ public:
         JitDefinitions definitions{
             { _name + "_SIZE_X",        toCodeString(_size.x) },
             { _name + "_SIZE_Y",        toCodeString(_size.y) },
+            { _name + "_SIZE_Z",        toCodeString(_size.z) },
         };
         return definitions;
     }
@@ -197,6 +200,8 @@ public:
             { _name + "_FEATURE_NUM", toCodeString(_dims.f) },
             { _name + "_SIZE_Y",      toCodeString(_dims.y) },
             { _name + "_SIZE_X",      toCodeString(_dims.x) },
+            { _name + "_SIZE_Z",      toCodeString(_dims.z) },
+
         };
         return definitions;
     }
@@ -214,6 +219,7 @@ std::shared_ptr<JitConstant> MakeJitConstant(const std::string& name, const DimT
 class JitConstants 
 {
     std::vector<std::shared_ptr<JitConstant>> _constants;
+
 public:
     JitConstants(std::initializer_list<std::shared_ptr<JitConstant>> constants) :_constants(constants) {}
 
@@ -235,12 +241,43 @@ public:
         AddConstants(jit._constants);
     }
 
+    inline void RemoveConstant(std::string name)
+    {
+        _constants.erase(std::remove_if(_constants.begin(), _constants.end(), [=](std::shared_ptr<JitConstant> x)->bool { return x->GetJitName() == name; } ),_constants.end());
+    }
+
     JitDefinitions GetDefinitions() const;
 };
 
-JitConstants MakeActivationJitConstants(const base_activation_params& params, const std::string& suffix="");
+
+
+// Historically, the whole kernel computation was performed in a single, UNIT,
+// type and the activation function assumed to be done in that UNIT_TYPE. With
+// the addition of different quantization schemes the kernels started to use
+// multiple types and there might be no single UNIT type. Also it's not clear
+// from the kernel-agnostic code in which type activation should be done.
+//
+// Simple solution for this is to make the ACTIVATION[_SUFFIX] jit macro accept
+// an additional type parameter, but fixing all the existing implementations is
+// costly, so in the meantime it's only done by explicitly specifying
+// `use_type_parameter` to true and for the remaining kernels the old scheme
+// will be used for now.
+//
+// Note, that we need the type to be the argument of the macro itself (as
+// opposite to this function) so that the logic of choosing the activation type
+// could be contained in the target code exclusively, without the need to do
+// that processing on the host side. Otherwise it would be harder to read the
+// target code as that would require looking into several place to understand
+// the logic.
+JitConstants MakeActivationJitConstants(const base_activation_params& params,
+                                        const std::string& suffix = "",
+                                        bool use_type_parameter = false);
 JitConstants MakeBaseParamsJitConstants(const base_params& params);
 JitConstants MakeLoopUnrollParamsJitConstants(uint32_t loopCount);
-JitConstants MakeUnitTypeJitConstants(Datatype dataType);
-
+JitConstants MakeTypeJitConstants(Datatype dataType, const std::string& macroName);
+JitConstants MakeTypeJitConstants(WeightsType weightsType, const std::string& macroName);
+inline JitConstants MakeUnitTypeJitConstants(Datatype dataType)
+{
+    return MakeTypeJitConstants(dataType, "UNIT");
+}
 }

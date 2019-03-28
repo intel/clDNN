@@ -60,6 +60,9 @@ inline std::string fmt_to_str(format fmt)
     case format::byxf: return "byxf";
     case format::bfyx: return "bfyx";
     case format::fyxb: return "fyxb";
+    case format::bfyx_f16: return "bfyx_f16";
+    case format::o_i_yx_i16_o16: return "o_i_yx_i16_o16";
+    case format::oiyx_o16: return "oiyx_o16";
     case format::os_iyx_osv16: return "os_iyx_osv16";
     case format::os_iyx_osv32: return "os_iyx_osv32";
     case format::os_iyx_osv64: return "os_iyx_osv64";
@@ -80,12 +83,15 @@ inline std::string fmt_to_str(format fmt)
     case format::is_o_yx_isv32: return "is_o_yx_isv32";
     case format::is_o32_yx_isv32_swizzled_by_4: return "is_o32_yx_isv32_swizzled_by_4";
     case format::os_is_y_x8_osv8_isv4: return "os_is_y_x8_osv8_isv4";
+    case format::os_is_y_x8_osv8_isv4_swizzled_by_4: return "os_is_y_x8_osv8_isv4_swizzled_by_4";
     case format::byxf_af32: return "byxf_af32";
     case format::byx8_f4: return "byx8_f4";
     case format::fs_bs_yx_bsv4_fsv32: return "fs_bs_yx_bsv4_fsv32";
     case format::bf_lyx_yx: return "bf_lyx_yx";
     case format::b_fs_yx_fsv4: return "b_fs_yx_fs4"; break;
     case format::os_is_yx_osv16_isv4: return "os_is_yx_osv16_isv4"; break;
+    case format::bfzyx: return "bfzyx";
+    case format::fs_b_yx_fsv32: return "fs_b_yx_fsv32";
     default:
         return "unknown (" + std::to_string(fmt.value) + ")";
     }

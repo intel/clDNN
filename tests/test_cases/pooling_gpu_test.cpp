@@ -1665,6 +1665,415 @@ TEST(pooling_forward_gpu, b_fs_yx_fsv4)
     } // for (int j = 0; F_array[j]; i++)
 }
 
+TEST(pooling_forward_gpu, fs_b_yx_fsv32_avg_3x3_input_2x2_pool_1x1_stride_2x2_output)
+{
+    const auto& engine = get_test_engine();
+    bool f16_supported = !!engine.get_info().supports_fp16;
+    if (!f16_supported) {
+        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
+        return;
+    }
+
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 1x1
+    //  Pool mode: avg
+    //  Padding: none
+    //
+    //  Input data:
+    //  [-0.5,  1.0,  0.5]
+    //  [ 2.0,  1.5, -0.5]
+    //  [ 4.0, -1.0,  3.5]
+    //
+    //  Expected output:
+    //  [ 1.0,   0.625]
+    //  [ 1.625, 0.875]
+
+    auto input_prim = memory::allocate(engine, { data_types::f16, format::yxfb, { 1, 1, 3, 3 } });
+
+    topology topology;
+    topology.add(input_layout("input", input_prim.get_layout()));
+    topology.add(reorder("reorder_input", "input", layout(data_types::f16, format::fs_b_yx_fsv32, { 1, 1, 3, 3 })));
+    topology.add(pooling("avg_pooling", "reorder_input", pooling_mode::average, { 1,1,2,2 }, { 1,1,1,1 }));
+    topology.add(reorder("reorder_after_pooling", "avg_pooling", layout(data_types::f16, format::bfyx, { 1,1,2,2 })));
+
+    network network(engine, topology);
+    set_values(input_prim, { FLOAT16(-0.5f), FLOAT16(1.0f), FLOAT16(0.5f), FLOAT16(2.0f), FLOAT16(1.5f), FLOAT16(-0.5f), FLOAT16(4.0f), FLOAT16(-1.0f), FLOAT16(3.5f) });
+    network.set_input_data("input", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder_after_pooling");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<FLOAT16>();
+
+    EXPECT_EQ(1.0f, float(output_ptr[0]));
+    EXPECT_EQ(0.625f, float(output_ptr[1]));
+    EXPECT_EQ(1.625f, float(output_ptr[2]));
+    EXPECT_EQ(0.875f, float(output_ptr[3]));
+
+}
+
+TEST(pooling_forward_gpu, fs_b_yx_fsv32_avg_3x3_input_2x2_pool_2x2_stride)
+{
+    const auto& engine = get_test_engine();
+    bool f16_supported = !!engine.get_info().supports_fp16;
+    if (!f16_supported) {
+        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
+        return;
+    }
+
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 2x2
+    //  Pool mode: avg
+    //  Padding: none
+    //
+    //  Input data:
+    //  [-0.5,  1.0,  0.5]
+    //  [ 2.0,  1.5, -0.5]
+    //  [ 4.0, -1.0,  3.5]
+    //
+    //  Expected output:
+    //  [ 1.0, 0  ]
+    //  [ 1.5, 3.5]
+
+    auto input_prim = memory::allocate(engine, { data_types::f16, format::yxfb, { 1, 1, 3, 3 } });
+
+    topology topology;
+    topology.add(input_layout("input", input_prim.get_layout()));
+    topology.add(reorder("reorder_input", "input", layout(data_types::f16, format::fs_b_yx_fsv32, { 1, 1, 3, 3 })));
+    topology.add(pooling("avg_pooling", "reorder_input", pooling_mode::average, { 1,1,2,2 }, { 1,1,2,2 }));
+    topology.add(reorder("reorder_after_pooling", "avg_pooling", layout(data_types::f16, format::bfyx, { 1,1,3,3 })));
+
+    network network(engine, topology);
+    set_values(input_prim, { FLOAT16(-0.5f), FLOAT16(1.0f), FLOAT16(0.5f), FLOAT16(2.0f), FLOAT16(1.5f), FLOAT16(-0.5f), FLOAT16(4.0f), FLOAT16(-1.0f), FLOAT16(3.5f) });
+    network.set_input_data("input", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder_after_pooling");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+    auto output_ptr = output_prim.pointer<FLOAT16>();
+
+    EXPECT_EQ(1.0f, float(output_ptr[0]));
+    EXPECT_EQ(0.f, float(output_ptr[1]));
+
+    EXPECT_EQ(1.5f, float(output_ptr[2]));
+    EXPECT_EQ(3.5f, float(output_ptr[3]));
+
+}
+
+TEST(pooling_forward_gpu, fs_b_yx_fsv32_avg_2x2x3x3_input_2x2_pool_2x2_stride)
+{
+    const auto& engine = get_test_engine();
+    bool f16_supported = !!engine.get_info().supports_fp16;
+    if (!f16_supported) {
+        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
+        return;
+    }
+
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 2x2
+    //  Pool mode: avg
+    //  Padding: none
+    //
+    //  Input data:
+    //              B 0                 B 1
+    //      [-0.5,  1.0,  0.5]  [-0.5,  1.0,  0.5]
+    //  F0  [ 2.0,  1.5, -0.5]  [ 2.0,  1.5, -0.5]
+    //      [ 4.0, -1.0,  3.5]  [ 4.0, -1.0,  3.5]
+    //
+    //      [-0.5,  1.0,  0.5]  [-0.5,  1.0,  0.5]
+    //  F1  [ 2.0,  1.5, -0.5]  [ 2.0,  1.5, -0.5]
+    //      [ 4.0, -1.0,  3.5]  [ 4.0, -1.0,  3.5]
+    //
+    //  Expected output:
+    //          B 0          B 1
+    //      [ 1.0, 0  ]  [ 1.0, 0  ]
+    //  F0  [ 1.5, 3.5]  [ 1.5, 3.5]
+    //
+    //      [ 1.0, 0  ]  [ 1.0, 0  ]
+    //  F1  [ 1.5, 3.5]  [ 1.5, 3.5]
+    //
+    const int features_count = 2;
+    const int batch_count = 2;
+    const int out_x = 2;
+    const int out_y = 2;
+
+    auto input_prim = memory::allocate(engine, { data_types::f16, format::bfyx, { batch_count, features_count, 3, 3 } });
+
+    topology topology;
+    topology.add(input_layout("input", input_prim.get_layout()));
+    topology.add(reorder("reorder_input", "input", layout(data_types::f16, format::fs_b_yx_fsv32, { batch_count, features_count, 3, 3 })));
+    topology.add(pooling("avg_pooling", "reorder_input", pooling_mode::average, { 1,1,2,2 }, { 1,1,2,2 }));
+    topology.add(reorder("reorder_after_pooling", "avg_pooling", layout(data_types::f16, format::bfyx, { batch_count, features_count, out_y, out_x })));
+
+    network network(engine, topology);
+    set_values(input_prim, { FLOAT16(-0.5f), FLOAT16(1.0f), FLOAT16(0.5f), FLOAT16(2.0f), FLOAT16(1.5f), FLOAT16(-0.5f), FLOAT16(4.0f), FLOAT16(-1.0f), FLOAT16(3.5f),   //B0F0
+                             FLOAT16(-0.5f), FLOAT16(1.0f), FLOAT16(0.5f), FLOAT16(2.0f), FLOAT16(1.5f), FLOAT16(-0.5f), FLOAT16(4.0f), FLOAT16(-1.0f), FLOAT16(3.5f),   //B0F1
+                             FLOAT16(-0.5f), FLOAT16(1.0f), FLOAT16(0.5f), FLOAT16(2.0f), FLOAT16(1.5f), FLOAT16(-0.5f), FLOAT16(4.0f), FLOAT16(-1.0f), FLOAT16(3.5f),   //B1F0
+                             FLOAT16(-0.5f), FLOAT16(1.0f), FLOAT16(0.5f), FLOAT16(2.0f), FLOAT16(1.5f), FLOAT16(-0.5f), FLOAT16(4.0f), FLOAT16(-1.0f), FLOAT16(3.5f) });//B1F1
+    network.set_input_data("input", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder_after_pooling");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    auto output_ptr = output_prim.pointer<FLOAT16>();
+
+    ASSERT_EQ((int)output_ptr.size(), batch_count * features_count*out_x*out_y);
+
+    
+    for (int b = 0; b<batch_count; b++)
+    {
+        for (int f = 0; f < features_count; f++)
+        {
+            const int f_pitch = out_x * out_y;
+            const int bf_offset = b * (f_pitch * features_count) + f * f_pitch;
+            EXPECT_EQ(1.0f, float(output_ptr[bf_offset + 0])); // X0Y0
+            EXPECT_EQ(0.f,  float(output_ptr[bf_offset + 1])); // X1Y0
+
+            EXPECT_EQ(1.5f, float(output_ptr[bf_offset + 2])); // X0Y1
+            EXPECT_EQ(3.5f, float(output_ptr[bf_offset + 3])); // X1Y1
+        }
+    }
+}
+
+TEST(pooling_forward_gpu, fs_b_yx_fsv32_max_1x1x3x3_input_2x2_pool_2x2_stride_2x2_outpad) {
+    const auto& engine = get_test_engine();
+    bool f16_supported = !!engine.get_info().supports_fp16;
+    if (!f16_supported) {
+        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
+        return;
+    }
+
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 2x2
+    //  Pool mode: max
+    //  Padding: 2x2
+    //
+    //  Input offset : -1x-1
+    //  Input data:
+    //  [ padd, padd, padd, padd, padd]
+    //  [ padd,  1.5, -1.0, -0.5, padd]
+    //  [ padd,  1.0, -1.0, -1.0, padd]
+    //  [ padd, -1.0, -1.0, -0.5, padd]
+    //  [ padd, padd, padd, padd, padd]
+    //
+    //  Expected output:
+    //  [0,    0,    0,  0,  0]
+    //  [0,  1.5, -0.5,  0,  0]
+    //  [0,    1, -0.5,  0,  0]
+    //  [0,    0,    0,  0,  0]
+
+
+
+        tensor input_tensor(1, 1, 3, 3);
+        auto input_prim = memory::allocate(engine, { data_types::f16, format::bfyx, input_tensor });
+
+        topology topology;
+        topology.add(input_layout("input_prim", input_prim.get_layout()));
+        topology.add(reorder("reorder_input", "input_prim", layout(data_types::f16, format::fs_b_yx_fsv32, input_tensor)));
+        topology.add(pooling("pool_prim", "reorder_input", pooling_mode::max, { 1,1,2,2 }, { 1,1,2,2 }, { 0,0,-1,-1 }, padding{ { 0,0,1,1 }, 0 }));
+        topology.add(reorder("reorder_pooling", "pool_prim", layout(data_types::f16, format::bfyx, { 1,1,4,4 }, padding{ {0,0,1,1},0 })));
+
+        network network(engine, topology);
+
+        set_values(input_prim, {
+            FLOAT16(1.50f), FLOAT16(-1.00f), FLOAT16(-0.50f),
+            FLOAT16(1.00f), FLOAT16(-1.00f), FLOAT16(-1.00f),
+            FLOAT16(-1.00f), FLOAT16(-1.00f), FLOAT16(-0.50f)
+            });
+
+
+        network.set_input_data("input_prim", input_prim);
+
+        std::vector<float> expected = {
+            0.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.5f,-0.5f, 0.0f,
+            0.0f, 1.f, -0.5f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f,
+        };
+
+        auto outputs = network.execute();
+        EXPECT_EQ(outputs.size(), size_t(1));
+        EXPECT_EQ(outputs.begin()->first, "reorder_pooling");
+
+        auto output_prim = outputs.begin()->second.get_memory();
+        EXPECT_EQ((int)output_prim.get_layout().size.count(), 4);
+        EXPECT_EQ((int)output_prim.get_layout().get_buffer_size().count(), 16);
+
+        auto output_ptr = output_prim.pointer<FLOAT16>();
+
+        for (size_t i = 0; i < expected.size(); ++i) {
+            EXPECT_EQ(expected[i], float(output_ptr[i]));
+        }
+
+}
+
+TEST(pooling_forward_gpu, fs_b_yx_fsv32_max_1x1x5x5_input_2x2_pool_2x2_stride_2x2_outpad_2x1_inpad) {
+    const auto& engine = get_test_engine();
+    bool f16_supported = !!engine.get_info().supports_fp16;
+    if (!f16_supported) {
+        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
+        return;
+    }
+
+    //  Brief test description.
+    //
+    //  Pool window: 2x2
+    //  Pool stride: 2x2
+    //  Pool mode: max
+    //  Padding: 2x2
+    //  Input Padding: 2x1 (yx format) out of the reorder layer
+    //
+    //  Input offset : 1x1
+    //  Input data:
+    //  [ 1,  2,     3,    4,   5 ]
+    //  [ 6,  1.5,  -1.0, -0.5, 7 ]
+    //  [ 8,  1.0,  -1.0, -1.0, 9 ]
+    //  [ 10, -1.0, -1.0, -0.5, 11]
+    //  [ 12, 13,    14,   15,  16]
+    //
+    //  Expected output:
+    //  [ 0,  0,  0,    0,  0]
+    //  [ 0,  1,  3,    5,  0]
+    //  [ 0,  8,  1.5,  9,  0]
+    //  [ 0, 12,  14,  16,  0]
+    //  [ 0,  0,  0,    0,  0]
+    
+    tensor input_tensor(1, 1, 5, 5);
+    auto input_prim = memory::allocate(engine, { data_types::f16, format::bfyx, input_tensor });
+
+    topology topology;
+    topology.add(input_layout("input_prim", input_prim.get_layout()));
+    topology.add(reorder("reorder_input", "input_prim", layout(data_types::f16, format::fs_b_yx_fsv32, input_tensor, padding{ { 0,0,2,1 } , 0 })));
+    topology.add(pooling("pool_prim", "reorder_input", pooling_mode::max, { 1,1,2,2 }, { 1,1,2,2 }, { 0,0,-1,-1 }, padding{ { 0,0,1,1 }, 0 }));
+    topology.add(reorder("reorder_pooling", "pool_prim", layout(data_types::f16, format::bfyx, input_tensor, padding {{0,0,1,1},0})));
+
+    network network(engine, topology);
+
+    set_values(input_prim, {
+        FLOAT16(1.f),  FLOAT16(2.f),    FLOAT16(3.f),    FLOAT16(4.f),    FLOAT16(5.f),
+        FLOAT16(6.f),  FLOAT16(1.50f),  FLOAT16(-1.00f), FLOAT16(-0.50f), FLOAT16(7.f),
+        FLOAT16(8.f),  FLOAT16(1.00f),  FLOAT16(-1.00f), FLOAT16(-1.00f), FLOAT16(9.f),
+        FLOAT16(10.f), FLOAT16(-1.00f), FLOAT16(-1.00f), FLOAT16(-0.50f), FLOAT16(11.f),
+        FLOAT16(12.f), FLOAT16(13.f),   FLOAT16(14.f),   FLOAT16(15.f),   FLOAT16(16.f)
+        });
+
+    network.set_input_data("input_prim", input_prim);
+
+    std::vector<float> expected = {
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.f, 3.f, 5.f, 0.0f,
+        0.0f, 8.f, 1.5f, 9.f, 0.0f,
+        0.0f, 12.f, 14.f, 16.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    };
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder_pooling");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+    EXPECT_EQ((int)output_prim.get_layout().size.count(), 9);
+    EXPECT_EQ((int)output_prim.get_layout().get_buffer_size().count(), 25);
+
+    auto output_ptr = output_prim.pointer<FLOAT16>();
+
+    for (size_t i = 0; i < expected.size(); ++i) {
+        EXPECT_EQ(expected[i], float(output_ptr[i]));
+    }
+}
+
+TEST(pooling_forward_gpu, fs_b_yx_fsv32_avg_65x5x6x7_input_3x3_pool_4x4_stride_3x2_outpad_2x3_inpad)
+{
+    const auto& engine = get_test_engine();
+    bool f16_supported = !!engine.get_info().supports_fp16;
+    if (!f16_supported) {
+        std::cout << "[ SKIPPED  ] float16 combinations are skipped (cl_khr_fp16 is not supported)." << std::endl;
+        return;
+    }
+
+    const int features = 65;
+    const int batches = 5;
+    const int x_input = 6;
+    const int y_input = 7;
+
+    const int pool_size = 3;
+    const int stride_size = 4;
+    const int x_out_pad = 3;
+    const int y_out_pad = 2;
+    const int x_in_pad = 2;
+    const int y_in_pad = 3;
+
+    const tensor input_tensor(batches, features, x_input, y_input);
+
+    std::vector<FLOAT16> input_data(batches*features*x_input*y_input);
+    for (size_t i = 0; i < input_data.size(); i++)
+    {
+        input_data[i] = FLOAT16((float)i/float(input_data.size()));
+    }
+
+    auto input_prim = memory::allocate(engine, { data_types::f16,format::bfyx,input_tensor });
+    set_values(input_prim, input_data);
+
+    std::vector<float> golden_results;
+    std::vector<float> fsv32_results;
+
+    { //GOLDEN TOPOLOGY
+        topology golden_topology;
+        golden_topology.add(input_layout("input", input_prim.get_layout()));
+        golden_topology.add(reorder("reorder_input", "input", input_prim.get_layout().with_padding(padding{ {0,0,x_in_pad,y_in_pad},0 })));
+        golden_topology.add(pooling("golden_pooling", "reorder_input", pooling_mode::average, { 1,1,pool_size,pool_size }, { 1,1,stride_size,stride_size }, { 0,0,0,0 }, padding{ { 0,0,x_out_pad,y_out_pad },0 }));
+
+        network golden_network(engine, golden_topology);
+        golden_network.set_input_data("input", input_prim);
+        
+        auto outputs = golden_network.execute();
+        auto output_ptr = outputs.begin()->second.get_memory().pointer<FLOAT16>();
+        for (size_t i = 0; i < output_ptr.size(); i++)
+        {
+            golden_results.push_back(float(output_ptr[i]));
+        }
+    }
+
+    { //FSV32 TOPOLOGY
+        topology golden_topology;
+        golden_topology.add(input_layout("input", input_prim.get_layout()));
+        golden_topology.add(reorder("reorder_input", "input", layout(data_types::f16, format::fs_b_yx_fsv32, input_tensor, padding{ {0,0,x_in_pad, y_in_pad}, 0 })));
+        golden_topology.add(pooling("fsv32_pooling", "reorder_input", pooling_mode::average, { 1,1,pool_size,pool_size }, { 1,1,stride_size,stride_size }, { 0,0,0,0 }, padding{ { 0,0,x_out_pad,y_out_pad },0 }));
+        golden_topology.add(reorder("reorder_pooling", "fsv32_pooling", layout(data_types::f16, format::bfyx, input_tensor, padding{ { 0,0,x_out_pad,y_out_pad },0 })));
+
+        network fsv32_network(engine, golden_topology);
+        fsv32_network.set_input_data("input", input_prim);
+
+        auto outputs = fsv32_network.execute();
+        auto output_ptr = outputs.begin()->second.get_memory().pointer<FLOAT16>();
+        for (size_t i = 0; i < output_ptr.size(); i++)
+        {
+            fsv32_results.push_back(float(output_ptr[i]));
+        }
+    }
+
+    ASSERT_EQ(fsv32_results.size(), golden_results.size());
+    for (size_t i = 0; i < golden_results.size(); i++)
+    {
+        EXPECT_EQ(golden_results[i], fsv32_results[i]);
+    }
+}
 
 class pooling_test : public tests::generic_test
 {

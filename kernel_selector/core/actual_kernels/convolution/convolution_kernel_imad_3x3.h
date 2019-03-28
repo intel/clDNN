@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,19 +24,17 @@ namespace kernel_selector {
     {
     public:
         using Parent = ConvolutionKernelBase;
-        ConvolutionKernel_imad_3x3() : ConvolutionKernelBase("convolution_gpu_imad") {}
+        ConvolutionKernel_imad_3x3() : ConvolutionKernel_imad_3x3(3, 3) {}
         ConvolutionKernel_imad_3x3(size_t FilterSizeX, size_t FilterSizeY)
-            : ConvolutionKernelBase("convolution_gpu_imad"),
+            : ConvolutionKernelBase("fused_conv_eltwise_gpu_imad"),
               m_FilterSizeX(FilterSizeX),
               m_FilterSizeY(FilterSizeY) {}
         virtual ~ConvolutionKernel_imad_3x3() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-
-        KernelsData GetCommonKernelsData(const Params& params, const optional_params& options, const std::string exeMode = DEFAULT, int autoTuneIndex = -1) const;
+        virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual ParamsKey GetSupportedKey() const override;
         virtual bool Validate(const Params& params, const optional_params& options) const override;
         JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
         DispatchData SetDefault(const convolution_params& params, int autoTuneIndex = -1) const override;
@@ -52,7 +50,7 @@ namespace kernel_selector {
         // This class is base one for several similar classes with different
         // filter sizes. That's why the actual filters sizes must be explicitly
         // specified.
-        size_t m_FilterSizeX = 3;
-        size_t m_FilterSizeY = 3;
+        size_t m_FilterSizeX;
+        size_t m_FilterSizeY;
     };
 }

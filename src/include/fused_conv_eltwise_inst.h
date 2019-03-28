@@ -78,7 +78,8 @@ public:
         if (static_cast<int32_t>(idx) >= this->get_split())
             throw std::range_error("quantization factor offset too big");
 
-        return get_dependency(desc->input.size() + 2 * this->get_split() + idx);
+        return get_dependency(desc->input.size()
+                              + (1 + 1 * bias_term()) * this->get_split() + idx);
     }
 
     program_node& conv_output_calibration_factors(size_t idx = 0) const
@@ -86,12 +87,20 @@ public:
         if (static_cast<int32_t>(idx) >= this->get_split())
             throw std::range_error("calibration factor offset too big");
 
-        return get_dependency(desc->input.size() + 3 * this->get_split() + idx);
+        return get_dependency(
+            desc->input.size()
+            + (1 + 1 * bias_term() + 1 * weights_quantization_term())
+                * this->get_split()
+            + idx);
     }
 
     program_node& eltw_output_calibration_factors() const
     {
-        return get_dependency(desc->input.size() + 4 * this->get_split());
+        return get_dependency(desc->input.size()
+                              + (1 + 1 * bias_term()
+                                 + 1 * weights_quantization_term()
+                                 + 1 * conv_output_calibration_term())
+                                  * this->get_split());
     }
 
     bool bias_term() const
@@ -162,7 +171,7 @@ public:
         if (static_cast<int32_t>(index) >= node.get_split())
             throw std::range_error("quantization factors offset too big");
 
-        return dep_memory(2 + 2*node.get_split() + index);
+        return dep_memory(2 + (1 + 1 * bias_term()) * node.get_split() + index);
     }
 
     memory_impl& output_calibration_factors_memory(size_t index) const
@@ -170,12 +179,20 @@ public:
         if (static_cast<int32_t>(index) >= node.get_split())
             throw std::range_error("quantization factors offset too big");
 
-        return dep_memory(2 + 3 * node.get_split() + index);
+        return dep_memory(
+            2
+            + (1 + 1 * bias_term() + 1 * weights_quantization_factors_term())
+                * node.get_split()
+            + index);
     }
 
     memory_impl& eltw_output_calibration_factors_memory() const
     {
-        return dep_memory(2 + 4 * node.get_split());
+        return dep_memory(2
+                          + (1 + 1 * bias_term()
+                             + 1 * weights_quantization_factors_term()
+                             + 1 * conv_output_calibration_factors_term())
+                              * node.get_split());
     }
 
     bool bias_term() const

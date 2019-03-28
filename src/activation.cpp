@@ -30,8 +30,24 @@ primitive_type_id activation_type_id()
 layout activation_inst::calc_output_layout(activation_node const& node)
 {
     assert((bool)node.get_primitive()->output_data_type == false
-           && "Output data type forcing is not supported for activation_node!");
-    return node.input().get_non_padded_output_layout();
+        && "Output data type forcing is not supported for activation_node!");
+
+    auto input_node_layout = node.input().get_non_padded_output_layout();
+    auto func = node.get_primitive()->activation_func;
+
+    std::vector<cldnn_activation_func> activations_int8 = {
+        activation_none,
+        activation_negative,
+        activation_not
+    };
+
+    if (input_node_layout.data_type == data_types::i8)
+    {
+        if (std::find(activations_int8.begin(), activations_int8.end(), func) == activations_int8.end())
+            CLDNN_ERROR_MESSAGE(node.id(), "Requested activation is not supported for integer type (int8).");
+    }
+
+    return input_node_layout;
 }
 
 std::string activation_inst::to_string(activation_node const& node)

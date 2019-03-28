@@ -24,7 +24,6 @@
 #include "pass_manager.h"
 #include "primitive_type.h"
 #include "program_dump_graph.h"
-#include "program_helpers.h"
 #include "program_impl.h"
 #include "sliding_window_utils.h"
 
@@ -44,7 +43,6 @@
 #include "prior_box_inst.h"
 #include "proposal_inst.h"
 #include "reorder_inst.h"
-#include "reshape_inst.h"
 #include "split_inst.h"
 
 #include "gpu/ocl_toolkit.h"
@@ -62,8 +60,9 @@ program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topolog
 {
     set_options();
     prepare_nodes(topology);
-    if (no_optimizations)
+    if (no_optimizations) {
         init_graph();
+    }
     else
         build_program(is_internal);
 }
@@ -126,7 +125,11 @@ bool program_impl::analyze_output_size_handling_need()
                 prim_node.input().get_output_layout().size,
                 filter_size, prim->input_offset, prim->stride, prim->dilation, true, 1);
 
-            if (specified_output_range != calc_output_range)
+            //if (specified_output_range != calc_output_range)
+            if (specified_output_range.batch[0] != calc_output_range.batch[0] ||
+                specified_output_range.feature[0] != calc_output_range.feature[0] ||
+                specified_output_range.spatial[0] != calc_output_range.spatial[0] ||
+                specified_output_range.spatial[1] != calc_output_range.spatial[1])
                 handling_needed = true;
         }
         else if (node->is_type<deconvolution>())
@@ -145,7 +148,11 @@ bool program_impl::analyze_output_size_handling_need()
                 prim_node.input().get_output_layout().size,
                 filter_size, prim->input_offset, prim->stride, { 1, 1, 1, 1 }, true, 1);
 
-            if (specified_output_range != calc_output_range)
+            //if (specified_output_range != calc_output_range)
+            if (specified_output_range.batch[0] != calc_output_range.batch[0] ||
+                specified_output_range.feature[0] != calc_output_range.feature[0] ||
+                specified_output_range.spatial[0] != calc_output_range.spatial[0] ||
+                specified_output_range.spatial[1] != calc_output_range.spatial[1])
                 handling_needed = true;
         }
         else if (node->is_type<pooling>())
@@ -163,7 +170,11 @@ bool program_impl::analyze_output_size_handling_need()
                 prim_node.input().get_output_layout().size,
                 prim->size, prim->input_offset, prim->stride, { 1, 1, 1, 1 }, true, 1);
 
-            if (specified_output_range != calc_output_range)
+            //if (specified_output_range != calc_output_range)
+            if (specified_output_range.batch[0] != calc_output_range.batch[0] ||
+                specified_output_range.feature[0] != calc_output_range.feature[0] ||
+                specified_output_range.spatial[0] != calc_output_range.spatial[0] ||
+                specified_output_range.spatial[1] != calc_output_range.spatial[1])
                 handling_needed = true;
         }
     }
@@ -307,38 +318,43 @@ void program_impl::build_program(bool is_internal)
     {
         post_optimize_graph(is_internal);
     }
+    prepare_memory_dependencies();
     engine->compile_program(*this);
-    this->dump_program("finished", true);
     cleanup();
 }
 
 void program_impl::init_graph()
 {
     graph_initializations graph_initializations_pass;
-    pm->run(*this, graph_initializations_pass);
+    apply_opt_pass(graph_initializations_pass);
 
     calculate_prior_boxes calculate_prior_boxes_pass;
-    pm->run(*this, calculate_prior_boxes_pass);
+    apply_opt_pass(calculate_prior_boxes_pass);
     
     mark_nodes mark_nodes_pass;
-    pm->run(*this, mark_nodes_pass);
+    apply_opt_pass(mark_nodes_pass);
+}
+
+void program_impl::apply_opt_pass(base_pass& p)
+{ 
+    pm->run(*this, p); 
 }
 
 void program_impl::run_graph_compilation() {
     compile_graph compile_graph_pass;
-    pm->run(*this, compile_graph_pass);
+    apply_opt_pass(compile_graph_pass);
 }
 
 void program_impl::pre_optimize_graph(bool is_internal)
 {
     trim_to_outputs trim_pass; //trim to outputs
-    pm->run(*this, trim_pass); // ToDo remove hidden dependencies from trimm pass
+    apply_opt_pass(trim_pass); // ToDo remove hidden dependencies from trimm pass
 
     handle_input_padding handle_input_padding; // handle symmetric and asymmetric padding for input
-    pm->run(*this, handle_input_padding);
+    apply_opt_pass(handle_input_padding);
 
     add_reshape_to_primitives add_reshape_to_primitives_pass; // add reshape to input/parameters for some primitives
-    pm->run(*this, add_reshape_to_primitives_pass);
+    apply_opt_pass(add_reshape_to_primitives_pass);
 
     processing_order.calculate_BFS_processing_order(); // this method makes sense only for OOOQ (out of order execution queue)
 
@@ -352,81 +368,83 @@ void program_impl::pre_optimize_graph(bool is_internal)
     if (options.get<build_option_type::optimize_data>()->enabled())
     {
         prepare_primitive_fusing prepare_primitive_fusing_pass;
-        pm->run(*this, prepare_primitive_fusing_pass);
+        apply_opt_pass(prepare_primitive_fusing_pass);
 
         layout_optimizer lo(output_size_handling_enabled);
         reorder_inputs reorder_inputs_pass(lo);
-        pm->run(*this, reorder_inputs_pass);
+        apply_opt_pass(reorder_inputs_pass);
 
         // this code should be moved to post compilation after kernel selector will support handling reorder bias
         pre_optimize_bias pre_optimize_bias_pass(lo);
-        pm->run(*this, pre_optimize_bias_pass);
+        apply_opt_pass(pre_optimize_bias_pass);
 
         // passes regarding conv + eltwise optimizations
 
         // shrinking eltwise if users are conv 1x1 with stride > 1 optimization
         eltwise_shrinking eltwise_shrinking_pass;
-        pm->run(*this, eltwise_shrinking_pass);
+        apply_opt_pass(eltwise_shrinking_pass);
 
         // trying to set stride to 1x1 by shrinking convolutions before eltwise if doable
         eltwise_remove_stride eltwise_remove_stride_pass;
-        pm->run(*this, eltwise_remove_stride_pass);
+        apply_opt_pass(eltwise_remove_stride_pass);
 
         prepare_conv_eltw_fusing prepare_conv_eltw_fusing_pass;
-        pm->run(*this, prepare_conv_eltw_fusing_pass);
+        apply_opt_pass(prepare_conv_eltw_fusing_pass);
 
         prepare_conv_eltw_read_write_opt prepare_conv_eltw_read_write_opt_pass;
-        pm->run(*this, prepare_conv_eltw_read_write_opt_pass);
+        apply_opt_pass(prepare_conv_eltw_read_write_opt_pass);
     }
 
-    handle_reshape();
+    handle_reshape handle_reshape_pass;
+    apply_opt_pass(handle_reshape_pass);
 
     remove_redundant_reorders remove_redundant_reorders_pass;
-    pm->run(*this, remove_redundant_reorders_pass);
+    apply_opt_pass(remove_redundant_reorders_pass);
 
     prepare_padding prepare_padding_pass(output_size_handling_enabled);
-    pm->run(*this, prepare_padding_pass);
+    apply_opt_pass(prepare_padding_pass);
 
     prepare_depthwise_sep_opt prepare_depthwise_sep_opt_pass;
-    pm->run(*this, prepare_depthwise_sep_opt_pass);
+    apply_opt_pass(prepare_depthwise_sep_opt_pass);
 
     if (!is_internal)
     {
         propagate_constants propagate_constants_pass;  // ToDo remove hidden dependencies from propagate_constants pass
-        pm->run(*this, propagate_constants_pass);
+        apply_opt_pass(propagate_constants_pass);
     }
 
     //try to fuse buffers (i.e. depth_concat in bfyx format) after padding calculations
     if (options.get<build_option_type::optimize_data>()->enabled())
     {
         prepare_buffer_fusing prepare_buffer_fusing_pass;
-        pm->run(*this, prepare_buffer_fusing_pass);
+        apply_opt_pass(prepare_buffer_fusing_pass);
     }
 
     //check if there exists some layout incompatibilities and add an reorder node if required
     add_required_reorders add_required_reorders_pass;
-    pm->run(*this, add_required_reorders_pass);
+    apply_opt_pass(add_required_reorders_pass);
 }
 
 void program_impl::post_optimize_graph(bool is_internal)
 {
+    post_input_reorder post_input_reorder_pass; // input reorder for fully connected if necessary
+    pm->run(*this, post_input_reorder_pass);
+
     layout_optimizer lo;
     post_optimize_weights post_optimize_weights_pass(lo);
-    pm->run(*this, post_optimize_weights_pass);
+    apply_opt_pass(post_optimize_weights_pass);
 
     remove_redundant_reorders remove_redundant_reorders_pass;
-    pm->run(*this, remove_redundant_reorders_pass); //TODO: do we need it at this place also?
+    apply_opt_pass(remove_redundant_reorders_pass); //TODO: do we need it at this place also?
 
     if (!is_internal)
     {
         propagate_constants propagate_constants_pass;  // ToDo remove hidden dependencies from propagate_constants pass
-        pm->run(*this, propagate_constants_pass);
+        apply_opt_pass(propagate_constants_pass);
     }
 
     prep_opt_depthwise_sep_post prep_opt_depthwise_sep_post_pass;
-    pm->run(*this, prep_opt_depthwise_sep_post_pass);
-   
-    prepare_memory_dependencies();
+    apply_opt_pass(prep_opt_depthwise_sep_post_pass);
 }
 
 // mark if the node is constant assuming that all dependencies are marked properly
@@ -470,6 +488,7 @@ void program_impl::mark_if_data_flow(program_node& node)
         }
     }
 }
+
 void program_impl::cleanup()
 {
     for (auto& node : processing_order)
@@ -575,7 +594,6 @@ void program_impl::basic_memory_dependencies()
             past_outputs.push_back(node->id());
     }
 }
-
 
 void program_impl::skipped_branch_memory_dependencies()
 {
@@ -695,129 +713,6 @@ std::string program_impl::get_memory_dependencies_string() const
     return mem_dep;
 }
 
-void program_impl::handle_reshape()
-{
-    //reshape primitive by definition does not change underlying data, only shape description
-    //however during graph initialization and data optimization the layouts can be changed without user's knowledge,
-    //when reshape is followed by reorder, it is likely that reorder's output will not be as expected (for example reshape with flattened shape)
-    //this pass resolved the issue by changing graph in the following way
-    //- in case reshape has multiple users with reshape->reorder sequence, it will be splitted to multiple reshape primitives with single user
-    //- in case of reshape->reorder sequence, the additional reorder before reshape will be added,
-    //  if last reorder does not contain padding or mean subtract, it will be removed later in the graph
-
-    for (const auto& node : processing_order)
-    {
-        if (node->is_type<reshape>())
-        {
-            auto& input_node = node->get_dependency(0);
-
-            if (input_node.is_type<reorder>())
-                continue;
-
-            node->get_output_layout();
-            if (node->as<reshape>().is_in_place())
-                node->optimized = true;
-
-            //vector for storing nodes that are reorder type, for which splitted primitives are needed (except for the first one where orginal reshape will be used)
-            std::vector<program_node*> reorder_node_to_split;
-
-            //find the users of reshape that are reorder type, if none present then skip the current node
-            for (const auto& user : node->get_users())
-            {
-                if (user->is_type<reorder>())
-                    reorder_node_to_split.push_back(user);
-            }
-
-            if (!reorder_node_to_split.empty())
-            {
-                auto& prim_node = node->as<reshape>();
-                const auto& prim = prim_node.get_primitive();
-                auto output_shape = prim->output_shape;
-
-                //vector for storing reshape nodes to connect to new reorder nodes (if needed)
-                std::vector<program_node*> reorder_reshape_nodes;
-
-                bool skip_first_user = false;
-                auto reshape_users = node->get_users();
-                for (const auto& user : reshape_users)
-                {
-                    //reshape node for first user will be the orginal reshape from the graph
-                    if (!skip_first_user)
-                    {
-                        if (std::find(reorder_node_to_split.begin(), reorder_node_to_split.end(), user) != reorder_node_to_split.end())
-                            reorder_reshape_nodes.push_back(node);
-                        skip_first_user = true;
-                        continue;
-                    }
-
-                    //other reshapes will be clones of the orginal one connected to reshape->reorder sequences
-                    if (std::find(reorder_node_to_split.begin(), reorder_node_to_split.end(), user) != reorder_node_to_split.end())
-                    {
-                        auto new_reshape = std::make_shared<reshape>("_reshape_split_" + user->id() + "_" + node->id(), input_node.id(), output_shape);
-                        auto& new_reshape_node = get_or_create(new_reshape);
-                        add_connection(input_node, new_reshape_node);
-                        user->replace_dependency(0, new_reshape_node);
-                        processing_order.insert(std::next(processing_order.get_processing_iterator(input_node)), &new_reshape_node);
-                        reorder_reshape_nodes.push_back(&new_reshape_node);
-                    }
-                }
-
-                //add new reorder nodes to proper reshape node
-                auto reshape_reorder_id = 0;
-                for (const auto& reorder_node : reorder_node_to_split)
-                {
-                    /*
-                    auto new_reshape = std::make_shared<reshape>("_reshape_split_" + user->id() + "_" + node->id(), input_node.id(), output_shape);
-                    auto& new_reshape_node = get_or_create(new_reshape);
-                    add_connection(input_node, new_reshape_node);
-                    user->replace_dependency(0, new_reshape_node);
-                    processing_order.insert(std::next(processing_order.get_processing_iterator(input_node)), &new_reshape_node);
-                    reorder_reshape_nodes.push_back(&new_reshape_node);
-                    */
-                    auto& reorder_reshape_node = reorder_reshape_nodes[reshape_reorder_id];
-                    auto reshape_in_layout = reorder_node->get_output_layout();
-                    auto reshape_input = std::make_shared<reorder>("_reshape_input_" + reorder_node->id() + "_" + reorder_reshape_node->id(), input_node.id(),
-                        reshape_in_layout.format, reshape_in_layout.data_type);
-                    auto& reshape_input_node = get_or_create(reshape_input);
-                    add_intermediate(reshape_input_node, *reorder_reshape_node, 0, reshape_input_node.dependencies.empty());
-                    reshape_reorder_id++;
-                }
-            }
-
-            auto reshape_layout = node->get_output_layout();
-            if (!(node->is_output()) && (reshape_layout.format != cldnn::format::bfyx))
-            {
-                auto bfyx_layout = layout({ reshape_layout.data_type, cldnn::format::bfyx, reshape_layout.size });
-                //when some primitive does an implicit reorder to some other format then we lose the info about pitches in reshape stage
-                //we assume user provides the input vector in bfyx
-                if (!program_helpers::are_layouts_identical(reshape_layout, bfyx_layout).second)
-                {
-                    auto reshape_input = std::make_shared<reorder>("_reshape_input_" + node->id(), input_node.id(), cldnn::format::bfyx, reshape_layout.data_type);
-                    auto& reshape_input_node = get_or_create(reshape_input);
-                    add_intermediate(reshape_input_node, *node, 0, reshape_input_node.dependencies.empty());
-
-                    auto reshape_users = node->get_users();
-                    for (const auto& user : reshape_users)
-                    {
-                        size_t idx = 0;
-                        for (size_t i = 0; i < user->get_dependencies().size(); i++)
-                        {
-                            auto& input = user->get_dependency(i);
-                            if (input.id() == node->id()) {
-                                idx = i;
-                                break;
-                            }
-                        }
-                        auto reshape_output = std::make_shared<reorder>("_reshape_output_" + node->id(), user->id(), reshape_layout.format, reshape_layout.data_type);
-                        auto& reshape_output_node = get_or_create(reshape_output);
-                        add_intermediate(reshape_output_node, *user, idx, reshape_output_node.dependencies.empty());
-                    }
-                }
-            }
-        }
-    }
-}
-
 void program_impl::apply_needed_padding(program_node& node, program_node& prev_node,
     const padding& needed_padding)
 {
@@ -907,6 +802,28 @@ void program_impl::add_intermediate(std::shared_ptr<primitive> prim, program_nod
     add_intermediate(get_or_create(prim), next, prev_idx, connect_int_node_with_old_dep, move_usrs_of_prev_to_node);
 }
 
+void program_impl::add_intermediate(program_node& node, program_node& next, program_node& prev,
+    bool connect_int_node_with_old_dep,
+    bool move_usrs_of_prev_to_node)
+{
+    bool node_found = false;
+    size_t idx = 0;
+    for (size_t i = 0; i < next.get_dependencies().size(); i++)
+    {
+        auto& input = next.get_dependency(i);
+        if (input.id() == prev.id()) {
+            idx = i;
+            node_found = true;
+            break;
+        }
+    }
+    if (!node_found) {
+        throw error("Trying to add intermediate node in between " + next.id() + " and dependecy " + prev.id() + 
+            " but they are not connected in this way.", CLDNN_ERROR);
+    }
+    add_intermediate(node, next, idx, connect_int_node_with_old_dep, move_usrs_of_prev_to_node);
+}
+
 void program_impl::add_connection(program_node& prev, program_node& next)
 {
     prev.users.push_back(&next);
@@ -988,7 +905,6 @@ void program_impl::replace(program_node& old_node, program_node& new_node)
     new_node.output_layout = old_node.get_output_layout();
     new_node.valid_output_layout = old_node.valid_output_layout;
 
-    
     //copy old's dependencies
     while (!old_node.dependencies.empty())
     {
@@ -1133,7 +1049,11 @@ void program_impl::dump_memory_pool() const
     path += "cldnn_memory_pool.log";
     auto dep = get_memory_dependencies_string();
     get_engine().dump_memory_pool(*this, path, dep);
-    std::string dump_file_name = std::to_string(pm->get_pass_count()+1) + "_memory_pool";
+    std::string dump_file_name; 
+    if (pm->get_pass_count() < 10)
+        dump_file_name += "0";
+    dump_file_name += std::to_string(pm->get_pass_count()) + "_memory_pool";
+    pm->inc_pass_count();
     dump_program(dump_file_name.c_str(), true);
 }
 

@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
     /// For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4].
     /// @param with_activation Enable Relu activation.
     /// @param activation_slp Relu activation slope.
+    /// @param output_data_type Precision of the output after eltwise activaiton. Might be less precise than internal computations (e.g. i8 input, i32 accumulator/activation, u8 output).
     fused_conv_eltwise(
         const primitive_id& id,
         const primitive_id& input,
@@ -59,6 +60,7 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
         const std::vector<primitive_id>& conv_w_quantization_factor,
         const std::vector<primitive_id>& conv_output_calibration_factors,
         const float conv_i_quantization_factor,
+        const float non_conv_scale,
         const primitive_id& eltw_output_calibration_factors,
         const std::vector<tensor>& eltw_stride,
         tensor stride = { 1, 1, 1, 1 },
@@ -68,11 +70,13 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
         float conv_activation_slp = 0.0f,
         bool eltw_with_activation = false,
         float eltw_activation_slp = 0.0f,
-        const padding& output_padding = padding()
+        const padding& output_padding = padding(),
+        optional_data_type output_data_type = {}
     )
-        :primitive_base(id, { input, input2 }, output_padding)
+        :primitive_base(id, { input, input2 }, output_padding, output_data_type)
         , conv(_conv_weights.cpp_ids, _conv_bias.cpp_ids, _conv_weights_quantization_factors.cpp_ids, _conv_output_calibration_factors.cpp_ids)
         , eltw(eltw_output_calibration_factors)
+        , non_conv_scale(non_conv_scale)
         , _conv_weights(weights)
         , _conv_bias(bias)
         , _conv_weights_quantization_factors(conv_w_quantization_factor)
@@ -124,6 +128,13 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
         conv.with_output_size = dto->conv.with_output_size != 0;
         conv.output_size = dto->conv.output_size;
 
+        eltw.output_calibration_factors = dto->eltw.output_calibration_factors;
+        eltw.output_quantization_factor = dto->eltw.output_quantization_factor;
+        eltw.mode = static_cast<eltwise_mode>(dto->eltw.mode);
+        eltw.with_activation = dto->eltw.with_activation != 0;
+        eltw.activation_negative_slope = dto->eltw.activation_negative_slope;
+
+        non_conv_scale = dto->non_conv_scale;
         second_input_in_output = dto->second_input_in_output;
 
         if (!dto->conv.split || (conv.weights.size() != conv.bias.size() && conv.bias.size() != 0) || dto->conv.split != conv.weights.size())
@@ -195,6 +206,15 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
     /// @brief On how many cards split the computation to.
     int32_t split() const { return static_cast<int32_t>(conv.weights.size()); }
 
+    // FIXME: In fact, that should be needed for any EltWise primitive, not
+    // only the fused one. What's more important, these scales should be
+    // separate for different inputs and probably per-channel, not per
+    // primitive.
+    //
+    // I'm only needing a scalar for my particular task, so let's hack like
+    // this in the meantime. The final design is still to be investigated.
+    float non_conv_scale = 1.0f;
+
     /// @brief Is optimization that output contains data from second input ON ?
     bool second_input_in_output = false;
 protected:
@@ -253,6 +273,7 @@ protected:
         dto.eltw.activation_negative_slope = eltw.activation_negative_slope;
         dto.eltw.stride = tensor_vector_to_arr(_eltw_stride);
 
+        dto.non_conv_scale = non_conv_scale;
         dto.second_input_in_output = second_input_in_output;
     }
 };

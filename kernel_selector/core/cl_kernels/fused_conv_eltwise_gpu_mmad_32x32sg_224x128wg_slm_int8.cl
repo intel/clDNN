@@ -113,25 +113,25 @@
         {\
             sum[s] = (int)as_char(regC_uchar16[s]) + (int)as_char(eltw_input_vals[s]);\
         }\
-        regC_uchar16.s0 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s0)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.s1 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s1)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.s2 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s2)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.s3 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s3)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s0 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s0)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s1 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s1)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s2 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s2)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s3 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s3)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
         \
-        regC_uchar16.s4 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s4)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.s5 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s5)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.s6 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s6)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.s7 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s7)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s4 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s4)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s5 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s5)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s6 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s6)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s7 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s7)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
         \
-        regC_uchar16.s8 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s8)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.s9 = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.s9)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.sa = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.sa)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.sb = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.sb)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s8 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s8)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.s9 = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.s9)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.sa = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.sa)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.sb = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.sb)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
         \
-        regC_uchar16.sc = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.sc)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.sd = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.sd)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.se = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.se)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
-        regC_uchar16.sf = as_uchar(ACTIVATION_ELTW( convert_char((int)round( (float)(sum.sf)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.sc = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.sc)  * eltw_calib_f.s0)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.sd = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.sd)  * eltw_calib_f.s1)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.se = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.se)  * eltw_calib_f.s2)), NL_M_ELTW, NL_N_ELTW));\
+        regC_uchar16.sf = as_uchar(ACTIVATION_ELTW( convert_char_sat(round( (float)(sum.sf)  * eltw_calib_f.s3)), NL_M_ELTW, NL_N_ELTW));\
     }
 #endif
 

@@ -74,6 +74,12 @@ namespace kernel_selector
         case ActivationFunction::EXP:                   method = "EXP"; break;
         case ActivationFunction::NONE:                  method = "NONE"; break;
         case ActivationFunction::NONE_GRAD:             method = "NONE_GRAD"; break;
+        case ActivationFunction::TAN:                   method = "TAN"; break;
+        case ActivationFunction::ATAN:                  method = "ATAN"; break;
+        case ActivationFunction::FLOOR:                 method = "FLOOR"; break;
+        case ActivationFunction::CEIL:                  method = "CEIL"; break;
+        case ActivationFunction::NEGATIVE:              method = "NEGATIVE"; break;
+        case ActivationFunction::NOT:                   method = "NOT"; break;
         default: break;
         }
         return method;
@@ -89,6 +95,7 @@ namespace kernel_selector
         case kernel_selector::DataLayout::yxfb:              return "YXFB";
         case kernel_selector::DataLayout::byxf:              return "BYXF";
         case kernel_selector::DataLayout::fyxb:              return "FYXB";
+        case kernel_selector::DataLayout::bfyx_f16:          return "BFYX_F16";
         case kernel_selector::DataLayout::bs_f_bsv8__af8:    return "BS_F_BSV8__AF8";
         case kernel_selector::DataLayout::bs_f_bsv16__af8:   return "BS_F_BSV16__AF8";
         case kernel_selector::DataLayout::bf8_xy16:          return "BF8_XY16";
@@ -98,6 +105,8 @@ namespace kernel_selector
         case kernel_selector::DataLayout::byx8_f4: return "BYX8_F4";
         case kernel_selector::DataLayout::fs_bs_yx_bsv4_fsv32: return "FS_BS_YX_BSV4_FSV32";
         case kernel_selector::DataLayout::b_fs_yx_fsv4:      return "B_FS_YX_FSV4";
+        case kernel_selector::DataLayout::bfzyx:              return "BFZYX";
+        case kernel_selector::DataLayout::fs_b_yx_fsv32: return "FS_B_YX_FSV32";
         default: return "";
         }
     }
@@ -309,6 +318,8 @@ namespace kernel_selector
         case WeightsLayout::oyxi:                       return "OYXI";
         case WeightsLayout::iyxo:                       return "IYXO";
         case WeightsLayout::yxio:                       return "YXIO";
+        case WeightsLayout::oiyx_o16:                   return "OIYX_O16";
+        case WeightsLayout::o_i_yx_i16_o16:             return "O_I_YX_I16_O16";
         case WeightsLayout::os_iyx_osv16:               return "OS_IYX_OSV16";
         case WeightsLayout::os_iyx_osv32:               return "OS_IYX_OSV32";
         case WeightsLayout::os_iyx_osv64:               return "OS_IYX_OSV64";
@@ -331,7 +342,9 @@ namespace kernel_selector
         case WeightsLayout::is_o_yx_isv32: return "IS_O_YX_ISV32";
         case WeightsLayout::is_o32_yx_isv32_swizzled_by_4: return "IS_O32_YX_ISV32_SWIZZLED_BY_4";
         case WeightsLayout::os_is_y_x8_osv8_isv4: return "OS_IS_Y_X8_OSV8_ISV4";
+        case WeightsLayout::os_is_y_x8_osv8_isv4_swizzled_by_4: return "OS_IS_Y_X8_OSV8_ISV4_SWIZZLED_BY_4";
         case WeightsLayout::os_is_yx_osv16_isv4:  return "OS_IS_YX_OSV16_ISV4";
+        case WeightsLayout::oizyx:                       return "OIZYX";
 
         default:
             return "";

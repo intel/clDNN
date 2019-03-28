@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,14 +34,15 @@ protected:
 
     virtual bool validate_impl(const typed_primitive_inst<fused_conv_eltwise>& instance) const override
     {
+      (void)instance;
         bool res = true;
 
-        auto outer_id = _outer.id();
-        auto data_type = instance.node.input().get_output_layout().data_type;
+        // auto outer_id = _outer.id();
+        // auto data_type = instance.node.input().get_output_layout().data_type;
 
         // Check whether all memory elements use the same unit type (FP16 or FP32).
-        CLDNN_ERROR_DATA_TYPES_MISMATCH(outer_id, "Input memory", data_type, "output memory", instance.node.get_output_layout().data_type, "");
-        CLDNN_ERROR_DATA_TYPES_MISMATCH(outer_id, "Input memory", data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
+        // CLDNN_ERROR_DATA_TYPES_MISMATCH(outer_id, "Input memory", data_type, "output memory", instance.node.get_output_layout().data_type, "");
+        // CLDNN_ERROR_DATA_TYPES_MISMATCH(outer_id, "Input memory", data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
 
         return res;
     }
@@ -116,6 +117,7 @@ public:
         fused_params.conv.depthwise_separable_opt = depthwise_separable_opt;
         fused_params.conv.transposed = transposed;
 
+        fused_params.non_conv_scale = primitive->non_conv_scale;
         fused_params.second_input_in_output = primitive->second_input_in_output;
 
         conv_params.local_convolution = weights_size.local[0] > 1 || weights_size.local[1] > 1;
@@ -204,8 +206,13 @@ namespace{
             implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), fused_conv_eltwise_gpu::create);
             implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), fused_conv_eltwise_gpu::create);
             implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), fused_conv_eltwise_gpu::create);
+            implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::bfyx), fused_conv_eltwise_gpu::create);
+            implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::u8, format::bfyx), fused_conv_eltwise_gpu::create);
             // MMAD
             implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), fused_conv_eltwise_gpu::create);
+            // IMAD
+            implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::b_fs_yx_fsv4), fused_conv_eltwise_gpu::create);
+            implementation_map<fused_conv_eltwise>::add(std::make_tuple(engine_types::ocl, data_types::u8, format::b_fs_yx_fsv4), fused_conv_eltwise_gpu::create);
         }
         ~attach() {}
     };

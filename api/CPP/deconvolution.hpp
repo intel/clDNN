@@ -214,6 +214,46 @@ struct deconvolution : public primitive_base<deconvolution, CLDNN_PRIMITIVE_DESC
     {
     }
 
+    /// @brief Constructs deconvolution primitive (computes input paddings to match output size).
+    /// @param id This primitive id.
+    /// @param input Input primitive id.
+    /// @param weights List of primitive ids containing weights data.
+    /// @param bias List of primitive ids containing bias data. Provide empty vector if using next parameters without bias.
+    /// @param groups Number of filter groups.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the deconvolution window should start calculations.
+    /// @param stride Defines shift in input buffer between adjacent calculations of output values.
+    /// @param with_activation Enables Relu activation.
+    /// @param activation_slp Relu activation slope.
+    /// @param output_size User-defined output data size of the primitive (w/o padding).
+    deconvolution(
+        const primitive_id& id,
+        const primitive_id& input,
+        const std::vector<primitive_id>& weights,
+        const std::vector<primitive_id>& bias,
+        uint32_t groups,
+        tensor stride,
+        tensor input_offset,
+        bool with_activation,
+        float activation_slp,
+        tensor output_size,
+        const padding& output_padding = padding()
+    )
+        :primitive_base(id, { input }, output_padding)
+        , weights(_weights.cpp_ids)
+        , bias(_bias.cpp_ids)
+        , input_offset(input_offset)
+        , stride(stride)
+        , with_activation(with_activation)
+        , activation_negative_slope(activation_slp)
+        , with_output_size(true)
+        , output_size(output_size)
+        , groups(groups)
+        , _weights(weights)
+        , _bias(bias)
+        , _gradient(false)
+    {
+    }
+
     /// @brief Constructs deconvolution primitive (w/o bias, computes input paddings to match output size).
     /// @param id This primitive id.
     /// @param input Input primitive id.

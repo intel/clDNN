@@ -276,8 +276,11 @@ typedef enum /*:int32_t*/
     cldnn_format_byxf,          ///< used in bitmaps, input from user i.e b images of RGB format \n \image html byxf.jpg
     cldnn_format_bfyx,          ///< the most common format for activations in clDNN. \n \image html bfyx.jpg
     cldnn_format_fyxb,          ///< format not used inside clDNN, but supported in reorder as extension for user provided formats.
+    cldnn_format_bfyx_f16,     ///< format used for blocked convolution
+    cldnn_format_o_i_yx_i16_o16,///< format used for blocked convolution
     cldnn_format_os_iyx_osv16,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
                                 ///< \n \image html os_iyx_osv16.jpg
+    cldnn_format_oiyx_o16,      ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
     cldnn_format_os_iyx_osv32,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv32 - 32 values of single slice.
     cldnn_format_os_iyx_osv64,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv64 - 64 values of single slice.
     cldnn_format_bs_xs_xsv8_bsv8, ///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice.
@@ -306,9 +309,12 @@ typedef enum /*:int32_t*/
     cldnn_format_is_o_yx_isv32, /// < \n format for weights for 1x1 MMAD convolutions 
     cldnn_format_is_o32_yx_isv32_swizzled_by_4, /// < \n format for weights for 1x1 MMAD convolutions
     cldnn_format_os_is_y_x8_osv8_isv4, /// < n\ format for weights for MMAD convolutions
+    cldnn_format_os_is_y_x8_osv8_isv4_swizzled_by_4, /// < n\ format for weights for MMAD convolutions
     cldnn_bf_lyx_yx,                      /// < \n format for local convolution weights
     cldnn_format_b_fs_yx_fsv4,            /// < \n format for input for IMAD convolutions
     cldnn_format_os_is_yx_osv16_isv4,     /// < \n format for weights for IMAD convolutions
+    cldnn_format_bfzyx,                   /// < \n format for 3D convolutions
+    cldnn_format_fs_b_yx_fsv32,           /// < format for fp16 convolutions using 32 features
     cldnn_format_format_num,    ///< number of format types
     cldnn_format_any = -1
 } cldnn_format_type;
@@ -318,7 +324,7 @@ typedef enum /*:int32_t*/
 
 #define CLDNN_TENSOR_BATCH_DIM_MAX 1
 #define CLDNN_TENSOR_FEATURE_DIM_MAX 1
-#define CLDNN_TENSOR_SPATIAL_DIM_MAX 2
+#define CLDNN_TENSOR_SPATIAL_DIM_MAX 3
 #define CLDNN_TENSOR_LOCAL_DIM_MAX 2
 #define CLDNN_TENSOR_DIM_MAX 8
 
@@ -463,6 +469,12 @@ typedef enum cldnn_activation_func_t
     activation_log,                     // log(val)
 	activation_log2,					// log2(val)
     activation_exp,                     // exp(val)
+    activation_tan,                     // tan(val)
+    activation_atan,                    // atan(val)
+    activation_floor,                   // floor(val)
+    activation_ceil,                    // ceil(val)
+    activation_negative,                // -val
+    activation_not,                     // !val
 } cldnn_activation_func;
 
 /// @brief activation gradient functions

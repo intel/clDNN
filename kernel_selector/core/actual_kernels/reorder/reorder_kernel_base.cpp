@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ namespace kernel_selector
         case WeightsLayout::os_i_osv16__ai8:
         case WeightsLayout::i_yxs_os_yxsv2_osv16:
         case WeightsLayout::iy_xs_os_xsv2_osv16__ao32:
+        case WeightsLayout::o_i_yx_i16_o16:
+        case WeightsLayout::oiyx_o16:
             return 16;
         case WeightsLayout::os_i_osv8__ai8:
         case WeightsLayout::iy_xs_os_xsv2_osv8__ao32:
@@ -91,10 +93,7 @@ namespace kernel_selector
         return mem_consts;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // MakeReorderJitConstants
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    inline JitConstants MakeReorderJitConstants(const reorder_params& params)
+    JitConstants ReorderKernelBase::GetJitConstants(const reorder_params& params) const
     {
         JitConstants jit = MakeBaseParamsJitConstants(params);
 
@@ -126,16 +125,9 @@ namespace kernel_selector
             MakeJitConstant("MEAN_OP(val,mean_val)",          getMeanOpString(params.mean_op))
         });
 
+        jit.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", SubGroupSize(params.output.GetLayout())));
+
         return jit;
-    }
-
-    JitConstants ReorderKernelBase::GetJitConstants(const reorder_params& params) const
-    {
-        JitConstants mem_consts = MakeReorderJitConstants(params);
-
-        mem_consts.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", SubGroupSize(params.output.GetLayout())));
-
-        return mem_consts;
     }
 
     ReorderKernelBase::DispatchData ReorderKernelBase::SetDefault(const reorder_weights_params& params) const

@@ -26,7 +26,6 @@ namespace kernel_selector {
         FullyConnectedGradWeightsKernelRef() : FullyConnectedGradWeightsKernelBase("fully_connected_grad_weights_gpu_ref") {}
         virtual ~FullyConnectedGradWeightsKernelRef() {}
 
-    protected:
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

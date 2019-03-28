@@ -90,6 +90,7 @@ kernel_selector::data_layout to_data_layout(format f)
     case format::yxfb:              return kernel_selector::data_layout::yxfb;
     case format::byxf:              return kernel_selector::data_layout::byxf;
     case format::fyxb:              return kernel_selector::data_layout::fyxb;
+    case format::bfyx_f16:          return kernel_selector::data_layout::bfyx_f16;
     case format::bs_x_bsv16:        return kernel_selector::data_layout::bs_f_bsv16__af8;
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::data_layout::bs_f_bsv8__af8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::data_layout::bs_f_bsv16__af8;
@@ -100,6 +101,8 @@ kernel_selector::data_layout to_data_layout(format f)
     case format::fs_bs_yx_bsv4_fsv32: return kernel_selector::data_layout::fs_bs_yx_bsv4_fsv32;
         //     case format::brfyx:          return kernel_selector::data_layout::brfyx;
     case format::b_fs_yx_fsv4:       return kernel_selector::data_layout::b_fs_yx_fsv4;
+    case format::bfzyx:              return kernel_selector::data_layout::bfzyx;
+    case format::fs_b_yx_fsv32:     return kernel_selector::data_layout::fs_b_yx_fsv32;
     default:
         return kernel_selector::data_layout::bfyx;
     }
@@ -115,6 +118,7 @@ cldnn::format from_data_layout(kernel_selector::data_layout l)
     case kernel_selector::data_layout::yxfb:              return cldnn::format::yxfb;
     case kernel_selector::data_layout::byxf:              return cldnn::format::byxf;
     case kernel_selector::data_layout::fyxb:              return cldnn::format::fyxb;
+    case kernel_selector::data_layout::bfyx_f16:          return cldnn::format::bfyx_f16;
     case kernel_selector::data_layout::bs_f_bsv8__af8:    return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::data_layout::bs_f_bsv16__af8:   return cldnn::format::bs_x_bsv16;
     case kernel_selector::data_layout::bf8_xy16:          return cldnn::format::bf8_xy16;
@@ -123,6 +127,8 @@ cldnn::format from_data_layout(kernel_selector::data_layout l)
     case kernel_selector::data_layout::byxf_af32: return cldnn::format::byxf_af32;
     case kernel_selector::data_layout::byx8_f4: return cldnn::format::byx8_f4;
     case kernel_selector::data_layout::fs_bs_yx_bsv4_fsv32: return cldnn::format::fs_bs_yx_bsv4_fsv32;
+    case kernel_selector::data_layout::bfzyx:              return cldnn::format::bfzyx;
+    case kernel_selector::data_layout::fs_b_yx_fsv32:     return cldnn::format::fs_b_yx_fsv32;
     default:
         return cldnn::format::bfyx;
         break;
@@ -143,6 +149,8 @@ kernel_selector::weights_layout to_weights_layout(format f)
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::weights_layout::os_i_osv8__ai8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::weights_layout::os_i_osv16__ai8;
     case format::bs_x_bsv16:        return kernel_selector::weights_layout::os_i_osv16;
+    case format::oiyx_o16:          return kernel_selector::weights_layout::oiyx_o16;
+    case format::o_i_yx_i16_o16:    return kernel_selector::weights_layout::o_i_yx_i16_o16;
     case format::image_2d_weights_c4_fyx_b:     return kernel_selector::weights_layout::image_2d_weights_c4_fyx_b;
     case format::image_2d_weights_c1_b_fyx:     return kernel_selector::weights_layout::image_2d_weights_c1_b_fyx;
     case format::winograd_2x3_s1_weights:       return kernel_selector::weights_layout::winograd_2x3_s1_weights;
@@ -155,8 +163,10 @@ kernel_selector::weights_layout to_weights_layout(format f)
     case format::is_o_yx_isv32: return kernel_selector::weights_layout::is_o_yx_isv32;
     case format::is_o32_yx_isv32_swizzled_by_4: return kernel_selector::weights_layout::is_o32_yx_isv32_swizzled_by_4;
     case format::os_is_y_x8_osv8_isv4: return kernel_selector::weights_layout::os_is_y_x8_osv8_isv4;
+    case format::os_is_y_x8_osv8_isv4_swizzled_by_4: return kernel_selector::weights_layout::os_is_y_x8_osv8_isv4_swizzled_by_4;
     case format::bf_lyx_yx:                                  return kernel_selector::weights_layout::bf_lyx_yx;
     case format::os_is_yx_osv16_isv4:  return kernel_selector::weights_layout::os_is_yx_osv16_isv4;
+    case format::bfzyx:              return kernel_selector::weights_layout::oizyx;
     default:
         return kernel_selector::weights_layout::oi;
     }
@@ -178,6 +188,8 @@ cldnn::format::type from_weights_layout(kernel_selector::weights_layout l)
     case kernel_selector::weights_layout::os_i_osv16:      return cldnn::format::bs_x_bsv16;
     case kernel_selector::weights_layout::os_i_osv8__ai8:  return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::weights_layout::os_i_osv16__ai8: return cldnn::format::bs_xs_xsv8_bsv16;
+    case kernel_selector::weights_layout::oiyx_o16:        return cldnn::format::oiyx_o16;
+    case kernel_selector::weights_layout::o_i_yx_i16_o16:  return cldnn::format::o_i_yx_i16_o16;
     case kernel_selector::weights_layout::image_2d_weights_c4_fyx_b:     return cldnn::format::image_2d_weights_c4_fyx_b;
     case kernel_selector::weights_layout::image_2d_weights_c1_b_fyx:     return cldnn::format::image_2d_weights_c1_b_fyx;
     case kernel_selector::weights_layout::winograd_2x3_s1_weights:       return cldnn::format::winograd_2x3_s1_weights;
@@ -190,7 +202,9 @@ cldnn::format::type from_weights_layout(kernel_selector::weights_layout l)
     case kernel_selector::weights_layout::is_o_yx_isv32:                          return cldnn::format::is_o_yx_isv32;
     case kernel_selector::weights_layout::is_o32_yx_isv32_swizzled_by_4: return cldnn::format::is_o32_yx_isv32_swizzled_by_4;
     case kernel_selector::weights_layout::os_is_y_x8_osv8_isv4: return cldnn::format::os_is_y_x8_osv8_isv4;
+    case kernel_selector::weights_layout::os_is_y_x8_osv8_isv4_swizzled_by_4: return cldnn::format::os_is_y_x8_osv8_isv4_swizzled_by_4;
     case kernel_selector::weights_layout::bf_lyx_yx:                              return cldnn::format::bf_lyx_yx;
+    case kernel_selector::weights_layout::oizyx:            return cldnn::format::bfzyx;
     default:
         return cldnn::format::bfyx;
     }
@@ -341,6 +355,18 @@ kernel_selector::activation_function get_kernel_selector_activation_param(cldnn_
 		return kernel_selector::activation_function::LOG2;
     case activation_exp:
         return kernel_selector::activation_function::EXP;
+    case activation_tan:
+        return kernel_selector::activation_function::TAN;
+    case activation_atan:
+        return kernel_selector::activation_function::ATAN;
+    case activation_floor:
+        return kernel_selector::activation_function::FLOOR;
+    case activation_ceil:
+        return kernel_selector::activation_function::CEIL;
+    case activation_negative:
+        return kernel_selector::activation_function::NEGATIVE;
+    case activation_not:
+        return kernel_selector::activation_function::NOT;
     default:
         throw std::runtime_error("Unknown activation function");
         break;

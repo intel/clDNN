@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,7 +99,9 @@ primitive_inst::primitive_inst(network_impl& network, program_node const& node, 
                 user_count--;
             else if (user->is_type<fused_conv_eltwise>())
             {
-                if ((*user->as<fused_conv_eltwise>().get_users().begin())->is_type<mutable_data>())
+                if (!user->as<fused_conv_eltwise>().get_users().empty()
+                    && (*user->as<fused_conv_eltwise>().get_users().begin())
+                           ->is_type<mutable_data>())
                 {
                     if (user->as<fused_conv_eltwise>().get_dependency(1).id() == node.id())
                     {

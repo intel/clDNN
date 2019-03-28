@@ -32,6 +32,7 @@
 #include "fully_connected_kernel_MMAD.h"
 #include "fully_connected_kernel_mmad_batched.h"
 #include "fully_connected_kernel_imad.h"
+#include "fully_connected_kernel_fs_byx_fsv32.h"
 
 namespace kernel_selector {
 
@@ -53,6 +54,7 @@ namespace kernel_selector {
         Attach<FullyConnectedKernelMMAD>();
         Attach<FullyConnected_mmad_batched>();
         Attach<FullyConnectedKernelIMAD>();
+        Attach<FullyConnected_fs_byx_fsv32>();
     }
 
     KernelsData fully_connected_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const

@@ -78,6 +78,6 @@ namespace kernel_selector
 
     KernelsData PoolingKerneGPU_fs_bs_yx_bsv4_fsv32::GetKernelsData(const Params& params, const optional_params& options) const
     {
-        return GetCommonKernelsData(params, options, FORCE_PRIORITY_1);
+        return GetCommonKernelsData(params, options, FORCE_PRIORITY_2);
     }
 }

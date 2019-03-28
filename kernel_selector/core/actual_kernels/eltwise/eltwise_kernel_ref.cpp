@@ -55,11 +55,13 @@ namespace kernel_selector {
         const eltwise_params& params = static_cast<const eltwise_params&>(p);
         for (size_t i = 0; i < params.inputs.size(); i++)
         {
-            if (params.inputs[i].GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32)
+            if (params.inputs[i].GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32 ||
+                params.inputs[i].GetLayout() == DataLayout::fs_b_yx_fsv32)
                 return false;
         }
         if (params.output.GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32 ||
-            params.output.GetLayout() == DataLayout::b_fs_yx_fsv4)
+            params.output.GetLayout() == DataLayout::b_fs_yx_fsv4 ||
+            params.output.GetLayout() == DataLayout::fs_b_yx_fsv32)
             return false;
 
         return true;

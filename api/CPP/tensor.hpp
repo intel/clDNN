@@ -86,6 +86,10 @@ struct format
         byxf = cldnn_format_byxf, ///< used in bitmaps, input from user i.e b images of RGB format \n \image html byxf.jpg
         bfyx = cldnn_format_bfyx, ///< the most common format for activations in clDNN. \n \image html bfyx.jpg
         fyxb = cldnn_format_fyxb, ///< format not used inside clDNN, but supported in reorder as extension for user provided formats.
+        bfyx_f16 = cldnn_format_bfyx_f16,             ///< format used for blocked convolution
+        o_i_yx_i16_o16 = cldnn_format_o_i_yx_i16_o16, ///< format used for blocked convolution
+        //TODO: [block_formats] - verify if it is really the weights format is needed (check os_iyx_osv16)
+        oiyx_o16 = cldnn_format_oiyx_o16,         ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
         os_iyx_osv16 = cldnn_format_os_iyx_osv16, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
                                                   ///< \n \image html os_iyx_osv16.jpg
         os_iyx_osv32 = cldnn_format_os_iyx_osv32, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv32 - 32 values of single slice.
@@ -113,12 +117,15 @@ struct format
         is_o_yx_isv32, /// format for weights for 1x1 MMAD convolutions
         is_o32_yx_isv32_swizzled_by_4, /// format for weights for 1x1 MMAD convolutions
         os_is_y_x8_osv8_isv4, /// format for weights for 1x1 MMAD convolutions
+        os_is_y_x8_osv8_isv4_swizzled_by_4, /// format for weights for 1x1 MMAD convolutions
         byxf_af32,           /// < \n format for input for primitives using MMAD
         byx8_f4,             /// < \n format for input for MMAD convolutions
         fs_bs_yx_bsv4_fsv32, /// < \n format for batched input for primitives using MMAD
-        bf_lyx_yx = cldnn_bf_lyx_yx,            /// < \n format for local convolution weights
+        bf_lyx_yx = cldnn_bf_lyx_yx,            /// < \n format for local convolution weights 
         b_fs_yx_fsv4,        /// < \n format for input for IMAD convolutions
         os_is_yx_osv16_isv4, /// < \n format for weights for IMAD convolutions
+        bfzyx = cldnn_format_bfzyx,
+        fs_b_yx_fsv32,       /// < \n format for input for fp16 primitives
         format_num = cldnn_format_format_num, ///< number of format types
         any = cldnn_format_any
     };
@@ -128,36 +135,42 @@ struct format
     {
         static const std::map<type, format_traits> traits
         {
-            { yxfb,{ 1, 1, 2, 0, "yxfb", "bfxy" } },
-            { byxf,{ 1, 1, 2, 0, "byxf", "bfxy" } },
-            { bfyx,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { fyxb,{ 1, 1, 2, 0, "fyxb", "bfxy" } },
-            { os_iyx_osv16, { 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { os_iyx_osv32,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { os_iyx_osv64,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { bs_xs_xsv8_bsv8, { 1, 1, 1, 0, "bx", "b?x?" } },
-            { bs_xs_xsv8_bsv16,{ 1, 1, 1, 0, "bx", "b?x?" } },
-            { bs_x_bsv16, { 1, 1, 1, 0, "bx", "b?x?" } },
-            { bf8_xy16, { 1, 1, 2, 0, "bfyx", "bfxy" }},
-            { image_2d_weights_c4_fyx_b, { 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { image_2d_weights_c1_b_fyx, { 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { winograd_2x3_s1_data, { 1, 1, 2, 0, "bxyf", "bfxy" } },
-            { winograd_2x3_s1_weights, { 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { winograd_2x3_s1_fused_weights, { 1, 1, 2, 0, "xyfb", "bfxy" } },
-            { winograd_6x3_s1_fused_weights,{ 1, 1, 2, 0, "xyfb", "bfxy" } },
-            { image_2d_weights_winograd_6x3_s1_fbxyb,{ 1, 1, 2, 0, "xyfb", "bfxy" } },
-            { image_2d_weights_winograd_6x3_s1_xfbyb,{ 1, 1, 2, 0, "xyfb", "bfxy" } },
-            { os_is_yx_isa8_osv8_isv4, { 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { os_is_yx_isa8_osv8_isv4_swizzled_by_4,{ 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { byxf_af32, { 1, 1, 2, 0, "byxf", "bfxy" } },
-            { byx8_f4 , { 1, 1, 2, 0, "byxf", "bfyx"} },
-            { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, 0, "fbyx", "bfxy" }},
-            { is_o_yx_isv32 , {1, 1, 2, 0, "byxf", "bfxy" } },
-            { is_o32_yx_isv32_swizzled_by_4 , {1,1,2,0,"byxf", "bfxy" } },
-            { os_is_y_x8_osv8_isv4 , { 1, 1, 2, 0, "byxf", "bfxy" } },
-            { bf_lyx_yx,{ 1, 1, 2, 2, "bfklyx", "bfklxy" } },
-            { b_fs_yx_fsv4,{ 1, 1, 1, 0, "bfyx", "bfxy" } },
+            { yxfb,{ 1, 1, 2, 0, "yxfb", "bfxy?" } },
+            { byxf,{ 1, 1, 2, 0, "byxf", "bfxy?" } },
+            { bfyx,{ 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { fyxb,{ 1, 1, 2, 0, "fyxb", "bfxy?" } },
+            { bfyx_f16, { 1, 1, 2, 0, "bfyx", "bfxy" }},
+            { o_i_yx_i16_o16, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { oiyx_o16, { 1, 1, 2, 0, "bfyx", "bfxy" } },
+            { os_iyx_osv16, { 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { os_iyx_osv32,{ 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { os_iyx_osv64,{ 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { bs_xs_xsv8_bsv8, { 1, 1, 1, 0, "bx", "b?x??" } },
+            { bs_xs_xsv8_bsv16,{ 1, 1, 1, 0, "bx", "b?x??" } },
+            { bs_x_bsv16, { 1, 1, 1, 0, "bx", "b?x??" } },
+            { bf8_xy16, { 1, 1, 2, 0, "bfyx", "bfxy?" }},
+            { image_2d_weights_c4_fyx_b, { 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { image_2d_weights_c1_b_fyx, { 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { winograd_2x3_s1_data, { 1, 1, 2, 0, "bxyf", "bfxy?" } },
+            { winograd_2x3_s1_weights, { 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { winograd_2x3_s1_fused_weights, { 1, 1, 2, 0, "xyfb", "bfxy?" } },
+            { winograd_6x3_s1_fused_weights,{ 1, 1, 2, 0, "xyfb", "bfxy?" } },
+            { image_2d_weights_winograd_6x3_s1_fbxyb,{ 1, 1, 2, 0, "xyfb", "bfxy?" } },
+            { image_2d_weights_winograd_6x3_s1_xfbyb,{ 1, 1, 2, 0, "xyfb", "bfxy?" } },
+            { os_is_yx_isa8_osv8_isv4, { 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { os_is_yx_isa8_osv8_isv4_swizzled_by_4,{ 1, 1, 2, 0, "bfyx", "bfxy?" } },
+            { byxf_af32, { 1, 1, 2, 0, "byxf", "bfxy?" } },
+            { byx8_f4 , { 1, 1, 2, 0, "byxf", "bfyx?"} },
+            { fs_bs_yx_bsv4_fsv32 , { 1, 1, 2, 0, "fbyx", "bfxy?" }},
+            { is_o_yx_isv32 , {1, 1, 2, 0, "byxf", "bfxy?" } },
+            { is_o32_yx_isv32_swizzled_by_4 , {1,1,2,0,"byxf", "bfxy?" } },
+            { os_is_y_x8_osv8_isv4 , { 1, 1, 2, 0, "byxf", "bfxy?" } },
+            { os_is_y_x8_osv8_isv4_swizzled_by_4 ,{ 1, 1, 2, 0, "byxf", "bfxy?" } },
+            { bf_lyx_yx,{ 1, 1, 2, 2, "bfklyx", "bfklxy?" } },
+            { b_fs_yx_fsv4,{ 1, 1, 1, 0, "bfyx", "bfxy?" } },
             { os_is_yx_osv16_isv4,{ 1, 1, 1, 0, "bfxy", "bfxy?" } },
+            { bfzyx,{ 1, 1, 3, 0, "bfzyx", "bfxyz" } },
+            { fs_b_yx_fsv32,{1,1,2,0, "fbyx", "bfxy" } },
         };
         return traits.at(fmt);
     }
@@ -389,6 +402,31 @@ public:
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX] = feature_num;
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX] = width;
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1] = height;
+        if (batch_num == 0 && feature_num == 0 && width == 0 && height == 0)
+            _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 2] = 0;
+    }
+
+    /// @brief Constructs @p tensor.
+    /// @details Example:
+    /*! @code
+    *
+    tensor my_tensor( 2, 3, 4, 5, 6 );   // b=2, f=3, x=4, y=5, z =6
+    cout << my_tensor.batch[0] << endl;           // 2
+    cout << my_tensor.feature[0] << endl;         // 3
+    cout << "x=" << my_tensor.spatial[0] << endl; // x=4
+    cout << "y=" << my_tensor.spatial[1] << endl; // y=5
+    cout << "z=" << my_tensor.spatial[2] << endl; // z=6
+    *
+    * @endcode
+    */
+    tensor(value_type batch_num, value_type feature_num, value_type width, value_type height, value_type depth)
+        : tensor(1)
+    {
+        _sizes[0] = batch_num;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX] = feature_num;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX] = width;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1] = height;
+        _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 2] = depth;
     }
 
     /// @brief Constructs @p tensor.
@@ -418,7 +456,7 @@ public:
     }
 
     /// @brief Constructs @p tensor using vector of sizes.
-    /// @param[in] sizes dimensions need to be provided in the following order {batch, feature, spatial_x, spatial_y}.
+    /// @param[in] sizes dimensions need to be provided in the following order {batch, feature, spatial_x, spatial_y [, spatial_z] }.
     /// @param[in] default_size default_size for tensor dimensions.
     /// @details Example:
     /*! @code
@@ -438,12 +476,15 @@ public:
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX] = sizes[CLDNN_TENSOR_BATCH_DIM_MAX];
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX] = sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX];
         _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1] = sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 1];
+        if (sizes.size() >= 5)
+        {
+            _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 2] =
+                sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + 2];
+        }
         if (sizes.size() == 6)
         {
             _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX] =
                 sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX];
-            _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX + 1] =
-                sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX + 1];
         }
     }
 
@@ -754,6 +795,23 @@ public:
             my_sizes[0] = align_to(my_sizes[0], 64);
             adjusted_coords[0] = align_to(adjusted_coords[0], 64);
         }
+        else if (fmt == cldnn::format::bfyx_f16 && !(is_aligned_to(my_sizes[1], 16)))
+        {
+            my_sizes[1] = align_to(my_sizes[1], 16);
+            adjusted_coords[1] = align_to(adjusted_coords[1], 16);
+        }
+        else if (fmt == cldnn::format::o_i_yx_i16_o16 && !(is_aligned_to(my_sizes[0], 16) && is_aligned_to(my_sizes[1], 16)))
+        {
+            my_sizes[0] = align_to(my_sizes[0], 16);
+            my_sizes[1] = align_to(my_sizes[1], 16);
+            adjusted_coords[0] = align_to(adjusted_coords[0], 16);
+            adjusted_coords[1] = align_to(adjusted_coords[1], 16);
+        }
+        else if (fmt == cldnn::format::oiyx_o16 && !is_aligned_to(my_sizes[0], 16))
+        {
+            my_sizes[0] = align_to(my_sizes[0], 16);
+            adjusted_coords[0] = align_to(adjusted_coords[0], 16);
+        }
         else if (fmt == cldnn::format::bs_xs_xsv8_bsv8 && !(is_aligned_to(my_sizes[0], 8) && is_aligned_to(my_sizes[1], 8)))
         {
             my_sizes[0] = align_to(my_sizes[0], 8);
@@ -808,7 +866,7 @@ public:
             adjusted_coords[0] = align_to(adjusted_coords[0], 32);
             adjusted_coords[1] = align_to(adjusted_coords[1], 32);
         }
-        else if (fmt == cldnn::format::os_is_y_x8_osv8_isv4)
+        else if (fmt == cldnn::format::os_is_y_x8_osv8_isv4 || fmt == cldnn::format::os_is_yx_isa8_osv8_isv4_swizzled_by_4)
         {
             my_sizes[1] = align_to(my_sizes[1], 4);
             my_sizes[0] = align_to(my_sizes[0], 8);

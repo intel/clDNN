@@ -37,7 +37,10 @@ void program_node::replace_dependency(size_t idx, program_node& new_dep)
     if (dependencies[idx] == &new_dep)
         return;
 
-    dependencies[idx]->users.remove(this);
+    auto it = std::find(dependencies[idx]->users.begin(), dependencies[idx]->users.end(), this);
+    if (it != dependencies[idx]->users.end()) {
+        dependencies[idx]->users.erase(it);
+    }
     myprog.remove_if_dangling(*dependencies[idx]);
 
     dependencies[idx] = &new_dep;
@@ -196,7 +199,7 @@ layout program_node::get_output_layout(bool invalidate_users_if_changed)
 
     auto new_layout = calc_output_layout();
     set_output_layout(new_layout, invalidate_users_if_changed);
-    return new_layout;
+    return output_layout;
 }
 
 layout program_node::get_output_layout() const

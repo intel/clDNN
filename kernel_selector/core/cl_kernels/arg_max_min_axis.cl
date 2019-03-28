@@ -57,14 +57,14 @@
 
 #ifdef MAX_OUT
     #define COMPARE_SIGN <
-    #define UNIT_FILL_VAL UNIT_VAL_MIN
+    #define INPUT0_FILL_VAL INPUT0_VAL_MIN
 #else
     #define COMPARE_SIGN >
-    #define UNIT_FILL_VAL UNIT_VAL_MAX    
+    #define INPUT0_FILL_VAL INPUT0_VAL_MAX    
 #endif
 
 __attribute__((reqd_work_group_size(LOCAL_SIZE, 1, 1)))
-KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output)
+KERNEL(arg_max_gpu_axis)(const __global INPUT0_TYPE* input, __global OUTPUT_TYPE* output)
 {
 #include "include/arg_max_min_common.cl"
     uint results[TOP_K];
@@ -90,7 +90,7 @@ KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output
         for (int j = 0; j < i; j++)
         {
             if (accumulator.index == results[j])
-                accumulator.value = UNIT_FILL_VAL;
+                accumulator.value = INPUT0_FILL_VAL;
         }
         global_index += GLOBAL_SIZE * GAP_SIZE;
         uint element_index = start_index + GLOBAL_SIZE;
@@ -101,7 +101,7 @@ KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output
             element.index = element_index;
             for (int j = 0; j < i; j++){
                 if (element.index == results[j])
-                    element.value = UNIT_FILL_VAL;
+                    element.value = INPUT0_FILL_VAL;
             }
             if(accumulator.value COMPARE_SIGN element.value)
             {
@@ -114,7 +114,7 @@ KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output
         if (local_index < VALUES_NUM)
             scratch[local_index] = accumulator;
         else
-            scratch[local_index].value = UNIT_FILL_VAL;
+            scratch[local_index].value = INPUT0_FILL_VAL;
 
         barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -144,7 +144,7 @@ KERNEL(arg_max_gpu_axis)(const __global UNIT_TYPE* input, __global float* output
 }
 
 #undef COMPARE_SIGN
-#undef UNIT_FILL_VAL
+#undef INPUT0_FILL_VAL
 #undef GAP_SIZE
 #undef VALUES_NUM
 #undef FIRST_DIM_SIZE

@@ -20,7 +20,7 @@
 
 namespace kernel_selector
 {
-    JitConstants ContractKernelBase::GetJitConstants(const contract_params& params)
+    JitConstants ContractKernelBase::GetJitConstants(const contract_params& params) const
     {
         JitConstants jit = MakeBaseParamsJitConstants(params);
 

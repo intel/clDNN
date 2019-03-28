@@ -143,17 +143,6 @@ namespace kernel_selector {
         if (CeilDiv(RoundUp(params.output.X().v * params.output.Y().v, runInfo.gemmStyle.subBlockDimM), runInfo.gemmStyle.globalWorkSizeDY) % runInfo.lws1 != 0)
             jit.AddConstant(MakeJitConstant("LEFTOVERS", 1));
 
-        if (!params.eltw.stride.empty())
-        {
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_X", params.eltw.stride[0].x));
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", params.eltw.stride[0].y));
-        }
-        else
-        {
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_X", 1));
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", 1));
-        }
-
 		return jit;
 	}
 

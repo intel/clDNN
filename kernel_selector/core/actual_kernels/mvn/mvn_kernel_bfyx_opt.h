@@ -27,10 +27,8 @@ namespace kernel_selector
         virtual ~MVNKernelBfyxOpt() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-        using Parent = MVNKernelBase;
-
-    protected:
         virtual ParamsKey GetSupportedKey() const override;
+        using Parent = MVNKernelBase;
 
     private:
         DispatchData SetDefault(const mvn_params& params) const override;

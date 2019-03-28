@@ -35,6 +35,24 @@ namespace kernel_selector
         return k;
     }
 
+    bool ReorderKernelFastBatch1::Validate(const Params& p, const optional_params& o) const
+    {
+        if (!ReorderKernelBase::Validate(p, o))
+        {
+            return false;
+        }
+
+        const reorder_params& params = static_cast<const reorder_params&>(p);
+        
+        if (params.output.GetLayout() == DataLayout::fs_b_yx_fsv32)
+            return false;
+
+        if (params.inputs[0].GetLayout() == DataLayout::fs_b_yx_fsv32)
+            return false;
+
+        return true;
+    }
+
     JitConstants ReorderKernelFastBatch1::GetJitConstants(const reorder_params& params) const
     {
         auto jit = ReorderKernelBase::GetJitConstants(params);

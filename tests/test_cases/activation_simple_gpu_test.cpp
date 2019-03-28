@@ -107,7 +107,7 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
     auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 5, 4 } });
     auto input_params = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 1 } });
     set_values(input,
-    { 1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
+    { 0.0f, -2.0f, -3.0f, 4.0f, 5.0f,
         2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
         3.0f, -3.0f, 3.0f, 5.0f, 1.0f,
         1.0f, 1.0f, 1.0f, -1.0f, 1.0f });
@@ -131,6 +131,9 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
         activation_cosh,
         activation_exp,
 		activation_log2,
+        activation_tan,
+        activation_negative,
+        activation_not
     };
 
     cldnn_activation_additional_params params = { 0.5f, 2.5f };
@@ -235,6 +238,15 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
 						EXPECT_FLOAT_EQ(std::log2((float)input_ptr[i]), output_ptr[i]);
                     }
 					break;
+                case activation_tan:
+                    EXPECT_FLOAT_EQ(std::tan((float)input_ptr[i]), output_ptr[i]);
+                    break;
+                case activation_negative:
+                    EXPECT_FLOAT_EQ(-((float)input_ptr[i]), output_ptr[i]);
+                    break;
+                case activation_not:
+                    EXPECT_FLOAT_EQ(!((float)input_ptr[i]), output_ptr[i]);
+                    break;
                 default:
                     break;
                 }
@@ -243,7 +255,7 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
     }
 }
 
-TEST(activation_f32_fw_gpu, basic_yxfb_asin_acos_log)
+TEST(activation_f32_fw_gpu, basic_yxfb_asin_acos_log_atan)
 {
     const auto& engine = get_test_engine();
 
@@ -254,7 +266,8 @@ TEST(activation_f32_fw_gpu, basic_yxfb_asin_acos_log)
         activation_asin,
         activation_acos,
         activation_log,
-		activation_log2
+		activation_log2,
+        activation_atan
     };
 
     for (auto func : funcs)
@@ -299,6 +312,9 @@ TEST(activation_f32_fw_gpu, basic_yxfb_asin_acos_log)
 			case activation_log2:
 				EXPECT_FLOAT_EQ(std::log2((float)input_ptr[i]), output_ptr[i]);
 				break;
+            case activation_atan:
+                EXPECT_FLOAT_EQ(std::atan((float)input_ptr[i]), output_ptr[i]);
+                break;
             default:
                 break;
             }
@@ -440,5 +456,118 @@ TEST(activation_f32_fw_gpu, relu_basic_output_padding_yxfb) {
 
     for (size_t i = 0; i < output_vec.size(); ++i) {
         EXPECT_FLOAT_EQ(output_vec[i], output_ptr[i]);
+    }
+}
+
+TEST(activation_f32_fw_gpu, basic_yxfb_floor_ceil)
+{
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 4 } });
+    set_values(input, { 0.01f, 0.99f, -0.01f, -0.99f, 1.1f, 1.0f, 0.0f, -1.1f });
+
+    std::vector<cldnn_activation_func> funcs = {
+        activation_floor,
+        activation_ceil
+    };
+
+    for (auto func : funcs)
+    {
+        topology topology(input_layout("input", input.get_layout()));
+        topology.add(activation("activation", "input", func));
+
+        network network(engine, topology);
+        network.set_input_data("input", input);
+        auto outputs = network.execute();
+        EXPECT_EQ(outputs.size(), size_t(1));
+        EXPECT_EQ(outputs.begin()->first, "activation");
+
+        auto output_memory = outputs.at("activation").get_memory();
+        auto output_layout = output_memory.get_layout();
+        auto output_ptr = output_memory.pointer<float>();
+        auto input_ptr = input.pointer<float>();
+
+        int y_size = output_layout.size.spatial[1];
+        int x_size = output_layout.size.spatial[0];
+        int f_size = output_layout.size.feature[0];
+        int b_size = output_layout.size.batch[0];
+        EXPECT_EQ(output_layout.format, format::yxfb);
+        EXPECT_EQ(y_size, 4);
+        EXPECT_EQ(x_size, 2);
+        EXPECT_EQ(f_size, 1);
+        EXPECT_EQ(b_size, 1);
+
+        for (size_t i = 0; i < output_layout.get_linear_size(); ++i)
+        {
+            switch (func)
+            {
+            case activation_floor:
+                EXPECT_FLOAT_EQ(std::floor((float)input_ptr[i]), output_ptr[i]);
+                break;
+            case activation_ceil:
+                EXPECT_FLOAT_EQ(std::ceil((float)input_ptr[i]), output_ptr[i]);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}
+
+TEST(activation_i8_fw_gpu, basic_yxfb_all_funcs)
+{
+    const auto& engine = get_test_engine();
+    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
+
+    std::vector<int8_t> input_vec = {
+        1,   0,  5,   1,
+        2,   0,  6,  -5,
+        3,   0, -7,  12,
+        4,   0, -8,   8
+    };
+    set_values(input, input_vec);
+
+    // functions valid for int8 type input
+    std::vector<cldnn_activation_func> funcs = {
+        activation_none,
+        activation_negative,
+        activation_not
+    };
+
+    for (auto func : funcs)
+    {
+        topology topology;
+        topology.add(input_layout("input", input.get_layout()));
+        topology.add(activation("activation", "input", func));
+
+        network network(engine, topology);
+        network.set_input_data("input", input);
+        auto outputs = network.execute();
+
+        ASSERT_EQ(outputs.size(), size_t(1));
+        EXPECT_EQ(outputs.begin()->first, "activation");
+
+        auto output_memory = outputs.at("activation").get_memory();
+        auto output_layout = output_memory.get_layout();
+        auto output_ptr = output_memory.pointer<int8_t>();
+        auto input_ptr = input.pointer<int8_t>();
+
+        for (size_t i = 0; i < output_layout.get_linear_size(); ++i)
+        {
+            switch (func)
+            {
+            case activation_none:
+                EXPECT_EQ((int8_t)input_ptr[i], output_ptr[i]);
+                break;
+            case activation_negative:
+                EXPECT_EQ(-((int8_t)input_ptr[i]), output_ptr[i]);
+                break;
+            case activation_not:
+                EXPECT_EQ(!((int8_t)input_ptr[i]), output_ptr[i]);
+                break;
+            default:
+                break;
+            }
+        }
     }
 }

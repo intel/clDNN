@@ -27,8 +27,6 @@ namespace kernel_selector
         virtual ~ArgMaxMinKernelAxis() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-
-    protected:
         virtual ParamsKey GetSupportedKey() const override;
     };
 }

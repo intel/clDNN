@@ -34,7 +34,7 @@ primitive_type_id permute_type_id()
 static std::vector<uint16_t> get_permute_order(permute_node const& node, format::type fmt)
 {
 
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "node format", fmt, "byxf, yxfb, bfyx, fyxb", format::byxf, format::yxfb, format::bfyx, format::fyxb);
+    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "node format", fmt, "byxf, yxfb, bfyx, fyxb, bfyx_f16", format::byxf, format::yxfb, format::bfyx, format::fyxb, format::bfyx_f16);
     switch (fmt)
     {
         // For input formats:
@@ -50,6 +50,9 @@ static std::vector<uint16_t> get_permute_order(permute_node const& node, format:
 
     case format::fyxb:
         return{ 1, 3, 2, 0 };
+
+    case format::bfyx_f16:
+        return{ 0, 1, 3, 2 };
 
     default:
         throw std::invalid_argument("This format is not supported in GPU permute_inst");

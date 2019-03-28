@@ -24,7 +24,7 @@ namespace kernel_selector
         k.EnableInputDataType(Datatype::F16);
         k.EnableInputDataType(Datatype::F32);
         k.EnableInputDataType(Datatype::INT8);
-        k.EnableOutputDataType(Datatype::F32);  //We support only f32, look into arg_max_min.hpp for more informations.
+        k.EnableAllOutputDataType();
         k.EnableInputLayout(DataLayout::bfyx);
         k.EnableInputLayout(DataLayout::yxfb);
         k.EnableOutputLayout(DataLayout::bfyx);

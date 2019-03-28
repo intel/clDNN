@@ -39,8 +39,6 @@ protected:
         auto outer_id = _outer.id();
         auto data_type = instance.node.input().get_output_layout().data_type;
 
-        // Check whether all memory elements use the same unit type (FP16 or FP32).
-        CLDNN_ERROR_DATA_TYPES_MISMATCH(outer_id, "Input memory", data_type, "output memory", instance.node.get_output_layout().data_type, "");
         // Integer signed/unsigned is ok for convoluiton
         CLDNN_ERROR_DATA_TYPES_MISMATCH_IGNORE_SIGN(outer_id, "Input memory", data_type, "filter memory", instance.weights_memory(0).get_layout().data_type, "");
 
@@ -111,20 +109,24 @@ public:
         conv_params.filterSize = {
             (uint32_t)weights_size.spatial[0],
             (uint32_t)weights_size.spatial[1],
+            (uint32_t)weights_size.spatial[2],
         };
 
         conv_params.padding = {
             (uint32_t)std::max(-input_offset.spatial[0], 0),
-            (uint32_t)std::max(-input_offset.spatial[1], 0)
+            (uint32_t)std::max(-input_offset.spatial[1], 0),
+            (uint32_t)std::max(-input_offset.spatial[2], 0)
         };
 
         conv_params.stride = {
             (uint32_t)stride.spatial[0],
-            (uint32_t)stride.spatial[1]
+            (uint32_t)stride.spatial[1],
+            (uint32_t)stride.spatial[2]
         };
         conv_params.dilation = {
             (uint32_t)dilation.spatial[0],
-            (uint32_t)dilation.spatial[1]
+            (uint32_t)dilation.spatial[1],
+            (uint32_t)dilation.spatial[2]
         };
         
         if (primitive->weights_quantization_factors.size() > 0)
@@ -168,12 +170,18 @@ namespace{
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::bfyx), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::u8, format::bfyx), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfzyx), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfzyx), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::bfzyx), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::winograd_2x3_s1_data), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::winograd_2x3_s1_data), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bf8_xy16), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bf8_xy16), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), convolution_gpu::create);
+            //block fp16 format
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx_f16), convolution_gpu::create);
             // MMAD
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byx8_f4), convolution_gpu::create);
@@ -182,6 +190,7 @@ namespace{
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::b_fs_yx_fsv4), convolution_gpu::create);
             implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::u8, format::b_fs_yx_fsv4), convolution_gpu::create);
+            implementation_map<convolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::fs_b_yx_fsv32), convolution_gpu::create);
         }
         ~attach() {}
     };

@@ -27,6 +27,18 @@ namespace cldnn
         {
             p.add_connection(prev, next);
         }
+        static void apply_opt_pass(program_impl& p, base_pass& pass)
+        {
+            p.apply_opt_pass(pass);
+        }
+        static void run_graph_compilation(program_impl& p)
+        {
+            p.run_graph_compilation();
+        }
+        static void prepare_memory_dependencies(program_impl& p)
+        {
+            p.prepare_memory_dependencies();
+        }
     };
 
 }

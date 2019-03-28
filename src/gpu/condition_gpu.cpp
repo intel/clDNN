@@ -98,18 +98,22 @@ private:
         {
             for (auto f = 0; f < range.feature[0]; f++)
             {
-                for (auto y = 0; y < range.spatial[1]; y++)
+                for (auto z = 0; z < range.spatial[2]; z++)
                 {
-                    for (auto x = 0; x < range.spatial[0]; x++)
+                    for (auto y = 0; y < range.spatial[1]; y++)
                     {
-                        auto input_idx = input_layout.get_linear_offset({
-                            b + offset.batch[0],
-                            f + offset.feature[0],
-                            x + offset.spatial[0],
-                            y + offset.spatial[1]
+                        for (auto x = 0; x < range.spatial[0]; x++)
+                        {
+                            auto input_idx = input_layout.get_linear_offset({
+                                b + offset.batch[0],
+                                f + offset.feature[0],
+                                x + offset.spatial[0],
+                                y + offset.spatial[1],
+                                z + offset.spatial[2]
                             });
-                        auto compare_idx = compare_layout.get_linear_offset({ b, f, x, y });
-                        if (!check_condition(input_ptr[input_idx], compare_ptr[compare_idx], function)) return false;
+                            auto compare_idx = compare_layout.get_linear_offset({ b, f, x, y, z });
+                            if (!check_condition(input_ptr[input_idx], compare_ptr[compare_idx], function)) return false;
+                        }
                     }
                 }
             }

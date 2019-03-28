@@ -204,10 +204,18 @@ namespace kernel_selector
                     if(useVload8)
                         jit.AddConstant(MakeJitConstant(name, "in" + std::to_string(input.index)));
                     else
-                        jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[GET_INDEX(INPUT, " + std::to_string(input.index) + ")]"));
+                    {
+                        if (params.inputs[input_idx].GetLayout() == DataLayout::bfyx_f16)
+                            jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[GET_INDEX1(INPUT, " + std::to_string(input.index) + ")]"));
+                        else
+                            jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[GET_INDEX(INPUT, " + std::to_string(input.index) + ")]"));
+                    }
                     break;
                 case EltwiseInputMode::OUTPUT_BUFFER:
-                    jit.AddConstant(MakeJitConstant(name, "output[GET_INDEX(OUTPUT, )]"));
+                    if (params.output.GetLayout() == DataLayout::bfyx_f16)
+                        jit.AddConstant(MakeJitConstant(name, "output[GET_INDEX1(OUTPUT, )]"));
+                    else
+                        jit.AddConstant(MakeJitConstant(name, "output[GET_INDEX(OUTPUT, )]"));
                     break;
                 case EltwiseInputMode::UNORDERED_ACCESS_INPUT_BUFFER:
                     jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[(size_t)tmp" + std::to_string(input.tmpIndex) + "]"));

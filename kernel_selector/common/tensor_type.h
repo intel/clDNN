@@ -42,6 +42,7 @@ namespace kernel_selector
             yxfb,               // 3D+batch
             byxf,               // 3D+batch
             fyxb,               // 3D+batch
+            bfyx_f16,           // 3D+batch
             bs_f_bsv8__af8,     // for optimized FC
             bs_f_bsv16__af8,    // for optimized FC
             bf8_xy16,           // for optimized conv1x1
@@ -52,6 +53,8 @@ namespace kernel_selector
             byx8_f4, // for MMAD convolution
             fs_bs_yx_bsv4_fsv32, // for batched MMAD
             b_fs_yx_fsv4,        // reordering format for swizzled input for convolution using IMAD
+            bfzyx,               // batch+feature+3D spatial
+            fs_b_yx_fsv32,       // for FP16 kernels, 32 features to avoid partial writes
             DataLayoutCount // NMBER OF ELEMENTS IN ENUM
         };
 
@@ -69,6 +72,8 @@ namespace kernel_selector
             os_iyx_osv16,
             os_iyx_osv32,
             os_iyx_osv64,
+            o_i_yx_i16_o16,
+            oiyx_o16,
             os_iyx_osv16_rotate_180,
             os_i_osv16,
             os_i_osv8__ai8,         // TODO can we drop the alignment form layout name?
@@ -88,8 +93,10 @@ namespace kernel_selector
             is_o_yx_isv32,           // for MMAD 1x1 convolutions
             is_o32_yx_isv32_swizzled_by_4,           // for MMAD 1x1 convolutions swizzled from ofm 0..7 to 0,4,8,12,16,20,24,28, 1,5...
             os_is_y_x8_osv8_isv4, // for MMAD convolutions
+            os_is_y_x8_osv8_isv4_swizzled_by_4, // for MMAD 1x1 convolutions swizzled from ofm 0..7 to 0,4,8,12,16,20,24,28, 1,5...
             bf_lyx_yx,               // local convolution
             os_is_yx_osv16_isv4,     // swizzled weights for convolution using IMAD
+            oizyx,
             WeightsLayoutCount       // NMBER OF ELEMENTS IN ENUM
         };
 
@@ -128,6 +135,7 @@ namespace kernel_selector
             FEATURE = 2,
             ROI     = 3,
             BATCH   = 4,
+            Z       = 5,
         };
 
         enum class WeightsChannelName
@@ -138,6 +146,7 @@ namespace kernel_selector
             OFM = 3,
             LX = 4,
             LY = 5,
+            Z  = 6,
         };
 
         inline bool SimpleLayout(WeightsLayout l)
@@ -150,6 +159,7 @@ namespace kernel_selector
             case WeightsLayout::oyxi:
             case WeightsLayout::iyxo:
             case WeightsLayout::yxio:
+            case WeightsLayout::oizyx:
                 return true;
             default:
                 return false;
@@ -166,6 +176,7 @@ namespace kernel_selector
             case DataLayout::yxfb:
             case DataLayout::byxf:
             case DataLayout::fyxb:
+            case DataLayout::bfzyx:
                 return true;
             default:
                 return false;
@@ -459,6 +470,7 @@ namespace kernel_selector
 
             Dim X()         const { return Extract(layout, DataChannelName::X, dims); }
             Dim Y()         const { return Extract(layout, DataChannelName::Y, dims); }
+            Dim Z()         const { return Extract(layout, DataChannelName::Z, dims); }
             Dim Feature()   const { return Extract(layout, DataChannelName::FEATURE, dims); }
             Dim ROI()       const { return Extract(layout, DataChannelName::ROI, dims); }
             Dim Batch()     const { return Extract(layout, DataChannelName::BATCH, dims); }
@@ -481,7 +493,7 @@ namespace kernel_selector
                 return TensorBaseT::ChannelsCount(dataChannelArray, l);
             }
         private:
-            static std::array<std::array<int, 5>, DataLayout::DataLayoutCount> dataChannelArray;
+            static std::array<std::array<int, 6>, DataLayout::DataLayoutCount> dataChannelArray;
             static NDims GetSimpleDims(const std::vector<size_t>& d, DataLayout l);
         };
 
@@ -505,6 +517,7 @@ namespace kernel_selector
 
             Dim X()   const { return Extract(layout, WeightsChannelName::X, dims); }
             Dim Y()   const { return Extract(layout, WeightsChannelName::Y, dims); }
+            Dim Z()   const { return Extract(layout, WeightsChannelName::Z, dims); }
             Dim IFM() const { return Extract(layout, WeightsChannelName::IFM, dims); }
             Dim OFM() const { return Extract(layout, WeightsChannelName::OFM, dims); }
             Dim LX()  const { return Extract(layout, WeightsChannelName::LX, dims); }
@@ -526,7 +539,7 @@ namespace kernel_selector
             }
         private:
             static NDims GetSimpleDims(const std::vector<size_t>& d, WeightsLayout l);
-            static std::array<std::array<int, 6>, WeightsLayout::WeightsLayoutCount> weightsChannelArray;
+            static std::array<std::array<int, 7>, WeightsLayout::WeightsLayoutCount> weightsChannelArray;
         };
     }
 }

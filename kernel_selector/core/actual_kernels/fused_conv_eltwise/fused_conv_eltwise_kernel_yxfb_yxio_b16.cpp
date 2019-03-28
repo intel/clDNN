@@ -203,17 +203,6 @@ namespace kernel_selector
             MakeJitConstant("WORK_ITEMS_PER_SINGLE_BATCHES_ELEMENTS", batch_size / batchesPerWorkItem), // how many work items we need to compute single element for each batch
         });
 
-        if (!params.eltw.stride.empty())
-        {
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_X", params.eltw.stride[0].x));
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", params.eltw.stride[0].y));
-        }
-        else
-        {
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_X", 1));
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", 1));
-        }
-
         return jit;
     }
 

@@ -130,7 +130,7 @@ public:
     refcounted_obj_ptr<memory_impl> get_from_across_networks_pool(const layout& layout, const primitive_id& id, uint32_t network_id);
     void clear_pool();
     void color_graph(const program_impl&);
-    void dump_memory_pool(const program_impl&, std::string, std::string);
+    void dump_memory_pool(const program_impl&, std::string&, std::string&);
 
     uint64_t get_temp_memory_used() const { return _temp_memory_used; };
     uint64_t get_max_peak_device_memory_used() const { return _max_peak_memory_used; };

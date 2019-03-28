@@ -22,7 +22,9 @@ namespace kernel_selector
     {
         ParamsKey k;
         k.EnableInputDataType(Datatype::INT8);
+        k.EnableInputDataType(Datatype::UINT8);
         k.EnableOutputDataType(Datatype::INT8);
+        k.EnableOutputDataType(Datatype::UINT8);
         k.EnableInputLayout(DataLayout::bfyx);
         k.EnableInputLayout(DataLayout::yxfb);
         k.EnableInputLayout(DataLayout::byxf);

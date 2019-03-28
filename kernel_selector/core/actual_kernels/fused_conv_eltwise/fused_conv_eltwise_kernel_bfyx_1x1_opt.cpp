@@ -170,17 +170,6 @@ namespace kernel_selector {
         jit.AddConstant(MakeJitConstant("OUT_BLOCK_HEIGHT", block.out_height));
         jit.AddConstant(MakeJitConstant("OUT_BLOCK_DEPTH", block.out_depth));
 
-        if (!params.eltw.stride.empty())
-        {
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_X", params.eltw.stride[0].x));
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", params.eltw.stride[0].y));
-        }
-        else
-        {
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_X", 1));
-            jit.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", 1));
-        }
-
         return jit;
 	}
 

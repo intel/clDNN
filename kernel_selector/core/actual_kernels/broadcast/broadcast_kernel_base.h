@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2018 Intel Corporation
+﻿// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ namespace kernel_selector
         using DispatchData = CommonDispatchData;
 
     protected:
-        static JitConstants GetJitConstants(const broadcast_params& params);
+        JitConstants GetJitConstants(const broadcast_params& params) const;
         static DispatchData SetDefault(const broadcast_params& params);
         KernelsData GetCommonKernelsData(const Params& params, const optional_params&, float estimated_time) const;
     };

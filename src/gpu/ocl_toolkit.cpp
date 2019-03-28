@@ -120,9 +120,7 @@ gpu_toolkit::gpu_toolkit(const configuration& config)
             << "    engine log: "          << _configuration.log << "\n"
             << "    sources dumps: "       << _configuration.ocl_sources_dumps_dir << "\n"
             << "\nEngine info:\n"
-            << "    configuration: "       << std::to_string(_engine_info.configuration) << "\n"
-            << "    model: "               << std::to_string(_engine_info.model) << "\n"
-            << "    architecture: "        << std::to_string(_engine_info.architecture) << "\n"
+            << "    device id: "           << _engine_info.dev_id << "\n"
             << "    cores count: "         << _engine_info.cores_count << "\n"
             << "    core frequencey: "     << _engine_info.core_frequency << "\n"
             << "    max work group size: " << _engine_info.max_work_group_size << "\n"
@@ -247,6 +245,11 @@ event_impl::ptr gpu_toolkit::group_events(std::vector<event_impl::ptr> const& de
 event_impl::ptr gpu_toolkit::create_user_event(bool set)
 {
     return _events_pool->get_from_user_pool(shared_from_this(), set);
+}
+
+void gpu_toolkit::reset_events()
+{
+    _events_pool->reset_events();
 }
 
 void gpu_toolkit::release_events_pool()

@@ -26,9 +26,31 @@
     (d3 % CAT(CAT(prefix, num), _FEATURE_NUM))*CAT(CAT(prefix, num), _FEATURE_PITCH) + \
     (d4 % CAT(CAT(prefix, num), _BATCH_NUM  ))*CAT(CAT(prefix, num), _BATCH_PITCH)
 
+    #define GET_INDEX1(prefix, num)                          \
+    FUNC_CALL(get_bfyx_f16_index)(                      \
+        d4, d3, d2, d1, CAT(CAT(prefix, num), _SIZE_X ), \
+        CAT(CAT(prefix, num), _SIZE_Y),                  \
+        CAT(CAT(prefix, num), _FEATURE_NUM),             \
+        CAT(CAT(prefix, num), _OFFSET),                  \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_Y),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_Y),        \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_X),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_X))
+
 #else
 
 #if ELTWISE_LAYOUT_BASED || QUANTIZATION_TERM
+
+#define GET_INDEX1(prefix, num)                          \
+    FUNC_CALL(get_bfyx_f16_index)(                      \
+        d4, d3, d2, d1, CAT(CAT(prefix, num), _SIZE_X ), \
+        CAT(CAT(prefix, num), _SIZE_Y),                  \
+        CAT(CAT(prefix, num), _FEATURE_NUM),             \
+        CAT(CAT(prefix, num), _OFFSET),                  \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_Y),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_Y),        \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_X),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_X))
 
 #define GET_INDEX(prefix, num)                                                          \
     CAT(CAT(prefix, num), _OFFSET) +                                                    \
@@ -42,6 +64,17 @@
     CAT(CAT(prefix, num), _OFFSET) + d1
 
 #else
+#define GET_INDEX1(prefix, num)                          \
+    FUNC_CALL(get_bfyx_f16_index)(                      \
+        d4, d3, d2, d1, CAT(CAT(prefix, num), _SIZE_X ), \
+        CAT(CAT(prefix, num), _SIZE_Y),                  \
+        CAT(CAT(prefix, num), _FEATURE_NUM),             \
+        CAT(CAT(prefix, num), _OFFSET),                  \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_Y),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_Y),        \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_X),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_X))
+
 
 #define GET_INDEX(prefix, num)                                                      \
     CAT(CAT(prefix, num), _OFFSET) +                                                \
@@ -86,7 +119,16 @@
     (CAT(d2_in, num) % CAT(CAT(prefix, num), _SIZES)[1])*CAT(CAT(prefix, num), _PITCHES)[1] +    \
     (CAT(d3_in, num) % CAT(CAT(prefix, num), _SIZES)[2])*CAT(CAT(prefix, num), _PITCHES)[2] +    \
     (CAT(d4_in, num) % CAT(CAT(prefix, num), _SIZES)[3])*CAT(CAT(prefix, num), _PITCHES)[3]
-
+    #define GET_INDEX1(prefix, num)                          \
+    FUNC_CALL(get_bfyx_f16_index)(                      \
+        d4, d3, d2, d1, CAT(CAT(prefix, num), _SIZE_X ), \
+        CAT(CAT(prefix, num), _SIZE_Y),                  \
+        CAT(CAT(prefix, num), _FEATURE_NUM),             \
+        CAT(CAT(prefix, num), _OFFSET),                  \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_Y),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_Y),        \
+        CAT(CAT(prefix, num), _PAD_BEFORE_SIZE_X),       \
+        CAT(CAT(prefix, num), _PAD_AFTER_SIZE_X))
 #endif
 
 #endif
@@ -106,11 +148,15 @@ KERNEL(eltwise)(
     const uint d3 = get_global_id(GWS_FEATURE);             // Feature
     const uint d4 = get_global_id(GWS_BATCH);               // Batch
 
+#if OUTPUT_LAYOUT_BFYX_F16
+    uint output_offset = GET_INDEX1(OUTPUT, );
+#else
     uint output_offset = OUTPUT_OFFSET +
                          d1*OUTPUT_X_PITCH +
                          d2*OUTPUT_Y_PITCH +
                          d3*OUTPUT_FEATURE_PITCH +
                          d4*OUTPUT_BATCH_PITCH;
+#endif
 #elif ELTWISE_NO_PITCH_SAME_DIMS
     const uint d1 = get_global_id(0);
     uint output_offset = OUTPUT_OFFSET + d1;
@@ -119,12 +165,16 @@ KERNEL(eltwise)(
     const uint d2 = get_global_id(1);
     const uint d3 = get_global_id(2) % OUTPUT_SIZES[2];
     const uint d4 = get_global_id(2) / OUTPUT_SIZES[2];
-    
+
+#if OUTPUT_LAYOUT_BFYX_F16
+    uint output_offset = GET_INDEX1(OUTPUT, );
+#else  
     uint output_offset = OUTPUT_OFFSET +
                          d1*OUTPUT_PITCHES[0] +
                          d2*OUTPUT_PITCHES[1] +
                          d3*OUTPUT_PITCHES[2] +
                          d4*OUTPUT_PITCHES[3];
+#endif
 #endif
 
 #if ELTWISE_BROADCAST
@@ -159,7 +209,7 @@ KERNEL(eltwise)(
 #endif // QUANTIZATION_TERM
 
 #if QUANTIZATION_TERM
-    output[output_offset] = ACTIVATION(convert_char(res), NL_M, NL_N);
+    output[output_offset] = ACTIVATION(convert_char_sat(res), NL_M, NL_N);
 #else
     output[output_offset] = ACTIVATION(res, NL_M, NL_N);
 #endif

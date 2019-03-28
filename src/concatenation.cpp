@@ -92,7 +92,7 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
     {
         auto input_i_layout = i->get_output_layout();
         auto input_mem_size = input_i_layout.size;
-        for (int dim = concatenation::along_b; dim <= concatenation::along_y; ++dim)
+        for (int dim = concatenation::along_b; dim <= concatenation::along_z; ++dim)
         {
             if (dim == node.get_primitive()->axis)
                 concat_count += input_mem_size.raw[dim];
@@ -105,7 +105,7 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
 
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Output format (fused) ", output_format, "input format (fused)", input_format, "Fused input/output formats mistmach");
 
-    for (int dim = concatenation::along_b; dim <= concatenation::along_y; ++dim)
+    for (int dim = concatenation::along_b; dim <= concatenation::along_z; ++dim)
     {
         if (dim == node.get_primitive()->axis)
         {

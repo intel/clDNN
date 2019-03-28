@@ -72,15 +72,31 @@ namespace kernel_selector
         {
             mem_consts.AddConstants({ MakeJitConstant("W_QF", params.weights_quantization_factors[0]) });
             mem_consts.AddConstants({ MakeJitConstant("I_QF",params.input_quantization_factor) });
+        }
 
-            if (params.output_calibration)
-            {
-                mem_consts.AddConstant(MakeJitConstant("CALIBRATION_TERM", params.output_calibration));
-                mem_consts.AddConstant(MakeJitConstant("O_QF", params.output_calibration_factors[0]));
+        if (params.output_calibration)
+        {
+            assert(params.output_quantization_factor == 1.0f
+                   && "Both per-channel and per-tesnsor output calibration "
+                      "factors are present!");
+            mem_consts.AddConstant(MakeJitConstant("CALIBRATION_TERM", params.output_calibration));
+        }
+        else
+        {
+            assert((params.int8_quantization
+                    || params.output_quantization_factor == 1.0f)
+                   && "Per-tensor output calibration isn't supported without "
+                      "weights quantization yet!");
 
-            }
-            else
-                mem_consts.AddConstants({ MakeJitConstant("O_QF", params.output_quantization_factor) });
+            // When/if per-tensor output calibration without weights
+            // quantization will be supported, the only way for the kernel to
+            // understand if it's required is by doing '#ifdef O_QF', i.e.
+            // simply checking "O_QF == 1.0f" would still hurt because its pure
+            // existence changes the type in which operations are performed.
+            // Hence, emit the macro conditionally.
+            if (params.output_quantization_factor != 1.0f)
+                mem_consts.AddConstants(
+                    {MakeJitConstant("O_QF", params.output_quantization_factor)});
         }
 
         if (params.local_convolution)
@@ -177,6 +193,10 @@ namespace kernel_selector
         {
             global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
         }
+        else if (params.output.GetLayout() == DataLayout::bfzyx )
+        {
+            global = { out.X().v, out.Y().v*out.Z().v, out.Feature().v*out.Batch().v };
+        }
         else
         {
             global = { out.Feature().v*out.Batch().v, out.X().v, out.Y().v };
@@ -234,7 +254,8 @@ namespace kernel_selector
             newParams,
             options,
             GetSupportedWeightLayouts(newParams),
-            kd.weightsReorderParams);
+            kd.weightsReorderParams,
+            GetSupportedKey());
 
         if (!succeed)
         {

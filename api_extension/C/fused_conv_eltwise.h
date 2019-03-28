@@ -86,6 +86,11 @@ struct eltw_data
     cldnn_tensor_arr stride;
 } eltw;
 
+// @brief Non-convolution output scaling factor. Might be used both to represent
+// i8->float dynamic range conversion and dynamic range scaling without changing
+// data precision (e.g. to align dynamic range with that of convolution result).
+float non_conv_scale = 1.0f;
+
 /// @brief Is optimization that output contains data from second input ON ?
 bool second_input_in_output = false;
 

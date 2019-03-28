@@ -36,7 +36,7 @@ namespace cldnn {
             using type = Type;
 
             event_impl::ptr get_from_pool(std::shared_ptr<gpu_toolkit>& ctx)
-            {
+            {   
                 for (auto& ev : _events)
                 {
                     if (!ev->is_valid())
@@ -44,6 +44,13 @@ namespace cldnn {
                 }
                 return allocate({ new Type(ctx), false });
             }
+
+            void reset_events()
+            {
+                for (auto& ev : _events)
+                    ev->reset();
+            }
+
         private:
             std::vector<event_impl::ptr> _events;
 
@@ -62,6 +69,10 @@ namespace cldnn {
                 dynamic_cast<type*>(ret.get())->attach_ocl_event(ev, q_stamp);
                 return ret;
             }
+            void reset()
+            {
+                reset_events();
+            }
         };
 
         struct user_event_pool : event_pool_impl<user_event>
@@ -72,6 +83,10 @@ namespace cldnn {
                 dynamic_cast<type*>(ret.get())->attach_event(set);
                 return ret;
             }
+            void reset()
+            {
+                reset_events();
+            }
         };
 
         struct group_event_pool : event_pool_impl<base_events>
@@ -81,6 +96,10 @@ namespace cldnn {
                 auto ret_ev = get_from_pool(ctx);
                 dynamic_cast<type*>(ret_ev.get())->attach_events(deps);
                 return ret_ev;
+            }
+            void reset()
+            {
+                reset_events();
             }
         };
 
@@ -102,6 +121,13 @@ namespace cldnn {
             event_impl::ptr get_from_group_pool(std::shared_ptr<gpu_toolkit> ctx, const std::vector<event_impl::ptr>& deps)
             {
                 return _group_pool.get(ctx, deps);
+            }
+
+            void reset_events()
+            {
+                _base_pool.reset();
+                _user_pool.reset();
+                _group_pool.reset();
             }
 
         private:

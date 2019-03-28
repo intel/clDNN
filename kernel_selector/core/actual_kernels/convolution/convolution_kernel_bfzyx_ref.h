@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,27 +17,23 @@
 #pragma once
 
 #include "convolution_kernel_base.h"
- 
+
 namespace kernel_selector {
-    
-    class ConvolutionKernel_bfyx_Ref : public ConvolutionKernelBase
+
+    class ConvolutionKernel_bfzyx_Ref : public ConvolutionKernelBase
     {
     public:
-        ConvolutionKernel_bfyx_Ref() : ConvolutionKernelBase("convolution_gpu_bfyx_ref") {}
-        virtual ~ConvolutionKernel_bfyx_Ref() {}
+        ConvolutionKernel_bfzyx_Ref() : ConvolutionKernelBase("convolution_gpu_bfzyx_ref") {}
+        virtual ~ConvolutionKernel_bfzyx_Ref() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
+        virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual ParamsKey GetSupportedKey() const override;
         virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override
         {
             return{
-                WeightsLayout::oiyx,
-                WeightsLayout::yxio,
-                WeightsLayout::iyxo,
-                WeightsLayout::oyxi,
-                WeightsLayout::bf_lyx_yx,
+                WeightsLayout::oizyx,
             };
         }
     };

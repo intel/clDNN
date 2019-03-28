@@ -33,8 +33,7 @@ If not than required reorder is added to the network.
 /*
 Add a reorder in between node and usr with reorder_layout as layout
 */
-void add_required_reorders::add_reorder(program_impl& p, program_node* node, program_node* usr, layout reorder_layout)
-{
+void add_required_reorders::add_reorder(program_impl& p, program_node* node, program_node* usr, layout reorder_layout){
 
     auto new_reorder = std::make_shared<reorder>(node->id() + "_reorder_" + usr->id(),
                                                  node->id(),
@@ -100,6 +99,8 @@ void add_required_reorders::run(program_impl& p)
         if (!correct_layout_selected) {
             //This list of preffered layouts has been selected arbitrary due to developers' experience
             cldnn::format preffered_layout_formats[]{
+            //TODO: [block_formats] - verify if it is really needed
+                cldnn::format::bfyx_f16,
                 cldnn::format::bfyx,
                 cldnn::format::yxfb,
                 cldnn::format::byxf,

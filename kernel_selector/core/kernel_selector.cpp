@@ -85,9 +85,14 @@ namespace kernel_selector {
         if (params.GetType() == kType &&
             options.GetType() == kType)
         {
+            const ParamsKey requireKey = params.GetParamsKey().Merge(options.GetSupportedKey());
             for (const auto& implementation : implementations)
             {
-                if (implementation->Supports(params, options))
+                const ParamsKey implKey = implementation->GetSupportedKey();
+                // TODO: Unify this check with the Validate virtual method. Make
+                // sure that the method is called here only, not in all the
+                // GetKernelsData implementations.
+                if (implKey.Support(requireKey))
                 {
                     try
                     {
@@ -148,6 +153,7 @@ namespace kernel_selector {
             options.GetType() == kType)
         {
             std::string hash = std::to_string(create_hash(params.to_string()));
+            ParamsKey requireKey = params.GetParamsKey().Merge(options.GetSupportedKey());
             std::tuple<std::string, int> cachedKernelConfig;
             if (options.tuningParams.mode == TuningMode::TUNING_DISABLED) // Try to load kernel/config from offline cache
             {
@@ -175,7 +181,7 @@ namespace kernel_selector {
                     if (implementation->GetName().compare(cachedkernelName) == 0)
                     {            
                         KernelsData kds = implementation->GetTunedKernelsDataByIndex(params, options, autoTuneIndex);
-                        if (kds.size() && kds[0].kernels.size() && implementation->Supports(params, options))
+                        if (kds.size() && kds[0].kernels.size() && implementation->GetSupportedKey().Support(requireKey))
                         {
                             kernelsData = kds;
                             kernelsData[0].kernelName = cachedkernelName;
@@ -204,7 +210,8 @@ namespace kernel_selector {
 
             for (const auto& implementation : implementations)
             {
-                if (implementation->Supports(params, options) && implementation->SupportsTuning())
+                const ParamsKey implKey = implementation->GetSupportedKey();
+                if (implKey.Support(requireKey) && implKey.TuningSupport())
                 {
                     try
                     {
@@ -234,8 +241,9 @@ namespace kernel_selector {
                 for (const auto& implementation : implementations)
                 {
 
+                    const ParamsKey implKey = implementation->GetSupportedKey();
                     //this time, check only implementations that have disabled tuning
-                    if (implementation->Supports(params, options) && !implementation->SupportsTuning())
+                    if (implKey.Support(requireKey) && !implKey.TuningSupport())
                     {
                         try
                         {
