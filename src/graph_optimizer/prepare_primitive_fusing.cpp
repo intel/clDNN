@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -170,7 +170,7 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl& p, program_node*
                     user = std::find_if(new_node.get_users().begin(), new_node.get_users().end(),
                         [](const program_node* node) { return node->id().find("_fused_bn_out") != std::string::npos; });
                     p.reverse_connection(new_node, **user);
-                    p.get_processing_order().calculate_BFS_processing_order();
+                    p.get_processing_order().calculate_BFS_processing_order();   // this should be avoided, why do we need recalculation of processing order?
                 }
             }
         }
@@ -180,25 +180,30 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl& p, program_node*
 void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* node)
 {
     // make sure this convolution have only 1 user and it's eltwise
-    // maek sure convolution is not an output
-    if (node->users.size() != 1 ||
+    // make sure convolution is not an output
+    if (node->get_users().size() != 1 ||
         node->is_output())
         return;
 
-    if (!(*(node->users.begin()))->is_type<eltwise>())
+    if (!(*(node->get_users().begin()))->is_type<eltwise>())
         return;
 
-    convolution_node * conv_node = static_cast<convolution_node*>(node);
-    convolution & conv = const_cast<convolution&>(*conv_node->get_primitive());
+    convolution_node* conv_node = static_cast<convolution_node*>(node);
+    convolution& conv = const_cast<convolution&>(*conv_node->get_primitive());
 
-    // currently works only for this format
-    if ( (conv_node->get_output_layout().format != cldnn::format::fs_bs_yx_bsv4_fsv32 || conv_node->get_output_layout().data_type != cldnn::data_types::i8) &&
-         (conv_node->get_output_layout().format != cldnn::format::bfyx || conv_node->get_output_layout().data_type != cldnn::data_types::f32) &&
-         (conv_node->get_output_layout().format != cldnn::format::yxfb || conv_node->get_output_layout().data_type != cldnn::data_types::f16)
+    // TODO: find a better way to check for available kernels
+    // currently works only for these formats
+    format fmt = conv_node->get_output_layout().format;
+    data_types data_type = conv_node->get_output_layout().data_type;
+    if ( (fmt != format::fs_bs_yx_bsv4_fsv32 || data_type != data_types::i8) &&
+         (fmt != format::b_fs_yx_fsv4 || data_type != data_types::i8) &&
+         (fmt != format::b_fs_yx_fsv4 || data_type != data_types::u8) &&
+         (fmt != format::bfyx || data_type != data_types::f32) &&
+         (fmt != format::yxfb || data_type != data_types::f16)
        )
         return;
 
-    auto weights_node_ptr = p.nodes_map.find(conv.weights[0])->second;
+    auto weights_node_ptr = p.get_node_ptr(conv.weights[0]);
     auto filter_size = weights_node_ptr->get_output_layout().size;
 
     // make sure if this is conv 1x1 its stride is 1x1
@@ -229,11 +234,18 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
         eltw.with_activation = true;
         eltw.activation_negative_slope = eltw_node->get_fused_activation_params().a;
     }
+    else if (eltw.with_activation)
+    {
+    }
+    else
+    {
+        return;
+    }
 
     int eltw_fused_input_idx; // <-- this input gets fused with eltwise
     int eltw_second_input_idx; // <-- this input is not fused, so we add it in kernel
     // here we check which input gets execute as last one, and fuse it
-    if (p.processing_order.get_processing_number(&eltw_node->input(0)) < p.processing_order.get_processing_number(&eltw_node->input(1)))
+    if (p.get_processing_order().get_processing_number(&eltw_node->input(0)) < p.get_processing_order().get_processing_number(&eltw_node->input(1)))
     {
         eltw_fused_input_idx = 1;
         eltw_second_input_idx = 0;
@@ -247,8 +259,6 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
     // we check if input to fuse is convolution that we're right now processing
     if (eltw_node->input(eltw_fused_input_idx).id() != conv.id)
         return;
-
-    primitive_id conv_id = conv_node->id();
 
     // get strides for other than our conv input
     std::vector<tensor> new_eltw_strides;
@@ -274,6 +284,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
         conv.weights_quantization_factors.ref(),
         conv.output_calibration_factors.ref(),
         conv.input_quantization_factor,
+        1.0f, // eltw_scale
         eltw.output_calibration_factors,
         new_eltw_strides,
         new_conv_stride,
@@ -286,6 +297,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
         );
 
     auto& new_node = p.get_or_create(fused_conv_eltw);
+
     p.replace(*conv_node, new_node);
 
     // right now new node's user is eltwise, let's clear users and take eltwise's users
@@ -294,13 +306,13 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
 
     // TODO: do it better, now it's done in a very ugly way to have good dependency order
     std::vector<program_node*> updated_deps;
-    updated_deps.push_back(new_node.dependencies[0]);
+    updated_deps.push_back(&(new_node.get_dependency(0)));
 
     // add second input
     updated_deps.push_back(&eltw_node->input(eltw_second_input_idx));
     eltw_node->input(eltw_second_input_idx).users.push_back(&new_node);
 
-    for (size_t d = 1; d < new_node.dependencies.size(); d++)
+    for (size_t d = 1; d < new_node.get_dependencies().size(); d++)
     {
         updated_deps.push_back(new_node.dependencies[d]);
     }
@@ -313,7 +325,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
 
     new_node.dependencies = updated_deps;
 
-    while (eltw_node->dependencies.size() > 1)
+    while (eltw_node->get_dependencies().size() > 1)
     {
         auto& dep = eltw_node->get_dependency(eltw_node->get_dependencies().size() - 1);
         p.remove_connection(dep, *eltw_node);
@@ -380,8 +392,8 @@ void prepare_primitive_fusing::run(program_impl& p)
         });
     }
 
-    itr = p.processing_order.begin();
-    while (itr != p.processing_order.end())
+    itr = p.get_processing_order().begin();
+    while (itr != p.get_processing_order().end())
     {
         auto node_itr = itr++;
         auto& node = (*node_itr);

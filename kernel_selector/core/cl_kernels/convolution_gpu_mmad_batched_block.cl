@@ -69,12 +69,14 @@ KERNEL(convolution_mmad_batched_block)(
     const uint x = get_global_id(0) * OUT_BLOCK_WIDTH;
     const uint y = get_global_id(1) * OUT_BLOCK_HEIGHT;
 
+    const uint b_f = (get_group_id(2) * WG_BATCH_COUNT + get_sub_group_id());
+
 #if WEIGHTS_PER_WORKITEM == 4
-    const uint f = (get_group_id(2) * 32 + get_sub_group_local_id() * 4) % FILTER_OFM_ALIGNED;
+    const uint f = (b_f * 32 + get_sub_group_local_id() * 4) % FILTER_OFM_ALIGNED;
 #else
-    const uint f = ((get_group_id(2) * WEIGHTS_PER_WORKITEM * 8) + get_sub_group_local_id() ) % FILTER_OFM_ALIGNED;
+    const uint f = ((b_f * WEIGHTS_PER_WORKITEM * 8) + get_sub_group_local_id() ) % FILTER_OFM_ALIGNED;
 #endif
-    const uint b_block = (get_group_id(2) * 8 * WEIGHTS_PER_WORKITEM) / FILTER_OFM_ALIGNED;
+    const uint b_block = (b_f * 8 * WEIGHTS_PER_WORKITEM) / FILTER_OFM_ALIGNED;
 
     // all accumulators
     int4 dotProd[OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT * WEIGHTS_PER_WORKITEM] = { 0 };
@@ -82,26 +84,25 @@ KERNEL(convolution_mmad_batched_block)(
     const int input_x = x * STRIDE_SIZE_X - PADDING_SIZE_X;
     const int input_y = y * STRIDE_SIZE_Y - PADDING_SIZE_Y;
 
-    const uint filter_offset = ((get_group_id(2) * WEIGHTS_PER_WORKITEM) % FILTER_OFM_MMAD_NUM) * FILTER_OFM_BLOCK_PITCH;
-    const uint input_offset = IN_OFFSET + IN_B_BLOCK_PITCH * b_block;
+    const uint filter_offset = ((b_f * WEIGHTS_PER_WORKITEM) % FILTER_OFM_MMAD_NUM) * FILTER_OFM_BLOCK_PITCH;
+    uint input_offset = IN_OFFSET + IN_B_BLOCK_PITCH * b_block + input_y * IN_Y_PITCH + input_x * IN_X_PITCH;
 
     uint filter_idx = filter_offset;
     __attribute__((opencl_unroll_hint(1)))
     for (uint k = 0; k < FILTER_IFM_MMAD_NUM; ++k)
     {
+        uint input_offset_y = 0;
         __attribute__((opencl_unroll_hint(FILTER_SIZE_Y)))
         for (uint j = 0; j < FILTER_SIZE_Y; ++j)
         {
-            
+            uint input_idx = input_offset + input_offset_y;
+
             ////// preloading input data //////
             int4 preloaded_input[NEEDED_INPUT_X];
             for(int p = 0; p < NEEDED_INPUT_X; p++)
             {
-                const int input_offset_y = input_y + j;
-                const int input_offset_x = input_x + p;
-
-                uint input_idx = input_offset + input_offset_y * IN_Y_PITCH + input_offset_x * IN_X_PITCH + k * IN_F_BLOCK_PITCH;
                 preloaded_input[p] = as_int4(intel_sub_group_block_read4((const __global uint*)(input + input_idx)));
+                input_idx += IN_X_PITCH;
             }
 
             __attribute__((opencl_unroll_hint(WEIGHTS_PER_WORKITEM)))
@@ -130,7 +131,9 @@ KERNEL(convolution_mmad_batched_block)(
                 }
             }
             filter_idx += FILTER_X_PITCH * FILTER_SIZE_X;
+            input_offset_y += IN_Y_PITCH;
         }
+        input_offset += IN_F_BLOCK_PITCH;
     }
 
 ////// QUANTIZE & OUTPUT //////
@@ -141,10 +144,11 @@ float4 quant_f = vload4(0, quantizations + f);
 float4 bias_f = vload4(0, biases + f);
 float4 calib_f = vload4(0, calibrations + f);
 
+uint dst_index = GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(OUTPUT, b_block*4, f, y, x);
+
 __attribute__((opencl_unroll_hint(OUT_BLOCK_WIDTH)))
 for(uint o = 0; o < OUT_BLOCK_WIDTH; o++)
 {
-    const uint dst_index = GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(OUTPUT, b_block*4, f, y, x + o);
     uint4 to_output;
     __attribute__((opencl_unroll_hint(4)))
     for(uint b = 0; b < 4; b++)
@@ -153,6 +157,7 @@ for(uint o = 0; o < OUT_BLOCK_WIDTH; o++)
         to_output[b] = as_uint(out);
     }
     intel_sub_group_block_write4((__global uint*)(output + dst_index), to_output);
+    dst_index += OUT_X_PITCH;
 }
 #else
 __attribute__((opencl_unroll_hint(WEIGHTS_PER_WORKITEM)))

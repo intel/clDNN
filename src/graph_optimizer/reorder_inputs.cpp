@@ -21,6 +21,8 @@
 #include "api/CPP/roi_pooling.hpp"
 #include "api/CPP/reorg_yolo.hpp"
 #include "api/CPP/eltwise.hpp"
+#include "api/CPP/softmax.hpp"
+#include "api/CPP/permute.hpp"
 #include "upsampling_inst.h"
 #include "pass_manager.h"
 #include "program_node.h"
@@ -41,6 +43,11 @@ void reorder_inputs::run(program_impl& p) {
 void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
 {
     //first pass to set layout optimization_attributes for topology
+    bool can_use_fsv32 = true;
+    bool can_use_f16 = true;
+    size_t total_conv_layers = 0;
+    size_t opt_conv_layers_bfyx_f16 = 0;
+
     for (auto& node : p.get_processing_order())
     {
         auto& prim = *node;
@@ -48,6 +55,11 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
         {
             if (prim.as<convolution>().get_primitive()->split() > 1)
                 lo.set_optimization_attribute(layout_optimizer::optimization_attributes_type::splitted_convolution, 1);
+
+            if (lo.is_format_optimized(prim.as<convolution>(), format::bfyx_f16))
+                opt_conv_layers_bfyx_f16 += 1;
+
+            total_conv_layers += 1;
         }
 
         //list of layers that do not support yxfb or perform worse than bfyx
@@ -55,8 +67,40 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
             prim.type() == cldnn::roi_pooling::type_id() || prim.type() == cldnn::deconvolution::type_id() ||
             prim.type() == cldnn::upsampling::type_id() || prim.type() == cldnn::reorg_yolo::type_id())
             lo.set_optimization_attribute(layout_optimizer::optimization_attributes_type::bfyx_only_layer, 1);
+
+        // Check if all layers in topology support fs_byx_fsv32 format
+        if (prim.is_in_data_flow() &&
+            prim.type() != cldnn::convolution::type_id() &&
+            prim.type() != cldnn::pooling::type_id() &&
+            prim.type() != cldnn::eltwise::type_id() &&
+            prim.type() != cldnn::fully_connected::type_id() &&
+            prim.type() != cldnn::reorder::type_id() &&
+            prim.type() != cldnn::input_layout::type_id() &&
+            prim.type() != cldnn::softmax::type_id())
+            can_use_fsv32 = false;
+
+        if (prim.is_in_data_flow() &&
+            prim.type() != cldnn::convolution::type_id() &&
+            prim.type() != cldnn::pooling::type_id() &&
+            prim.type() != cldnn::eltwise::type_id() &&
+            prim.type() != cldnn::permute::type_id() &&
+            //prim.type() != cldnn::concatenation::type_id() &&
+            prim.type() != cldnn::fully_connected::type_id() &&
+            prim.type() != cldnn::reorder::type_id() &&
+            prim.type() != cldnn::input_layout::type_id() &&
+            prim.type() != cldnn::softmax::type_id())
+            can_use_f16 = false;
     }
 
+    if (can_use_fsv32)
+        lo.set_optimization_attribute(layout_optimizer::optimization_attributes_type::only_fsv32_layers, 1);
+
+    // Due to fact that single winograd convolution is faster than bfyx_f16 and
+    // using them together leads do redundant reorders, whole topology switch
+    // will be performed if at least half of layers can use bfyx_f16.
+    if (can_use_f16 && opt_conv_layers_bfyx_f16 >= total_conv_layers / 2)
+        lo.set_optimization_attribute(layout_optimizer::optimization_attributes_type::bfyx_f16_network, 1);
+    
     const auto reorder_input = [&p, &lo](typed_program_node<convolution>& conv_node)
     {
         auto conv_prim = conv_node.get_primitive();
@@ -80,7 +124,11 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
                 weights_layout).first;
 
             auto reorder_removed = false;
-            if (new_input && new_input->output_format != format::winograd_2x3_s1_data && new_input->output_format != format::bf8_xy16 && new_input->output_format != format::byxf) //output format is not optimal
+            if (new_input && new_input->output_format != format::winograd_2x3_s1_data 
+                && new_input->output_format != format::bf8_xy16 
+                && new_input->output_format != format::byxf 
+                && new_input->output_format != format::fs_b_yx_fsv32
+                && new_input->output_format != format::bfyx_f16) //output format is not optimal
             {
                 auto reorder_input_layout = reorder_input.get_output_layout();
 
@@ -218,7 +266,8 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
             }
         }
 
-        if (new_input && (new_input->output_format == format::bf8_xy16 || new_input->output_format == format::byxf))
+        if (new_input && (new_input->output_format == format::bf8_xy16 || 
+            new_input->output_format == format::byxf))
         {
             auto conv1x1_output = std::make_shared<reorder>("_conv1x1_reorder_back_" + conv_node.id(), conv_node.id(), input_layout.format, input_layout.data_type);
             auto& back_node = p.get_or_create(conv1x1_output);
@@ -226,7 +275,13 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
             conv_node.invalidate_users();
             p.replace_all_usages(conv_node, back_node);
             p.add_connection(conv_node, back_node);
+
+            p.mark_if_constant(back_node);
+            p.mark_if_data_flow(back_node);
+            p.mark_if_constant(conv_node);
+            p.mark_if_data_flow(conv_node);
         }
+
 
         if (new_input)
         {

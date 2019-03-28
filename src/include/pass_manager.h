@@ -69,7 +69,7 @@ namespace cldnn
         add_required_reorders() : base_pass("add_required_reorders") {}
     private:
         virtual void run(program_impl& p) override;
-        void add_reorder(program_impl& p, program_node* node, program_node* usr, layout reorder_layout);
+        void add_reorder(program_impl &p, program_node* node, program_node* usr, layout reorder_layout);
     };
 
     class add_reshape_to_primitives : public base_pass
@@ -123,6 +123,14 @@ namespace cldnn
         void handle_detection_output(program_impl& p);
         void handle_lstm(program_impl& p);
         void set_outputs(program_impl& p);  
+    };
+
+    class handle_reshape : public base_pass
+    {
+    public:
+        handle_reshape() : base_pass("handle_reshape") {}
+    private:
+        virtual void run(program_impl& p) override;
     };
 
     class handle_input_padding : public base_pass
@@ -217,6 +225,15 @@ namespace cldnn
     private:
         virtual void run(program_impl& p) override;
         bool output_size_handling_enabled;
+    };
+
+    class post_input_reorder : public base_pass
+    {
+    public:
+        post_input_reorder() : base_pass("post_input_reorder") {}
+    private:
+        virtual void run(program_impl& p) override;
+        program_node& add_reorder(program_impl &p, program_node* node, program_node* usr, layout reorder_layout);
     };
 
     class post_optimize_weights : public base_pass

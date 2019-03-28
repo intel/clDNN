@@ -54,18 +54,6 @@ void eltwise_shrinking::run(program_impl& p)
                         break;
                     }
 
-                    if (user->get_output_layout().format == format::b_fs_yx_fsv4)
-                    {
-                        // Workaround for VIS-1079
-                        // Currently, we don't have "conv + eltwise" optimization for
-                        // IMAD and it blocks us to run the whole ResNet-50.i8 topology in IMAD.
-                        // As workaround, this optimization will be temporary switched off for
-                        // "format == b_fs_yx_fsv4"(IMAD specific data layout).
-                        // TODO: Please, remove this code, when VIS - 1079 will be done.
-                        can_shrink = false;
-                        break;
-                    }
-
                     const auto conv = std::static_pointer_cast<const convolution>(user->get_primitive());
                     if (conv->weights.size() != 1)
                     {

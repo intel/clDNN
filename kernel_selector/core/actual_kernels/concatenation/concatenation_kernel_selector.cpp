@@ -16,14 +16,18 @@
 
 #include "concatenation_kernel_selector.h"
 #include "concatenation_kernel_ref.h"
+#include "concatenation_kernel_bfzyx_ref.h"
 #include "concatenation_kernel_depth_bfyx_no_pitch.h"
+#include "concatenation_kernel_blocked.h"
  
 namespace kernel_selector 
 {
     concatenation_kernel_selector::concatenation_kernel_selector()
     {
         Attach<ConcatenationKernelRef>();
+        Attach<ConcatenationKernel_bfzyx_Ref>();
         Attach<ConcatenationKernel_depth_bfyx_no_pitch>();
+        Attach<ConcatenationKernelBlocked>();
     }
 
     KernelsData concatenation_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const

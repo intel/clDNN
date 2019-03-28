@@ -28,6 +28,8 @@ inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
     return GET_DATA_BS_FYX_BSV8_INDEX(INPUT0, b, f, y, x, SUB_GROUP_SIZE);
 #elif defined INPUT0_LAYOUT_BF8_XY16
     return GET_DATA_BF8_XY16_INDEX(INPUT0, b, f, y, x);
+#elif defined INPUT0_LAYOUT_BFYX_F16
+    return GET_DATA_BFYX_F16_INDEX(INPUT0, b, f, y, x);
 #elif defined INPUT0_LAYOUT_BYXF_AF32
 	return GET_DATA_BYXF_AF32_INDEX(INPUT0, b, f, y, x);
 #elif defined INPUT0_LAYOUT_BYX8_F4
@@ -36,6 +38,8 @@ inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
     return GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(INPUT0, b, f, y, x);
 #elif defined INPUT0_LAYOUT_B_FS_YX_FSV4
     return GET_DATA_B_FS_YX_FSV4_INDEX(INPUT0, b, f, y, x);
+#elif defined INPUT0_LAYOUT_FS_B_YX_FSV32
+    return GET_DATA_FS_B_YX_FSV32_INDEX(INPUT0, b, f, y, x);
 #else
 #error reorder_data.cl: input format - not supported
 #endif
@@ -52,6 +56,8 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
     return GET_DATA_BS_FYX_BSV8_INDEX(OUTPUT, b, f, y, x, SUB_GROUP_SIZE);
 #elif defined OUTPUT_LAYOUT_BF8_XY16
     return GET_DATA_BF8_XY16_INDEX(OUTPUT, b, f, y, x);
+#elif defined OUTPUT_LAYOUT_BFYX_F16
+    return GET_DATA_BFYX_F16_INDEX(OUTPUT, b, f, y, x);
 #elif defined OUTPUT_LAYOUT_BYXF_AF32
 	return GET_DATA_BYXF_AF32_INDEX(OUTPUT, b, f, y, x);
 #elif defined OUTPUT_LAYOUT_BYX8_F4
@@ -60,6 +66,8 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
     return GET_DATA_FS_BS_YX_BSV4_FSV32_INDEX(OUTPUT, b, f, y, x);
 #elif defined OUTPUT_LAYOUT_B_FS_YX_FSV4
     return GET_DATA_B_FS_YX_FSV4_INDEX(OUTPUT, b, f, y, x);
+#elif defined OUTPUT_LAYOUT_FS_B_YX_FSV32
+    return GET_DATA_FS_B_YX_FSV32_INDEX(OUTPUT, b, f, y, x);
 #else
 #error reorder_data.cl: output format - not supported
 #endif

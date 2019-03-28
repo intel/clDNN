@@ -85,6 +85,11 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), val_fw },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), val_fw },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::yxfb), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::bfyx), val_fw },
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::byxf), val_fw },
+                //block fp16 format
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx_f16), val_fw}
             });
         }
         ~attach() {}

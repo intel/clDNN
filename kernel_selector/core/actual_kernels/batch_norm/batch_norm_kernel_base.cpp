@@ -54,7 +54,7 @@ namespace kernel_selector
         kd.gws1 = params.inputs[0].Feature().v;
         kd.gws2 = 1;
 
-        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(32));
+        kd.lws0 = std::min(std::max(kd.gws0, static_cast<size_t>(1)), static_cast<size_t>(256));
         while (kd.gws0 % kd.lws0 != 0)
         {
             --kd.lws0;

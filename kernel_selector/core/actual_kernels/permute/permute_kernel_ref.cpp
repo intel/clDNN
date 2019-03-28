@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,14 +40,10 @@ namespace kernel_selector
         return k;
     }
 
-    inline JitConstants MakePermuteJitConstants(const permute_params& params)
+    JitConstants PermuteKernelRef::GetJitConstants(const permute_params& params) const
     {
-        JitConstants jit = MakeBaseParamsJitConstants(params);
-
-        jit.AddConstants({
-            MakeJitConstant("PERMUTE_ORDER", params.order)
-        });
-
+        JitConstants jit = MakeBaseParamsJitConstants(params);;
+        jit.AddConstant(MakeJitConstant("PERMUTE_ORDER", params.order));
         return jit;
     }
 
@@ -60,7 +56,7 @@ namespace kernel_selector
 
 
         auto entry_point = GetEntryPoint(kernelName, newParams.layerID, options);
-        auto cldnn_jit = MakePermuteJitConstants(newParams);
+        auto cldnn_jit = GetJitConstants(newParams);
         std::string jit = CreateJit(kernelName, cldnn_jit, entry_point);
 
         const auto& in = newParams.inputs[0];

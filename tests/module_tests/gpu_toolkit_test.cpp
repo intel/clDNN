@@ -103,7 +103,7 @@ TEST(gpu_engine, engine_info)
     EXPECT_GT(info.core_frequency, 0u);
 }
 
-TEST(gpu_engine, DISABLED_user_context)
+TEST(gpu_engine, user_context)
 {
     user_gpu_toolkit gpu_toolkit;
     cl_context user_context = gpu_toolkit.get_gpu_context();

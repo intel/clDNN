@@ -48,7 +48,17 @@ namespace kernel_selector
         if (params.inputs[0].Feature().v != 3)
             return false;
 
+        if (params.mode == MeanSubtractMode::IN_BUFFER && params.mean.LogicalSize() != params.inputs[0].Feature().v)
+            return false;
+
         return true;
+    }
+
+    size_t static get_wg_batch_size(const reorder_params& params)
+    {
+        if (params.inputs[0].Batch().v % 16 == 0)
+            return 16;
+        return 1;
     }
 
     reorder_kernel_byxf_f32_to_byx8_f4_i8::DispatchData reorder_kernel_byxf_f32_to_byx8_f4_i8::SetDefault(const reorder_params& params) const
@@ -63,7 +73,7 @@ namespace kernel_selector
 
         kd.lws0 = 16;
         kd.lws1 = 1;
-        kd.lws2 = 1;
+        kd.lws2 = get_wg_batch_size(params);
 
         return kd;
     }
@@ -72,6 +82,7 @@ namespace kernel_selector
     {
         auto jit = ReorderKernelBase::GetJitConstants(params);
         jit.Merge(GetTensorFriendlyWorkGroupsJit(params.inputs[0]));
+        jit.AddConstant(MakeJitConstant("WG_BATCH_SIZE", get_wg_batch_size(params)));
         return jit;
     }
 

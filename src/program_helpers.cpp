@@ -68,7 +68,10 @@ namespace cldnn
         if ((l1.format == format::bf8_xy16 && l2.format != format::bf8_xy16) ||
             (l2.format == format::bf8_xy16 && l1.format != format::bf8_xy16) ||
             (l1.format == format::b_fs_yx_fsv4 && l2.format != format::b_fs_yx_fsv4) ||
-            (l2.format == format::b_fs_yx_fsv4 && l1.format != format::b_fs_yx_fsv4))
+            (l2.format == format::b_fs_yx_fsv4 && l1.format != format::b_fs_yx_fsv4) ||
+            ((l1.format == format::fs_b_yx_fsv32 || l2.format == format::fs_b_yx_fsv32) && l1.format != l2.format) ||
+            (l1.format == format::bfyx_f16 && l2.format != format::bfyx_f16) ||
+            (l2.format == format::bfyx_f16 && l1.format != format::bfyx_f16))
             return{ false, false };
 
         auto l1_pitch = l1.get_pitches();

@@ -104,7 +104,7 @@ public:
     uint64_t get_max_used_device_memory() const { return _memory_pool.get_max_peak_device_memory_used(); }
     uint64_t get_used_device_memory() const { return _memory_pool.get_temp_memory_used(); }
 
-    void dump_memory_pool(const program_impl& program, std::string path, std::string dependencies) { _memory_pool.dump_memory_pool(program, path, dependencies); }
+    void dump_memory_pool(const program_impl& program, std::string& path, std::string& dependencies) { _memory_pool.dump_memory_pool(program, path, dependencies); }
     bool use_memory_pool() const;
 
 private:

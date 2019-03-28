@@ -604,7 +604,6 @@ namespace cldnn
                 continue;
             }
         }
-
     }
 
     void graph_initializations::set_outputs(program_impl& p)

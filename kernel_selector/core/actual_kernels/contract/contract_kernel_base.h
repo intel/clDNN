@@ -56,7 +56,7 @@ namespace kernel_selector
         using DispatchData = CommonDispatchData;
 
     protected:
-        static JitConstants GetJitConstants(const contract_params& params);
+        JitConstants GetJitConstants(const contract_params& params) const;
         static DispatchData SetDefault(const contract_params& params);
         KernelsData GetCommonKernelsData(const Params& params, const optional_params&, float estimated_time) const;
     };

@@ -70,12 +70,14 @@ void prepare_padding::run(program_impl& p)
                 if (!prim->with_output_size)
                     continue;
 
-                // NOTE: Currently there is no pooling implementation/pooling mode which does not check input data range.
-                // There is no need to add padding requirements on pooling inputs.
-                //auto needed_padding = calc_sliding_window_needed_input_padding(
-                //    prim_node.input().get_output_layout(),
-                //    prim->output_size, prim->size, prim->input_offset, prim->stride, {1, 1, 1, 1}, false, 1);
-                auto needed_padding = prim_node.input().get_output_layout().data_padding;
+                
+                padding needed_padding;
+                //WA for this format. sliding window needs to be fixed --perf degradation for IncepctionV1 type models
+                if(node->get_output_layout().format == format::bfyx_f16)
+                    needed_padding = calc_sliding_window_needed_input_padding(prim_node.input().get_output_layout(),
+                    prim->output_size, prim->size, prim->input_offset, prim->stride, {1, 1, 1, 1}, false, 1);
+                else
+                    needed_padding = prim_node.input().get_output_layout().data_padding;
 
                 p.apply_needed_padding(prim_node, prim_node.input(), needed_padding);
             }
@@ -99,9 +101,11 @@ void prepare_padding::run(program_impl& p)
         // right now output padding optimization is only available for bfyx format and data type = float32
         if (conv_layout.format != cldnn::format::bfyx
             && conv_layout.format != cldnn::format::bf8_xy16
+            && conv_layout.format != cldnn::format::bfyx_f16
             && conv_layout.format != cldnn::format::byxf_af32
             && conv_layout.format != cldnn::format::fs_bs_yx_bsv4_fsv32
-            && conv_layout.format != cldnn::format::b_fs_yx_fsv4)
+            && conv_layout.format != cldnn::format::b_fs_yx_fsv4
+            && conv_layout.format != cldnn::format::fs_b_yx_fsv32)
         {
             continue;
         }

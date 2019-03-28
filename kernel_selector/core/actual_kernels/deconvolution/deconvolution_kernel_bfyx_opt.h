@@ -26,8 +26,9 @@ namespace kernel_selector {
         DeconvolutionKernel_bfyx_opt() : DeconvolutionKernelBase("deconvolution_gpu_bfyx_opt") {}
         virtual ~DeconvolutionKernel_bfyx_opt() {}
 
-    protected:
         virtual ParamsKey GetSupportedKey() const override;
+
+    protected:
         CommonDispatchData SetDefault(const deconvolution_params& params) const override;
     };
 }

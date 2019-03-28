@@ -53,7 +53,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const std::vector<primitive_id>& weights,
         const std::vector<primitive_id>& bias,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -196,6 +196,59 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
     /// @param weights List of primitive ids containing weights data.
     /// @param groups Number of filter groups.
     /// @param bias List of primitive ids containing bias data.
+    /// @param stride Defines shift in input buffer between adjacent calculations of output values.
+    /// @param dilation Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels.
+    /// As an example in one dimension, a filter w of size 3 would compute over input x the following: w[0]*x[0] + w[1]*x[1] + w[2]*x[2] for dilation of 1.
+    /// For dilation 2 the filter would instead compute w[0]*x[0] + w[1]*x[2] + w[2]*x[4].
+    /// @param with_activation Enable Relu activation.
+    /// @param activation_slp Relu activation slope.
+    /// @param output_size User-defined output data size of the primitive (w/o padding).
+    convolution(
+        const primitive_id& id,
+        const primitive_id& input,
+        const std::vector<primitive_id>& weights,
+        const std::vector<primitive_id>& bias,
+        uint32_t groups,
+        tensor stride,
+        tensor input_offset,
+        tensor dilation,
+        bool with_activation,
+        float activation_slp,
+        tensor output_size,
+        const padding& output_padding = padding()
+    )
+        :primitive_base(id, { input }, output_padding)
+        , weights(_weights.cpp_ids)
+        , bias(_bias.cpp_ids)
+        , weights_quantization_factors(_weights_quantization_factors.cpp_ids)
+        , output_calibration_factors(_output_calibration_factors.cpp_ids)
+        , input_quantization_factor(1.0f)
+        , output_quantization_factor(1.0f)
+        , input_offset(input_offset)
+        , stride(stride)
+        , dilation(dilation)
+        , with_activation(with_activation)
+        , activation_negative_slope(activation_slp)
+        , with_output_size(true)
+        , output_size(output_size)
+        , groups(groups)
+        , padding_above(tensor(0, 0, 0, 0))
+        , padding_below(tensor(0, 0, 0, 0))
+        , _weights(weights)
+        , _bias(bias)
+        , _weights_quantization_factors(std::vector<primitive_id>(0))
+        , _output_calibration_factors(std::vector<primitive_id>(0))
+    {
+        if ((bias.size() != 0) && (weights.size() != bias.size()))
+            throw std::runtime_error("convolution's weights/bias count does not match");
+    }
+
+    /// @brief Constructs convolution primitive.
+    /// @param id This primitive id.
+    /// @param input Input primitive id.
+    /// @param weights List of primitive ids containing weights data.
+    /// @param groups Number of filter groups.
+    /// @param bias List of primitive ids containing bias data.
     /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the convolution window should start calculations.
     /// @param stride Defines shift in input buffer between adjacent calculations of output values.
     /// @param dilation Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels.
@@ -210,7 +263,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const std::vector<primitive_id>& bias,
         uint32_t groups,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -267,7 +320,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const float i_quantization_factor,
         const float o_quantization_factor,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -300,6 +353,58 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
             throw std::runtime_error("convolution's weights count does not match quantization factors count");
     }
 
+    /// @brief Constructs convolution primitive.
+    /// @param id This primitive id.
+    /// @param input Input primitive id.
+    /// @param weights List of primitive ids containing weights data.
+    /// @param bias List of primitive ids containing bias data.
+    /// @param quantization_factor List of primitive ids containing quanitization factors per output feature map. The scaling is applied before the activation. It is the user's responsibility to ensure that fused activation works correctly in the quantized dynamic range. Otherwise, the overload with both quantization and calibration factors must be used instead.
+    /// @param output_data_type Precision of the output after activation. Might be less precise than internal computations (e.g. i8 input, i32 accumulator/activation, u8 output).
+    /// @param stride Defines shift in input buffer between adjacent calculations of output values.
+    /// @param input_offset Defines a shift, relative to (0,0) position of the input buffer, where (0,0) point of the convolution window should start calculations.
+    /// @param dilation Defines gaps in the input - dilation rate k=1 is normal convolution, k=2 means skipping one pixel per input, k=4 means skipping 3 pixels.
+    /// @param with_activation Enable Relu activation.
+    /// @param activation_slp Relu activation slope.
+    convolution(
+        const primitive_id& id,
+        const primitive_id& input,
+        const std::vector<primitive_id>& weights,
+        const std::vector<primitive_id>& bias,
+        const std::vector<primitive_id>& quantization_factors,
+        data_types output_data_type,
+        tensor stride = { 1, 1, 1, 1 },
+        tensor input_offset = { 0,0,0,0 },
+        tensor dilation = { 1, 1, 1, 1 },
+        bool with_activation = false,
+        float activation_slp = 0.0f,
+        const padding& output_padding = padding()
+    )
+        :primitive_base(id, { input }, output_padding, { output_data_type })
+        , weights(_weights.cpp_ids)
+        , bias(_bias.cpp_ids)
+        , weights_quantization_factors(_weights_quantization_factors.cpp_ids)
+        , output_calibration_factors(_output_calibration_factors.cpp_ids)
+        , input_quantization_factor(1.0f)
+        , output_quantization_factor(1.0f)
+        , input_offset(input_offset)
+        , stride(stride)
+        , dilation(dilation)
+        , with_activation(with_activation)
+        , activation_negative_slope(activation_slp)
+        , with_output_size(false)
+        , groups(1)
+        , padding_above(tensor(0, 0, 0, 0))
+        , padding_below(tensor(0, 0, 0, 0))
+        , _weights(weights)
+        , _bias(bias)
+        , _weights_quantization_factors(quantization_factors)
+        , _output_calibration_factors(std::vector<primitive_id>(0))
+
+    {
+        if ((bias.size() != 0) && (weights.size() != bias.size()))
+            throw std::runtime_error("convolution's weights/bias count does not match");
+        validate_quantized();
+    }
 
     /// @brief Constructs convolution primitive.
     /// @param id This primitive id.
@@ -325,7 +430,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const std::vector<primitive_id>& output_calibration_factors,
         const float i_quantization_factor,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -375,7 +480,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const primitive_id& input,
         const std::vector<primitive_id>& weights,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -522,7 +627,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const std::vector<primitive_id>& weights,
         uint32_t groups,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -700,7 +805,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const std::vector<primitive_id>& bias,
         tensor output_size,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -730,7 +835,7 @@ struct convolution : public primitive_base<convolution, CLDNN_PRIMITIVE_DESC(con
         const std::vector<primitive_id>& weights,
         tensor output_size,
         tensor stride = { 1, 1, 1, 1 },
-        tensor input_offset = { 0,0,0,0 },
+        tensor input_offset = { 0,0,0,0,0 },
         tensor dilation = { 1, 1, 1, 1 },
         bool with_activation = false,
         float activation_slp = 0.0f,
@@ -819,6 +924,36 @@ protected:
         dto.groups = groups;
         dto.padding_above = padding_above;
         dto.padding_below = padding_below;
+    }
+
+private:
+    // TODO: validate_quantized -> validate ?
+    void validate_quantized()
+    {
+        if ((weights.size() != 0) && weights_quantization_factors.size() != 0
+            && (weights.size() != weights_quantization_factors.size()))
+            throw std::runtime_error("convolution's weights count does not "
+                                     "match quantization factors count");
+        if (with_activation && output_data_type)
+        {
+            // Use explicit switch to get compiler warning if new data_types would become supported.
+            switch (*output_data_type)
+            {
+            case data_types::u8:
+                if (activation_negative_slope != 0.0f)
+                    throw std::runtime_error(
+                        "Negative slope in activation is meaningless for the "
+                        "unsigned type!");
+                break;
+            case data_types::i8:
+            case data_types::i32:
+            case data_types::i64:
+            case data_types::f16:
+            case data_types::f32:
+                // All is OK.
+                break;
+            }
+        }
     }
 };
 /// @}

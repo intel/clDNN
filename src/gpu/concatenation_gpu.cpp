@@ -35,6 +35,7 @@ namespace
         {
         case concatenation::along_x: return kernel_selector::concat_axis::X;
         case concatenation::along_y: return kernel_selector::concat_axis::Y;
+        case concatenation::along_z: return kernel_selector::concat_axis::Z;
         case concatenation::along_f: return kernel_selector::concat_axis::FEATURE;
         case concatenation::along_b: return kernel_selector::concat_axis::BATCH;
         default:
@@ -103,20 +104,31 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i8,  format::yxfb), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::u8,  format::yxfb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i32,  format::yxfb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i64,  format::yxfb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i8,  format::bfyx), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::u8,  format::bfyx), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i32,  format::bfyx), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i64,  format::bfyx), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::u8,  format::byxf), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i32,  format::byxf), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i64,  format::byxf), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f32, format::fyxb), concatenation_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::fyxb), concatenation_gpu::create },
+                // 5D
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::bfzyx), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfzyx), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i8,  format::bfzyx), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i32,  format::bfzyx), concatenation_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i64,  format::bfzyx), concatenation_gpu::create },                
+                //block fp16 format                
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx_f16), concatenation_gpu::create },                
                 // MMAD
                 { std::make_tuple(engine_types::ocl, data_types::i8,  format::byxf_af32), concatenation_gpu::create },
 

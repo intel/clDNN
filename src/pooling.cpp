@@ -54,7 +54,8 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
 
     if (desc->global_pooling) {
         window_size.spatial[0] = input_layout.size.spatial[0];
-        window_size.spatial[1] = input_layout.size.spatial[1];	
+        window_size.spatial[1] = input_layout.size.spatial[1];
+        window_size.spatial[2] = input_layout.size.spatial[2];
     }
 
     // TODO: Consider moving general parameter verification to arguments constructor.

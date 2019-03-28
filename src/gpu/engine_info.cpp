@@ -130,34 +130,7 @@ std::string to_string_hex(int val)
     return std::string("0x") + &buf[i];
 }
 
-struct device_info
-{
-    engine_info_internal::models model;
-    engine_info_internal::architectures arch;
-    engine_info_internal::configurations config;
-    std::string code;
-};
-
 #include "mode.inc"
-
-const device_info& get_device_info(int device_id)
-{
-#define GEN_DEVICE(code, dev_id, model, arch, conf) { dev_id, {engine_info_internal::model, engine_info_internal::arch, engine_info_internal::conf, #code} },
-    static const std::unordered_map<int, device_info> device_map
-    {
-#include "gpu_devices.inc"
-    };
-#undef GEN_DEVICE
-    
-    auto it = device_map.find(device_id);
-    if (it == device_map.end())
-    {
-        std::cerr << "[WARNING]. Device ID (" << to_string_hex(device_id) << ") not supported. Pretending to behave like SKL GT2." << std::endl;
-        int new_device_id = 6433;
-        return device_map.at(new_device_id);
-    }
-    return device_map.at(device_id);
-}
 
 std::shared_ptr<rapidjson::Document> get_cache_from_file(uint32_t compute_units_count, const gpu_toolkit& context) {
     std::string tuning_cache_path = context.get_configuration().tuning_cache_path;
@@ -215,10 +188,6 @@ engine_info_internal::engine_info_internal(const gpu_toolkit& context)
 {
     auto device_id = get_gpu_device_id();
     if (0 == device_id) throw std::runtime_error(device_info_failed_msg);
-    auto& dev_info = get_device_info(device_id);
-    model = dev_info.model;
-    architecture = dev_info.arch;
-    configuration = dev_info.config;
     dev_id = to_string_hex(device_id);
     driver_version = context.device().getInfo<CL_DRIVER_VERSION>();
 

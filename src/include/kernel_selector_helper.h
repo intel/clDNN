@@ -103,12 +103,13 @@ kernel_selector::activation_function get_kernel_selector_activation_grad_param(c
 template <typename T = std::uint32_t>
 kernel_selector::dim_tensor<T> convert_dim_vector(const tensor& t)
 {
-    const auto& sizes = t.sizes(format::bfyx);
+    const auto& sizes = t.sizes(format::bfzyx);
     return {
         static_cast<T>(sizes[0]),
         static_cast<T>(sizes[1]),
         static_cast<T>(sizes[2]),
         static_cast<T>(sizes[3]),
+        static_cast<T>(sizes[4])
     };
 }
 

@@ -28,6 +28,8 @@ inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
     return GET_DATA_BS_FYX_BSV8_INDEX(INPUT0, b, f, y, x, SUB_GROUP_SIZE);
 #elif defined INPUT0_LAYOUT_BF8_XY16
     return GET_DATA_BF8_XY16_INDEX(INPUT0, b, f, y, x);
+#elif defined INPUT0_LAYOUT_BFYX_F16
+    return GET_DATA_BFYX_F16_INDEX(INPUT0, b, f, y, x);
 #else
 #error reorder_data_fast_b1.cl: input format - not supported
 #endif
@@ -44,6 +46,8 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
     return GET_DATA_BS_FYX_BSV8_INDEX(OUTPUT, b, f, y, x, SUB_GROUP_SIZE);
 #elif defined OUTPUT_LAYOUT_BF8_XY16
     return GET_DATA_BF8_XY16_INDEX(OUTPUT, b, f, y, x);
+#elif defined OUTPUT_LAYOUT_BFYX_F16
+    return GET_DATA_BFYX_F16_INDEX(OUTPUT, b, f, y, x);
 #else
 #error reorder_data_fast_b1.cl: output format - not supported
 #endif
@@ -97,6 +101,40 @@ KERNEL (reorder_data_fast_b1)(
 
     tmp_data_idx  = data_idx / INPUT0_BATCH_NUM;
     const uint b = data_idx - tmp_data_idx * INPUT0_BATCH_NUM;
+#elif defined OUTPUT_LAYOUT_BFYX_8F
+    uint tmp_data_idx = data_idx / INPUT0_BATCH_NUM;
+    const uint b = data_idx - tmp_data_idx * INPUT0_BATCH_NUM;
+    data_idx = tmp_data_idx;
+
+    tmp_data_idx = data_idx / INPUT0_FEATURE_NUM;
+    const uint f = data_idx - tmp_data_idx * INPUT0_FEATURE_NUM;
+    data_idx = tmp_data_idx;
+
+    // We're first iterating over Y then over X for performance reason
+    // Otherwise we could compute X and Y in reverse order
+    tmp_data_idx = data_idx / INPUT0_SIZE_X;
+    const uint x = data_idx - tmp_data_idx * INPUT0_SIZE_X;
+    data_idx = tmp_data_idx;
+
+    tmp_data_idx  = data_idx / INPUT0_SIZE_Y;
+    const uint y = data_idx - tmp_data_idx * INPUT0_SIZE_Y;
+#elif defined OUTPUT_LAYOUT_BFYX_16F
+    uint tmp_data_idx = data_idx / INPUT0_BATCH_NUM;
+    const uint b = data_idx - tmp_data_idx * INPUT0_BATCH_NUM;
+    data_idx = tmp_data_idx;
+
+    tmp_data_idx = data_idx / INPUT0_FEATURE_NUM;
+    const uint f = data_idx - tmp_data_idx * INPUT0_FEATURE_NUM;
+    data_idx = tmp_data_idx;
+
+    // We're first iterating over Y then over X for performance reason
+    // Otherwise we could compute X and Y in reverse order
+    tmp_data_idx = data_idx / INPUT0_SIZE_X;
+    const uint x = data_idx - tmp_data_idx * INPUT0_SIZE_X;
+    data_idx = tmp_data_idx;
+
+    tmp_data_idx  = data_idx / INPUT0_SIZE_Y;
+    const uint y = data_idx - tmp_data_idx * INPUT0_SIZE_Y;
 #else // BYXF?
     uint tmp_data_idx = data_idx / INPUT0_BATCH_NUM;
     const uint b = data_idx - tmp_data_idx * INPUT0_BATCH_NUM;

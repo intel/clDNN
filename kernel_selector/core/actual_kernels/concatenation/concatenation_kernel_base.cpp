@@ -26,6 +26,7 @@ namespace kernel_selector
         {
         case ConcatAxis::X:         name = Tensor::DataChannelName::X; break;
         case ConcatAxis::Y:         name = Tensor::DataChannelName::Y; break;
+        case ConcatAxis::Z:         name = Tensor::DataChannelName::Z; break;
         case ConcatAxis::FEATURE:   name = Tensor::DataChannelName::FEATURE; break;
         case ConcatAxis::BATCH:     name = Tensor::DataChannelName::BATCH; break;
         default: break;

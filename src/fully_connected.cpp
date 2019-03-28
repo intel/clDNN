@@ -68,7 +68,9 @@ layout fully_connected_inst::calc_output_layout(fully_connected_node const& node
 
     if(is_batch_after_spatial(input_layout.format.order()) || 
         (input_layout.format == format::bfyx &&                //this condition tests whether our input is batch>1 in bfyx format, if yes there will be
-        input_layout.size.batch[0] > 1))                            //extra reorder between input and this fc from bfyx to yxfb format (so "is_batch_after_spatial" should return true)
+        input_layout.size.batch[0] > 1) ||                     //extra reorder between input and this fc from bfyx to yxfb format (so "is_batch_after_spatial" should return true)
+        input_layout.format == format::bs_x_bsv16 ||
+        input_layout.format == format::bs_xs_xsv8_bsv8)
     {
         auto result = layout(input_layout.data_type, format::yxfb, tensor(input_layout.size.batch[0], weights_layout.size.batch[0], 1, 1));
         return result;
@@ -106,8 +108,6 @@ fully_connected_inst::typed_primitive_inst(network_impl& network, fully_connecte
 {
     auto input_layout = node.input().get_output_layout();
     auto output_layout = node.get_output_layout();
-
-    CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_layout.format.value, "expected format", format::yxfb, format::bfyx, format::byxf_af32, format::fs_bs_yx_bsv4_fsv32, format::b_fs_yx_fsv4);
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_layout.size.raw.size(), "output size", output_layout.size.raw.size(), "");
 }
 }

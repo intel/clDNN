@@ -31,29 +31,48 @@ namespace cldnn
 
 	layout arg_max_min_inst::calc_output_layout(arg_max_min_node const& node)
 	{
-        assert((bool)node.get_primitive()->output_data_type == false
-               && "Output data type forcing is not supported for "
-                  "arg_max_min_node!");
         auto desc = node.get_primitive();
-
-		auto input_layout = node.input().get_output_layout();
-
+        auto input_layout = node.input().get_output_layout();
+        auto output_data_type = desc->output_data_type ? *desc->output_data_type : input_layout.data_type;
+        auto size_check = [&](size_t tensor_size) {
+            size_t max_size;
+            // lowest integer not representable in floating point type = 2^(mantissa_bits + 1) + 1
+            // https://stackoverflow.com/questions/3793838/which-is-the-first-integer-that-an-ieee-754-float-is-incapable-of-representing-e
+            if (output_data_type == data_types::f32) {
+                max_size = (1 << std::numeric_limits<float>::digits);
+            }
+            else if (output_data_type == data_types::f16) {
+                // mantissa_bits for fp16 = 10
+                max_size = (1 << 11);
+            }
+            else {
+                max_size = data_type_traits::max<size_t>(output_data_type);
+            }
+            
+            if (tensor_size > max_size) {
+                CLDNN_ERROR_GREATER_THAN(node.id(), "Reduced tensor size", tensor_size, "Maximum output data type value", max_size, "Current output data type is unable to hold maximum index of a tensor.");
+            }
+        };
 		if (desc->with_axis){
 			switch (desc->axis){
 				case arg_max_min::x:
-					return layout{ data_types::f32, format::bfyx, tensor{ input_layout.size.batch[0], input_layout.size.feature[0], (int32_t)desc->top_k, input_layout.size.spatial[1] }};
+                    size_check(input_layout.size.spatial[0]);
+					return layout{ output_data_type, format::bfyx, tensor{ input_layout.size.batch[0], input_layout.size.feature[0], (int32_t)desc->top_k, input_layout.size.spatial[1] }};
 				case arg_max_min::y:
-					return layout{ data_types::f32, format::bfyx, tensor{ input_layout.size.batch[0], input_layout.size.feature[0], input_layout.size.spatial[0], (int32_t)desc->top_k }};
+                    size_check(input_layout.size.spatial[1]);
+					return layout{ output_data_type, format::bfyx, tensor{ input_layout.size.batch[0], input_layout.size.feature[0], input_layout.size.spatial[0], (int32_t)desc->top_k }};
 				case arg_max_min::feature:
-					return layout{ data_types::f32, format::bfyx, tensor{ input_layout.size.batch[0], (int32_t)desc->top_k, input_layout.size.spatial[0], input_layout.size.spatial[1] }};
+                    size_check(input_layout.size.feature[0]);
+					return layout{ output_data_type, format::bfyx, tensor{ input_layout.size.batch[0], (int32_t)desc->top_k, input_layout.size.spatial[0], input_layout.size.spatial[1] }};
 				case arg_max_min::batch:
-					return layout{ data_types::f32, format::bfyx, tensor{ (int32_t)desc->top_k, input_layout.size.feature[0], input_layout.size.spatial[0], input_layout.size.spatial[1] }};
+                    size_check(input_layout.size.batch[0]);
+					return layout{ output_data_type, format::bfyx, tensor{ (int32_t)desc->top_k, input_layout.size.feature[0], input_layout.size.spatial[0], input_layout.size.spatial[1] }};
 				default:
 					break;
 			}
 		}
-
-		return layout{ data_types::f32, input_layout.format, tensor{ input_layout.size.batch[0], 1, (int32_t)desc->top_k, 1 } };
+        size_check(input_layout.size.feature[0] * input_layout.size.spatial[0] * input_layout.size.spatial[1]);
+        return layout{ output_data_type, input_layout.format, tensor{ input_layout.size.batch[0], 1, (int32_t)desc->top_k, 1 } };
 	}
 
 	std::string arg_max_min_inst::to_string(arg_max_min_node const& node)

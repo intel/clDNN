@@ -25,8 +25,6 @@ namespace kernel_selector
         OneHotKernelRef() : OneHotKernelBase("one_hot_ref") {}
 
         KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
-
-    protected:
         ParamsKey GetSupportedKey() const override;
     };
 }

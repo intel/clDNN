@@ -48,10 +48,12 @@ namespace kernel_selector {
 
         for (size_t i = 0; i < ewParams.inputs.size(); i++)
         {
-            if (ewParams.inputs[i].GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32)
+            if (ewParams.inputs[i].GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32 ||
+                ewParams.inputs[i].GetLayout() == DataLayout::fs_b_yx_fsv32)
                 return false;
         }
-        if (ewParams.output.GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32)
+        if (ewParams.output.GetLayout() == DataLayout::fs_bs_yx_bsv4_fsv32 ||
+            ewParams.output.GetLayout() == DataLayout::fs_b_yx_fsv32)
             return false;
 
         const auto& output = ewParams.output;

@@ -95,6 +95,13 @@ namespace kernel_selector {
         return true;
     }
 
+    size_t static get_wg_batch_count(const convolution_params& params)
+    {
+        if (params.inputs[0].Batch().v % 64 == 0)
+            return 16; // because we process 4 batches per SIMD
+        return 1;
+    }
+
     ConvolutionKernelBase::DispatchData ConvolutionKernel_mmad_batched_block::SetDefault(const convolution_params& arg, int) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
@@ -111,7 +118,7 @@ namespace kernel_selector {
 
         runInfo.lws0 = 1;
         runInfo.lws1 = 1;
-        runInfo.lws2 = sub_group_size;
+        runInfo.lws2 = sub_group_size * get_wg_batch_count(arg);
 
         return runInfo;
     }
@@ -120,7 +127,8 @@ namespace kernel_selector {
     {
         auto jit = Parent::GetJitConstants(params, runInfo);
 
-        jit.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", runInfo.lws2));
+        const int sub_group_size = 8;
+        jit.AddConstant(MakeJitConstant("SUB_GROUP_SIZE", sub_group_size));
 
         // pitch for special block format used in this kernel
         const size_t ifm_32_aligned = Align(params.weights.IFM().v, 32);
@@ -139,10 +147,15 @@ namespace kernel_selector {
         jit.AddConstant(MakeJitConstant("IN_F_BLOCK_PITCH", in_f_block_pitch));
         jit.AddConstant(MakeJitConstant("IN_OFFSET", in_offset));
 
+        const size_t out_x_pitch = 32 * 4;
+        jit.AddConstant(MakeJitConstant("OUT_X_PITCH", out_x_pitch));
+
         auto block = get_out_block_size(params);
         jit.AddConstant(MakeJitConstant("OUT_BLOCK_WIDTH", block.out_width));
         jit.AddConstant(MakeJitConstant("OUT_BLOCK_HEIGHT", block.out_height));
         jit.AddConstant(MakeJitConstant("WEIGHTS_PER_WORKITEM", block.out_depth));
+
+        jit.AddConstant(MakeJitConstant("WG_BATCH_COUNT", get_wg_batch_count(params)));
 
         return jit;
     }

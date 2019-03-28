@@ -36,14 +36,7 @@ namespace cldnn { namespace gpu {
 struct fully_connected_gpu : typed_primitive_gpu_impl<fully_connected>
 {
     using parent = typed_primitive_gpu_impl<fully_connected>;
-
-    std::vector<network_impl::ptr> _reorders;   // TODO: move this reorder to graph compiler
-    memory_impl::cptr new_input_mem;      // TODO: remove this hack
-
-    fully_connected_gpu(const fully_connected_node& arg, const kernel_selector::kernel_data& kd, std::vector<network_impl::ptr> reorders)
-        : parent(arg, kd)
-        , _reorders(reorders)
-    {}
+    using parent::parent;
 
 protected:
 
@@ -51,7 +44,7 @@ protected:
     {
         kernel::kernel_arguments_data args;
 
-        args.inputs     = { new_input_mem };
+        args.inputs     = { &instance.input_memory() };
         args.output     = &instance.output_memory();
         args.weights    = &instance.weights_memory();
         args.bias       = instance.bias_term() ? &instance.bias_memory() : nullptr;
@@ -62,28 +55,6 @@ protected:
     }
 
 public:
-
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, fully_connected_inst& instance) override
-    {
-        std::vector<event_impl::ptr> tmp_events(events);
-
-        if (_reorders.empty())
-        {
-            new_input_mem = &instance.input_memory();
-        }
-        else
-        {
-            auto network = _reorders[0];
-            network->set_input_data("input", instance.input_memory());
-            network->execute(tmp_events);
-            auto output_id = network->get_output_ids()[0];
-            new_input_mem = &network->get_primitive(output_id)->output_memory();
-            tmp_events.clear();
-            tmp_events.push_back(network->get_primitive_event(output_id));
-        }
-
-        return parent::execute_impl(tmp_events, instance);
-    }
 
     static primitive_impl* create(const fully_connected_node& arg)
     {
@@ -120,18 +91,7 @@ public:
 
         CLDNN_ERROR_BOOL(arg.id(), "Best_kernel.empty()", best_kernels.empty(), "Cannot find a proper kernel with this arguments");
 
-        const auto& new_fc_params = *static_cast<kernel_selector::fully_connected_params*>(best_kernels[0].params.get());
-        std::vector<network_impl::ptr> reorders; 
-        if (fc_params.inputs[0].GetLayout() != new_fc_params.inputs[0].GetLayout())
-        {
-            const auto& input_layout = arg.input().get_output_layout();
-            topology_impl tpl;
-            tpl.add(std::make_shared<cldnn::input_layout>("input", input_layout));
-            tpl.add(std::make_shared<cldnn::reorder>("reorder", "input", from_data_layout(new_fc_params.inputs[0].GetLayout()), input_layout.data_type));
-            reorders.push_back(arg.get_program().get_engine().build_network(tpl, cldnn::build_options(), true));
-        }
-
-        auto fc = new fully_connected_gpu(arg, best_kernels[0], reorders);
+        auto fc = new fully_connected_gpu(arg, best_kernels[0]);
 
         return fc;
     };
@@ -157,6 +117,8 @@ namespace {
                 // IMAD
                 { std::make_tuple(engine_types::ocl, data_types::i8,  format::b_fs_yx_fsv4), val_fw },
                 { std::make_tuple(engine_types::ocl, data_types::u8,  format::b_fs_yx_fsv4), val_fw },
+                // fs_b_yx_fsv32
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::fs_b_yx_fsv32), val_fw },
             });
         }
         ~attach() {}

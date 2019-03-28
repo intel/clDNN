@@ -98,8 +98,6 @@ namespace kernel_selector {
                             input.GetLayout(), Tensor::DataChannelName::X);
         const int iY  = DataTensor::Channelndex(
                             input.GetLayout(), Tensor::DataChannelName::Y);
-        const int iB  = DataTensor::Channelndex(
-                            input.GetLayout(), Tensor::DataChannelName::BATCH);
         const int iF  = DataTensor::Channelndex(
                             input.GetLayout(), Tensor::DataChannelName::FEATURE);
         const int wOD = WeightsTensor::Channelndex(
@@ -109,8 +107,6 @@ namespace kernel_selector {
         const int oY = DataTensor::Channelndex(
             output.GetLayout(), Tensor::DataChannelName::Y);
         mem_consts.AddConstants({
-            MakeJitConstant("_IMAD_DEFINES",   1),
-            //MakeJitConstant("SCALE_FACTOR",     m_ScaleFactor), //(255.0f / 700000.0f);
             MakeJitConstant("_IW",              iDims[iX].v),
             MakeJitConstant("_IH",              iDims[iY].v),
             MakeJitConstant("_ID",              RoundUp(iDims[iF].v, 4)),
@@ -125,8 +121,6 @@ namespace kernel_selector {
             MakeJitConstant("K_HEIGHT",         wDims[iY].v),
             MakeJitConstant("K_WIDTH",          wDims[iX].v),
             MakeJitConstant("K_STRIDE",         params.stride.x), // X and Y must be equal
-            MakeJitConstant("BATCH_SIZE",       iDims[iB].v),
-            MakeJitConstant("WORKGROUP_SIZE",   "SIMD_SIZE"),
         });
 
         size_t obw, obh;
@@ -137,29 +131,7 @@ namespace kernel_selector {
             MakeJitConstant("OUT_BLOCK_HEIGHT", obh)
         });
 
-        // FM_TILE definition
-        mem_consts.AddConstants({
-            MakeJitConstant("IMAD_LENGTH", 4),
-            MakeJitConstant("SYSTOLIC_DEPTH", 1),
-            MakeJitConstant("FM_TILE", "(IMAD_LENGTH * SYSTOLIC_DEPTH)")
-        });
-
-        if (input.GetDType() == Datatype::UINT8) {
-            // For unsigned types IMAD convolution kernel should skip
-            // all negative values.
-            mem_consts.AddConstants({
-                MakeJitConstant("CONVO_UNSIGNED", 1)
-            });
-        }
-
-        if (params.output.GetLayout() != DataLayout::b_fs_yx_fsv4) {
-            mem_consts.AddConstants({
-                // Produce unswizzelled results.
-                MakeJitConstant("TO_UNSWIZZLE", 1),
-            });
-        }
-
-        return mem_consts;
+    return mem_consts;
 
     } // GetJitConstants
 
@@ -254,52 +226,4 @@ namespace kernel_selector {
 
         return true;
     }
-
-    KernelsData
-    ConvolutionKernel_imad_3x3::GetCommonKernelsData(
-                                const Params&          params,
-                                const optional_params& options,
-                                const std::string      exeMode,
-                                int                    autoTuneIndex) const
-    {
-        if (!Validate(params, options))
-        {
-            return{};
-        }
-
-        KernelData kd = KernelData::Default<convolution_params>(params);
-        convolution_params& newParams = *static_cast<convolution_params*>(kd.params.get());
-        DispatchData runInfo = SetDefault(newParams, autoTuneIndex);
-        if (!CheckWorkGroups(runInfo))
-        {
-            // Internal Error - wrong calculation of global/local work group sizes
-            return{};
-        }
-
-        bool succeed = UpdateWeightsParams(
-            newParams,
-            options,
-            GetSupportedWeightLayouts(newParams),
-            kd.weightsReorderParams,
-            GetSupportedKey());
-
-        if (!succeed)
-        {
-            return{};
-        }
-
-        auto finalKernelName = GetKernelName(newParams);
-        auto cldnnJit = GetJitConstants(newParams, runInfo);
-        auto entryPoint = GetEntryPoint(finalKernelName, newParams.layerID, options);
-        auto jit = CreateJit(finalKernelName, cldnnJit, entryPoint);
-
-        auto& kernel = kd.kernels[0];
-        FillCLKernelData(kernel, runInfo, params.engineInfo, finalKernelName, jit, entryPoint, exeMode, true, !newParams.bias.empty(), 1, newParams.int8_quantization, newParams.output_calibration);
-
-        kd.estimatedTime = runInfo.effiency;
-        kd.autoTuneIndex = autoTuneIndex;
-
-        return{ kd };
-
-    } // GetCommonKernelsData
 }

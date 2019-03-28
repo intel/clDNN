@@ -33,8 +33,8 @@ inline int FUNC(apply_pooling)(int tmp, int in)
 }
 
 KERNEL(pooling_gpu_int8_ref)(
-    const __global UNIT_TYPE* input,
-    __global UNIT_TYPE* output)
+    const __global INPUT0_TYPE* input,
+    __global OUTPUT_TYPE* output)
 {
 #if OUTPUT_LAYOUT_BFYX  || OUTPUT_LAYOUT_BYXF
     const uint x    = (uint)get_global_id(0);
@@ -127,7 +127,7 @@ KERNEL(pooling_gpu_int8_ref)(
 #endif
 
     const uint output_pos = GET_DATA_INDEX(OUTPUT, b, f, y, x);
-    output[output_pos] = ACTIVATION(convert_char(result), NL_M ,NL_N);
+    output[output_pos] = ACTIVATION(TO_OUTPUT_TYPE(result), NL_M ,NL_N);
 }
 
 #undef INIT_VAL

@@ -130,7 +130,13 @@ namespace kernel_selector
 		LOG2,
         EXP,
         NONE,
-        NONE_GRAD
+        NONE_GRAD,
+        TAN,
+        ATAN,
+        FLOOR,
+        CEIL,
+        NEGATIVE,
+        NOT
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,8 +332,9 @@ namespace kernel_selector
     {
         X,
         Y,
+        Z,
         FEATURE,
-        BATCH,
+        BATCH
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -379,9 +386,10 @@ namespace kernel_selector
     struct Size {
         T x = 0;
         T y = 0;
+        T z = 0;
 
         Size() = default;
-        Size(T x, T y) : x(x), y(y) {}
+        Size(T x, T y, T z = 1) : x(x), y(y), z(z) {}
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -391,11 +399,13 @@ namespace kernel_selector
     struct DimTensor {
         T b = 0;
         T f = 0;
+        T z = 0;
         T y = 0;
         T x = 0;
 
+
         DimTensor() = default;
-        DimTensor(T b, T f, T y, T x) : b(b), f(f), y(y), x(x) {}
+        DimTensor(T b, T f, T z, T y, T x ) : b(b), f(f), z(z), y(y), x(x) {}
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

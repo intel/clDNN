@@ -54,21 +54,37 @@ namespace kernel_selector {
         return true;
     }
 
+    size_t static get_wg_batch_size(const convolution_params& params)
+    {
+        if (params.inputs[0].Batch().v % 64 == 0)
+            return 32;
+        return 1;
+    }
+
     ConvolutionKernelBase::DispatchData ConvolutionKernel_byx8_f4__fs_bs_yx_bsv4_fsv32::SetDefault(const convolution_params& arg, int) const
     {
         DispatchData runInfo = ConvolutionKernelBase::SetDefault(arg);
 
         runInfo.effiency = FORCE_PRIORITY_1;
 
-        runInfo.gws0 = (arg.output.Batch().v * arg.output.Feature().v) / 4;
+        runInfo.gws0 = (arg.output.Batch().v * arg.output.Feature().v) / (4 * 2);
         runInfo.gws1 = arg.output.X().v / 8;
-        runInfo.gws2 = arg.output.Y().v / 4;
+        runInfo.gws2 = arg.output.Y().v / 2;
 
-        runInfo.lws0 = 8;
+        runInfo.lws0 = 8 * get_wg_batch_size(arg);
         runInfo.lws1 = 1;
         runInfo.lws2 = 1;
 
         return runInfo;
+    }
+
+    JitConstants ConvolutionKernel_byx8_f4__fs_bs_yx_bsv4_fsv32::GetJitConstants(const convolution_params& params, const DispatchData& kd) const
+    {
+        auto jits = ConvolutionKernelBase::GetJitConstants(params, kd);
+
+        jits.AddConstant(MakeJitConstant("WG_BATCH_SIZE", get_wg_batch_size(params)));
+
+        return jits;
     }
 
     KernelsData ConvolutionKernel_byx8_f4__fs_bs_yx_bsv4_fsv32::GetKernelsData(const Params& params, const optional_params& options) const

@@ -48,8 +48,12 @@ namespace {
         {
             return false;
         }
-
         return true;
+    }
+
+    bool is_power_of_two(const int32_t value) 
+    {
+        return ((value > 0) && !(value & (value - 1)));
     }
 }
 
@@ -95,6 +99,18 @@ bool layout_optimizer::convolution_byxf_opt(layout const& output_layout, const l
         should_use_winograd_2x3_s1(conv, output_layout, weights_layout, _output_size_handling_enabled))
         return true;
 
+    return false;
+}
+
+bool layout_optimizer::convolution_bfyx_f16_opt(layout const& input_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv)
+{
+    //A set of rules that define when bfyx_f16 mem format can be used
+    if (input_layout.data_type == data_types::f16 &&
+        input_layout.size.batch[0] == 1 &&
+        weights_layout.size.batch[0] % 16 == 0 &&
+        input_layout.size.feature[0] % 16 == 0 &&
+        conv->dilation == tensor(1))
+        return true;
     return false;
 }
 
@@ -188,26 +204,45 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
         break;
 
     case data_type::input: //convolution input
-
-        if (current_layout.data_type == data_types::f16 &&
+        if (_optimization_attributes.bfyx_f16_network &&
+            convolution_bfyx_f16_opt(current_layout, output_or_weights_layout, prim))
+        {
+            expected_tensor = current_layout.size;
+            expected_format = cldnn::format::bfyx_f16;
+        }
+        else if (current_layout.data_type == data_types::f16 &&
             layout_optimizer::convolution_byxf_opt(current_layout, output_or_weights_layout, prim) &&
             (users_for_convolution_byxf_opt(node, 2) || deps_depth_in_same_format(node, cldnn::format::byxf, 2)) &&
-            //TODO: remove this condition when yxfb optimizations will be disabled
+            //todo: remove this condition when yxfb optimizations will be disabled
             current_layout.format != cldnn::format::yxfb &&
             current_layout.size.batch[0] == 1 &&
             prim->dilation == tensor{ 1 } &&
             !node.get_transposed())
         {
-            expected_tensor = current_layout.size;
-            expected_format = cldnn::format::byxf;
+                expected_tensor = current_layout.size;
+                expected_format = cldnn::format::byxf;
         }
-        // IMAD case
+        // fp16 32 feauters
+        else if ((current_layout.data_type == data_types::f16 && current_layout.format == format::fs_b_yx_fsv32) ||
+                 (current_layout.data_type == data_types::f16 &&
+                  prim->split() == 1 && current_layout.size.batch[0] != 1 && current_layout.size.feature[0] % 32 == 0 &&
+                 _optimization_attributes.splitted_convolution == 0 && _optimization_attributes.only_fsv32_layers == 1)
+            )
+        {
+            //32 features things
+            if (output_or_weights_layout.size.feature[0] == 3 ||         // use bfyx -> fs_byx_fsv32 convolution
+                prim->split() != 1 || current_layout.size.batch[0] == 1) // escape to bfyx format for unsupported node
+                expected_format = format::bfyx;
+            else
+                expected_format = format::fs_b_yx_fsv32;
+        }
+        // imad case
         else if (current_layout.format == format::b_fs_yx_fsv4 ||
                  current_layout.format == format::os_is_yx_osv16_isv4)
         {
-            // Nothing to do, just go out from here.
+            // nothing to do, just go out from here.
         }
-        // MMAD case
+        // mmad case
         else if (current_layout.data_type == data_types::i8)
         {
             expected_tensor = current_layout.size;
@@ -238,6 +273,7 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
                 expected_tensor = current_layout.size;
                 expected_format = cldnn::format::bfyx;
             }
+
         }
         else
         {
@@ -470,7 +506,30 @@ void layout_optimizer::set_optimization_attribute(optimization_attributes_type a
     case optimization_attributes_type::bfyx_only_layer:
         _optimization_attributes.bfyx_only_layer = val;
         break;
+    case optimization_attributes_type::only_fsv32_layers:
+        _optimization_attributes.only_fsv32_layers = val;
+        break;
+    case optimization_attributes_type::bfyx_f16_network:
+        _optimization_attributes.bfyx_f16_network = val;
+        break;
     default:
         throw std::out_of_range("unsupported layout optimization attribute");
+    }
+}
+
+bool layout_optimizer::is_format_optimized(const convolution_node& node, const format& format)
+{
+    auto input_layout = node.input().get_output_layout();
+    auto weights_layout = node.weights().get_output_layout();
+    auto prim = node.get_primitive();
+
+    switch (format)
+    {
+    case format::bfyx_f16:
+        return convolution_bfyx_f16_opt(input_layout, weights_layout, prim) &&
+            // Work-around for inability to use bfyx_f16 and winograd together
+            !should_use_winograd_2x3_s1(prim, input_layout, weights_layout, _output_size_handling_enabled);
+    default:
+        throw std::invalid_argument("[Layout optimizer] Other formats in is_format_optimized(...) method are not implemented!");
     }
 }

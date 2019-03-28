@@ -33,6 +33,7 @@ struct primitive_impl;
 struct program_node;
 class layout_optimizer;
 class pass_manager;
+class base_pass;
 class program_impl_wrapper;
 /*
     cldnn_program implementation
@@ -45,7 +46,6 @@ struct program_impl : public refcounted_obj<program_impl>
     friend class propagate_constants;               // to be removed when possible
     friend class prepare_primitive_fusing;          // to be removed when possible
     friend class prepare_conv_eltw_fusing;          // to be removed when possible
-    friend class prepare_conv_eltw_read_write_opt;  // to be removed when possible
     friend class reorder_inputs;                    // to be removed when possible
     friend class program_impl_wrapper;              // this class is intended to extend the interface of program_impl for 
                                                     // the usage within tests_core_internal project only
@@ -125,15 +125,21 @@ public:
     // Gets or creates program_node for given primitive 'prim' and inserts it as an intermediate
     // node between 'next' and it's dependency at 'prev_idx' index.
     void add_intermediate(std::shared_ptr<primitive> prim, program_node& next, size_t prev_idx, 
-        bool connect_int_node_with_old_dep = true,
-        bool move_usrs_of_prev_to_node = false);
+                          bool connect_int_node_with_old_dep = true,
+                          bool move_usrs_of_prev_to_node = false);
 
-    //removes a node from the graph and deletes it afterwards,
-    //prereq: node cannot be marked as output and has to have exactly one dependency
-    //returns if 'node' has been extracted and removed successfully
+    // Inserts given program_node 'node' as an intermediate node between 'next' and it's
+    //  dependency prev
+    void add_intermediate(program_node& node, program_node& next, program_node& prev,
+                          bool connect_int_node_with_old_dep = true,
+                          bool move_usrs_of_prev_to_node = false);
+
+    // removes a node from the graph and deletes it afterwards,
+    // prereq: node cannot be marked as output and has to have exactly one dependency
+    // returns if 'node' has been extracted and removed successfully
     bool extract_and_remove(program_node& node);
 
-    //returns if 'node' has been removed
+    // returns if 'node' has been removed
     bool remove_if_dangling(program_node& node);
 
     void mark_if_constant(program_node& node);
@@ -169,6 +175,7 @@ private:
     void init_graph();
     void set_options();
 
+    void apply_opt_pass(base_pass& p);
     void run_graph_compilation();
     void pre_optimize_graph(bool is_internal);
     void post_optimize_graph(bool is_internal);
@@ -179,9 +186,6 @@ private:
     */
     // TODO: Remove once we will get full support for input/output padding in all primitive implementations.
     bool analyze_output_size_handling_need();
-
-    // handle split, deconvolution and upsampling
-    void handle_reshape();
 
     /*
     ** Optimization functions
@@ -214,8 +218,8 @@ private:
     void swap_names(program_node& node1, program_node& node2);
     void replace_all_usages(program_node& old_node, program_node& new_node);
 
-    //old_node - node which will be replaced
-    //new_node - node which will replace the old one
+    // old_node - node which will be replaced
+    // new_node - node which will replace the old one
     void replace(program_node& old_node, program_node& new_node);
 };
 

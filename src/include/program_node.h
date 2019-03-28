@@ -86,6 +86,7 @@ public:
     program_impl const& get_program() const { return myprog; }
 
     std::shared_ptr<primitive_impl> get_selected_impl() const { return selected_impl; }
+    void set_selected_impl(std::shared_ptr<primitive_impl> impl) { selected_impl = impl; }
 
     std::vector<program_node*> const& get_dependencies() const { return dependencies; }
     program_node& get_dependency(size_t idx) const { return *dependencies.at(idx); }

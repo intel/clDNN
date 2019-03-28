@@ -17,6 +17,93 @@
 #include "jitter.h"
 #include "tensor_type.h"
 
+namespace {
+    class JitTerm
+    {
+    public:
+        JitTerm(std::string text)
+            : text(std::move(text))
+        {}
+
+        std::string str() const { return text; }
+
+        JitTerm gt(const JitTerm& rhs) const
+        {
+            return {"(" + text + ">" + rhs.str() + ")"};
+        }
+
+        JitTerm ge(const JitTerm& rhs) const
+        {
+            return {"(" + text + ">=" + rhs.str() + ")"};
+        }
+
+        JitTerm le(const JitTerm& rhs) const
+        {
+            return {"(" + text + "<=" + rhs.str() + ")"};
+        }
+
+        JitTerm eq(const JitTerm& rhs) const
+        {
+            return {"(" + text + "==" + rhs.str() + ")"};
+        }
+
+    private:
+        std::string text;
+    };
+
+    JitTerm operator+(const JitTerm& lhs, const JitTerm& rhs)
+    {
+        return {"(" + lhs.str() + " + " + rhs.str() + ")"};
+    }
+
+    JitTerm operator-(const JitTerm& lhs, const JitTerm& rhs)
+    {
+        return {"(" + lhs.str() + " - " + rhs.str() + ")"};
+    }
+
+    JitTerm operator*(const JitTerm& lhs, const JitTerm& rhs)
+    {
+        return {"(" + lhs.str() + " * " + rhs.str() + ")"};
+    }
+
+    JitTerm operator/(const JitTerm& lhs, const JitTerm& rhs)
+    {
+        return {"(" + lhs.str() + " / " + rhs.str() + ")"};
+    }
+
+    JitTerm neg(const JitTerm& arg)
+    {
+        return {"(-" + arg.str() + ")"};
+    }
+
+    JitTerm ternary(const JitTerm& condition,
+                    const JitTerm& true_expr,
+                    const JitTerm& false_expr)
+    {
+        return {"(" + condition.str() + " ? " + true_expr.str() + " : "
+                + false_expr.str() + ")"};
+    }
+    JitTerm isinf(const JitTerm& arg)
+    {
+        return {"(isinf(" + arg.str() + "))"};
+    }
+
+    JitTerm exp(const JitTerm& arg)
+    {
+        return {"(exp(" + arg.str() + "))"};
+    }
+
+    JitTerm log(const JitTerm& arg)
+    {
+        return {"(log(" + arg.str() + "))"};
+    }
+
+    JitTerm operator"" _jit(const char* str, size_t)
+    {
+        return {str};
+    }
+} // namespace
+
 namespace kernel_selector {
 
     std::string toCLType(WeightsType wType)
@@ -108,15 +195,17 @@ namespace kernel_selector {
         JitDefinitions GetDefinitions(const Tensor::TensorBaseT<DType, Layout>& t) const
         {
             JitDefinitions definitions{
-                { _name + "_TYPE",          toCLType(t.GetDType()) },
             { _name + "_OFFSET",        toCodeString(t.GetFirstElementOffset()) },
             { _name + "_VIEW_OFFSET",   toCodeString(t.GetViewOffset()) },
             { _name + "_LENGTH",        toCodeString(t.LogicalSize()) },
             { _name + "_DIMS",          toCodeString(t.GetDims().size()) },
             { _name + "_SIMPLE",        toCodeString(t.SimpleLayout()) },
-            { "TO_" + _name + "_TYPE",  "convert_" + toCLType(t.GetDType()) },
             { _name + "_LAYOUT_" + toString(t.GetLayout()), "1" },
             };
+
+            auto type_defs = MakeTypeJitConstants(t.GetDType(), _name).GetDefinitions();
+            definitions.insert(definitions.end(), type_defs.begin(), type_defs.end());
+
 
             definitions.push_back({ _name + "_SIZE",        toCodeString(t.GetDims().size()) });
             definitions.push_back({ _name + "_SIZES",       toVectorString(t.GetDims(), "size_t", KERNEL_SELECTOR_TENSOR_DIM_MAX, 1, [](const Tensor::Dim& d) { return d.v; }) });
@@ -148,20 +237,24 @@ namespace kernel_selector {
         JitDefinitions definitions{
             { _name + "_SIZE_X",        toCodeString(_tensor.X().v) },
         { _name + "_SIZE_Y",        toCodeString(_tensor.Y().v) },
+        { _name + "_SIZE_Z",        toCodeString(_tensor.Z().v) },
         { _name + "_FEATURE_NUM",   toCodeString(_tensor.Feature().v) },
         { _name + "_ROI_NUM",       toCodeString(_tensor.ROI().v) },
         { _name + "_BATCH_NUM",     toCodeString(_tensor.Batch().v) },
         { _name + "_X_PITCH",       toCodeString(_tensor.X().pitch) },
         { _name + "_Y_PITCH",       toCodeString(_tensor.Y().pitch) },
+        { _name + "_Z_PITCH",       toCodeString(_tensor.Z().pitch) },
         { _name + "_FEATURE_PITCH", toCodeString(_tensor.Feature().pitch) },
         { _name + "_ROI_PITCH",     toCodeString(_tensor.ROI().pitch) },
         { _name + "_BATCH_PITCH",   toCodeString(_tensor.Batch().pitch) },
         { _name + "_PAD_BEFORE_SIZE_X",        toCodeString(_tensor.X().pad.before) },
         { _name + "_PAD_BEFORE_SIZE_Y",        toCodeString(_tensor.Y().pad.before) },
+        { _name + "_PAD_BEFORE_SIZE_Z",        toCodeString(_tensor.Z().pad.before) },
         { _name + "_PAD_BEFORE_FEATURE_NUM",   toCodeString(_tensor.Feature().pad.before) },
         { _name + "_PAD_BEFORE_BATCH_NUM",     toCodeString(_tensor.Batch().pad.before) },
         { _name + "_PAD_AFTER_SIZE_X",         toCodeString(_tensor.X().pad.after) },
         { _name + "_PAD_AFTER_SIZE_Y",         toCodeString(_tensor.Y().pad.after) },
+        { _name + "_PAD_AFTER_SIZE_Z",         toCodeString(_tensor.Z().pad.after) },
         { _name + "_PAD_AFTER_FEATURE_NUM",    toCodeString(_tensor.Feature().pad.after) },
         { _name + "_PAD_AFTER_BATCH_NUM",      toCodeString(_tensor.Batch().pad.after) },
         };
@@ -196,10 +289,12 @@ namespace kernel_selector {
         JitDefinitions definitions{
             { _name + "_SIZE_X",        toCodeString(_tensor.X().v) },
             { _name + "_SIZE_Y",        toCodeString(_tensor.Y().v) },
+            { _name + "_SIZE_Z",        toCodeString(_tensor.Z().v) },
             { _name + "_IFM_NUM",       toCodeString(_tensor.IFM().v) },
             { _name + "_OFM_NUM",       toCodeString(_tensor.OFM().v) },
             { _name + "_X_PITCH",       toCodeString(_tensor.X().pitch) },
             { _name + "_Y_PITCH",       toCodeString(_tensor.Y().pitch) },
+            { _name + "_Z_PITCH",       toCodeString(_tensor.Z().pitch) },
             { _name + "_IFM_PITCH",     toCodeString(_tensor.IFM().pitch) },
             { _name + "_OFM_PITCH",     toCodeString(_tensor.OFM().pitch) },
         };
@@ -214,245 +309,307 @@ namespace kernel_selector {
         return std::static_pointer_cast<JitConstant>(std::make_shared<WeightTensorJitConstant>(name, value));
     }
 
-    std::shared_ptr<JitConstant> MakeActivationJitConstants(ActivationFunction activation_function, const std::string& suffix)
+    std::shared_ptr<JitConstant>
+    MakeActivationJitConstants(ActivationFunction activation_function,
+                               const std::string& suffix,
+                               bool use_type_parameter)
     {
         std::string name = "ACTIVATION" + suffix;
+
+        // See the comment in the jitter.h regarding `use_type_parameter`.
+        // The "CAT" macro is expected to be defined through the inlcusion of
+        // 'common.cl' in the kernel.
+        auto type_handler =
+            [use_type_parameter](const std::string& prefix,
+                                 const std::string& suffix) -> std::string {
+            if (!use_type_parameter)
+                return prefix + "UNIT" + suffix;
+
+            std::string result = "jit_type";
+
+            // Process the prefix first, otherwise when doing "CAT(TO_,
+            // CAT(NAME, _TYPE))" the second concatenation will be expanded
+            // fully first resulting in something like "TO_float".
+            if (!prefix.empty())
+                result = "CAT(" + prefix + ", " + result + ")";
+
+            if (!suffix.empty())
+                result = "CAT(" + result + ", " + suffix + ")";
+
+            return result;
+        };
+
+        const JitTerm one{type_handler("", "_VAL_ONE")};
+        const JitTerm zero{type_handler("", "_VAL_ZERO")};
+        const JitTerm input{"input"};
+        auto max_func = [type_handler](const JitTerm& lhs,
+                                       const JitTerm& rhs) -> JitTerm {
+            return {"(" + type_handler("", "_MAX_FUNC") + "(" + lhs.str() + ", "
+                    + rhs.str() + "))"};
+        };
+        auto min_func = [type_handler](const JitTerm& lhs,
+                                       const JitTerm& rhs) -> JitTerm {
+            return {"(" + type_handler("", "_MIN_FUNC") + "(" + lhs.str() + ", "
+                    + rhs.str() + "))"};
+        };
+        auto to_type = [type_handler](const JitTerm& arg) -> JitTerm {
+            return {type_handler("TO_", "_TYPE") + "(" + arg.str() + ")"};
+        };
+
+        std::string macro_def = name
+            + (use_type_parameter ? "(jit_type, input, m, n)" : "(input, m, n)");
+        std::string macro_def_grad = name
+            + (use_type_parameter ? "(jit_type, input_grad, input, m, n)"
+                                  : "(input_grad, input, m, n)");
         // TODO: use native_exp and use cast for APL
         switch (activation_function)
         {
         case ActivationFunction::LOGISTIC:
-            return MakeJitConstant(name + "(input, m, n)", "(UNIT_VAL_ONE/(UNIT_VAL_ONE + exp(-input)))");
+            return MakeJitConstant(macro_def,
+                                   (one / (one + exp(neg(input)))).str());
         case ActivationFunction::HYPERBOLIC_TAN:
-            return MakeJitConstant(name + "(input, m, n)", "(tanh(input))");
+            return MakeJitConstant(macro_def, "(tanh(input))");
         case ActivationFunction::RELU:
-            return MakeJitConstant(name + "(input, m, n)", "(UNIT_MAX_FUNC(UNIT_VAL_ZERO, input))");
+            return MakeJitConstant(macro_def, max_func(zero, input).str());
         case ActivationFunction::RELU_NEGATIVE_SLOPE:
-            return MakeJitConstant(name + "(input, slope, n)", "isinf(TO_UNIT_TYPE(slope)) ? ((input >= UNIT_VAL_ZERO) ? \
-                                                        input : -TO_UNIT_TYPE(slope)) : \
-                                                        (UNIT_MAX_FUNC(input, UNIT_VAL_ZERO) + TO_UNIT_TYPE(slope) * UNIT_MIN_FUNC(input, UNIT_VAL_ZERO))");
+        {
+            const JitTerm slope = to_type("m"_jit);
+            return MakeJitConstant(
+                macro_def,
+                ternary(isinf(slope),
+                        ternary(input.ge(zero), input, neg(slope)),
+                        max_func(input, zero) + (slope * min_func(input, zero)))
+                    .str());
+        }
         case ActivationFunction::ELU:
-            return MakeJitConstant(name + "(input, alpha, n)", "(UNIT_MAX_FUNC(input, UNIT_VAL_ZERO) +  \
-                                                        TO_UNIT_TYPE(alpha) * (exp(UNIT_MIN_FUNC(input, UNIT_VAL_ZERO)) - UNIT_VAL_ONE));");
+        {
+            auto alpha = "m"_jit;
+            return MakeJitConstant(
+                macro_def,
+                (max_func(input, zero)
+                 + (to_type(alpha) * (exp(min_func(input, zero)) - one)))
+                    .str());
+        }
         case ActivationFunction::CLAMP:
-            return MakeJitConstant(name + "(input, m, n)", "(UNIT_MAX_FUNC(TO_UNIT_TYPE(m), UNIT_MIN_FUNC(TO_UNIT_TYPE(n), input)))");
+            return MakeJitConstant(
+                macro_def,
+                max_func(to_type("m"_jit), min_func("n"_jit, input)).str());
         case ActivationFunction::SOFTRELU:
-            return MakeJitConstant(name + "(input, m, n)", "(log(UNIT_VAL_ONE + exp(input)))");
+            return MakeJitConstant(macro_def, log(one + exp(input)).str());
         case ActivationFunction::ABS:
-            return MakeJitConstant(name + "(input, m, n)", "(fabs(input))");
+            return MakeJitConstant(macro_def, "(fabs(input))");
         case ActivationFunction::LINEAR:
-            return MakeJitConstant(name + "(input, m, n)", "(m*input + n)");
+            return MakeJitConstant(macro_def, "(m*input + n)");
         case ActivationFunction::SQUARE:
-            return MakeJitConstant(name + "(input, m, n)", "(input*input)");
+            return MakeJitConstant(macro_def, "(input*input)");
         case ActivationFunction::SQRT:
-            return MakeJitConstant(name + "(input, m, n)", "(sqrt(input))");
+            return MakeJitConstant(macro_def, "(sqrt(input))");
         case ActivationFunction::SIN:
-            return MakeJitConstant(name + "(input, m, n)", "(sin(input))");
+            return MakeJitConstant(macro_def, "(sin(input))");
         case ActivationFunction::ASIN:
-            return MakeJitConstant(name + "(input, m, n)", "(asin(input))");
+            return MakeJitConstant(macro_def, "(asin(input))");
         case ActivationFunction::SINH:
-            return MakeJitConstant(name + "(input, m, n)", "(sinh(input))");
+            return MakeJitConstant(macro_def, "(sinh(input))");
         case ActivationFunction::COS:
-            return MakeJitConstant(name + "(input, m, n)", "(cos(input))");
+            return MakeJitConstant(macro_def, "(cos(input))");
         case ActivationFunction::ACOS:
-            return MakeJitConstant(name + "(input, m, n)", "(acos(input))");
+            return MakeJitConstant(macro_def, "(acos(input))");
         case ActivationFunction::COSH:
-            return MakeJitConstant(name + "(input, m, n)", "(cosh(input))");
+            return MakeJitConstant(macro_def, "(cosh(input))");
         case ActivationFunction::LOG:
-            return MakeJitConstant(name + "(input, m, n)", "(log(input))");
+            return MakeJitConstant(macro_def, "(log(input))");
         case ActivationFunction::LOG2:
-            return MakeJitConstant(name + "(input, m, n)", "(log2(input))");
+            return MakeJitConstant(macro_def, "(log2(input))");
         case ActivationFunction::EXP:
-            return MakeJitConstant(name + "(input, m, n)", "(exp(input))");
+            return MakeJitConstant(macro_def, "(exp(input))");
         case ActivationFunction::RELU_GRAD:
-            return MakeJitConstant(name + "(input_grad, input, m, n)", "(input_grad * (input > UNIT_VAL_ZERO ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0)))");
+            return MakeJitConstant(
+                macro_def_grad,
+                ("input_grad"_jit * ternary(input.gt(zero), one, zero)).str());
         case ActivationFunction::RELU_NEGATIVE_SLOPE_GRAD:
-            return MakeJitConstant(name + "(input_grad, input, slope, n)", "(input_grad * ((input > UNIT_VAL_ZERO ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0)) + TO_UNIT_TYPE(slope) * (input <= 0 ? TO_UNIT_TYPE(1) : TO_UNIT_TYPE(0))))");
+        {
+            auto slope = "m"_jit;
+            return MakeJitConstant(
+                macro_def_grad,
+                ("input_grad"_jit
+                 * (ternary(input.gt(zero), one, zero)
+                    + (to_type(slope) * ternary(input.le(zero), one, zero))))
+                    .str());
+        }
         case ActivationFunction::NONE_GRAD:
-            return MakeJitConstant(name + "(input_grad, input, m, n)", "input_grad");
+            return MakeJitConstant(macro_def_grad, "input_grad");
+        case ActivationFunction::TAN:
+            return MakeJitConstant(macro_def, "(tan(input))");
+        case ActivationFunction::ATAN:
+            return MakeJitConstant(macro_def, "(atan(input))");
+        case ActivationFunction::FLOOR:
+            return MakeJitConstant(macro_def, "(floor(input))");
+        case ActivationFunction::CEIL:
+            return MakeJitConstant(macro_def, "(ceil(input))");
+        case ActivationFunction::NEGATIVE:
+            return MakeJitConstant(macro_def, "(-input)");
+        case ActivationFunction::NOT:
+            return MakeJitConstant(
+                macro_def,
+                ternary(input.eq(zero), one, zero)
+                    .str()); // the workaround for OpenCL's vector type result (!input)
         case ActivationFunction::NONE:
         default:
-            return MakeJitConstant(name + "(input, m, n)", "input");
+            return MakeJitConstant(macro_def, "input");
         }
     }
 
-    JitConstants MakeUnitTypeJitConstants(Datatype dataType)
+    JitConstants MakeTypeJitConstants(Datatype dataType, const std::string& macroName)
     {
-        std::string unit_type;
-        std::string unit_max_val;
-        std::string unit_min_val;
-        std::string unit_val_one;
-        std::string unit_val_zero;
-        std::string to_unit_type;
-        std::string unit_max_func;
-        std::string unit_min_func;
+        std::string type;
+        std::string max_val;
+        std::string min_val;
+        std::string val_one;
+        std::string val_zero;
+        std::string to_type;
+        std::string to_type_sat;
+        std::string max_func;
+        std::string min_func;
+        std::string type_size;
+        bool is_fp;
         switch (dataType)
         {
         case Datatype::INT8:
-            unit_type = "char";
-            unit_max_val = "CHAR_MAX";
-            unit_min_val = "CHAR_MIN";
-            unit_val_one = "(char) 1";
-            unit_val_zero = "(char) 0";
-            to_unit_type = "convert_char(v)";
-            unit_max_func = "max";
-            unit_min_func = "min";
+            type = "char";
+            max_val = "CHAR_MAX";
+            min_val = "CHAR_MIN";
+            val_one = "(char) 1";
+            val_zero = "(char) 0";
+            to_type = "convert_char(v)";
+            to_type_sat = "convert_char_sat(v)";
+            max_func = "max";
+            min_func = "min";
+            type_size = "1";
+            is_fp = false;
             break;
         case Datatype::UINT8:
-            unit_type = "uchar";
-            unit_max_val = "UCHAR_MAX";
-            unit_min_val = "0";
-            unit_val_one = "(uchar) 1";
-            unit_val_zero = "(uchar) 0";
-            to_unit_type = "convert_uchar(v)";
-            unit_max_func = "max";
-            unit_min_func = "min";
+            type = "uchar";
+            max_val = "UCHAR_MAX";
+            min_val = "0";
+            val_one = "(uchar) 1";
+            val_zero = "(uchar) 0";
+            to_type = "convert_uchar(v)";
+            to_type_sat = "convert_uchar_sat(v)";
+            max_func = "max";
+            min_func = "min";
+            type_size = "1";
+            is_fp = false;
             break;
         case Datatype::INT32:
-            unit_type = "int";
-            unit_max_val = "INT_MAX";
-            unit_min_val = "INT_MIN";
-            unit_val_one = "(int) 1";
-            unit_val_zero = "(int) 0";
-            to_unit_type = "convert_int(v)";
-            unit_max_func = "max";
-            unit_min_func = "min";
+            type = "int";
+            max_val = "INT_MAX";
+            min_val = "INT_MIN";
+            val_one = "(int) 1";
+            val_zero = "(int) 0";
+            to_type = "convert_int(v)";
+            to_type_sat = "convert_int_sat(v)";
+            max_func = "max";
+            min_func = "min";
+            type_size = "4";
+            is_fp = false;
             break;
         case Datatype::UINT32:
-            unit_type = "uint";
-            unit_max_val = "UINT_MAX";
-            unit_min_val = "0";
-            unit_val_one = "(uint) 1";
-            unit_val_zero = "(uint) 0";
-            to_unit_type = "convert_uint(v)";
-            unit_max_func = "max";
-            unit_min_func = "min";
+            type = "uint";
+            max_val = "UINT_MAX";
+            min_val = "0";
+            val_one = "(uint) 1";
+            val_zero = "(uint) 0";
+            to_type = "convert_uint(v)";
+            to_type_sat = "convert_uint_sat(v)";
+            max_func = "max";
+            min_func = "min";
+            type_size = "4";
+            is_fp = false;
             break;
         case Datatype::INT64:
-            unit_type = "long";
-            unit_max_val = "LONG_MAX";
-            unit_min_val = "LONG_MIN";
-            unit_val_one = "(long) 1";
-            unit_val_zero = "(long) 0";
-            to_unit_type = "convert_long(v)";
-            unit_max_func = "max";
-            unit_min_func = "min";
+            type = "long";
+            max_val = "LONG_MAX";
+            min_val = "LONG_MIN";
+            val_one = "(long) 1";
+            val_zero = "(long) 0";
+            to_type = "convert_long(v)";
+            to_type_sat = "convert_long_sat(v)";
+            max_func = "max";
+            min_func = "min";
+            type_size = "8";
+            is_fp = false;
             break;
         case Datatype::F16:
-            unit_type = "half";
-            unit_max_val = "HALF_MAX";
-            unit_min_val = "-UNIT_VAL_MAX";
-            unit_val_one = "1.0h";
-            unit_val_zero = "0.0h";
-            to_unit_type = "convert_half(v)";
-            unit_max_func = "fmax";
-            unit_min_func = "fmin";
+            type = "half";
+            max_val = "HALF_MAX";
+            min_val = "-" + macroName + "_VAL_MAX";
+            val_one = "1.0h";
+            val_zero = "0.0h";
+            to_type = "convert_half(v)";
+            to_type_sat = "convert_half_sat(v)";
+            max_func = "fmax";
+            min_func = "fmin";
+            type_size = "2";
+            is_fp = true;
             break;
         default:
-            unit_type = "float";
-            unit_max_val = "FLT_MAX";
-            unit_min_val = "-UNIT_VAL_MAX";
-            unit_val_one = "1.0f";
-            unit_val_zero = "0.0f";
-            to_unit_type = "(float)(v)";
-            unit_max_func = "fmax";
-            unit_min_func = "fmin";
+            type = "float";
+            max_val = "FLT_MAX";
+            min_val = "-" + macroName + "_VAL_MAX";
+            val_one = "1.0f";
+            val_zero = "0.0f";
+            to_type = "convert_float(v)";
+            to_type_sat = "convert_float(v)";
+            max_func = "fmax";
+            min_func = "fmin";
+            type_size = "4";
+            is_fp = true;
             break;
         }
 
         return JitConstants
         {
-            MakeJitConstant("UNIT_TYPE",            unit_type),
-            MakeJitConstant("UNIT_VAL_MAX",         unit_max_val),
-            MakeJitConstant("UNIT_VAL_MIN",         unit_min_val),
-            MakeJitConstant("UNIT_VAL_ONE",         unit_val_one),
-            MakeJitConstant("UNIT_VAL_ZERO",        unit_val_zero),
-            MakeJitConstant("TO_UNIT_TYPE(v)",      to_unit_type),
-            MakeJitConstant("UNIT_MAX_FUNC",        unit_max_func),
-            MakeJitConstant("UNIT_MIN_FUNC",        unit_min_func),
+            MakeJitConstant(macroName+"_TYPE",              type),
+            MakeJitConstant(macroName+"_VAL_MAX",           max_val),
+            MakeJitConstant(macroName+"_VAL_MIN",           min_val),
+            MakeJitConstant(macroName+"_VAL_ONE",           val_one),
+            MakeJitConstant(macroName+"_VAL_ZERO",          val_zero),
+            MakeJitConstant("TO_"+macroName+"_TYPE(v)",     to_type),
+            MakeJitConstant("TO_"+macroName+"_TYPE_SAT(v)", to_type_sat),
+            MakeJitConstant(macroName+"_MAX_FUNC",          max_func),
+            MakeJitConstant(macroName+"_MIN_FUNC",          min_func),
+            MakeJitConstant(macroName + "_TYPE_SIZE",       type_size),
+            MakeJitConstant(macroName+"_IS_FP",             is_fp),
         };
     }
-
-    JitConstants MakeActivationJitConstants(const base_activation_params& params, const std::string& suffix)
+    JitConstants MakeTypeJitConstants(WeightsType weightsType, const std::string& macroName)
     {
-        return JitConstants{
-            MakeJitConstant("NL_M" + suffix, params.m),
-            MakeJitConstant("NL_N" + suffix, params.n),
-            MakeActivationJitConstants(params.function, suffix)
-        };
+      switch (weightsType)
+        {
+        case WeightsType::UNSUPPORTED:
+            return MakeTypeJitConstants(Datatype::UNSUPPORTED, macroName);
+        case WeightsType::F16:
+            return MakeTypeJitConstants(Datatype::F16, macroName);
+        case WeightsType::F32:
+            return MakeTypeJitConstants(Datatype::F32, macroName);
+        case WeightsType::INT8:
+            return MakeTypeJitConstants(Datatype::INT8, macroName);
+        case WeightsType::UINT8:
+            return MakeTypeJitConstants(Datatype::UINT8, macroName);
+        }
+        assert(false || "Unreachable!");
+        // FIXME: Is there some builtin_unreachable available?
+        return MakeTypeJitConstants(Datatype::UNSUPPORTED, macroName);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // MakeBaseParamsJitConstants
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    JitConstants MakeBaseParamsJitConstants(const base_params& params)
+    JitConstants MakeActivationJitConstants(const base_activation_params& params,
+                                            const std::string& suffix,
+                                            bool use_type_parameter)
     {
-        bool bFP16Used = params.output.GetDType() == Datatype::F16;
-        bool bInt8Used = params.output.GetDType() == Datatype::INT8;
-        bool bInt32Used = params.output.GetDType() == Datatype::INT32;
-        bool bInt64Used = params.output.GetDType() == Datatype::INT64;
-        bool bUInt8Used = params.output.GetDType() == Datatype::UINT8;
-        bool bUInt32Used = params.output.GetDType() == Datatype::INT32;
-        for (const auto& i : params.inputs)
-        {
-            bFP16Used |= i.GetDType() == Datatype::F16;
-            bInt8Used |= i.GetDType() == Datatype::INT8;
-            bInt32Used |= i.GetDType() == Datatype::INT32;
-            bInt64Used |= i.GetDType() == Datatype::INT64;
-            bUInt8Used |= i.GetDType() == Datatype::UINT8;
-            bUInt32Used |= i.GetDType() == Datatype::UINT32;
-        }
-
-        JitConstants jit{
-            MakeJitConstant("OUTPUT",               params.output),
-            MakeJitConstant("FP64_SUPPORTED",       params.engineInfo.bFP64Support),
-            MakeJitConstant("FP16_SUPPORTED",       params.engineInfo.bFP16Support),
-            MakeJitConstant("FP16_UNIT_USED",       bFP16Used),
-            MakeJitConstant("INT8_UNIT_USED",       bInt8Used),
-            MakeJitConstant("INT32_UNIT_USED",      bInt32Used),
-            MakeJitConstant("INT64_UNIT_USED",      bInt64Used),
-            MakeJitConstant("UINT8_UNIT_USED",      bUInt8Used),
-            MakeJitConstant("UINT32_UNIT_USED",     bUInt32Used),
-            MakeJitConstant("GRADIENT",             params.gradient),
-        };
-
-        if (bInt8Used)
-        {
-            jit.Merge(MakeUnitTypeJitConstants(Datatype::INT8));
-        }
-        else if (bFP16Used)
-        {
-            jit.Merge(MakeUnitTypeJitConstants(Datatype::F16));
-        }
-        else if (bInt32Used)
-        {
-            jit.Merge(MakeUnitTypeJitConstants(Datatype::INT32));
-        }
-        else if (bInt64Used)
-        {
-            jit.Merge(MakeUnitTypeJitConstants(Datatype::INT64));
-        }
-        else if (bUInt8Used)
-        {
-            jit.Merge(MakeUnitTypeJitConstants(Datatype::UINT8));
-        }
-        else if (bUInt32Used)
-        {
-            jit.Merge(MakeUnitTypeJitConstants(Datatype::UINT32));
-        }
-        else
-        {
-            jit.Merge(MakeUnitTypeJitConstants(Datatype::F32));
-        }
-
-        // for activation function
-        jit.Merge(MakeActivationJitConstants(params.activation));
-
-        for (size_t i = 0; i < params.inputs.size(); i++)
-        {
-            jit.AddConstant(MakeJitConstant("INPUT" + toCodeString(i), params.inputs[i]));
-        }
-
-        return jit;
+        return JitConstants{MakeJitConstant("NL_M" + suffix, params.m),
+                            MakeJitConstant("NL_N" + suffix, params.n),
+                            MakeActivationJitConstants(
+                                params.function, suffix, use_type_parameter)};
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

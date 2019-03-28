@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
 // limitations under the License.
 */
 
-#include "convolution_kernel_bfyx_ref.h"
+#include "convolution_kernel_bfzyx_ref.h"
 
 namespace kernel_selector {
-    
-    ParamsKey ConvolutionKernel_bfyx_Ref::GetSupportedKey() const
+
+    ParamsKey ConvolutionKernel_bfzyx_Ref::GetSupportedKey() const
     {
         ParamsKey k;
         k.EnableInputDataType(Datatype::F16);
@@ -30,10 +30,8 @@ namespace kernel_selector {
         k.EnableInputWeightsType(WeightsType::F16);
         k.EnableInputWeightsType(WeightsType::F32);
         k.EnableInputWeightsType(WeightsType::INT8);
-        k.EnableInputLayout(DataLayout::bfyx);
-        k.EnableOutputLayout(DataLayout::bfyx);
-        k.EnableInputLayout(DataLayout::byxf);
-        k.EnableOutputLayout(DataLayout::byxf);
+        k.EnableInputLayout(DataLayout::bfzyx);
+        k.EnableOutputLayout(DataLayout::bfzyx);
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableDilation();
@@ -51,7 +49,7 @@ namespace kernel_selector {
         return k;
     }
 
-    KernelsData ConvolutionKernel_bfyx_Ref::GetKernelsData(const Params& params, const optional_params& options) const
+    KernelsData ConvolutionKernel_bfzyx_Ref::GetKernelsData(const Params& params, const optional_params& options) const
     {
         return GetTunedKernelsDataByIndex(params, options);
     }

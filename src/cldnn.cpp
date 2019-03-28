@@ -543,7 +543,6 @@ void cldnn_get_network_executed_primitive_names(cldnn_network network, char* nam
     {
         SHOULD_NOT_BE_NULL(network, "Network");
         auto&& primitive_ids = api_cast(network)->get_executed_primitive_ids();
-        SHOULD_NOT_EQUAL_0(primitive_ids.size(), "Primitives size");
         primitive_id_vector_to_char_array(names, size, size_ret, status, primitive_ids);
     });
 }

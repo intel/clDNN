@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016-2018 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 */
 
 #include "convolution_kernel_selector.h"
-#include "convolution_kernel_bfyx_ref.h"
+#include "convolution_kernel_ref.h"
 #include "convolution_kernel_bfyx_1x1_opt.h"
 #include "convolution_kernel_bfyx_gemm_like.h"
 #include "convolution_kernel_bfyx_direct_10_12_16.h"
@@ -51,12 +51,20 @@
 #include "convolution_kernel_imad_3x3.h"
 #include "convolution_kernel_imad_1x1.h"
 #include "convolution_kernel_imad_7x7.h"
+#include "convolution_kernel_bfzyx_ref.h"
+#include "convolution_kernel_fs_byx_fsv32.h"
+#include "convolution_kernel_fs_byx_fsv32_1x1.h"
+#include "convolution_kernel_bfyx_to_fs_byx_fsv32.h"
+#include "convolution_kernel_bfyx_f16_depthwise.h"
+#include "convolution_kernel_bfyx_f16_1x1.h"
+#include "convolution_kernel_bfyx_f16.h"
+#include "convolution_kernel_bfyx_to_bfyx_f16.h"
 
 namespace kernel_selector 
 {
     convolution_kernel_selector::convolution_kernel_selector()
     {
-        Attach<ConvolutionKernel_bfyx_Ref>();
+        Attach<ConvolutionKernel_Ref>();
         Attach<convolution_kernel_bfyx_1x1_opt>();
         Attach<ConvolutionKernel_bfyx_GEMMLike>();
         Attach<ConvolutionKernel_bfyx_Direct_10_10_12>();
@@ -93,6 +101,14 @@ namespace kernel_selector
         Attach<ConvolutionKernel_imad_3x3>();
         Attach<ConvolutionKernel_imad_1x1>();
         Attach<ConvolutionKernel_imad_7x7>();
+        Attach<ConvolutionKernel_bfzyx_Ref>();
+        Attach<ConvolutionKernel_fs_byx_fsv32>();
+        Attach<ConvolutionKernel_fs_byx_fsv32_1x1>();
+        Attach<ConvolutionKernel_bfyx_to_fs_byx_fsv32>();
+        Attach<ConvolutionKernel_bfyx_f16_depthwise>();
+        Attach<ConvolutionKernel_bfyx_f16_1x1>();
+        Attach<ConvolutionKernel_bfyx_f16>();
+        Attach<ConvolutionKernel_bfyx_to_bfyx_f16>();
     }
 
     KernelsData convolution_kernel_selector::GetBestKernels(const Params& params, const optional_params& options) const

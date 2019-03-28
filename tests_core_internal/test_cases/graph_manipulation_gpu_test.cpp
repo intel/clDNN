@@ -113,9 +113,7 @@ TEST(add_intermediate_gpu, test1)
     prog->add_intermediate(new_reorder, prog->get_node("conv1a"), 0);
     prog->dump_program("custom_dump", true);
 
-    pass_manager pm;
-    compile_graph compile_graph_pass;
-    pm.run(*prog, compile_graph_pass);
+    program_impl_wrapper::run_graph_compilation(*prog);
 
     cldnn::refcounted_obj_ptr<cldnn::network_impl> net = api_cast(engine.get())->allocate_network(*prog);
     network network = api_cast(net.get());
@@ -178,9 +176,7 @@ TEST(add_intermediate_gpu, test2)
     program_impl_wrapper::add_connection(*prog, prog->get_or_create(weights_node), prog->get_or_create(new_conv));
     prog->dump_program("custom_dump", true);
 
-    pass_manager pm;
-    compile_graph compile_graph_pass;
-    pm.run(*prog, compile_graph_pass);
+    program_impl_wrapper::run_graph_compilation(*prog);
 
     cldnn::refcounted_obj_ptr<cldnn::network_impl> net = api_cast(engine.get())->allocate_network(*prog);
     network network = api_cast(net.get());

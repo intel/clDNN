@@ -20,7 +20,7 @@
 
 namespace kernel_selector
 {
-    JitConstants OneHotKernelBase::GetJitConstants(const one_hot_params& params)
+    JitConstants OneHotKernelBase::GetJitConstants(const one_hot_params& params) const
     {
         JitConstants jit = MakeBaseParamsJitConstants(params);
 

@@ -28,15 +28,16 @@ namespace kernel_selector {
         virtual ~ConvolutionKernel_byx8_f4__fs_bs_yx_bsv4_fsv32() {}
 
         virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
+        virtual ParamsKey GetSupportedKey() const override;
 
     protected:
-        virtual ParamsKey GetSupportedKey() const override;
         bool Validate(const Params& p, const optional_params& o) const override;
+        JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;
         ConvolutionKernelBase::DispatchData SetDefault(const convolution_params& arg, int) const override;
         virtual std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&) const override
         {
             return{
-                WeightsLayout::os_is_y_x8_osv8_isv4,
+                WeightsLayout::os_is_y_x8_osv8_isv4_swizzled_by_4,
             };
         }
     };

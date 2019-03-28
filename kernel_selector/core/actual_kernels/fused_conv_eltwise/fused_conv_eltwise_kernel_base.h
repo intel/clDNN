@@ -64,6 +64,7 @@ namespace kernel_selector
             base_activation_params activation;
         } eltw;
 
+        float non_conv_scale = 1.0f;
         bool second_input_in_output = false;
 
         virtual std::string to_string() const override;

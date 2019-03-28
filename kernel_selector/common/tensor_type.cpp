@@ -22,62 +22,71 @@ namespace kernel_selector
 {
     namespace Tensor
     {
-        std::array<std::array<int, 5>, DataLayout::DataLayoutCount> DataTensor::dataChannelArray
+        std::array<std::array<int, 6>, DataLayout::DataLayoutCount> DataTensor::dataChannelArray
         { {
             // explaination:
-            // 0, 1, 2, 3, 4 means the ordering starts from X, then Y, then F, thenR, then B
+            // 0, 1, 2, 3, 4, 5 means the ordering starts from X, then Y, then F, thenR, then Z
             // -1 means it's not used
-            //X, Y, F, R, B
-            {-1,-1, 0,-1, 1 }, // DataLayout::bf
-            {-1,-1, 1,-1, 0 }, // DataLayout::fb
-            { 0, 1, 2,-1, 3 }, // DataLayout::bfyx
-            { 2, 3, 1,-1, 0 }, // DataLayout::yxfb
-            { 1, 2, 0,-1, 3 }, // DataLayout::byxf
-            { 1, 2, 3,-1, 0 }, // DataLayout::fyxb
-            {-1,-1, 0,-1, 1 }, // DataLayout::bs_f_bsv8__af8
-            {-1,-1, 0,-1, 1 }, // DataLayout::bs_f_bsv16__af8
-            { 0, 1, 2,-1, 3 }, // DataLayout::bf8_xy16
-            { 0, 1, 2, 3, 4 }, // DataLayout::brfyx
-            { 2, 1, 0,-1, 3 }, // DataLayout::winograd_2x3_s1_data
-            { 1, 2, 0,-1, 3 }, // DataLayout::byxf_af32
-            { 1, 2, 0,-1, 3 }, // DataLayout::byx8_f8
-            { 0, 1, 3,-1, 2 }, // DataLayout::fs_bs_yx_bsv4_fsv32
-            { 0, 1, 2, -1, 3 },// DataLayout::b_fs_yx_fsv4
+            //X, Y, F, R, B, Z
+            {-1,-1, 0,-1, 1, -1 }, // DataLayout::bf
+            {-1,-1, 1,-1, 0, -1 }, // DataLayout::fb
+            { 0, 1, 2,-1, 3, -1 }, // DataLayout::bfyx
+            { 2, 3, 1,-1, 0, -1 }, // DataLayout::yxfb
+            { 1, 2, 0,-1, 3, -1 }, // DataLayout::byxf
+            { 1, 2, 3,-1, 0, -1 }, // DataLayout::fyxb
+            { 0, 1, 2,-1, 3, -1 }, // DataLayout::bfyx_16f
+            {-1,-1, 0,-1, 1, -1 }, // DataLayout::bs_f_bsv8__af8
+            {-1,-1, 0,-1, 1, -1 }, // DataLayout::bs_f_bsv16__af8
+            { 0, 1, 2,-1, 3, -1 }, // DataLayout::bf8_xy16
+            { 0, 1, 2, 3, 4, -1 }, // DataLayout::brfyx
+            { 2, 1, 0,-1, 3, -1 }, // DataLayout::winograd_2x3_s1_data
+            { 1, 2, 0,-1, 3, -1 }, // DataLayout::byxf_af32
+            { 1, 2, 0,-1, 3, -1 }, // DataLayout::byx8_f8
+            { 0, 1, 3,-1, 2, -1 }, // DataLayout::fs_bs_yx_bsv4_fsv32
+            { 0, 1, 2, -1, 3, -1 },// DataLayout::b_fs_yx_fsv4
+            { 0, 1, 3, -1, 4, 2 }, // DataLayout::bfzyx
+            { 0, 1, 3,-1, 2, -1 }, // DataLayout::fs_b_yx_fsv32
+
         } };
 
-        std::array<std::array<int, 6>, WeightsLayout::WeightsLayoutCount> WeightsTensor::weightsChannelArray
+        std::array<std::array<int, 7>, WeightsLayout::WeightsLayoutCount> WeightsTensor::weightsChannelArray
         { {
-            // X, Y,   I,  O, LX, LY,
-            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::oi
-            { -1, -1,  1,  0, -1, -1 }, // WeightsLayout::io
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::oiyx
-            {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::oyxi
-            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::iyxo
-            {  2,  3,  1,  0, -1, -1 }, // WeightsLayout::yxio
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv16
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv32
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv64
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_iyx_osv16_rotate_180
-            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv8__ai8
-            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv16__ai8
-            { -1, -1,  0,  1, -1, -1 }, // WeightsLayout::os_i_osv16
-            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::i_yxs_os_yxsv2_osv16
-            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::iy_xs_os_xsv2_osv16__ao32
-            {  1,  2,  3,  0, -1, -1 }, // WeightsLayout::iy_xs_os_xsv2_osv8__ao32
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_c4_fyx_b
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_c1_b_fyx
-            {  3,  2,  1,  0, -1, -1 }, // WeightsLayout::winograd_2x3_s1_weights
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::winograd_2x3_s1_fused_weights
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::winograd_6x3_s1_fused_weights
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4_swizzled_by_4
-            {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::is_o_yx_isv32
-            {  1,  2,  0,  3, -1, -1 }, // WeightsLayout::is_o32_yx_isv32_swizzled_by_4
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_y_x8_osv8_isv4
-            {  0,  1,  2,  3,  4,  5 }, // WeightsLayout::bf_lyx_yx
-            {  0,  1,  2,  3, -1, -1 }, // WeightsLayout::os_is_yx_osv16_isv4
+            // X, Y,   I,  O, LX, LY,  Z
+            { -1, -1,  0,  1, -1, -1, -1 }, // WeightsLayout::oi
+            { -1, -1,  1,  0, -1, -1, -1 }, // WeightsLayout::io
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::oiyx
+            {  1,  2,  0,  3, -1, -1, -1 }, // WeightsLayout::oyxi
+            {  1,  2,  3,  0, -1, -1, -1 }, // WeightsLayout::iyxo
+            {  2,  3,  1,  0, -1, -1, -1 }, // WeightsLayout::yxio
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv16
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv32
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv64
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::oiyx_o16
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::o_i_yx_i16_o16
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv16_rotate_180
+            { -1, -1,  0,  1, -1, -1, -1 }, // WeightsLayout::os_i_osv8__ai8
+            { -1, -1,  0,  1, -1, -1, -1 }, // WeightsLayout::os_i_osv16__ai8
+            { -1, -1,  0,  1, -1, -1, -1 }, // WeightsLayout::os_i_osv16
+            {  1,  2,  3,  0, -1, -1, -1 }, // WeightsLayout::i_yxs_os_yxsv2_osv16
+            {  1,  2,  3,  0, -1, -1, -1 }, // WeightsLayout::iy_xs_os_xsv2_osv16__ao32
+            {  1,  2,  3,  0, -1, -1, -1 }, // WeightsLayout::iy_xs_os_xsv2_osv8__ao32
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::image_2d_weights_c4_fyx_b
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::image_2d_weights_c1_b_fyx
+            {  3,  2,  1,  0, -1, -1, -1 }, // WeightsLayout::winograd_2x3_s1_weights
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::winograd_2x3_s1_fused_weights
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::winograd_6x3_s1_fused_weights
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_fbxyb
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::image_2d_weights_winograd_6x3_s1_xfbyb
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_is_yx_isa8_osv8_isv4_swizzled_by_4
+            {  1,  2,  0,  3, -1, -1, -1 }, // WeightsLayout::is_o_yx_isv32
+            {  1,  2,  0,  3, -1, -1, -1 }, // WeightsLayout::is_o32_yx_isv32_swizzled_by_4
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_is_y_x8_osv8_isv4
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_is_y_x8_osv8_isv4_swizzled_by_4
+            {  0,  1,  2,  3,  4,  5, -1 }, // WeightsLayout::bf_lyx_yx
+            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_is_yx_osv16_isv4
+            {  0,  1,  3,  4, -1, -1,  2 }, // WeightsLayout::oizyx
+
         } };
 
         NDims DataTensor::GetSimpleDims(const std::vector<size_t>& d, DataLayout l)
@@ -96,6 +105,10 @@ namespace kernel_selector
                 assert(newDims.size() == 2);
                 newDims[0] = RoundUp(newDims[0], 8);
                 newDims[1] = RoundUp(newDims[1], 16);
+                break;
+            case bfyx_f16:
+                assert(newDims.size() == 4);
+                newDims[2] = RoundUp(newDims[2], 16);
                 break;
             case bf8_xy16:
                 assert(newDims.size() == 4);
@@ -117,6 +130,9 @@ namespace kernel_selector
                 newDims[3] = RoundUp(newDims[3], 32);
                 newDims[2] = RoundUp(newDims[2], 4);
                 break;
+            case fs_b_yx_fsv32:
+                assert(newDims.size() == 4);
+                newDims[3] = RoundUp(newDims[3], 32);
             default:
                 break;
             }
@@ -331,6 +347,7 @@ namespace kernel_selector
                 newDims[3] = RoundUp(newDims[3], 32);
                 break;
             case os_is_y_x8_osv8_isv4:
+            case os_is_y_x8_osv8_isv4_swizzled_by_4:
                 assert(newDims.size() == 4);
                 newDims[2] = RoundUp(newDims[2], 4);
                 newDims[3] = RoundUp(newDims[3], 8);
@@ -340,6 +357,15 @@ namespace kernel_selector
                 assert(newDims.size() == 4);
                 newDims[2] = RoundUp(newDims[2], 4);
                 newDims[3] = RoundUp(newDims[3], 16);
+                break;
+            case o_i_yx_i16_o16:
+                assert(newDims.size() == 4);
+                newDims[2] = RoundUp(newDims[2], 16);
+                newDims[3] = RoundUp(newDims[3], 16);
+                break;
+            case oiyx_o16:
+                assert(newDims.size() == 4);
+                newDims[0] = RoundUp(newDims[0], 16);
                 break;
             default:
                 break;
@@ -432,6 +458,14 @@ namespace kernel_selector
                 const size_t dst_ifm = IFM().v * src_x * src_y;
                 vec[Channelndex(l, WeightsChannelName::IFM)] = dst_ifm;
                 vec[Channelndex(l, WeightsChannelName::OFM)] = OFM().v;
+            }
+            else if (src_channels == 5 && dst_channels == 5)
+            {
+                vec[Channelndex(l, WeightsChannelName::X)] = X().v;
+                vec[Channelndex(l, WeightsChannelName::Y)] = Y().v;
+                vec[Channelndex(l, WeightsChannelName::IFM)] = IFM().v;
+                vec[Channelndex(l, WeightsChannelName::OFM)] = OFM().v;
+                vec[Channelndex(l, WeightsChannelName::Z)] = Z().v;
             }
             else if (src_channels == 6 && dst_channels == 6)
             {

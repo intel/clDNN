@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 
 #include "kernel_selector_common.h"
 #include "kernel_selector_params.h"
+
+#include "jitter.h"
 #include "primitive_db.h"
 
 namespace kernel_selector 
@@ -40,17 +42,7 @@ namespace kernel_selector
             return GetKernelsData(params, options);
         }
 
-        virtual bool Supports(const Params& params, const optional_params& options) const
-        {
-            const ParamsKey requireKey = params.GetParamsKey().Merge(options.GetSupportedKey());
-            return GetSupportedKey().Support(requireKey);
-        }
-
-        bool SupportsTuning() const
-        {
-            return GetSupportedKey().TuningSupport();
-        }
-
+        virtual ParamsKey GetSupportedKey() const = 0;
         virtual const std::string GetName() const { return kernelName; }
 
         static const primitive_db& get_db() { return db; }
@@ -60,8 +52,9 @@ namespace kernel_selector
         const std::string kernelName;
 
         static size_t UniqeID() { return counter++; } // TODO: use interlocked
-        virtual ParamsKey GetSupportedKey() const = 0;
-        
+        virtual Datatype GetUnitType(const base_params& params) const;
+        JitConstants MakeBaseParamsJitConstants(const base_params& params) const;
+
     private:
         static size_t counter;
     };

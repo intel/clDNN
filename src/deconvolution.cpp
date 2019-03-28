@@ -149,7 +149,6 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Output feature size", output_size.feature.size(), "expected output feature size", 1,"Only one-dimensional features are supported" );
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Output feature size", output_size.feature.size(), "expected output feature size", 1, "Only one-dimensional features are supported");
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Output batch size", output_size.batch.size(), "expected output batch size", 1, "Only one-dimensional features are supported");
-        CLDNN_ERROR_NOT_EQUAL(node.id(), "Weights spatial size", filter_inst.size.spatial.size(), "expected deconvolution weights spatial size", 2, "Weights have to have 2 dimensions in spatial domain.");
 
         if (node.get_primitive()->gradient())
         {

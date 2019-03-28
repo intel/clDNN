@@ -217,7 +217,7 @@ namespace cldnn
                             // to detach engine while destroying memory pool
     }
 
-    void memory_pool::dump_memory_pool(const program_impl& program , std::string path, std::string dep)
+    void memory_pool::dump_memory_pool(const program_impl& program , std::string& path, std::string& dep)
     {
         using namespace std;
         ofstream log(path);

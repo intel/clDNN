@@ -66,12 +66,17 @@ public:
     enum class optimization_attributes_type
     {
         splitted_convolution,
-        bfyx_only_layer
+        bfyx_only_layer,
+        only_fsv32_layers,        
+        bfyx_f16_network
     };
+
     struct optimization_attributes
     {
         int32_t splitted_convolution = 0;
         int32_t bfyx_only_layer = 0;
+        int32_t only_fsv32_layers = 0;
+        int32_t bfyx_f16_network = 0;
     };
 
 private:
@@ -114,6 +119,7 @@ private:
 
     bool convolution_bfyx_opt(const layout& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv);
     bool convolution_byxf_opt(const layout& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv);
+    bool convolution_bfyx_f16_opt(const layout& output_layout, const layout& weights_layout, std::shared_ptr<const convolution> conv);
     bool users_for_convolution_byxf_opt(program_node const& node, uint32_t depth);
     bool deps_depth_in_same_format(program_node const& node, const cldnn::format format, uint32_t depth);
 
@@ -146,7 +152,8 @@ public:
                      T& node,
                      layout const& user_layout)
         -> typename std::enable_if<
-            meta::is_any_of<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node, embed_node, lstm_gemm_node>::value,
+            meta::is_any_of<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node, 
+                                embed_node, lstm_gemm_node>::value,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
         >::type
     {
@@ -162,7 +169,8 @@ public:
                      T& node,
                      layout const& user_layout)
         -> typename std::enable_if<
-            !meta::is_any_of<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node, embed_node, lstm_gemm_node>::value,
+            !meta::is_any_of<T, convolution_node, fully_connected_node, deconvolution_node, detection_output_node, 
+                                embed_node, lstm_gemm_node>::value,
             meta::deduce_ret_type_t<decltype(&layout_optimizer::create_reorder_if_needed)>
         >::type
     {
@@ -177,5 +185,7 @@ public:
         data_type type);
 
     void set_optimization_attribute(optimization_attributes_type attribute, int32_t val);
+
+    bool is_format_optimized(const convolution_node& node, const format& format);
 };
 }

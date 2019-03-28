@@ -160,6 +160,18 @@ namespace kernel_selector
 
         JitConstants eltw_activations = MakeActivationJitConstants(params.eltw.activation, "_ELTW");
         mem_consts.Merge(eltw_activations);
+        mem_consts.AddConstant(MakeJitConstant("ELTW_CALIBRATION_TERM", params.eltw.output_calibration));
+
+        if (!params.eltw.stride.empty())
+        {
+            mem_consts.AddConstant(MakeJitConstant("ELTW_STRIDE_X", params.eltw.stride[0].x));
+            mem_consts.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", params.eltw.stride[0].y));
+        }
+        else
+        {
+            mem_consts.AddConstant(MakeJitConstant("ELTW_STRIDE_X", 1));
+            mem_consts.AddConstant(MakeJitConstant("ELTW_STRIDE_Y", 1));
+        }
 
         mem_consts.AddConstant(MakeJitConstant("IN_OUT_OPT", params.second_input_in_output ? 1 : 0));
 
@@ -309,7 +321,8 @@ namespace kernel_selector
             newParams,
             options,
             GetSupportedWeightLayouts(newParams),
-            kd.weightsReorderParams);
+            kd.weightsReorderParams,
+            GetSupportedKey());
 
         if (!succeed)
         {

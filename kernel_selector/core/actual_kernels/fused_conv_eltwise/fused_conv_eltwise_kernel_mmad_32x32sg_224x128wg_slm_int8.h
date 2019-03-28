@@ -29,9 +29,9 @@ namespace kernel_selector {
 		virtual ~fused_conv_eltwise_kernel_mmad_32x32sg_224x128wg_slm_int8() {}
 
 		virtual KernelsData GetKernelsData(const Params& params, const optional_params& options) const override;
+		virtual ParamsKey GetSupportedKey() const override;
 
 	protected:
-		virtual ParamsKey GetSupportedKey() const override;
 		bool Validate(const Params& p, const optional_params& o) const override;
 		JitConstants GetJitConstants(const fused_conv_eltwise_params& params, const DispatchData& kd) const override;
 		DispatchData SetDefault(const fused_conv_eltwise_params& arg, int autoTuneIndex = -1) const override;
