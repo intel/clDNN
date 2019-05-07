@@ -20,6 +20,7 @@
 #include "program_node.h"
 #include "pass_manager.h"
 #include "convolution_inst.h"
+#include "custom_gpu_primitive_inst.h"
 #include "sliding_window_utils.h"
 
 using namespace cldnn;
@@ -111,7 +112,8 @@ void prepare_padding::run(program_impl& p)
         }
 
         // We shoudn't apply any padding to nodes which are marked as outputs
-        if (conv_input_node.is_output())
+        // or nodes which are custom primitives
+        if (conv_input_node.is_output() || conv_input_node.is_type<custom_gpu_primitive>())
             continue;
 
         // Calculating input padding needed for convolution
