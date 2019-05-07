@@ -31,7 +31,7 @@ primitive_type_id deconvolution_type_id()
 
 layout deconvolution_inst::calc_output_layout(deconvolution_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for deconvolution_node!");
     auto desc = node.get_primitive();
 
@@ -52,9 +52,10 @@ layout deconvolution_inst::calc_output_layout(deconvolution_node const& node)
     {
         CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined output spatial X", desc->output_size.spatial[0], "value 0", 0, "User-defined size of output layout must be positive (>= 1)");
         CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined output spatial Y", desc->output_size.spatial[1], "value 0", 0, "User-defined size of output layout must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined output spatial Z", desc->output_size.spatial[2], "value 0", 0, "User-defined size of output layout must be positive (>= 1)");
 
         tensor output_size(input_layout.size.batch[0], number_of_features,
-                           desc->output_size.spatial[0], desc->output_size.spatial[1]);
+                           desc->output_size.spatial[0], desc->output_size.spatial[1], desc->output_size.spatial[2]);
         return { input_layout.data_type, input_layout.format, output_size };
     }
 
@@ -65,7 +66,7 @@ layout deconvolution_inst::calc_output_layout(deconvolution_node const& node)
         input_layout.size, filter_size, input_offset, strd, {1, 1, 1, 1}, true, 1);
 
     tensor output_size(input_layout.size.batch[0], number_of_features,
-                       output_range.spatial[0], output_range.spatial[1]);
+                       output_range.spatial[0], output_range.spatial[1], output_range.spatial[2]);
     return { input_layout.data_type, input_layout.format, output_size };
 }
 
@@ -141,6 +142,7 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias batch[0]", bias_inst.size.batch[0], "dimension size", 1, "Batch[0] of bias should be 1. Bias isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias feature[0]", bias_inst.size.feature[0], "dimension size", 1, "Feature[0] of bias should be 1. Bias isn't 1D vector.");
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[1]", bias_inst.size.spatial[1], "dimension size", 1, "Spatial[1] of bias should be 1. Bias isn't 1D vector.");
+            CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[2]", bias_inst.size.spatial[1], "dimension size", 1, "Spatial[2] of bias should be 1. Bias isn't 1D vector.");
 
             CLDNN_ERROR_NOT_EQUAL(node.id(), "Bias spatial[0]", bias_inst.size.spatial[0], "output feature size / split", output_size.feature[0] / split, "Biases/output feature maps number does not match.");
         }
@@ -161,3 +163,4 @@ deconvolution_inst::typed_primitive_inst(network_impl& network, deconvolution_no
      }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(deconvolution)

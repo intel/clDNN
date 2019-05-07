@@ -36,7 +36,7 @@ max_unpooling_node::typed_program_node(const std::shared_ptr<max_unpooling> prim
 
 layout max_unpooling_inst::calc_output_layout(max_unpooling_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
           && "Output data type forcing is not supported for max_unpooling_node!");
     auto desc = node.get_primitive();
 
@@ -100,3 +100,4 @@ max_unpooling_inst::typed_primitive_inst(network_impl& network, max_unpooling_no
 }
 
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(max_unpooling)

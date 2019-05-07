@@ -70,29 +70,47 @@ inline uint FUNC(get_bf8_xy16_index)(uint b, uint f, uint y, uint x, uint x_size
     return idx;
 }
 
-inline uint FUNC(get_bfyx_f16_index)(uint b, uint f, uint y, uint x, uint x_size, uint y_size, uint f_size, uint offset, uint y_pad_before,uint y_pad_after, uint x_pad_before, uint x_pad_after)
+inline uint FUNC(get_bfyx_f16_index)(
+    uint b, uint f, uint y, uint x,
+    uint x_size, uint y_size, uint f_size,
+    uint y_pad_before,uint y_pad_after,
+    uint x_pad_before, uint x_pad_after,
+    uint f_pad_before, uint f_pad_after)
 {
+    const uint feature_slice_size = 16;
+
     const uint full_width = x_size + x_pad_before + x_pad_after;
     const uint full_height = y_size + y_pad_before + y_pad_after;
-    const uint xy_offset = (x + y * full_width)*16;
-    const uint f_offset = (f / 16) * full_width*full_height*16 + (f % 16);
-    const uint b_offset = b * f_size * full_width * full_height;
+    const uint full_features = f_pad_before + f_size + f_pad_after;
+    const uint feature_tiles_number = (full_features + feature_slice_size - 1) / feature_slice_size;
 
-    const size_t idx = offset*16 + xy_offset + f_offset + b_offset;
+    const uint x_pitch = feature_slice_size;
+    const uint y_pitch = x_pitch * full_width;
+    const uint fs_pitch = y_pitch * full_height;
+    const uint b_pitch = fs_pitch * feature_tiles_number;
+
+    const uint x_offset = (x + x_pad_before) * x_pitch;
+    const uint y_offset = (y + y_pad_before) * y_pitch;
+    const uint fs_offset = (f / feature_slice_size + f_pad_before / feature_slice_size) * fs_pitch;
+    const uint b_offset = b * b_pitch;
+
+    const size_t idx = x_offset + y_offset + fs_offset + b_offset + (f % feature_slice_size);
 
     return idx;
 }
 
 #define GET_DATA_BFYX_F16_INDEX(prefix, b, f, y, x)     \
     FUNC_CALL(get_bfyx_f16_index)(                      \
-        b, f, y, x, CAT(prefix, _SIZE_X ),              \
+        b, f, y, x,                                     \
+        CAT(prefix, _SIZE_X ),                          \
         CAT(prefix, _SIZE_Y),                           \
         CAT(prefix, _FEATURE_NUM),                      \
-        CAT(prefix, _OFFSET),                           \
         CAT(prefix, _PAD_BEFORE_SIZE_Y),                \
         CAT(prefix, _PAD_AFTER_SIZE_Y),                 \
         CAT(prefix, _PAD_BEFORE_SIZE_X),                \
-        CAT(prefix, _PAD_AFTER_SIZE_X))
+        CAT(prefix, _PAD_AFTER_SIZE_X),                 \
+        CAT(prefix, _PAD_BEFORE_FEATURE_NUM),           \
+        CAT(prefix, _PAD_AFTER_FEATURE_NUM))
 
 #define GET_FILTER_O_I_YX_I16_O16_INDEX(prefix, o, i, y, x, sub_group_size)  \
     CAT(prefix, _OFFSET) +                                                   \
@@ -104,21 +122,6 @@ inline uint FUNC(get_bfyx_f16_index)(uint b, uint f, uint y, uint x, uint x_size
         ((i) / (sub_group_size))*(sub_group_size)*CAT(prefix, _IFM_PITCH) +  \
         ((o) / (sub_group_size))*CAT(prefix, _OFM_PITCH)                     \
     )
-
-inline uint FUNC(get_oiyx_o16_index)(uint o, uint i, uint y, uint x, uint i_size, uint o_size, uint x_size, uint y_size)
-{
-    const uint s_off = (x + y*x_size)*16;
-    const uint f_off = (o / 16)*(x_size*y_size*16) + o%16;
-    const size_t idx = s_off + f_off;
-    return idx;
-}
-
-#define GET_FILTER_OIYX_O16(prefix, o, i, y, x) \
-    FUNC_CALL(get_oiyx_o16_index)(              \
-        o, i, y, x, CAT(prefix, _IFM_NUM),      \
-        CAT(prefix, _OFM_NUM),                  \
-        CAT(prefix, _SIZE_X),                   \
-        CAT(prefix, _SIZE_Y))
 
 inline uint FUNC(get_byxf_af32_index)(uint b, uint f, uint y, uint x, uint y_pitch, uint b_pitch, uint f_size, uint offset)
 {

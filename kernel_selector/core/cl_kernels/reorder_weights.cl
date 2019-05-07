@@ -52,8 +52,6 @@ inline uint FUNC(get_input_index)(uint o, uint i, uint y, uint x)
     return GET_FILTER_OS_IS_Y_X8_OSV8_ISV4_SWIZZLED_BY_4(INPUT0, o, i, y, x);
 #elif defined INPUT0_LAYOUT_O_I_YX_I16_O16
     return GET_FILTER_O_I_YX_I16_O16_INDEX(INPUT0, o, i, y, x, SUB_GROUP_SIZE);
-#elif defined INPUT0_LAYOUT_OIYX_O16
-    return GET_FILTER_OIYX_O16(INPUT0, o, i, y, x);
 #else
 #error reorder_weights.cl: input format - not supported
 #endif
@@ -98,8 +96,6 @@ inline uint FUNC(get_output_index)(uint o, uint i, uint y, uint x)
     return GET_FILTER_OS_IS_YX_ISA8_OSV8_ISV4_SWIZZLED_BY_4_INDEX(OUTPUT, o, i, y, x);
 #elif defined OUTPUT_LAYOUT_O_I_YX_I16_O16
     return GET_FILTER_O_I_YX_I16_O16_INDEX(OUTPUT, o, i, y, x, SUB_GROUP_SIZE);
-#elif defined OUTPUT_LAYOUT_OIYX_O16
-    return GET_FILTER_OIYX_O16(OUTPUT, o, i, y, x);
 #else
 #error reorder_weights.cl: output format - not supported
 #endif

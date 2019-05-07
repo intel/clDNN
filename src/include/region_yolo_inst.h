@@ -39,3 +39,4 @@ public:
 using region_yolo_inst = typed_primitive_inst<region_yolo>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(region_yolo)

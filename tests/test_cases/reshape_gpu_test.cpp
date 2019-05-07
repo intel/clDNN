@@ -475,6 +475,15 @@ TEST(reshape_gpu_f16, basic_4dim_input_output_padd)
         );
 }
 
+TEST(reshape_gpu_f32, basic_5dim_in_place)
+{
+    generic_reshape_test<float>(
+        format::bfzyx,
+        tensor(9, 9, 2, 4, 2),
+        tensor(27, 2, 1, 4, 6),
+        true);
+}
+
 TEST(reshape_gpu_f32, multiple_users_with_reorder) {
     // Tests split with crop implementation
     //                                                   _ REORDER(yxfb) --> RELU(yxfb)

@@ -77,9 +77,16 @@ protected:
         dto.spatial_scale = spatial_scale;
         dto.group_sz = group_sz;
     }
+private:
+    roi_pooling() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(roi_pooling) & CLDNN_SERIALIZATION_NVP(mode) & CLDNN_SERIALIZATION_NVP(pooled_width)
+           & CLDNN_SERIALIZATION_NVP(pooled_height) & CLDNN_SERIALIZATION_NVP(spatial_scale) & CLDNN_SERIALIZATION_NVP(group_sz);
+    )
 };
 
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(roi_pooling)

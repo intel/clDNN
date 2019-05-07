@@ -31,6 +31,8 @@ public:
     using parent::parent;
 
     program_node& input() const { return get_dependency(0); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using mvn_node = typed_program_node<mvn>;
@@ -50,3 +52,4 @@ public:
 using mvn_inst = typed_primitive_inst<mvn>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(mvn)

@@ -38,6 +38,8 @@ public:
     program_node& location() const { return get_dependency(0); }
     program_node& confidence() const { return get_dependency(1); }
     program_node& prior_box() const { return get_dependency(2); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using detection_output_node = typed_program_node<detection_output>;
@@ -70,6 +72,8 @@ public:
     using parent::parent;
 
     program_node& input() const { return get_dependency(0); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using detection_output_sort_node = typed_program_node<detection_output_sort>;
@@ -96,3 +100,5 @@ namespace gpu {
 }
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(detection_output)
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(detection_output_sort)

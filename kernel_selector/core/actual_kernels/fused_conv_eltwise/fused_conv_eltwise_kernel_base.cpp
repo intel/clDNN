@@ -303,7 +303,13 @@ namespace kernel_selector
         }
 
         KernelData kd = KernelData::Default<fused_conv_eltwise_params>(params);
+
         fused_conv_eltwise_params& newParams = *static_cast<fused_conv_eltwise_params*>(kd.params.get());
+        if (newParams.engineInfo.bIMMADSupport)
+        {
+            kd.weightsReorderParams.read_only = true;
+            kd.weightsReorderParams.device_only = true;
+        }
 
         if (NeedPaddedInput())
         {

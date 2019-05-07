@@ -78,8 +78,14 @@ protected:
         dto.axis = static_cast<cldnn_tile_axis>(axis);
         dto.tiles = tiles;
     }
+private:
+    tile() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(tile) & CLDNN_SERIALIZATION_NVP(axis) & CLDNN_SERIALIZATION_NVP(tiles);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(tile)

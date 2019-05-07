@@ -79,6 +79,8 @@ void prepare_buffer_fusing::run(program_impl& p)
                 upper_padd.raw[concat_axis] = upper_padd_val;
                 lower_padd = lower_padd_offset;
 
+                auto first_input_format = nodes_list.first[0]->get_output_layout().format;
+
                 //check if concatenation in place can be applied for inputs set
                 for (auto input : nodes_list.first)
                 {
@@ -101,6 +103,10 @@ void prepare_buffer_fusing::run(program_impl& p)
                         if (user_count != 1) // user_cout == 0 means that input will be used only by concatenations, so we cannot apply concat in place for it
                             return;
                     }
+
+                    //check if all inputs have the same format
+                    if (input->get_output_layout().format != first_input_format)
+                        return;
                 }
 
                 //apply concatenation in place optimization

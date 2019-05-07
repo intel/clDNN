@@ -224,8 +224,16 @@ protected:
         dto.shift = shift.c_str();
         dto.epsilon = epsilon;
     }
+private:
+    batch_norm() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(batch_norm) & CLDNN_SERIALIZATION_NVP(mean) 
+           & CLDNN_SERIALIZATION_NVP(variance) & CLDNN_SERIALIZATION_NVP(scale) & CLDNN_SERIALIZATION_NVP(shift) 
+           & CLDNN_SERIALIZATION_NVP(inv_variance) & CLDNN_SERIALIZATION_NVP(epsilon);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(batch_norm)

@@ -37,6 +37,8 @@ namespace cldnn {
         program_node& P4() const { return get_dependency(4); }
         program_node& P5() const { return get_dependency(5); }
         program_node& pool_size() const { return get_dependency(6); }
+    private:
+        CLDNN_SERIALIZATION_PARENT_ONLY()
     };
 
     using pyramidROIAlign_node = typed_program_node<pyramid_roi_align>;
@@ -62,3 +64,4 @@ namespace cldnn {
 
     using pyramid_roi_align_inst = typed_primitive_inst<pyramid_roi_align>;
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(pyramid_roi_align)

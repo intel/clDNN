@@ -30,10 +30,10 @@ primitive_type_id eltwise_type_id()
 
 layout eltwise_inst::calc_output_layout(eltwise_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for eltwise_inst_node!");
     auto input_node0_layout = node.input(0).get_non_padded_output_layout();
-    auto input_node1_layout = node.input(0).get_non_padded_output_layout();
+    auto input_node1_layout = node.input(1).get_non_padded_output_layout();
     auto mode = node.get_primitive()->mode;
 
     //list of operations supported for integer types
@@ -61,6 +61,7 @@ layout eltwise_inst::calc_output_layout(eltwise_node const& node)
         // we can safely use only first stride, since we're using first input, and input / stride should give exact same value for every input
         input_node0_layout.size.spatial[0] /= eltw->stride[0].spatial[0];
         input_node0_layout.size.spatial[1] /= eltw->stride[0].spatial[1];
+        input_node0_layout.size.spatial[2] /= eltw->stride[0].spatial[2];
         return input_node0_layout;
     }
     else 
@@ -212,3 +213,4 @@ eltwise_inst::typed_primitive_inst(network_impl& network, eltwise_node const& no
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(eltwise)

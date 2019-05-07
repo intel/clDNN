@@ -41,7 +41,7 @@ struct primitive_type_base : ::cldnn_primitive_type
 
     std::shared_ptr<cldnn::program_node> create_node(program_impl& program, const std::shared_ptr<primitive> prim) const override
     {
-        if (prim->type != this)
+        if (prim->get_type() != this)
             throw std::invalid_argument("primitive_type_base::create_node: primitive type mismatch");
 
         return std::make_shared<typed_program_node<PType>>(std::static_pointer_cast<PType>(prim), program);

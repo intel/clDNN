@@ -28,7 +28,7 @@ primitive_type_id softmax_loss_grad_type_id()
 
 layout softmax_loss_grad_inst::calc_output_layout(softmax_loss_grad_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for "
               "softmax_loss_grad_node!");
     return node.input().get_non_padded_output_layout();
@@ -52,3 +52,4 @@ softmax_loss_grad_inst::typed_primitive_inst(network_impl& network, softmax_loss
     //TODO: add size check here for labels
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(softmax_loss_grad)

@@ -34,8 +34,8 @@ struct generic_layer_gpu : typed_primitive_impl<generic_layer>
 
     generic_layer_gpu(const generic_layer_node& arg)
     : outer(arg)
-    , _cl_kernel_data(*outer.get_primitive()->generic_params.clKernel.get())
-    , _kernel(arg.get_program().get_engine().get_context(), outer.get_primitive()->generic_params.clKernel->kernelString)
+    , _cl_kernel_data(*outer.get_primitive()->get_generic_params().clKernel.get())
+    , _kernel(arg.get_program().get_engine().get_context(), outer.get_primitive()->get_generic_params().clKernel->kernelString)
     {}
 
     event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, generic_layer_inst& instance) override
@@ -51,6 +51,10 @@ struct generic_layer_gpu : typed_primitive_impl<generic_layer>
         _kernel.set_output_event(instance.node.is_output());
         return _kernel.run(_cl_kernel_data, events, args);
     }
+private:
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & boost::serialization::make_nvp("typed_primitive_impl_generic_layer", boost::serialization::base_object<typed_primitive_impl<generic_layer>>(*this));
+    )
 };
 
 // TODO: move this file to cpu folder and add a new traget to 'cldnn::engine_types'
@@ -74,7 +78,7 @@ struct generic_layer_cpu : typed_primitive_impl<generic_layer>
         mem_lock<uint8_t> old_pointer(input_mem);
         mem_lock<uint8_t> new_pointer(output_mem);
 
-        const auto& cpu_kernel = *outer.get_primitive()->generic_params.cpuKernel.get();
+        const auto& cpu_kernel = *outer.get_primitive()->get_generic_params().cpuKernel.get();
 
         cpu_kernel.Execute(old_pointer.data(), old_pointer.size(), new_pointer.data(), new_pointer.size());
 
@@ -84,7 +88,7 @@ struct generic_layer_cpu : typed_primitive_impl<generic_layer>
 
 static primitive_impl* create(const generic_layer_node& arg)
 {
-    if (arg.get_primitive()->generic_params.engine == kernel_selector::generic_kernel_params::Engine::GPU)
+    if (arg.get_primitive()->get_generic_params().engine == kernel_selector::generic_kernel_params::Engine::GPU)
     {
         return new generic_layer_gpu(arg);
     }
@@ -106,3 +110,4 @@ namespace {
     attach attach_impl;
 }
 }
+CLDNN_SERIALIZATION_GPU_NG_CLASS(neural, generic_layer)

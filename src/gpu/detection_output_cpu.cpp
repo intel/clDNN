@@ -256,23 +256,23 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
             #pragma omp parallel for num_threads(num_threads_to_use) reduction(+:num_det)
 #endif
 #endif
-            for (int cls = 0; cls < (int)args.num_classes; ++cls)
+            for (int cls = 0; cls < (int)args.get_num_classes(); ++cls)
             {
-                if ((int)cls == args.background_label_id)
+                if ((int)cls == args.get_background_label_id())
                 {
                     conf_per_image[cls].clear();
                     continue; // Skip background class.
                 }
                 std::vector<std::pair<float,int>>& scores = conf_per_image[cls];
-                const int label = args.share_location ? 0 : cls;
-                apply_nms(bboxes_per_image[label], scores, args.nms_threshold, args.eta, args.top_k);
+                const int label = args.get_share_location() ? 0 : cls;
+                apply_nms(bboxes_per_image[label], scores, args.get_nms_threshold(), args.get_eta(), args.get_top_k());
                 num_det += (int)scores.size();
             }
-            if (num_det > args.keep_top_k)
+            if (num_det > args.get_keep_top_k())
             {
                 std::vector<std::pair<float, std::pair<int, int>>> score_index_pairs;
                 score_index_pairs.reserve(num_det);
-                for (int label = 0; label < (int)args.num_classes; ++label)
+                for (int label = 0; label < (int)args.get_num_classes(); ++label)
                 {
                     std::vector<std::pair<float, int>>& scores = confidences[image][label];
                     for (std::pair<float, int> score_index : scores)
@@ -283,10 +283,10 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
 
                 // Keep top k results per image.
                 auto sort_function = [](const std::pair<float, std::pair<int, int>>& p1, const std::pair<float, std::pair<int, int>>& p2) { return p1.first > p2.first; };
-                if ((int)score_index_pairs.size() > args.keep_top_k)
+                if ((int)score_index_pairs.size() > args.get_keep_top_k())
                 {
-                    std::partial_sort(score_index_pairs.begin(), score_index_pairs.begin() + args.keep_top_k, score_index_pairs.end(), sort_function);
-                    score_index_pairs.resize(args.keep_top_k);
+                    std::partial_sort(score_index_pairs.begin(), score_index_pairs.begin() + args.get_keep_top_k(), score_index_pairs.end(), sort_function);
+                    score_index_pairs.resize(args.get_keep_top_k());
                 }
                 else
                 {
@@ -294,7 +294,7 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
                 }
 
                 // Store the new indices.
-                std::vector<std::vector<std::pair<float,int>>> new_indices(args.num_classes);
+                std::vector<std::vector<std::pair<float,int>>> new_indices(args.get_num_classes());
                 for (int j = 0; j < (int)score_index_pairs.size(); ++j)
                 {
                     int label = score_index_pairs[j].second.first;
@@ -316,13 +316,13 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
             auto& final_detections_per_image = final_detections[image];
             for (int label = 0; label < (int)final_detections_per_image.size(); ++label)
             {
-                int loc_label = args.share_location ? 0 : label;
+                int loc_label = args.get_share_location() ? 0 : label;
                 const std::vector<bounding_box>& bboxes = bboxes_per_image[loc_label];
                 const std::vector<std::pair<float,int>>& label_detections = final_detections_per_image[label];
                 for (std::pair<float,int> score_prior : label_detections)
                 {
                     out_ptr[count * DETECTION_OUTPUT_ROW_SIZE] = (dtype)(float)image;
-                    out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 1] = args.decrease_label_id ? ((dtype)((float)label - 1.0f))
+                    out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 1] = args.get_decrease_label_id() ? ((dtype)((float)label - 1.0f))
                                                                                             : (dtype)(float)label;
                     out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 2] = (dtype)score_prior.first;
                     const bounding_box& bbox = bboxes[score_prior.second];
@@ -336,7 +336,7 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
         }
 
         //In case number of detections is smaller than keep_top_k fill the rest of the buffer with invalid image id (-1).
-        while (count < num_of_images*args.keep_top_k)
+        while (count < num_of_images*args.get_keep_top_k())
         {
             out_ptr[count * DETECTION_OUTPUT_ROW_SIZE] = (dtype)-1.f;
             out_ptr[count * DETECTION_OUTPUT_ROW_SIZE + 1] = (dtype)0.f;
@@ -366,7 +366,7 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
     template<typename dtype>
     void extract_locations_per_image(const detection_output_inst& instance, std::vector<std::vector<std::vector<bounding_box>>>& locations, const int num_of_priors, const int num_loc_classes)
     {
-        const bool share_location = instance.argument.share_location;
+        const bool share_location = instance.argument.get_share_location();
         auto& input_location = instance.location_memory();
         const int num_of_images = (int)locations.size();
 
@@ -435,11 +435,11 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
     template<typename dtype>
     void extract_confidences_per_image(const detection_output_inst& instance, std::vector<std::vector<std::vector<std::pair<float,int>>>>& confidences, const int num_of_priors)
     {
-        const int num_classes = instance.argument.num_classes;
+        const int num_classes = instance.argument.get_num_classes();
 
         const int num_of_images = (int)confidences.size();
         auto& input_confidence = instance.confidence_memory();
-        const float confidence_threshold = instance.argument.confidence_threshold;
+        const float confidence_threshold = instance.argument.get_confidence_threshold();
 
         mem_lock<dtype> lock{ &input_confidence };
         auto confidence_data = lock.begin();
@@ -540,8 +540,8 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
         const auto& args = instance.argument;
 
         const int num_of_images = (int)bboxes.size();
-        const int num_of_priors = instance.prior_box_memory().get_layout().size.spatial[1] / args.prior_info_size;
-        const int num_loc_classes = args.share_location ? 1 : args.num_classes;
+        const int num_of_priors = instance.prior_box_memory().get_layout().size.spatial[1] / args.get_prior_info_size();
+        const int num_loc_classes = args.get_share_location() ? 1 : args.get_num_classes();
 
         // Extract locations per image.
         std::vector<std::vector<std::vector<bounding_box>>> locations(num_of_images); // Per image : label -> bounding boxes.
@@ -550,8 +550,8 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
         // Extract prior boxes - same within a batch.
         std::vector<bounding_box> prior_bboxes(num_of_priors); // Prior-Boxes (identical for all images since we assume all images in a batch are of same dimension).
         std::vector<std::array<float, PRIOR_BOX_SIZE>> prior_variances(num_of_priors); // Variances per prior-box (identical for all images since we assume all images in a batch are of same dimension).
-        extract_prior_boxes_and_variances<dtype>(instance, args.variance_encoded_in_target,
-                                                 args.prior_info_size, args.prior_coordinates_offset,
+        extract_prior_boxes_and_variances<dtype>(instance, args.get_variance_encoded_in_target(),
+                                                 args.get_prior_info_size(), args.get_prior_coordinates_offset(),
                                                  prior_bboxes, prior_variances);
 
         // Create the decoded bounding boxes according to locations predictions and prior-boxes. 
@@ -562,8 +562,8 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
             locations[image].resize(num_loc_classes);
             for (int cls = 0; cls < num_loc_classes; ++cls)
             {
-                const int label = args.share_location ? 0 : cls;
-                if (!args.share_location && label == args.background_label_id)
+                const int label = args.get_share_location() ? 0 : cls;
+                if (!args.get_share_location() && label == args.get_background_label_id())
                 {
                     continue; // Skip background class.
                 }
@@ -576,8 +576,8 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
                 for (int i = 0; i < label_loc_preds_size; ++i)
                 {
                     bounding_box decoded_bbox;
-                    decode_bounding_box(prior_bboxes[i], prior_variances[i], args.code_type, args.variance_encoded_in_target, label_loc_preds[i], &decoded_bbox,
-                                        args.prior_is_normalized, args.input_width, args.input_height, args.clip);
+                    decode_bounding_box(prior_bboxes[i], prior_variances[i], args.get_code_type(), args.get_variance_encoded_in_target(), label_loc_preds[i], &decoded_bbox,
+                                        args.get_prior_is_normalized(), args.get_input_width(), args.get_input_height(), args.get_clip());
                     bboxes_per_image[label].emplace_back(decoded_bbox);
                 }
             }
@@ -623,6 +623,10 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
     {
         return new detection_output_cpu(arg);
     }
+private:
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & boost::serialization::make_nvp("parent", boost::serialization::base_object<typed_primitive_impl<detection_output>>(*this));
+    )
 };
 
 primitive_impl* runDetectOutCpu(const detection_output_node& arg)
@@ -631,3 +635,6 @@ primitive_impl* runDetectOutCpu(const detection_output_node& arg)
 }
 
 }}
+/// @brief typed_primitive_impl_detection_output exported in detection_output_gpu.cpp
+CLDNN_SERIALIZATION_EXPORT_CLASS_GUID(cldnn::gpu::detection_output_cpu, "detection_output_cpu")
+CLDNN_SERIALIZATION_OVERLOAD_NT_GPU_CLASS_CONSTRUCTOR(cldnn::gpu::detection_output_cpu, detection_output)

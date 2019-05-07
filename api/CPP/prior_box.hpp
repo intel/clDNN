@@ -178,8 +178,16 @@ private:
         }
         return result;
     }
+    prior_box() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(prior_box) & CLDNN_SERIALIZATION_NVP(img_size) & CLDNN_SERIALIZATION_NVP(min_sizes)
+           & CLDNN_SERIALIZATION_NVP(max_sizes) & CLDNN_SERIALIZATION_NVP(aspect_ratios) & CLDNN_SERIALIZATION_NVP(flip) & CLDNN_SERIALIZATION_NVP(clip)
+           & CLDNN_SERIALIZATION_NVP(variance) & CLDNN_SERIALIZATION_NVP(step_width) & CLDNN_SERIALIZATION_NVP(step_height) 
+           & CLDNN_SERIALIZATION_NVP(offset) & CLDNN_SERIALIZATION_NVP(scale_all_sizes);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(prior_box)

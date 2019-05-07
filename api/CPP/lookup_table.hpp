@@ -79,8 +79,15 @@ namespace cldnn
             dto.with_axis = with_axis;
             dto.axis = static_cast<cldnn_lookup_table_axis>(axis);
         }
+    private:
+        lookup_table() : primitive_base() {} // Constructor necessary for serialization process
+        CLDNN_SERIALIZATION_MEMBERS(
+            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(lookup_table)
+               & CLDNN_SERIALIZATION_NVP(axis) & CLDNN_SERIALIZATION_NVP(with_axis);
+        )
     };
     /// @}
     /// @}
     /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(lookup_table)

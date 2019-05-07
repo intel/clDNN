@@ -37,11 +37,11 @@ std::string custom_gpu_primitive_inst::to_string(custom_gpu_primitive_node const
     std::stringstream primitive_description;
 
     json_composite custom_gpu_prim_info;
-    custom_gpu_prim_info.add("entry point",   desc->kernel_entry_point);
-    custom_gpu_prim_info.add("kernels code",  desc->kernels_code.ref());
-    custom_gpu_prim_info.add("build options", desc->build_options);
-    custom_gpu_prim_info.add("gws", desc->gws);
-    custom_gpu_prim_info.add("lws", desc->lws);
+    custom_gpu_prim_info.add("entry point",   desc->get_kernel_entry_point());
+    custom_gpu_prim_info.add("kernels code",  desc->get_kernels_code().ref());
+    custom_gpu_prim_info.add("build options", desc->get_build_options());
+    custom_gpu_prim_info.add("gws", desc->get_gws());
+    custom_gpu_prim_info.add("lws", desc->get_lws());
     // TODO: consider printing more information here
     node_info->add("custom primitive info", custom_gpu_prim_info);
     node_info->dump(primitive_description);
@@ -54,3 +54,4 @@ custom_gpu_primitive_inst::typed_primitive_inst(network_impl& network, custom_gp
 {
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(custom_gpu_primitive)

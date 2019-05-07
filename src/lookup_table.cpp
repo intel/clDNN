@@ -31,7 +31,7 @@ namespace cldnn
 
     layout lookup_table_inst::calc_output_layout(lookup_table_node const& node)
     {
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for "
                   "lookup_table_node!");
         auto desc = node.get_primitive();
@@ -65,3 +65,4 @@ namespace cldnn
     {
     }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(lookup_table)

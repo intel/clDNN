@@ -127,6 +127,12 @@ protected:
         dto.alpha = alpha;
         dto.beta = beta;
     }
+private:
+    gemm() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(gemm) & CLDNN_SERIALIZATION_NVP(transpose_input1) 
+           & CLDNN_SERIALIZATION_NVP(transpose_input2) & CLDNN_SERIALIZATION_NVP(alpha) & CLDNN_SERIALIZATION_NVP(beta);
+    )
 };
 
 }
@@ -134,3 +140,4 @@ protected:
 /// @}
 /// @}
 /// @}
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(gemm)

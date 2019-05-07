@@ -376,7 +376,7 @@ layout layout_optimizer::get_expected_layout(layout const& current_layout, data_
     auto expected_format = output_or_weights_layout.format;
 
     if (type != data_type::input)
-        CLDNN_ERROR_MESSAGE(prim->id, "detection_output only supports optimization of its output (no weights/biases)");
+        CLDNN_ERROR_MESSAGE(prim->get_id(), "detection_output only supports optimization of its output (no weights/biases)");
 
     return layout(expected_data_type, expected_format, expected_tensor);
 }
@@ -472,7 +472,7 @@ std::vector<std::pair<std::shared_ptr<primitive>, bool>> layout_optimizer::get_g
             if (reorder.first)
             {
                 ret.push_back(reorder);
-                input_id = reorder.first->id;
+                input_id = reorder.first->get_id();
             }
         }
     }

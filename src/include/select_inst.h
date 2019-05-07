@@ -32,6 +32,8 @@ namespace cldnn
 
         program_node& input(size_t idx = 0) const { return get_dependency(idx); }
 		size_t inputs_count() const { return get_dependencies().size(); }
+    private:
+        CLDNN_SERIALIZATION_PARENT_ONLY()
 	};
 
 	using select_node = typed_program_node<select>;
@@ -50,3 +52,4 @@ namespace cldnn
 
 	using select_inst = typed_primitive_inst<select>;
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(select)

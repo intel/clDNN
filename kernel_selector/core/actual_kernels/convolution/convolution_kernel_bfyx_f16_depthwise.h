@@ -33,7 +33,7 @@ namespace kernel_selector
     protected:
         bool Validate(const Params&, const optional_params&) const override;
         std::vector<WeightsLayout> GetSupportedWeightLayouts(const convolution_params&)  const override {
-            return { WeightsLayout::oiyx_o16,};
+            return { WeightsLayout::os_iyx_osv16,};
         }
         bool NeedPaddedInput() const override { return false; }
         JitConstants GetJitConstants(const convolution_params& params, const DispatchData& kd) const override;

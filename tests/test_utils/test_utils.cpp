@@ -131,7 +131,7 @@ namespace tests
             topology.add(reorder("input0", "input0_init", input_mems[0].get_layout()));
         }
 
-        if (layer_params->input[0] == "reorder0")
+        if (layer_params->get_input()[0] == "reorder0")
         {
             // Add reorder layer with output padding as input to the tested layer.
             topology.add(reorder("reorder0", "input0", input_mems[0].get_layout().with_padding({ { 0, 0, 1, 3 },{ 0, 0, 5, 2 } })));

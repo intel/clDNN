@@ -28,7 +28,7 @@ namespace cldnn
 
     layout reorg_yolo_inst::calc_output_layout(reorg_yolo_node const& node)
     {
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for "
                   "reorg_yolo_node!");
         auto input_layout = node.input().get_output_layout();
@@ -63,3 +63,4 @@ namespace cldnn
     {
     }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(reorg_yolo)

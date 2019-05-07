@@ -68,6 +68,7 @@ namespace kernel_selector
                     uint32_t activationAdditionalParamsAsInput : 1;
                     uint32_t FP16Emulation : 1;
                     uint32_t gradient : 1;
+                    uint32_t gradientOutput : 1;
                     uint32_t momentum : 1;
 
                     union dedicated_t
@@ -270,6 +271,7 @@ namespace kernel_selector
         void EnableTensorPitches() { key.restrict.val.pitches = 1; }
         void EnableBatching() { key.restrict.val.batching = 1; }
         void EnableGradient() { key.restrict.val.gradient = 1; }
+        void EnableGradientOutput() { key.restrict.val.gradientOutput = 1; }
         void EnableSubGroup() { key.machineInfo.val.subgroup = 1; }
         void EnableSubGroupShort() { key.machineInfo.val.subgroupShort = 1; }
         void EnableNonBiasTerm() { key.restrict.val.nonBias = 1; }

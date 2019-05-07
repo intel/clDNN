@@ -25,7 +25,6 @@
 
 #include <map>
 #include <sstream>
-
 using namespace cldnn;
 namespace kernel_selector
 {
@@ -58,6 +57,10 @@ struct custom_gpu_primitive_gpu : typed_primitive_impl<custom_gpu_primitive>
         _kernel.set_output_event(instance.node.is_output());
         return _kernel.run(*cl_kernel.get(), events, args);
     }
+private:
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & boost::serialization::make_nvp("typed_primitive_impl_custom_gpu_primitive", boost::serialization::base_object<typed_primitive_impl<custom_gpu_primitive>>(*this));
+    )
 };
 
 static kernel_selector::kernel_argument_element get_arg(cldnn_arg arg)
@@ -175,8 +178,8 @@ static std::string get_jit_constant(const custom_gpu_primitive_node& outer)
     const auto primitive = outer.get_primitive().get();
 
     mem_consts.AddConstants({
-        kernel_selector::MakeJitConstant("GLOBAL_WORKSIZE", primitive->gws),
-        kernel_selector::MakeJitConstant("LOCAL_WORKSIZE", primitive->lws),
+        kernel_selector::MakeJitConstant("GLOBAL_WORKSIZE", primitive->get_gws()),
+        kernel_selector::MakeJitConstant("LOCAL_WORKSIZE", primitive->get_lws()),
     });
 
     for (size_t i = 0; i < outer.get_dependencies().size(); i++) 
@@ -202,18 +205,18 @@ static primitive_impl* create(const custom_gpu_primitive_node& arg)
     
     auto cl_kernel = std::make_shared<kernel_selector::cl_kernel_data>();
     cl_kernel->kernelString = std::make_shared<kernel_selector::kernel_string>();
-    cl_kernel->kernelString->entry_point = primitive->kernel_entry_point;
-    cl_kernel->kernelString->options = primitive->build_options;
+    cl_kernel->kernelString->entry_point = primitive->get_kernel_entry_point();
+    cl_kernel->kernelString->options = primitive->get_build_options();
     cl_kernel->kernelString->jit = get_jit_constant(arg);
-    for (const auto& s : primitive->kernels_code)
+    for (const auto& s : primitive->get_kernels_code())
     {
         cl_kernel->kernelString->str += s + "\n";
     }
 
-    cl_kernel->workGroups.global = primitive->gws;
-    cl_kernel->workGroups.local = primitive->lws;
+    cl_kernel->workGroups.global = primitive->get_gws();
+    cl_kernel->workGroups.local = primitive->get_lws();
 
-    for (const auto& p : primitive->kernel_arguments)
+    for (const auto& p : primitive->get_kernel_arguments())
     {
         cl_kernel->arguments.push_back(get_arg(p));
     }
@@ -233,3 +236,29 @@ namespace {
     attach attach_impl;
 }
 }
+CLDNN_SERIALIZATION_EXPORT_CLASS_GUID(cldnn::typed_primitive_impl<cldnn::custom_gpu_primitive>, "typed_primitive_impl_custom_gpu_primitive")
+CLDNN_SERIALIZATION_EXPORT_CLASS_GUID(neural::custom_gpu_primitive_gpu, "custom_gpu_primitive_gpu")
+#ifdef CLDNN_SERIALIZATION
+///@brief Overloaded constructor.
+namespace boost {
+    namespace serialization {
+        template<class Archive>
+        void save_construct_data(Archive & ar, const neural::custom_gpu_primitive_gpu * t, const unsigned int /*file_version*/)
+        {
+            auto outer = &t->outer;
+            ar << make_nvp("outer", outer)
+               << make_nvp("cl_kernel", t->cl_kernel);
+        }
+        template<class Archive>
+        void load_construct_data(Archive & ar, neural::custom_gpu_primitive_gpu * t, const unsigned int /*file_version*/)
+        {
+            cldnn::typed_program_node<cldnn::custom_gpu_primitive>* outer;
+            std::shared_ptr<kernel_selector::cl_kernel_data> cl_kernel;
+
+            ar >> make_nvp("outer", outer)
+               >> make_nvp("cl_kernel", cl_kernel);
+            ::new(static_cast<void*>(t))neural::custom_gpu_primitive_gpu(*outer, cl_kernel);
+        }
+    }
+}
+#endif

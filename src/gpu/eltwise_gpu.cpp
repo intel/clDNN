@@ -109,7 +109,7 @@ public:
             ew_params.stride.resize(stride.size());
             for (size_t i = 0; i < primitive->stride.size(); i++)
             {
-                ew_params.stride[i] = { (uint32_t)stride[i].spatial[0], (uint32_t)stride[i].spatial[1] };
+                ew_params.stride[i] = { (uint32_t)stride[i].spatial[0], (uint32_t)stride[i].spatial[1], (uint32_t)stride[i].spatial[2] };
             }
         }
 
@@ -150,6 +150,8 @@ public:
 
         return eltwise;
     }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -173,6 +175,12 @@ namespace {
                 { std::make_tuple(engine_types::ocl, data_types::i64, format::byxf), eltwise_gpu::create },
                 //block fp16
                 { std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx_f16), eltwise_gpu::create },
+                //3D
+                { std::make_tuple(engine_types::ocl, data_types::f32, format::bfzyx), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::f16, format::bfzyx), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i8, format::bfzyx), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i32, format::bfzyx), eltwise_gpu::create },
+                { std::make_tuple(engine_types::ocl, data_types::i64, format::bfzyx), eltwise_gpu::create },
                 // MMAD
                 { std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), eltwise_gpu::create },
                 { std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), eltwise_gpu::create },
@@ -187,3 +195,4 @@ namespace {
     attach attach_impl;
 }
 } }
+CLDNN_SERIALIZATION_GPU_CLASS(eltwise)

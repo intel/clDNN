@@ -89,6 +89,8 @@ public:
     gpu_toolkit& get_context() { return _context; }
     //forces compilation of all pending kernels/programs
     void build_all();
+    // Builds kernels from binaries
+    void build_from_binaries();
 };
 
 }}

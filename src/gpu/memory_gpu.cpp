@@ -21,6 +21,19 @@
 
 namespace cldnn { namespace gpu {
 
+cl_mem_flags resource_flags_to_cl_mem_flags(resource_flags flags)
+{
+    cl_mem_flags cl_flags = 0;
+    if (resource_flags::NONE != (flags & resource_flags::DEVICE_ONLY))
+        cl_flags |= CL_MEM_HOST_NO_ACCESS;
+    if (resource_flags::NONE != (flags & resource_flags::READ_ONLY))
+        cl_flags |= CL_MEM_READ_ONLY;
+    if (resource_flags::NONE != (flags & resource_flags::COPY_HOST_PTR))
+        cl_flags |= CL_MEM_COPY_HOST_PTR;
+
+    return cl_flags;
+}
+
 gpu_buffer::gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, const layout& layout)
     : memory_impl(engine, layout, false)
     , _context(engine->get_context())
@@ -31,6 +44,16 @@ gpu_buffer::gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, const layo
     void* ptr = gpu_buffer::lock();
     memset(ptr, 0, size());
     gpu_buffer::unlock();
+}
+
+gpu_buffer::gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, resource_flags flags, gpu_buffer::ptr to_copy)
+    : memory_impl(engine, to_copy->get_layout(), false)
+    , _context(engine->get_context())
+    , _lock_count(0)
+    , _buffer(_context->context(), resource_flags_to_cl_mem_flags(flags), size(), to_copy->lock())
+    , _mapped_ptr(nullptr)
+{
+    to_copy->unlock();
 }
 
 gpu_buffer::gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, const layout& new_layout, const cl::Buffer& buffer)

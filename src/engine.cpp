@@ -60,6 +60,11 @@ engine_impl::~engine_impl()
     _context->release_events_pool();
 }
 
+memory_impl::ptr engine_impl::allocate_and_copy_memory(refcounted_obj_ptr<memory_impl> src, resource_flags flags)
+{
+    return _memory_pool.alloc_and_copy_memory(src, flags);
+}
+
 memory_impl::ptr engine_impl::allocate_memory(layout layout)
 {
     return _memory_pool.get_memory(layout);
@@ -126,12 +131,21 @@ void engine_impl::release_pending_memory()
 
 program_impl::ptr engine_impl::build_program(const topology_impl& topology, const build_options& options, bool is_internal, bool no_optimizations)
 {
-    return{ new program_impl(*this, topology, options, is_internal, no_optimizations), false };
+    auto prog_impl = new program_impl(*this, topology, options, is_internal, no_optimizations);
+    CLDNN_SERIALIZATION_PROGRAM_SAVE(prog_impl, options, is_internal)
+    return{ prog_impl, false };
 }
 
 program_impl::ptr engine_impl::build_program(const std::set<std::shared_ptr<program_node>>& nodes, const build_options& options, bool is_internal)
 {
-    return{ new program_impl(*this, nodes, options, is_internal), false };
+    auto prog_impl = new program_impl(*this, nodes, options, is_internal);
+    CLDNN_SERIALIZATION_PROGRAM_SAVE(prog_impl, options, is_internal)
+    return{ prog_impl, false };
+}
+
+program_impl::ptr engine_impl::load_program(const std::string& file_name, const std::string& dump_path)
+{
+    CLDNN_SERIALIZATION_PROGRAM_LOAD(this, file_name, dump_path)
 }
 
 network_impl::ptr engine_impl::build_network(const topology_impl& topology, const build_options& options, bool is_internal)
@@ -160,10 +174,8 @@ gpu::engine_info_internal engine_impl::get_engine_info() const
     return _context->get_engine_info();
 }
 
-void engine_impl::compile_program(program_impl& program)
+void engine_impl::compile_program(program_impl&)
 {
-    if (!program.get_options().get<build_option_type::serialize_network>()->serialization_network_name.empty()) 
-        _context->get_kernels_cache().get_context().set_serialization_flag(true);
     //TODO: better compilation logic instead of a simple 'compile all'?
     _context->get_kernels_cache().build_all();
 }

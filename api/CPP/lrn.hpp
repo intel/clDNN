@@ -99,8 +99,16 @@ protected:
         dto.beta = beta;
         dto.norm_region = norm_region;
     }
+private:
+    lrn() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(lrn) & CLDNN_SERIALIZATION_NVP(size) 
+           & CLDNN_SERIALIZATION_NVP(k) & CLDNN_SERIALIZATION_NVP(alpha) & CLDNN_SERIALIZATION_NVP(beta) 
+           & CLDNN_SERIALIZATION_NVP(norm_region);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(lrn)

@@ -35,6 +35,8 @@ namespace cldnn
 		{
 		}
         program_node& input() const { return get_dependency(0); }
+    private:
+        CLDNN_SERIALIZATION_PARENT_ONLY()
 	};
 
 	using arg_max_min_node = typed_program_node<arg_max_min>;
@@ -55,3 +57,4 @@ namespace cldnn
 	using arg_max_min_inst = typed_primitive_inst<arg_max_min>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(arg_max_min)

@@ -65,6 +65,11 @@ network_impl::network_impl(engine_impl& engine, const std::set<std::shared_ptr<p
 {
 }
 
+network_impl::network_impl(engine_impl& engine, const std::string& file_name, const std::string& dump_path)
+    : network_impl(*engine.load_program(file_name, dump_path), false)
+{
+}
+
 void network_impl::validate_primitives()
 {
     for (auto const& prim : _exec_order)

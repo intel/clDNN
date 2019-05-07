@@ -29,7 +29,7 @@ namespace cldnn
 
     layout scale_grad_input_inst::calc_output_layout(scale_grad_input_node const& node)
     {
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for "
                   "scale_grad_input_node!");
         auto result = node.input().get_non_padded_output_layout();
@@ -96,3 +96,4 @@ namespace cldnn
         }
     }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(scale_grad_input)

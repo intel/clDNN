@@ -31,9 +31,11 @@ namespace kernel_selector
         k.EnableInputLayout(DataLayout::yxfb);
         k.EnableInputLayout(DataLayout::bfyx);
         k.EnableInputLayout(DataLayout::byxf);
+        k.EnableInputLayout(DataLayout::bfzyx);
         k.EnableOutputLayout(DataLayout::yxfb);
         k.EnableOutputLayout(DataLayout::bfyx);
         k.EnableOutputLayout(DataLayout::byxf);
+        k.EnableOutputLayout(DataLayout::bfzyx);
         k.EnableTensorOffset();
         k.EnableTensorPitches();
         k.EnableBiasPerFeature();
@@ -54,7 +56,7 @@ namespace kernel_selector
         {
             const auto& out = params.output;
             runInfo.gws0 = Align(out.X().v, 32);
-            runInfo.gws1 = out.Y().v;
+            runInfo.gws1 = out.Y().v * out.Z().v;
             runInfo.gws2 = out.Feature().v * out.Batch().v;
 
             runInfo.lws0 = 32;

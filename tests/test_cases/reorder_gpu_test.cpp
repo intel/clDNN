@@ -886,6 +886,222 @@ TEST(reorder_gpu_f32, basic_bfyx_to_yxfb_input_padding)
 
 }
 
+TEST(reorder_gpu_f32, basic_bfyx_to_bfzyx)
+{
+    //  Input               : bfyx:2x2x2x2
+    //  Output              : bfzyx:2x2x1X2x2
+
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+
+    set_values(input, {
+        1.f, 0.f,
+        5.f, 1.5f,
+
+        2.f, 0.f,
+        6.f, 5.2f,
+
+        3.f, 0.5f,
+        7.f, 12.f,
+
+        4.f, -0.5f,
+        8.f, 8.f
+    });
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        reorder("reorder", "input", format::bfzyx, data_types::f32));
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder");
+
+    auto output = outputs.begin()->second.get_memory();
+    EXPECT_TRUE(output.get_layout().format == format::bfzyx);
+    auto sizes = output.get_layout().size;
+    EXPECT_TRUE(sizes.batch[0] == 2);
+    EXPECT_TRUE(sizes.feature[0] == 2);
+    EXPECT_TRUE(sizes.spatial[0] == 2);
+    EXPECT_TRUE(sizes.spatial[1] == 2);
+    EXPECT_TRUE(sizes.spatial[2] == 1);
+
+    float answers[16] = {
+        1.f, 0.f,
+        5.f, 1.5f,
+
+        2.f, 0.f,
+        6.f, 5.2f,
+
+        3.f, 0.5f,
+        7.f, 12.f,
+
+        4.f, -0.5f,
+        8.f, 8.f
+    };
+
+    auto output_ptr = output.pointer<float>();
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_FLOAT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(reorder_gpu_f32, basic_yxfb_to_bfzyx)
+{
+    //  Input               : yxfb:2x2x2x2
+    //  Output              : bfzyx:2x2x1X2x2
+
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+
+    set_values(input, {
+        1.f, 0.f,
+        5.f, 1.5f,
+
+        2.f, 0.f,
+        6.f, 5.2f,
+
+        3.f, 0.5f,
+        7.f, 12.f,
+
+        4.f, -0.5f,
+        8.f, 8.f
+    });
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        reorder("reorder", "input", format::bfzyx, data_types::f32));
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder");
+
+    auto output = outputs.begin()->second.get_memory();
+    EXPECT_TRUE(output.get_layout().format == format::bfzyx);
+    auto sizes = output.get_layout().size;
+    EXPECT_TRUE(sizes.batch[0] == 2);
+    EXPECT_TRUE(sizes.feature[0] == 2);
+    EXPECT_TRUE(sizes.spatial[0] == 2);
+    EXPECT_TRUE(sizes.spatial[1] == 2);
+    EXPECT_TRUE(sizes.spatial[2] == 1);
+
+    float answers[16] = {
+        1.0f,  2.0f,
+        3.0f,  4.0f,
+
+        5.0f,  6.0f,
+        7.0f,  8.0f,
+
+        0.0f,  0.0f,
+        0.5f, -0.5f,
+
+        1.5f,  5.2f,
+        12.0f, 8.0f
+    };
+
+    auto output_ptr = output.pointer<float>();
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_FLOAT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(reorder_gpu_f32, basic_bfzyx_to_bfyx)
+{
+    //  Input               : bfzyx:2x2x2x2x2
+    //  Output              : bfyx:2x2x4x2
+
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx,{ 2, 2, 2, 2, 2 } });
+
+    set_values(input, {
+        1.f, 0.f,
+        5.f, 1.5f,
+
+        2.f, 0.f,
+        6.f, 5.2f,
+
+        3.f, 0.5f,
+        7.f, 12.f,
+
+        4.f, -0.5f,
+        8.f, 8.f,
+
+        1.f, 0.f,
+        5.f, 1.5f,
+
+        2.f, 0.f,
+        6.f, 5.2f,
+
+        3.f, 0.5f,
+        7.f, 12.f,
+
+        4.f, -0.5f,
+        8.f, 8.f
+    });
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        reorder("reorder", "input", format::bfyx, data_types::f32));
+
+    network network(engine, topology);
+    network.set_input_data("input", input);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "reorder");
+
+    auto output = outputs.begin()->second.get_memory();
+    EXPECT_TRUE(output.get_layout().format == format::bfyx);
+    auto sizes = output.get_layout().size;
+    EXPECT_TRUE(sizes.batch[0] == 2);
+    EXPECT_TRUE(sizes.feature[0] == 2);
+    EXPECT_TRUE(sizes.spatial[0] == 2);
+    EXPECT_TRUE(sizes.spatial[1] == 4);
+    EXPECT_TRUE(sizes.spatial[2] == 1);
+
+    float answers[32] = {
+        1.f, 0.f,
+        5.f, 1.5f,
+
+        2.f, 0.f,
+        6.f, 5.2f,
+
+        3.f, 0.5f,
+        7.f, 12.f,
+
+        4.f, -0.5f,
+        8.f, 8.f,
+
+        1.f, 0.f,
+        5.f, 1.5f,
+
+        2.f, 0.f,
+        6.f, 5.2f,
+
+        3.f, 0.5f,
+        7.f, 12.f,
+
+        4.f, -0.5f,
+        8.f, 8.f
+    };
+
+    auto output_ptr = output.pointer<float>();
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_FLOAT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
 TEST(reorder_gpu_opt, basic_remove_redundant)
 {
     engine eng;
@@ -1340,7 +1556,7 @@ public:
         assert(mean == "");
         assert(subtract_per_feature.size() == 0);
         
-        auto output = memory::allocate(engine, cldnn::layout(*reorder->output_data_type, inputs[0].get_layout().format, inputs[0].get_layout().size));
+        auto output = memory::allocate(engine, cldnn::layout(*reorder->get_output_data_type(), inputs[0].get_layout().format, inputs[0].get_layout().size));
 
         cldnn::pointer<InputType> input_mem = inputs[0].pointer<InputType>();
         cldnn::pointer<OutputType> output_mem = output.pointer<OutputType>();
@@ -1359,7 +1575,7 @@ public:
     {
         if (generic_params->data_type == data_types::f32)
         {
-            if (*layer_params->output_data_type == data_types::f32)
+            if (*layer_params->get_output_data_type() == data_types::f32)
             {
                 return generate_reference_typed<float, float>(inputs);
             }
@@ -1370,7 +1586,7 @@ public:
         }
         else
         {
-            if (*layer_params->output_data_type == data_types::f32)
+            if (*layer_params->get_output_data_type() == data_types::f32)
             {
                 return generate_reference_typed<FLOAT16, float>(inputs);
             }

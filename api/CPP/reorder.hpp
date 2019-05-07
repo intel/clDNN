@@ -155,8 +155,16 @@ protected:
         dto.subtract_per_feature = float_vector_to_arr(subtract_per_feature);
         dto.mean_mode = mean_mode;
     }
+
+private:
+    reorder() : primitive_base(), output_format(format::bfyx) {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(reorder) & CLDNN_SERIALIZATION_NVP(output_format)
+           & CLDNN_SERIALIZATION_NVP(mean) & CLDNN_SERIALIZATION_NVP(subtract_per_feature) & CLDNN_SERIALIZATION_NVP(mean_mode);
+        )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(reorder)

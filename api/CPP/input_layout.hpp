@@ -69,8 +69,13 @@ private:
     {
         dto.layout = layout;
     }
+    input_layout() : primitive_base(), layout(data_types::f32, format::byxf, tensor()) {}  // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(input_layout) & CLDNN_SERIALIZATION_NVP(layout);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(input_layout)

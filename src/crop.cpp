@@ -30,7 +30,7 @@ primitive_type_id crop_type_id()
 
 layout crop_inst::calc_output_layout(crop_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for crop_node!");
     const auto& ref_in_sizes = node.get_primitive()->reference_input;
     const auto in_layout     = node.input().get_output_layout();
@@ -144,3 +144,4 @@ void crop_inst::reuse_input()
     _output = _network.get_engine().reinterpret_buffer(input_memory(), node.get_output_layout());
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(crop)

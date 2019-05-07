@@ -34,7 +34,6 @@ namespace kernel_selector
         case WeightsLayout::i_yxs_os_yxsv2_osv16:
         case WeightsLayout::iy_xs_os_xsv2_osv16__ao32:
         case WeightsLayout::o_i_yx_i16_o16:
-        case WeightsLayout::oiyx_o16:
             return 16;
         case WeightsLayout::os_i_osv8__ai8:
         case WeightsLayout::iy_xs_os_xsv2_osv8__ao32:
@@ -138,7 +137,7 @@ namespace kernel_selector
 
         std::vector<size_t> global(3);
 
-        global = { out.OFM().v, out.IFM().v, out.X().v*out.Y().v };
+        global = { out.OFM().v, out.IFM().v, out.X().v*out.Y().v*out.Z().v };
         auto local = GetOptimalLocalWorkGroupSizes(global);
 
         kd.gws0 = global[0];

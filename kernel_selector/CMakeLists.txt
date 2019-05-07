@@ -33,6 +33,9 @@ intel_config_flag_apply_settings(
 if (CLDNN__ENABLE_PERSISTENT_CACHE)
   set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS CLDNN_ENABLE_PERSISTENT_CACHE)
 endif ()
+if(CLDNN__INCLUDE_SERIALIZATION)
+  set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS CLDNN_SERIALIZATION)
+endif()
 
 # ========================================= Source/Header files ========================================
 

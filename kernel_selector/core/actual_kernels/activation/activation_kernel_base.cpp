@@ -25,13 +25,20 @@ namespace kernel_selector
         const auto& out = arg.output;
 
         DispatchData runInfo;
-        std::vector<size_t> global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
-        if (out.GetLayout() == DataLayout::yxfb)
+        std::vector<size_t> global;
+        if (out.GetLayout() == DataLayout::bfzyx)
         {
-            global[0] = out.Feature().v*out.Batch().v;
-            global[1] = out.X().v;
-            global[2] = out.Y().v;
+            global = { out.X().v, out.Y().v*out.Z().v, out.Feature().v*out.Batch().v };
         }
+        else if (out.GetLayout() == DataLayout::yxfb)
+            {
+            global = { out.Feature().v*out.Batch().v, out.X().v, out.Y().v };
+            }
+        else
+        {
+            global = { out.X().v, out.Y().v, out.Feature().v*out.Batch().v };
+        }
+
         std::vector<size_t> local = GetOptimalLocalWorkGroupSizes(global);
         runInfo.gws0 = global[0];
         runInfo.gws1 = global[1];

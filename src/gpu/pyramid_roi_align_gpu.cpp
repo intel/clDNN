@@ -56,7 +56,8 @@ struct pyramid_roi_align_gpu : typed_primitive_gpu_impl<pyramid_roi_align>
 
         return new pyramid_roi_align_gpu(arg, best_kernels[0]);
     }
-
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -74,3 +75,4 @@ namespace {
 
 }
 }}
+CLDNN_SERIALIZATION_GPU_CLASS(pyramid_roi_align)

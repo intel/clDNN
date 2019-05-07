@@ -37,6 +37,8 @@ public:
     program_node& bias() const { return get_dependency(2); }
 
     bool bias_term() const { return get_dependencies().size() > 2; }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using scale_node = typed_program_node<scale>;
@@ -62,3 +64,4 @@ public:
 using scale_inst = typed_primitive_inst<scale>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(scale)

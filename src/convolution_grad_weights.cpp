@@ -31,7 +31,7 @@ primitive_type_id convolution_grad_weights_type_id()
 
 layout convolution_grad_weights_inst::calc_output_layout(convolution_grad_weights_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for "
               "convolution_grad_weights_node!");
     //output buffer will not be used in this primitive unless output gradient weights is set
@@ -136,3 +136,4 @@ convolution_grad_weights_inst::typed_primitive_inst(network_impl& network, convo
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(convolution_grad_weights)

@@ -81,8 +81,10 @@ public:
             // FP32 (float)
         case fuse(data_types::f32, format::bfyx):
         case fuse(data_types::f32, format::yxfb):
+        case fuse(data_types::f32, format::bfzyx):
         case fuse(data_types::f16, format::bfyx):
         case fuse(data_types::f16, format::yxfb):
+        case fuse(data_types::f16, format::bfzyx):
             break;
         default:
             throw std::runtime_error("deconvolution weights format unsupported");
@@ -95,7 +97,7 @@ public:
 #if 0 // TODO: support dilation
         const auto& dilation = primitive->dilation;
 #else
-        const tensor dilation = {0,0,1,1};
+        const tensor dilation = {0,0,1,1,1};
 #endif
         const auto depthwise_separable_opt = arg.get_depthwise_sep_opt();
         const auto actual_split = depthwise_separable_opt ? (decltype(split))1 : split;
@@ -116,21 +118,25 @@ public:
         deconv_params.filterSize = {
             (uint32_t)weights_size.spatial[0],
             (uint32_t)weights_size.spatial[1],
+            (uint32_t)weights_size.spatial[2]
         };
 
         deconv_params.padding = {
             (uint32_t)std::max(-input_offset.spatial[0], 0),
-            (uint32_t)std::max(-input_offset.spatial[1], 0)
+            (uint32_t)std::max(-input_offset.spatial[1], 0),
+            (uint32_t)std::max(-input_offset.spatial[2], 0)
         };
 
         deconv_params.stride = {
             (uint32_t)stride.spatial[0],
-            (uint32_t)stride.spatial[1]
+            (uint32_t)stride.spatial[1],
+            (uint32_t)stride.spatial[2]
         };
 
         deconv_params.dilation = {
             (uint32_t)dilation.spatial[0],
-            (uint32_t)dilation.spatial[1]
+            (uint32_t)dilation.spatial[1],
+            (uint32_t)dilation.spatial[2]
         };
 
         deconv_params.gradient = primitive->gradient();
@@ -149,6 +155,8 @@ public:
 
         return deconv;
     }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace{
@@ -156,8 +164,10 @@ namespace{
         attach() {
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::yxfb), deconvolution_gpu::create);
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfyx), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfzyx), deconvolution_gpu::create);
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::yxfb), deconvolution_gpu::create);
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx), deconvolution_gpu::create);
+            implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfzyx), deconvolution_gpu::create);
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::byxf), deconvolution_gpu::create);
             implementation_map<deconvolution>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::byxf), deconvolution_gpu::create);
         }
@@ -166,3 +176,4 @@ namespace{
     attach attach_impl;
 }
 } }
+CLDNN_SERIALIZATION_GPU_CLASS(deconvolution)

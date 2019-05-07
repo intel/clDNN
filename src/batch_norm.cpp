@@ -30,7 +30,7 @@ primitive_type_id batch_norm_type_id()
 
 layout batch_norm_inst::calc_output_layout(batch_norm_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for batch_norm_node!");
     return node.input().get_non_padded_output_layout();
 }
@@ -99,3 +99,4 @@ batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node con
 	}
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(batch_norm)

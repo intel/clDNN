@@ -102,8 +102,14 @@ protected:
     {
         dto.bias = bias.c_str();
     }
+private:
+    scale() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(scale) & CLDNN_SERIALIZATION_NVP(bias);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(scale)

@@ -32,6 +32,8 @@ public:
 
     program_node& input() const { return get_dependency(0); }
     program_node& scale() const { return get_dependency(1); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using normalize_node = typed_program_node<normalize>;
@@ -53,3 +55,4 @@ public:
 using normalize_inst = typed_primitive_inst<normalize>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(normalize)

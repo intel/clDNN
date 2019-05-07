@@ -5050,8 +5050,8 @@ TEST_P(convolution_gpu, b_fs_yx_fsv4)
                               1.0f,
                               {1, 1, stride, stride},
                               {0, 0, offSet, offSet});
-        conv_gold.output_padding = padding({0, 0, output_padding, output_padding}, 0.0f);
-        conv_imad.output_padding = padding({0, 0, output_padding, output_padding}, 0.0f);
+        conv_gold.set_output_padding(padding({0, 0, output_padding, output_padding}, 0.0f));
+        conv_imad.set_output_padding(padding({0, 0, output_padding, output_padding}, 0.0f));
         topology.add(conv_gold, conv_imad);
     }
     else
@@ -5061,8 +5061,8 @@ TEST_P(convolution_gpu, b_fs_yx_fsv4)
             "conv_gold", "input", {"weights_gold"}, {1, 1, stride, stride}, {0, 0, offSet, offSet});
         convolution conv_imad(
             "conv_imad", "reorder_in", {"weights_imad"}, {1, 1, stride, stride}, {0, 0, offSet, offSet});
-        conv_gold.output_padding = padding({0, 0, output_padding, output_padding}, 0.0f);
-        conv_imad.output_padding = padding({0, 0, output_padding, output_padding}, 0.0f);
+        conv_gold.set_output_padding(padding({0, 0, output_padding, output_padding}, 0.0f));
+        conv_imad.set_output_padding(padding({0, 0, output_padding, output_padding}, 0.0f));
         topology.add(conv_gold, conv_imad);
     }
 
@@ -5208,7 +5208,7 @@ TEST_P(convolution_gpu, fs_byx_fsv32)
 
         auto conv_fsv = convolution("conv_fsv", "input_fsv", { "weights_fsv" }, { "biases_fsv" },
                                     { 1, 1, stride, stride }, { 0, 0, input_offset, input_offset });
-        conv_fsv.output_padding = padding({ 0, 0, output_padding, output_padding }, 0.f);
+        conv_fsv.set_output_padding(padding({ 0, 0, output_padding, output_padding }, 0.f));
 
         topology.add(conv_fsv);
     }
@@ -5231,7 +5231,7 @@ TEST_P(convolution_gpu, fs_byx_fsv32)
 
         auto conv_fsv = convolution("conv_fsv", "input_fsv", { "weights_fsv" },
             { 1, 1, stride, stride }, { 0, 0, input_offset, input_offset });
-        conv_fsv.output_padding = padding({ 0, 0, output_padding, output_padding }, 0.f);
+        conv_fsv.set_output_padding(padding({ 0, 0, output_padding, output_padding }, 0.f));
 
         topology.add(conv_fsv);
     }
@@ -5349,7 +5349,7 @@ TEST_P(convolution_gpu, bfyx_f16)
 
         auto conv_fsv = convolution("conv", "input_f16", { "weights" }, { "biases" },
             { 1, 1, stride, stride }, { 0, 0, input_offset, input_offset });
-        conv_fsv.output_padding = padding({ 0, 0, output_padding, output_padding }, 0.f);
+        conv_fsv.set_output_padding(padding({ 0, 0, output_padding, output_padding }, 0.f));
 
         topology.add(conv_fsv);
     }
@@ -5372,7 +5372,7 @@ TEST_P(convolution_gpu, bfyx_f16)
 
         auto conv_fsv = convolution("conv", "input_f16", { "weights" },
             { 1, 1, stride, stride }, { 0, 0, input_offset, input_offset });
-        conv_fsv.output_padding = padding({ 0, 0, output_padding, output_padding }, 0.f);
+        conv_fsv.set_output_padding(padding({ 0, 0, output_padding, output_padding }, 0.f));
 
         topology.add(conv_fsv);
     }
@@ -5599,7 +5599,7 @@ public:
         float activation_slope = convolution->activation_negative_slope;
         tensor input_offset = convolution->input_offset;
         tensor weights_size = inputs[1].get_layout().size;
-        padding output_padding = convolution->output_padding;
+        padding output_padding = convolution->get_output_padding();
 
         tensor output_size = get_expected_output_tensor();
 
@@ -5631,7 +5631,7 @@ public:
                     for (int x = 0; x < output_size_x; x++)
                     {
                         int output_index = (b * output_buffer_size.feature[0] + out_f) * output_buffer_size.spatial[1] * output_buffer_size.spatial[0];
-                        tensor lower_output_padding = convolution->output_padding.lower_size();
+                        tensor lower_output_padding = convolution->get_output_padding().lower_size();
                         output_index += (lower_output_padding.spatial[1] + y) * output_buffer_size.spatial[0] + lower_output_padding.spatial[0] + x;
 
                         output_mem[output_index] += bias_mem[out_f];
@@ -5661,7 +5661,7 @@ public:
                             int output_yi = y;
                             int output_xi = x;
                             int output_index = (output_bi * output_buffer_size.feature[0] + output_fi) * output_buffer_size.spatial[1] * output_buffer_size.spatial[0];
-                            tensor lower_output_padding = convolution->output_padding.lower_size();
+                            tensor lower_output_padding = convolution->get_output_padding().lower_size();
                             output_index += (lower_output_padding.spatial[1] + output_yi) * output_buffer_size.spatial[0] + lower_output_padding.spatial[0] + output_xi;
 
                             for (int kernel_y = 0; kernel_y < weights_size.spatial[1]; kernel_y++)

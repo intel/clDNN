@@ -30,6 +30,8 @@ public:
     using parent::parent;
 
     program_node& input(size_t idx = 0) const { return get_dependency(idx); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using custom_gpu_primitive_node = typed_program_node<custom_gpu_primitive>;
@@ -42,10 +44,10 @@ class typed_primitive_inst<custom_gpu_primitive> : public typed_primitive_inst_b
 public:
     static layout calc_output_layout(custom_gpu_primitive_node const& node)
     {
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for "
                   "custom_gpu_primitive_node!");
-        layout output_layout = node.get_primitive()->output_layout;
+        layout output_layout = node.get_primitive()->get_output_layout();
         
         // if the output layout format was set to any, it means the layer output format will be the same as the first input
         if (output_layout.format == format::any)
@@ -64,3 +66,4 @@ public:
 using custom_gpu_primitive_inst = typed_primitive_inst<custom_gpu_primitive>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(custom_gpu_primitive)

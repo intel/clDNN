@@ -24,10 +24,14 @@
 
 using namespace cldnn;
 
-program_node::program_node(std::shared_ptr<primitive> prim, program_impl & prog) : desc(prim), myprog(prog), org_id(prim->id)
+program_node::program_node(std::shared_ptr<primitive> prim, program_impl & prog) : desc(prim), myprog(prog), org_id(prim->get_id())
 {
     if (prim)
-        output_layout.data_padding = prim->output_padding;
+        output_layout.data_padding = prim->get_output_padding();
+}
+
+program_node::program_node(program_impl& prog) : myprog(prog)
+{
 }
 
 void program_node::replace_dependency(size_t idx, program_node& new_dep)
@@ -58,7 +62,7 @@ std::vector<primitive_id> program_node::get_dependencies_ids() const
 {
     std::vector<primitive_id> dep_ids;
     for (auto& dependency : dependencies)
-        dep_ids.push_back(dependency->get_primitive()->id);
+        dep_ids.push_back(dependency->get_primitive()->get_id());
     return dep_ids;
 }
 
@@ -272,4 +276,4 @@ void details::internal_program_node_base::set_implementation(std::unique_ptr<pri
 {
     selected_impl = std::move(impl);
 }
-
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENT(cldnn::details::internal_program_node_base)

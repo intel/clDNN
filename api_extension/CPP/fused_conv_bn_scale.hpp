@@ -163,8 +163,18 @@ protected:
         dto.inv_variance = inv_variance.c_str();
         dto.scale_bias = scale_bias.c_str();
     }
+private:
+    fused_conv_bn_scale() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(fused_conv_bn_scale) & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(bias)
+           & CLDNN_SERIALIZATION_NVP(input_offset) & CLDNN_SERIALIZATION_NVP(stride) & CLDNN_SERIALIZATION_NVP(dilation) & CLDNN_SERIALIZATION_NVP(with_activation) 
+           & CLDNN_SERIALIZATION_NVP(activation_negative_slope) & CLDNN_SERIALIZATION_NVP(with_output_size) & CLDNN_SERIALIZATION_NVP(output_size) 
+           & CLDNN_SERIALIZATION_NVP(scale_bias) & CLDNN_SERIALIZATION_NVP(inv_variance) & CLDNN_SERIALIZATION_NVP(epsilon) & CLDNN_SERIALIZATION_NVP(_weights)
+           & CLDNN_SERIALIZATION_NVP(_bias);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(fused_conv_bn_scale)

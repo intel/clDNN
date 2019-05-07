@@ -72,7 +72,8 @@ struct gpu_buffer : public memory_impl {
 
 private:
     gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, const layout& layout);
-    
+    gpu_buffer(const refcounted_obj_ptr<engine_impl>& engine, resource_flags flags, gpu_buffer::ptr to_copy);
+
     std::shared_ptr<gpu_toolkit> _context;
     std::mutex _mutex;
     unsigned _lock_count;

@@ -40,7 +40,7 @@ namespace kernel_selector {
             return MakeJitConstant(jitName, jitValue);
         }
     }
-    //TODO: [blocked_formats] does fp32 work well with kernel?
+
     ParamsKey EltwiseKernel_mixed_byxf_and_fs_b_yx_fsv32::GetSupportedKey() const
     {
         ParamsKey k;

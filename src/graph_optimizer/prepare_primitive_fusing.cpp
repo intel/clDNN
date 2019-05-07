@@ -119,22 +119,22 @@ void prepare_primitive_fusing::fuse_conv_bn_scale(program_impl& p, program_node*
                     if (!(*sc_backw)->is_type<scale_grad_weights>())
                         return;
 
-                    auto conv_out_prim = std::make_shared<mutable_data>(prim->id + "_fused_conv_out", memory::attach(dummy_layout, &zero, 1));
+                    auto conv_out_prim = std::make_shared<mutable_data>(prim->get_id() + "_fused_conv_out", memory::attach(dummy_layout, &zero, 1));
                     auto& conv_out_node = p.get_or_create(conv_out_prim);
                     auto conv_out_mem = p.get_engine().allocate_memory(node.get_output_layout());
                     conv_out_node.as<mutable_data>().attach_memory(*conv_out_mem, false);
                     p.add_intermediate(conv_out_node, **bn_backw, 1, true);
 
-                    auto bn_out_prim = std::make_shared<mutable_data>(prim->id + "_fused_bn_out", memory::attach(dummy_layout, &zero, 1));
+                    auto bn_out_prim = std::make_shared<mutable_data>(prim->get_id() + "_fused_bn_out", memory::attach(dummy_layout, &zero, 1));
                     auto& bn_out_node = p.get_or_create(bn_out_prim);
                     auto bn_out_mem = p.get_engine().allocate_memory(bn_node->get_output_layout());
                     bn_out_node.as<mutable_data>().attach_memory(*bn_out_mem, false);
                     p.add_intermediate(bn_out_node, **sc_backw, 0, true);
                 }
 
-                auto new_conv = std::make_shared<fused_conv_bn_scale>(prim->id + "_fused", prim->input[0], prim->weights.ref(), prim->bias.ref(), bn_prim->epsilon,
-                    scale_prim->input[1], scale_prim->bias, prim->stride, prim->dilation, prim->input_offset, bn_prim->inv_variance,
-                    prim->with_activation, prim->activation_negative_slope, prim->output_padding);
+                auto new_conv = std::make_shared<fused_conv_bn_scale>(prim->get_id() + "_fused", prim->get_input()[0], prim->weights.ref(), prim->bias.ref(), bn_prim->epsilon,
+                    scale_prim->get_input()[1], scale_prim->bias, prim->stride, prim->dilation, prim->input_offset, bn_prim->inv_variance,
+                    prim->with_activation, prim->activation_negative_slope, prim->get_output_padding());
                 auto& new_node = p.get_or_create(new_conv);
                 p.replace(node, new_node);
 
@@ -257,7 +257,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
     }
 
     // we check if input to fuse is convolution that we're right now processing
-    if (eltw_node->input(eltw_fused_input_idx).id() != conv.id)
+    if (eltw_node->input(eltw_fused_input_idx).id() != conv.get_id())
         return;
 
     // get strides for other than our conv input
@@ -275,7 +275,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
     }
 
     auto fused_conv_eltw = std::make_shared<fused_conv_eltwise>(
-        conv.id + "_fused_" + eltw.id,
+        conv.get_id() + "_fused_" + eltw.get_id(),
         conv_node->input().id(),
         eltw_node->input(eltw_second_input_idx).id(),
         eltw.mode,

@@ -84,8 +84,14 @@ private:
     {
         dto.dimension = static_cast<cldnn_softmax_dimension>(dimension);
     }
+
+    softmax() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(softmax) & CLDNN_SERIALIZATION_NVP(dimension);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(softmax)

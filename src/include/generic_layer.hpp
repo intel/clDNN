@@ -65,9 +65,8 @@ struct generic_layer : public primitive_base<generic_layer, CLDNN_PRIMITIVE_DESC
     {
     }
 
-    /// @brief Requested memory layout.
-    layout output_layout;
-    const kernel_selector::generic_kernel_params generic_params;
+    const layout& get_output_layout() const { return output_layout; }
+    const kernel_selector::generic_kernel_params& get_generic_params() const { return generic_params; }
 
 protected:
     std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const override
@@ -80,8 +79,19 @@ protected:
         dto.output_layout = output_layout;
         dto.generic_params = &generic_params;
     }
+
+private:
+    /// @brief Requested memory layout.
+    layout output_layout;
+    kernel_selector::generic_kernel_params generic_params;
+
+    generic_layer() : primitive_base(), output_layout(data_types::f32, format::byxf, tensor()) {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(generic_layer) & CLDNN_SERIALIZATION_NVP(output_layout) & CLDNN_SERIALIZATION_NVP(generic_params);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(generic_layer)

@@ -17,7 +17,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "api/CPP/mutable_data.hpp"
+#include "api_extension/CPP/fused_conv_eltwise.hpp"
 #include "primitive_inst.h"
+#include "program_impl.h"
 
 namespace cldnn
 {
@@ -37,6 +39,19 @@ struct typed_program_node<mutable_data> : public typed_program_node_base<mutable
 
 private:
     memory_impl::ptr mem;
+    CLDNN_SERIALIZATION_MEMBERS(
+        auto mem_layout = &mem->get_layout();
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(mem_layout);
+        if (!Archive::is_saving::value)
+        {
+            if (this->get_dependency(0).is_type<mutable_data>() && (*this->get_users().begin())->is_type<fused_conv_eltwise>()) // Solution for conv_eltw_read_write_opt
+                mem = &this->get_dependency(0).as<mutable_data>().get_attached_memory();
+            else if (this->get_dependency(0).is_type<fused_conv_eltwise>() && this->get_dependency(0).get_dependency(1).is_type<mutable_data>())
+                mem = &this->get_dependency(0).get_dependency(1).as<mutable_data>().get_attached_memory();
+            else
+                mem = this->get_program().get_engine().allocate_memory(*mem_layout);
+        }
+    )
 
     void fill_memory();
     void fill_memory_xavier();
@@ -64,3 +79,4 @@ public:
 using mutable_data_inst = typed_primitive_inst<mutable_data>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(mutable_data)

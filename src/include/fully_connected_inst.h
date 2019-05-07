@@ -48,6 +48,9 @@ public:
 private:
     float input_qf;
     float output_qf;
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) /* input_qf, output_qf from primitvie */;
+    )
 };
 
 using fully_connected_node = typed_program_node<fully_connected>;
@@ -77,3 +80,4 @@ public:
 using fully_connected_inst = typed_primitive_inst<fully_connected>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(fully_connected)

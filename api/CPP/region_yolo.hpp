@@ -87,9 +87,14 @@ namespace cldnn
             dto.mask_size = mask_size;
             dto.do_softmax = do_softmax;
         }
+        region_yolo() : primitive_base() {} // Constructor necessary for serialization process
+        CLDNN_SERIALIZATION_MEMBERS(
+            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(region_yolo) & CLDNN_SERIALIZATION_NVP(coords) & CLDNN_SERIALIZATION_NVP(classes)
+               & CLDNN_SERIALIZATION_NVP(num) & CLDNN_SERIALIZATION_NVP(mask_size) & CLDNN_SERIALIZATION_NVP(do_softmax);
+        )
     };
     /// @}
     /// @}
     /// @}
 }
-#pragma once
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(region_yolo)

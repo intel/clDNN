@@ -27,7 +27,7 @@ namespace cldnn {
 
     layout pyramid_roi_align_inst::calc_output_layout(pyramidROIAlign_node const &node)
     {
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for "
                   "pyramidROIAlign_node!");
 
@@ -61,3 +61,4 @@ namespace cldnn {
         : parent(network, node)
     { }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(pyramid_roi_align)

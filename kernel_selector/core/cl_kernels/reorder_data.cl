@@ -45,6 +45,11 @@ inline uint FUNC(get_input_index)(uint b, uint f, uint y, uint x)
 #endif
 }
 
+inline uint FUNC(get_input3d_index)(uint b, uint f, uint z, uint y, uint x)
+{
+    return GET_3D_DATA_INDEX(INPUT0, b, f, z, y, x);
+}
+
 ///////////////////////// Output Index /////////////////////////
 
 inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
@@ -73,6 +78,11 @@ inline uint FUNC(get_output_index)(uint b, uint f, uint y, uint x)
 #endif
 }
 
+inline uint FUNC(get_output3d_index)(uint b, uint f, uint z, uint y, uint x)
+{
+    return GET_3D_DATA_INDEX(OUTPUT, b, f, z, y, x);
+}
+
 KERNEL (reorder_data)(
     const __global INPUT_REORDER_TYPE* input, 
     __global OUTPUT_REORDER_TYPE* output
@@ -89,11 +99,29 @@ KERNEL (reorder_data)(
 #elif INPUT0_DIMS == 4
     const uint y = ((uint)(get_global_id(GWS_YX))) / INPUT0_SIZE_X;
     const uint x = ((uint)(get_global_id(GWS_YX))) % INPUT0_SIZE_X;
+#elif INPUT0_DIMS == 5
+    uint data_idx = get_global_id(GWS_YX);
+    uint tmp_data_idx = data_idx / INPUT0_SIZE_X;
+    const uint x = data_idx - tmp_data_idx * INPUT0_SIZE_X;
+    data_idx = tmp_data_idx;
+
+    tmp_data_idx  = data_idx / INPUT0_SIZE_Y;
+    const uint y = data_idx - tmp_data_idx * INPUT0_SIZE_Y;
+    data_idx = tmp_data_idx;
+
+    tmp_data_idx  = data_idx / INPUT0_SIZE_Z;
+    const uint z = data_idx - tmp_data_idx * INPUT0_SIZE_Z;
 #endif
 
+#if   INPUT0_DIMS == 5
+    uint8 ov = FUNC_CALL(reshape_dims3d)(b,f,z,y,x, INPUT0_SIZE_Z, INPUT0_SIZE_Y, INPUT0_SIZE_X, OUTPUT_SIZE_Z, OUTPUT_SIZE_Y, OUTPUT_SIZE_X, INPUT0_DIMS, OUTPUT_DIMS);
+    const uint input_idx  = FUNC_CALL(get_input3d_index)(b, f, z, y, x);
+    const uint output_idx = FUNC_CALL(get_output3d_index)(ov[0],ov[1],ov[2],ov[3],ov[4]);
+#else
     uint4 ov = FUNC_CALL(reshape_dims)(b,f,y,x, INPUT0_SIZE_Y, INPUT0_SIZE_X, OUTPUT_SIZE_Y, OUTPUT_SIZE_X, INPUT0_DIMS, OUTPUT_DIMS);
     const uint input_idx  = FUNC_CALL(get_input_index)(b, f, y, x);
     const uint output_idx = FUNC_CALL(get_output_index)(ov[0],ov[1],ov[2],ov[3]);
+#endif
 
 #if defined MEAN_SUBTRACT_INSIDE_PARAMS
     float res = TO_MEAN_TYPE(input[input_idx]);

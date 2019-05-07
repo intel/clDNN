@@ -47,6 +47,8 @@ struct softmax_loss_grad_gpu : typed_primitive_gpu_impl<softmax_loss_grad>
 
         return softmax_loss_grad_node;
     };
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -67,3 +69,4 @@ namespace {
 }
 
 } }
+CLDNN_SERIALIZATION_GPU_CLASS(softmax_loss_grad)

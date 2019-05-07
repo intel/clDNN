@@ -210,8 +210,16 @@ protected:
         dto.with_activation = with_activation;
         dto.activation_negative_slope = activation_negative_slope;
     }
+private:
+    fully_connected() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(fully_connected) & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(bias) 
+           & CLDNN_SERIALIZATION_NVP(weights_quantization_factors) & CLDNN_SERIALIZATION_NVP(output_calibration_factors) & CLDNN_SERIALIZATION_NVP(input_quantization_factor) 
+           & CLDNN_SERIALIZATION_NVP(output_quantization_factor) & CLDNN_SERIALIZATION_NVP(with_activation) & CLDNN_SERIALIZATION_NVP(activation_negative_slope);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(fully_connected)

@@ -35,7 +35,7 @@ void post_optimize_weights::run(program_impl& p) {
 template <typename T>
 void post_optimize_weights::optimize_weights(T& node, layout_optimizer& lo, program_impl& p)
 {
-    auto weights_offset = node.get_primitive()->input.size();
+    auto weights_offset = node.get_primitive()->get_input().size();
     auto bias_offset = weights_offset + program_helpers::wrap_if_single(node.get_primitive()->weights).size();
     for (auto i = weights_offset; i < bias_offset; i++)
     {
@@ -70,7 +70,7 @@ void post_optimize_weights::optimize_weights(T& node, layout_optimizer& lo, prog
 template <>
 void post_optimize_weights::optimize_weights<fused_conv_eltwise_node>(fused_conv_eltwise_node& node, layout_optimizer& lo, program_impl& p)
 {
-    auto weights_offset = node.get_primitive()->input.size();
+    auto weights_offset = node.get_primitive()->get_input().size();
     auto bias_offset = weights_offset + program_helpers::wrap_if_single(node.get_primitive()->conv.weights).size();
     for (auto i = weights_offset; i < bias_offset; i++)
     {

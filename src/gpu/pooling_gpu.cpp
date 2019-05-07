@@ -116,11 +116,13 @@ public:
         if (primitive->global_pooling) {
             primitive->size.spatial[0] = input_sizes.spatial[0];
             primitive->size.spatial[1] = input_sizes.spatial[1];
+            primitive->size.spatial[2] = input_sizes.spatial[2];
         }
 
         //check if last pooling window goes outside of input size + padding. If so the avg pooling size will be adjusted to that.
         auto dynamic_mode = (((output_sizes.spatial[0] - 1) * stride.spatial[0]) + primitive->size.spatial[0]) > -2 * input_offset.spatial[0] + input_sizes.spatial[0] ||
-            (((output_sizes.spatial[1] - 1) * stride.spatial[1]) + primitive->size.spatial[1]) > -2 * input_offset.spatial[1] + input_sizes.spatial[1];
+            (((output_sizes.spatial[1] - 1) * stride.spatial[1]) + primitive->size.spatial[1]) > -2 * input_offset.spatial[1] + input_sizes.spatial[1] ||
+            (((output_sizes.spatial[2] - 1) * stride.spatial[2]) + primitive->size.spatial[2]) > -2 * input_offset.spatial[2] + input_sizes.spatial[2];
 
         if (primitive->mode == pooling_mode::average && dynamic_mode)
             pp.divMode = kernel_selector::kernel_divider_mode::DYNAMIC_WITH_PADDING;
@@ -140,16 +142,19 @@ public:
         pp.poolSize = {
             (uint32_t)primitive->size.spatial[0],
             (uint32_t)primitive->size.spatial[1],
+            (uint32_t)primitive->size.spatial[2],
         };
 
         pp.poolPad = {
             (uint32_t)std::max(-input_offset.spatial[0], 0),
-            (uint32_t)std::max(-input_offset.spatial[1], 0)
+            (uint32_t)std::max(-input_offset.spatial[1], 0),
+            (uint32_t)std::max(-input_offset.spatial[2], 0)
         };
 
         pp.poolStride = {
             (uint32_t)stride.spatial[0],
-            (uint32_t)stride.spatial[1]
+            (uint32_t)stride.spatial[1],
+            (uint32_t)stride.spatial[2]
         };
 
         auto& kernel_selector   = kernel_selector::pooling_kernel_selector::Instance();
@@ -161,6 +166,8 @@ public:
 
         return pool;
     }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -181,6 +188,10 @@ namespace {
 			implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::u8, format::byxf), pooling_gpu::create);            
             //block fp16 format
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfyx_f16), pooling_gpu::create);           
+            //3D
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f32, format::bfzyx), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::f16, format::bfzyx), pooling_gpu::create);
+            implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::bfzyx), pooling_gpu::create);
             // MMAD
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::byxf_af32), pooling_gpu::create);
             implementation_map<pooling>::add(std::make_tuple(engine_types::ocl, data_types::i8, format::fs_bs_yx_bsv4_fsv32), pooling_gpu::create);
@@ -194,3 +205,4 @@ namespace {
     attach attach_impl;
 }
 } }
+CLDNN_SERIALIZATION_GPU_CLASS(pooling)

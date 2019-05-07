@@ -103,9 +103,15 @@ struct convolution_grad_input : public deconvolution
     {
         return convolution_grad_input(id, input, weights, stride, input_offset, output_size, output_padding);
     }
+private:
+    convolution_grad_input() : deconvolution() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(deconvolution);
+    )
 
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(convolution_grad_input)

@@ -52,22 +52,23 @@ namespace kernel_selector
     // Checks if we need boundary checking in kernel.
     bool PoolingKernelBase::NeedsBoundaryCheck(const pooling_params& pp) const
     {
-        if (pp.poolPad.x != 0 || pp.poolPad.y != 0)
+        if (pp.poolPad.x != 0 || pp.poolPad.y != 0 || pp.poolPad.z != 0)
         {
             return true;
         }
 
         const auto& input = pp.inputs[0];
 
-        if (input.X().v < pp.poolSize.x || input.Y().v < pp.poolSize.y)
+        if (input.X().v < pp.poolSize.x || input.Y().v < pp.poolSize.y || input.Z().v < pp.poolSize.z)
         {
             return true;
         }
 
         auto mod_x = (input.X().v - pp.poolSize.x) % pp.poolStride.x;
         auto mod_y = (input.Y().v - pp.poolSize.y) % pp.poolStride.y;
+        auto mod_z = (input.Z().v - pp.poolSize.z) % pp.poolStride.z;
 
-        return mod_x || mod_y;
+        return mod_x || mod_y || mod_z;
     }
 
     PoolingKernelBase::DispatchData PoolingKernelBase::SetDefault(const pooling_params& params) const
@@ -78,12 +79,12 @@ namespace kernel_selector
 
         kd.fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
-        if (output.GetLayout() == DataLayout::bfyx || output.GetLayout() == DataLayout::byxf)
+        if (output.GetLayout() == DataLayout::bfyx || output.GetLayout() == DataLayout::byxf || output.GetLayout() == DataLayout::bfzyx )
         {
             // Determine global work sizes.
             kd.gws2 = output.Batch().v * output.Feature().v;    // B, F
             kd.gws0 = Align(output.X().v, 32);        // X
-            kd.gws1 = output.Y().v;                             // Y
+            kd.gws1 = output.Y().v * output.Z().v;    // Y, Z
 
             // Find largest positive local work size that is divider for global work size.
             kd.lws0 = 32;

@@ -28,7 +28,7 @@ primitive_type_id softmax_type_id()
 
 layout softmax_inst::calc_output_layout(softmax_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for softmax_node!");
     return node.input().get_output_layout();
 }
@@ -67,3 +67,4 @@ softmax_inst::typed_primitive_inst(network_impl& network, softmax_node const& no
     //        throw std::runtime_error("Softmax input has more than one dimension per batch");
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(softmax)

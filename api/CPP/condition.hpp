@@ -112,8 +112,15 @@ protected:
     {
         return { compare_data };
     }
+private:
+    condition() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(condition) & CLDNN_SERIALIZATION_NVP(compare_data) 
+           & CLDNN_SERIALIZATION_NVP(function) & CLDNN_SERIALIZATION_NVP(offset);
+    )
 };
 }
 /// @}
 /// @}
 /// @}
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(condition)

@@ -38,26 +38,27 @@ private:
     static void setDetectOutSpecificParams(kernel_selector::detection_output_params::DedicatedParams& detectOutParams, const detection_output_node& arg)
     {
         auto primitive = arg.get_primitive();
-        detectOutParams.keep_top_k = primitive->keep_top_k;
-        detectOutParams.num_classes = primitive->num_classes;
-        detectOutParams.top_k = primitive->top_k;
-        detectOutParams.background_label_id = primitive->background_label_id;
-        detectOutParams.code_type = (int32_t)primitive->code_type;
-        detectOutParams.share_location = primitive->share_location;
-        detectOutParams.variance_encoded_in_target = primitive->variance_encoded_in_target;
-        detectOutParams.nms_threshold = primitive->nms_threshold;
-        detectOutParams.eta = primitive->eta;
-        detectOutParams.confidence_threshold = primitive->confidence_threshold;
-        detectOutParams.prior_coordinates_offset = primitive->prior_coordinates_offset;
-        detectOutParams.prior_info_size = primitive->prior_info_size;
-        detectOutParams.prior_is_normalized = primitive->prior_is_normalized;
-        detectOutParams.input_width = primitive->input_width;
-        detectOutParams.input_heigh = primitive->input_height;
+        detectOutParams.keep_top_k = primitive->get_keep_top_k();
+        detectOutParams.num_classes = primitive->get_num_classes();
+        detectOutParams.top_k = primitive->get_top_k();
+        detectOutParams.background_label_id = primitive->get_background_label_id();
+        detectOutParams.code_type = (int32_t)primitive->get_code_type();
+        detectOutParams.share_location = primitive->get_share_location();
+        detectOutParams.variance_encoded_in_target = primitive->get_variance_encoded_in_target();
+        detectOutParams.nms_threshold = primitive->get_nms_threshold();
+        detectOutParams.eta = primitive->get_eta();
+        detectOutParams.confidence_threshold = primitive->get_confidence_threshold();
+        detectOutParams.prior_coordinates_offset = primitive->get_prior_coordinates_offset();
+        detectOutParams.prior_info_size = primitive->get_prior_info_size();
+        detectOutParams.prior_is_normalized = primitive->get_prior_is_normalized();
+        detectOutParams.input_width = primitive->get_input_width();
+        detectOutParams.input_heigh = primitive->get_input_height();
         detectOutParams.conf_size_x = arg.confidence().get_output_layout().get_buffer_size().spatial[0];
         detectOutParams.conf_size_y = arg.confidence().get_output_layout().get_buffer_size().spatial[1];
         detectOutParams.conf_padding_x = arg.confidence().get_output_layout().data_padding.lower_size().spatial[0];
         detectOutParams.conf_padding_y = arg.confidence().get_output_layout().data_padding.lower_size().spatial[1];
     }
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 
 
 public:
@@ -103,24 +104,25 @@ private:
         if (arg.get_dependency(0).is_type<detection_output>())
         {
             auto primitive = arg.get_dependency(0).as<detection_output>().get_primitive();
-            detectOutParams.keep_top_k = primitive->keep_top_k;
-            detectOutParams.num_classes = primitive->num_classes;
+            detectOutParams.keep_top_k = primitive->get_keep_top_k();
+            detectOutParams.num_classes = primitive->get_num_classes();
             detectOutParams.num_images = arg.get_dependency(0).as<detection_output>().location().get_output_layout().size.batch[0];
-            detectOutParams.top_k = primitive->top_k;
-            detectOutParams.share_location = primitive->share_location;
-            detectOutParams.background_label_id = primitive->background_label_id;
+            detectOutParams.top_k = primitive->get_top_k();
+            detectOutParams.share_location = primitive->get_share_location();
+            detectOutParams.background_label_id = primitive->get_background_label_id();
         }
         else
         {
             auto primitive = arg.get_primitive();
-            detectOutParams.keep_top_k = primitive->keep_top_k;
-            detectOutParams.num_classes = primitive->num_classes;
-            detectOutParams.num_images = primitive->num_images;
-            detectOutParams.top_k = primitive->top_k;
-            detectOutParams.share_location = primitive->share_location;
-            detectOutParams.background_label_id = primitive->background_label_id;
+            detectOutParams.keep_top_k = primitive->get_keep_top_k();
+            detectOutParams.num_classes = primitive->get_num_classes();
+            detectOutParams.num_images = primitive->get_num_images();
+            detectOutParams.top_k = primitive->get_top_k();
+            detectOutParams.share_location = primitive->get_share_location();
+            detectOutParams.background_label_id = primitive->get_background_label_id();
         }
     }
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 
 public:
     static primitive_impl* create(const detection_output_sort_node& arg)
@@ -160,3 +162,5 @@ namespace {
 }
 
 }}
+CLDNN_SERIALIZATION_GPU_CLASS(detection_output)
+CLDNN_SERIALIZATION_GPU_CLASS(detection_output_sort)

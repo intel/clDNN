@@ -115,10 +115,10 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
             auto reorder_prim = input_node.as<reorder>().typed_desc();
             auto& reorder_input = input_node.get_dependency(0);
             auto reorder_layout = input_node.get_output_layout();
-            reorder_layout.data_type = *reorder_prim->output_data_type;
+            reorder_layout.data_type = *reorder_prim->get_output_data_type();
             new_input = lo.get_reorder(
                 reorder_layout,
-                reorder_prim->id,
+                reorder_prim->get_id(),
                 layout_optimizer::data_type::input,
                 conv_node,
                 weights_layout).first;
@@ -132,12 +132,12 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
             {
                 auto reorder_input_layout = reorder_input.get_output_layout();
 
-                auto opt_layout = layout(*new_input->output_data_type, new_input->output_format, reorder_input_layout.size);
+                auto opt_layout = layout(*new_input->get_output_data_type(), new_input->output_format, reorder_input_layout.size);
                 if (reorder_input_layout == opt_layout) //reorder 'breaks' optimal format
                 {
                     if (reorder_prim->subtract_per_feature.empty() &&
                         reorder_prim->mean.empty() &&
-                        !reorder_prim->output_padding) //just plain reorder
+                        !reorder_prim->get_output_padding()) //just plain reorder
                     {
                         conv_node.replace_dependency(0, reorder_input);
                         if (input_node.get_users().size() == 0 && !input_node.is_output())
@@ -149,14 +149,14 @@ void reorder_inputs::run(program_impl& p, layout_optimizer& lo)
                     else //change reorder's output layout
                     {
                         reorder_prim->output_format = opt_layout.format;
-                        reorder_prim->output_data_type = opt_layout.data_type;
+                        reorder_prim->set_output_data_type(opt_layout.data_type);
                         new_input = nullptr;
                     }
                 }
                 else //current reorder gives bad output, simply change it
                 {
                     reorder_prim->output_format = opt_layout.format;
-                    reorder_prim->output_data_type = opt_layout.data_type;
+                    reorder_prim->set_output_data_type(opt_layout.data_type);
                     new_input = nullptr;
                 }
             }

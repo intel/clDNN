@@ -65,8 +65,12 @@ struct primitive
     {
     private:
         std::vector<primitive_id>& vref;
+        CLDNN_SERIALIZATION_MEMBERS(
+            ar & CLDNN_SERIALIZATION_NVP(vref);
+        )
 
     public:
+        fixed_size_vector_ref() : vref(*new std::vector<primitive_id>) {}
         fixed_size_vector_ref(std::vector<primitive_id>& ref) : vref(ref)
         {}
 
@@ -147,28 +151,23 @@ public:
         result.insert(result.end(), deps.begin(), deps.end());
         return result;
     }
-
     /// @brief Implicit conversion to primiitive id.
     operator primitive_id() const { return id; }
 
-    /// @brief Primitive's type id.
-    const primitive_type_id type;
+    const primitive_type_id& get_type() const { return type; }
+    const primitive_id& get_id() const { return id; }
+    void set_id(const primitive_id& new_id) { id = new_id; }
+    const fixed_size_vector_ref& get_input() const { return input; }
+    const padding& get_output_padding() const { return output_padding; }
+    void set_output_padding(const padding& op) { output_padding = op; }
+    const optional_data_type& get_output_data_type() const { return output_data_type; }
+    void set_output_data_type(const optional_data_type& odt) { output_data_type = odt; }
 
-    /// @brief Primitive's id.
-    const primitive_id id;
-
-    /// @brief List of ids of input primitives.
-    fixed_size_vector_ref input;
-
-    /// @brief Requested output padding.
-    padding output_padding;
-
-    /// @brief Requested output precision, if any.
-    optional_data_type output_data_type;
 
 protected:
     struct primitive_id_arr
     {
+        primitive_id_arr() {}
         primitive_id_arr(std::vector<primitive_id> const& vec) : cpp_ids(vec)
         {}
 
@@ -196,11 +195,37 @@ protected:
         }
 
         size_t size() const { return cpp_ids.size(); }
+    private:
+        CLDNN_SERIALIZATION_MEMBERS(
+            ar & CLDNN_SERIALIZATION_NVP(cpp_ids);
+        )
     };
 
-    primitive_id_arr _input;
+    /// @brief Primitive's type id.
+    primitive_type_id type;
+
+    /// @brief Primitive's id.
+    primitive_id id;
+
+    /// @brief List of ids of input primitives.
+    fixed_size_vector_ref input;
+
+    /// @brief Requested output padding.
+    padding output_padding;
+
+    /// @brief Requested output precision, if any.
+    optional_data_type output_data_type;
+
+    primitive_id_arr _input; // Should it be remove if input is also protected?
 
     virtual std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const { return{}; }
+    primitive(const primitive_type_id& type) : type(type) {}
+
+private:
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_NVP(id) & CLDNN_SERIALIZATION_NVP(input)
+           & CLDNN_SERIALIZATION_NVP(output_padding) & CLDNN_SERIALIZATION_NVP(output_data_type) & CLDNN_SERIALIZATION_NVP(_input);
+    )
 };
 
 /// @brief base class for all primitives implementations.
@@ -241,10 +266,15 @@ protected:
             throw std::invalid_argument("DTO type mismatch");
     }
 
+    primitive_base() : primitive(PType::type_id()) {} 
+
 private:
     mutable DTO _dto;
 
     virtual void update_dto(DTO& dto) const = 0;
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(primitive);
+    )
 };
 
 #define CLDNN_DEFINE_TYPE_ID(PType) static primitive_type_id type_id()\

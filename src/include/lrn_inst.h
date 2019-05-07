@@ -40,3 +40,4 @@ public:
 using lrn_inst = typed_primitive_inst<lrn>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(lrn)

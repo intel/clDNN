@@ -64,6 +64,9 @@ struct primitive_impl
     virtual bool is_cpu() const { return true; }
 private:
 	std::string _kernel_name;
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_NVP(_kernel_name);
+    )
 };
 
 /*
@@ -87,7 +90,7 @@ public:
 
     memory_impl& dep_memory(size_t index) const { return dependencies().at(index)->output_memory(); }
     memory_impl& output_memory() const { return *_output; }
-    size_t inputs_memory_count() const { return _node.get_primitive()->input.size(); }
+    size_t inputs_memory_count() const { return _node.get_primitive()->get_input().size(); }
     primitive_type_id type() const { return _node.type(); }
     primitive_id id() const { return _node.id(); }
     primitive_id org_id() const { return _node.get_org_primitive_id(); }
@@ -186,6 +189,9 @@ private:
     }
 
 
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(primitive_impl);
+    )
 };
 
 namespace details
@@ -302,5 +308,4 @@ class typed_primitive_inst : public typed_primitive_inst_base<PType>
         static std::string to_string(PType##_node const& arg) { return primitive_inst::generic_to_string(arg, #PType); } \
     }; \
     using PType##_inst = typed_primitive_inst<PType>;
-
 }

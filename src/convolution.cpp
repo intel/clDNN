@@ -46,8 +46,8 @@ layout convolution_inst::calc_output_layout(convolution_node const& node)
     auto filter_size = weights_layout.size;
 
     auto input_type = input_layout.data_type;
-    auto output_type = node.get_primitive()->output_data_type
-                           ? *node.get_primitive()->output_data_type
+    auto output_type = node.get_primitive()->get_output_data_type()
+                           ? *node.get_primitive()->get_output_data_type()
                            : input_type;
 
     // TODO: Consider moving general parameter verification to arguments constructor.
@@ -207,3 +207,4 @@ convolution_inst::typed_primitive_inst(network_impl& network, convolution_node c
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(convolution)

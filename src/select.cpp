@@ -30,7 +30,7 @@ primitive_type_id select_type_id()
 
 layout select_inst::calc_output_layout(select_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for select_node!");
     return node.input().get_non_padded_output_layout();
 }
@@ -83,3 +83,4 @@ select_inst::typed_primitive_inst(network_impl& network, select_node const& node
 	CLDNN_ERROR_DATA_TYPES_MISMATCH(node.id(), "Data type input 1", data_type1, "Data type input 2", data_type2, "");
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(select)

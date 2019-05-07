@@ -47,7 +47,9 @@ public:
     bool initial_cell_term() const { return !get_primitive()->initial_cell.empty(); }
     std::vector<cldnn_activation_func> activations() const { return get_primitive()->activations; }
     std::vector<cldnn_activation_additional_params> activation_params() const { return get_primitive()->activation_params; }
-    size_t sequence_len() const { return get_primitive()->input.size(); }
+    size_t sequence_len() const { return get_primitive()->get_input().size(); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using lstm_node = typed_program_node<lstm>;
@@ -86,3 +88,4 @@ public:
 using lstm_inst = typed_primitive_inst<lstm>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(lstm)

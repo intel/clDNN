@@ -33,7 +33,7 @@ namespace cldnn
 	{
         auto desc = node.get_primitive();
         auto input_layout = node.input().get_output_layout();
-        auto output_data_type = desc->output_data_type ? *desc->output_data_type : input_layout.data_type;
+        auto output_data_type = desc->get_output_data_type() ? *desc->get_output_data_type() : input_layout.data_type;
         auto size_check = [&](size_t tensor_size) {
             size_t max_size;
             // lowest integer not representable in floating point type = 2^(mantissa_bits + 1) + 1
@@ -101,3 +101,4 @@ namespace cldnn
 	{
 	}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(arg_max_min)

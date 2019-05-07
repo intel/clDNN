@@ -42,3 +42,17 @@ inline uint4 FUNC(reshape_dims)(uint o, uint i, uint y, uint x, uint src_size_y,
     
     return (uint4)(o,i,y,x);
 }
+
+inline uint8 FUNC(reshape_dims3d)(uint o, uint i, uint z, uint y, uint x, uint src_size_z, uint src_size_y, uint src_size_x, uint dst_size_z, uint dst_size_y, uint dst_size_x, uint src_dims, uint dst_dims)
+{
+    if (src_dims == 4 && dst_dims == 5)
+    {
+        return (uint8)(o,i,1,y,x,0,0,0);
+    }
+    else if (src_dims == 5 && dst_dims == 4)
+    {
+        uint _y = z*src_size_y + y;
+        return (uint8)(o,i,0,_y,x,0,0,0);
+    }
+    return (uint8)(o,i,z,y,x,0,0,0);
+}

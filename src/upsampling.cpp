@@ -29,7 +29,7 @@ primitive_type_id upsampling_type_id()
 
 layout upsampling_inst::calc_output_layout(upsampling_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for upsampling_node!");
     auto desc = node.get_primitive();
     auto input_layout = node.input().get_output_layout();
@@ -62,14 +62,14 @@ std::string upsampling_inst::to_string(upsampling_node const& node)
             break;
     }
 
-    primitive_description << "id: " << desc->id << ", type: upsampling" << 
+    primitive_description << "id: " << desc->get_id() << ", type: upsampling" << 
         "\n\tinput_1: " << input_1.id() << ", count: " << input_1.get_output_layout().count() << ",  size: " << input_1.get_output_layout().size <<
         "\n\tscale: " << desc->scale <<
         "\n\tnum_filter: " << desc->num_filter <<
         "\n\tsample_type: " << str_type <<
         "\n\twith activation: " << activation << ", slope: " << desc->activation_negative_slope << 
-        "\n\toutput padding lower size: " << desc->output_padding.lower_size() <<
-        "\n\toutput padding upper size: " << desc->output_padding.upper_size() <<
+        "\n\toutput padding lower size: " << desc->get_output_padding().lower_size() <<
+        "\n\toutput padding upper size: " << desc->get_output_padding().upper_size() <<
         "\n\toutput: count: " << node.get_output_layout().count() << ",  size: " << node.get_output_layout().size << '\n';
 
     return primitive_description.str();
@@ -82,3 +82,4 @@ upsampling_inst::typed_primitive_inst(network_impl& network, upsampling_node con
         CLDNN_ERROR_MESSAGE(node.id(), "Upsampling primitive instance with bilinear filtering should be replaced by deconvolution!");
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(upsampling)

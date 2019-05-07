@@ -34,6 +34,8 @@ public:
 
     program_node& input() const { return get_dependency(0); }
     program_node& input2() const { return get_dependency(1); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using upsampling_node = typed_program_node<upsampling>;
@@ -54,3 +56,4 @@ public:
 using upsampling_inst = typed_primitive_inst<upsampling>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(upsampling)

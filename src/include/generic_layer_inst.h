@@ -31,6 +31,8 @@ public:
     using parent::parent;
 
     program_node& input() const { return get_dependency(0); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using generic_layer_node = typed_program_node<generic_layer>;
@@ -43,7 +45,7 @@ class typed_primitive_inst<generic_layer> : public typed_primitive_inst_base<gen
 public:
     static layout calc_output_layout(generic_layer_node const& node)
     {
-        return node.get_primitive()->output_layout;
+        return node.get_primitive()->get_output_layout();
     }
 
     static std::string to_string(generic_layer_node const& node);
@@ -55,3 +57,4 @@ public:
 using generic_layer_inst = typed_primitive_inst<generic_layer>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(generic_layer)

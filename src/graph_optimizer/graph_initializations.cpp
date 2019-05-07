@@ -60,7 +60,7 @@ namespace cldnn
                 auto output_layout_size = output_layout.size;
 
                 auto split_prim = node->as<split>().typed_desc();
-                primitive_id input_id = split_prim->input[0];
+                primitive_id input_id = split_prim->get_input()[0];
                 auto split_num = split_prim->output_offsets.size();
 
                 //create crop for each split ouptut provided
@@ -120,7 +120,7 @@ namespace cldnn
                 primitive_id upsampling_id = node->id();
                 auto& input_node = node->get_dependency(0);
 
-                primitive_id input_id = upsampling_prim->input[0];
+                primitive_id input_id = upsampling_prim->get_input()[0];
                 auto num_filter = upsampling_prim->num_filter;
 
                 //setting deconvolution parameters based on upsampling input
@@ -208,7 +208,7 @@ namespace cldnn
                 primitive_id deconv_id = node->id();
                 auto& input_node = node->get_dependency(0);
 
-                primitive_id input_id = deconv_prim->input[0];
+                primitive_id input_id = deconv_prim->get_input()[0];
 
                 //setting convolution parameters based on deconvolution params
                 auto stride = deconv_prim->stride;
@@ -223,7 +223,7 @@ namespace cldnn
                 auto input_offset = deconv_prim->input_offset;
                 auto with_activation = deconv_prim->with_activation;
                 auto activation_negative_slope = deconv_prim->activation_negative_slope;
-                auto output_padding = deconv_prim->output_padding;
+                auto output_padding = deconv_prim->get_output_padding();
 
                 //remove deconvolution node and its connections to weights and biases, rename it and move to the optimized list
                 tensor filter_size = { 1, 1, 1, 1 };
@@ -328,7 +328,7 @@ namespace cldnn
                     false,  // share_location
                     0,      // top_k
                     -1,     // background_label_id
-                    detect_out_prim->output_padding);
+                    detect_out_prim->get_output_padding());
 
                 p.get_or_create(detect_out_sort_prim);
 
@@ -488,7 +488,7 @@ namespace cldnn
                             }
                         }
 
-                        //primitive_id lstm_gemm_input_id = node->get_dependency(input_idx).get_primitive()->id;
+                        //primitive_id lstm_gemm_input_id = node->get_dependency(input_idx).get_primitive()->get_id();
                         //the line below requires an attention: get_org_primitive_id() might not be an actual id of a node (see rename method)
                         //ToDO: ensure that get_org_primitive_id() is suitable here
                         primitive_id lstm_gemm_input_id = node->get_dependency(input_idx).get_org_primitive_id();

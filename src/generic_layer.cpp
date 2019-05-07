@@ -54,3 +54,4 @@ std::string generic_layer_inst::to_string(generic_layer_node const& node)
 }
 
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(generic_layer)

@@ -45,6 +45,17 @@ You can find more information [here](https://software.intel.com/en-us/openvino-t
 
 ## Changelog
 
+### Drop 14.1
+    New features:
+    - network serialization
+    - 3D support for: Acitvation, Reorder, Eltwise, Reshape, Deconvolution
+    Bug fixes:
+    - concatenation fix for different input formats
+    UX:
+    - added 2019.4 intel ocl icd
+    - refactored bfyx_f16 format
+    - added i32 and i64 support for select primitive
+
 ### Drop 14.0
     New features:
     - 3 spatial dimensions support in convolution primitive (3D convolution)

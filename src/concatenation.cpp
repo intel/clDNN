@@ -29,7 +29,7 @@ primitive_type_id concatenation_type_id()
 
 layout concatenation_inst::calc_output_layout(concatenation_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for concatenation_node!");
     auto desc = node.get_primitive();
 
@@ -41,7 +41,7 @@ layout concatenation_inst::calc_output_layout(concatenation_node const& node)
 
     // calculate sum of features from all inputs
     result_sizes[axis_index] = 0;
-    for (size_t i = 0; i < desc->input.size(); ++i)
+    for (size_t i = 0; i < desc->get_input().size(); ++i)
     {
         auto input_sizes = node.input(i).get_output_layout().size.sizes();
         result_sizes[axis_index] += input_sizes[axis_index];
@@ -138,4 +138,27 @@ concatenation_inst::typed_primitive_inst(network_impl& network, concatenation_no
         }
     }
 }
+
+void concatenation_inst::on_execute()
+{
+    // if there is only one input and it is optimized just use input as output
+    if (_deps.size() == 1)
+    {
+        if (!node.can_be_optimized())
+            return;
+
+        if (_output && _network.get_engine().is_the_same_buffer(output_memory(), input_memory()))
+            return;
+
+        reuse_input();
+    }
+
 }
+
+void concatenation_inst::reuse_input()
+{
+    _output = _network.get_engine().reinterpret_buffer(input_memory(), node.get_output_layout());
+}
+
+}
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(concatenation)

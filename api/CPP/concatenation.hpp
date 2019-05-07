@@ -91,8 +91,14 @@ private:
     {
         dto.axis = static_cast<cldnn_concatenation_axis>(axis);
     }
+
+    concatenation() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(concatenation) & CLDNN_SERIALIZATION_NVP(axis);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(concatenation)

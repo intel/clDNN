@@ -20,6 +20,11 @@
 #include "primitive.hpp"
 #include "memory.hpp"
 
+namespace boost {
+    namespace serialization {
+        class access;
+} }
+
 namespace cldnn
 {
 /// @addtogroup cpp_api C++ API
@@ -82,41 +87,78 @@ namespace cldnn
             , _kernels_code(dto->kernels_code)
     {
     }
+    const fixed_size_vector_ref& get_kernels_code() const { return kernels_code; }
+    const std::string& get_kernel_entry_point() const { return kernel_entry_point; }
+    const std::vector<cldnn_arg>& get_kernel_arguments() const  { return kernel_arguments; }
+    const std::string& get_build_options() const  { return build_options; }
+    const layout& get_output_layout() const  { return output_layout; }
+    std::vector<size_t> get_gws() const  { return gws; }
+    std::vector<size_t> get_lws() const  { return lws; }
 
+private:
     /// @brief Source code for the kernel
     fixed_size_vector_ref kernels_code;
     /// @brief The name of the entry point function in the kernel
-    const std::string kernel_entry_point;
+    std::string kernel_entry_point;
     /// @brief Argument bindings for the entry point function
-    const std::vector<cldnn_arg> kernel_arguments;
+    std::vector<cldnn_arg> kernel_arguments;
     /// @brief The kernel's build options
-    const std::string build_options;
+    std::string build_options;
     /// @brief The output layout declared by the primitive
-    const layout output_layout;
+    layout output_layout;
     /// @brief The global working sizes
-    const std::vector<size_t> gws;
+    std::vector<size_t> gws;
     /// @brief The local working sizes
-    const std::vector<size_t> lws;
-    
+    std::vector<size_t> lws;
+
+    custom_gpu_primitive() : primitive_base(), output_layout(data_types::f32, format::byxf, { 1,1,1,1,1 }) {} // Constructor necessary for serialization process
+    // To make it easier, create serialize method for std::vector<cldnn_arg>.
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(custom_gpu_primitive) & CLDNN_SERIALIZATION_NVP(kernels_code)
+           & CLDNN_SERIALIZATION_NVP(kernel_entry_point) & CLDNN_SERIALIZATION_NVP(build_options)
+           & CLDNN_SERIALIZATION_NVP(output_layout) & CLDNN_SERIALIZATION_NVP(gws) & CLDNN_SERIALIZATION_NVP(lws);
+        cldnn_arg args;
+        const std::string arg_type_str("kernel_arguments_arg_type_");
+        const std::string index_str("kernel_arguments_index_");
+        std::string kernel_arguments_arg_type;
+        std::string kernel_arguments_index;
+        auto kernel_arguments_size = kernel_arguments.size();
+        ar & CLDNN_SERIALIZATION_NVP(kernel_arguments_size);
+        for (size_t x = 0; x < kernel_arguments_size; x++)
+        {
+            kernel_arguments_arg_type = arg_type_str + std::to_string(x);
+            kernel_arguments_index = index_str + std::to_string(x);
+            if (Archive::is_saving::value)
+            {
+                args.arg_type = kernel_arguments.at(x).arg_type;
+                args.index = kernel_arguments.at(x).index;
+            }
+            ar & boost::serialization::make_nvp(kernel_arguments_arg_type.c_str(), args.arg_type)
+               & boost::serialization::make_nvp(kernel_arguments_index.c_str(), args.index);
+            if (!Archive::is_saving::value)
+                kernel_arguments.push_back(args);
+        }
+    )
 
 protected:
     primitive_id_arr _kernels_code;
 
     void update_dto(dto& dto) const override
     {
-        dto.kernels_code            = _kernels_code.ref();
-        dto.kernel_entry_point      = kernel_entry_point.c_str();
-        dto.kernel_arguments        = kernel_arguments.data();
-        dto.kernel_arguments_num    = (int)kernel_arguments.size();
-        dto.build_options           = build_options.c_str();
-        dto.output_layout           = (cldnn_layout)output_layout;
-        dto.gws                     = gws.data();
-        dto.gws_num                 = (int)gws.size();
-        dto.lws                     = lws.data();
-        dto.lws_num                 = (int)lws.size();
+        dto.kernels_code = _kernels_code.ref();
+        dto.kernel_entry_point = kernel_entry_point.c_str();
+        dto.kernel_arguments = kernel_arguments.data();
+        dto.kernel_arguments_num = (int)kernel_arguments.size();
+        dto.build_options = build_options.c_str();
+        dto.output_layout = (cldnn_layout)output_layout;
+        dto.gws = gws.data();
+        dto.gws_num = (int)gws.size();
+        dto.lws = lws.data();
+        dto.lws_num = (int)lws.size();
     }
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(custom_gpu_primitive)

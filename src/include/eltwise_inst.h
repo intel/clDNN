@@ -46,6 +46,7 @@ public:
 private:
     float output_qf;
     bool output_cf; // to know if we have calibration factors
+    CLDNN_SERIALIZATION_PARENT_ONLY() /* output_qf, output_cf from primitive */
 };
 
 using eltwise_node = typed_program_node<eltwise>;
@@ -69,3 +70,4 @@ public:
 using eltwise_inst = typed_primitive_inst<eltwise>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(eltwise)

@@ -61,7 +61,7 @@ static std::vector<uint16_t> get_permute_order(permute_node const& node, format:
 
 layout permute_inst::calc_output_layout(permute_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for permute_node!");
     auto input_layout = node.input().get_output_layout();
     auto permute_order = node.get_primitive()->permute_order;
@@ -75,7 +75,7 @@ layout permute_inst::calc_output_layout(permute_node const& node)
     }
 
     auto input_size = tensor(output_sizes);
-    auto op = node.get_primitive()->output_padding;
+    auto op = node.get_primitive()->get_output_padding();
 
     return layout(input_layout.data_type, input_layout.format, input_size, op);
 }
@@ -123,3 +123,4 @@ permute_inst::typed_primitive_inst(network_impl& network, permute_node const& no
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(permute)

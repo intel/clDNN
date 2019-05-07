@@ -213,7 +213,6 @@ typedef enum /*:int32_t*/
     cldnn_build_option_tuning_config,           ///< Tuning config.
     cldnn_build_option_graph_dumps_dir,         ///< Specifies a directory to which stages of network compilation should be dumped.
     cldnn_build_option_serialization,           ///< Specifies a name of files to which serialization should be dumped.
-    cldnn_build_option_load_program,            ///< Specifies a name of load_program process.
     cldnn_build_option_learning_config,         ///< User defined learning parameters.
     cldnn_build_option_detection_output_gpu     ///< Run detection output layer always on GPU, regardless performance
 } cldnn_build_option_type;
@@ -280,7 +279,6 @@ typedef enum /*:int32_t*/
     cldnn_format_o_i_yx_i16_o16,///< format used for blocked convolution
     cldnn_format_os_iyx_osv16,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
                                 ///< \n \image html os_iyx_osv16.jpg
-    cldnn_format_oiyx_o16,      ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
     cldnn_format_os_iyx_osv32,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv32 - 32 values of single slice.
     cldnn_format_os_iyx_osv64,  ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv64 - 64 values of single slice.
     cldnn_format_bs_xs_xsv8_bsv8, ///< format used only for fully connected weights: bs - batch slice, xs - x slice, bsv8 - 8 values of single slice.
@@ -649,6 +647,11 @@ CLDNN_API void cldnn_get_event_profiling_info(cldnn_event event, cldnn_profiling
 /// @param[in] options_num Number of elements in the @p options array.
 CLDNN_API cldnn_program cldnn_build_program(cldnn_engine engine, cldnn_topology topology, cldnn_build_option* options, size_t options_num, cldnn_status* status);
 
+/// @brief Builds executable program based on the one serialized to file.
+/// @param[in] engine The engine which will be used to build the program.
+/// @param[in] file_name The base name of files from which program will be build.
+CLDNN_API cldnn_program cldnn_build_serialized_program(cldnn_engine engine, const char* file_name, const char* dump_path, cldnn_status* status);
+
 /// @brief Increment reference counter for the program object.
 CLDNN_API void cldnn_retain_program(cldnn_program program, cldnn_status* status);
 
@@ -665,6 +668,11 @@ CLDNN_API void cldnn_release_program(cldnn_program program, cldnn_status* status
 /// @param[in] options The pointer of array of @ref cldnn_build_option which define network build options.
 /// @param[in] options_num Number of elements in the @p options array.
 CLDNN_API        cldnn_network cldnn_build_network(cldnn_engine engine, cldnn_topology topology, cldnn_build_option* options, size_t options_num, cldnn_status* status);
+
+/// @brief Builds executable network based on serialized to file program.
+/// @param[in] engine The engine which will be used to build the program.
+/// @param[in] file_name The base name of files from which program will be build.
+CLDNN_API        cldnn_network cldnn_build_serialized_network(cldnn_engine engine, const char* file_name, const char* dump_path, cldnn_status* status);
 
 /// @brief Allocates memory for a new network which will be able to execute specified @p program.
 /// @param[in] program The program object which holds binaries compiled from some topology and engine. Multiple network objects can share the same program.

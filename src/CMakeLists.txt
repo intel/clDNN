@@ -54,6 +54,11 @@ set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
     "CLDNN_VERSION_BUILD=${CLDNN__VERSION_BUILD}"
     "CLDNN_VERSION_REVISION=${CLDNN__VERSION_REVISION}"
   )
+if(CLDNN__INCLUDE_SERIALIZATION)
+  set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
+    CLDNN_SERIALIZATION
+  )
+endif()
 
 # ========================================= Source/Header files ========================================
 
@@ -118,6 +123,17 @@ file(GLOB __CLDNN_Headers__include
     "${__CLDNN_Directory__include}/*.h"
     "${__CLDNN_Directory__include}/*.hpp"
   )
+  
+set(__CLDNN_Label__serialization       "serialization")
+if(CLDNN__INCLUDE_SERIALIZATION)
+  set(__CLDNN_Directory__serialization "${CMAKE_CURRENT_SOURCE_DIR}/serialization")
+  file(GLOB __CLDNN_Headers__serialization
+      "${__CLDNN_Directory__serialization}/*.h"
+      "${__CLDNN_Directory__serialization}/*.hpp"
+    )
+else()
+	set(__CLDNN_Headers__serialization)
+endif()
 
 # Special handling of capabilities files.
 set(__CLDNN_Directory__caps            "${CMAKE_CURRENT_SOURCE_DIR}/caps")
@@ -176,6 +192,7 @@ set(__CLDNN_AllSources
     ${__CLDNN_Headers__api}
     ${__CLDNN_Sources__graph_opt}
     ${__CLDNN_Headers__include}
+	${__CLDNN_Headers__serialization}
     ${__CLDNN_Sources__caps}
     ${__CLDNN_Headers__api__cpp}
     ${__CLDNN_Headers__api__c}
@@ -200,6 +217,7 @@ source_group("${__CLDNN_Label__api_extension}"        FILES ${__CLDNN_Headers__a
 source_group("${__CLDNN_Label__api_extension__cpp}"   FILES ${__CLDNN_Headers__api_extension__cpp})
 source_group("${__CLDNN_Label__api_extension__c}"     FILES ${__CLDNN_Headers__api_extension__c})
 source_group("${__CLDNN_Label__include}"              FILES ${__CLDNN_Headers__include})
+source_group("${__CLDNN_Label__serialization}"        FILES ${__CLDNN_Headers__serialization})
 source_group("${__CLDNN_Label__graph_opt}"            FILES ${__CLDNN_Sources__graph_opt})
 source_group("${__CLDNN_Label__caps}"                 FILES ${__CLDNN_Sources__caps})
 source_group("${__CLDNN_Label__main}"                 FILES ${__CLDNN_Sources__main})
@@ -220,6 +238,9 @@ include_directories(
     "${__CLDNN_Directory__ks_actual_kernels}"
     "${__CLDNN_Directory__ks_common}"
   )
+if(CLDNN__INCLUDE_SERIALIZATION)
+  include_directories("${__CLDNN_Directory__serialization}")
+endif()
 
 # =================================== Link targets and dependencies ====================================
 
@@ -244,6 +265,10 @@ elseif((NOT ANDROID) AND (UNIX))
   target_link_libraries("${CLDNN_BUILD__PROJ}" pthread)
 endif()
 target_link_libraries("${CLDNN_BUILD__PROJ}" ${CLDNN__SYSTEM_LINK_LIBRARIES})
+
+if(CLDNN__INCLUDE_SERIALIZATION)
+  target_link_libraries("${CLDNN_BUILD__PROJ}" Boost::serialization)
+endif()
 
 # ========================================== Installation ==============================================
 

@@ -42,6 +42,7 @@ namespace kernel_selector
         k.EnableSplitSupport();
         k.EnableGradient();
         k.DisableTuning();
+        k.EnableGradientOutput();
         return k;
     }
 }

@@ -61,7 +61,6 @@ namespace kernel_selector
             {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv16
             {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv32
             {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv64
-            {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::oiyx_o16
             {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::o_i_yx_i16_o16
             {  0,  1,  2,  3, -1, -1, -1 }, // WeightsLayout::os_iyx_osv16_rotate_180
             { -1, -1,  0,  1, -1, -1, -1 }, // WeightsLayout::os_i_osv8__ai8
@@ -166,6 +165,7 @@ namespace kernel_selector
 
             const size_t src_x = X().v;
             const size_t src_y = Y().v;
+            const size_t src_z = Z().v;
 
             std::vector<size_t> vec(dst_channels);
             if (src_channels == 2 && dst_channels == 2)
@@ -197,6 +197,35 @@ namespace kernel_selector
                 vec[Channelndex(l, DataChannelName::FEATURE)] = dst_ifm;
                 vec[Channelndex(l, DataChannelName::BATCH)] = Batch().v;
             }
+            else if (src_channels == 2 && dst_channels == 5)
+            {
+                const size_t dst_ifm = Feature().v / (src_x*src_y*src_z);
+                const size_t dst_xyz = Feature().v % (src_x*src_y*src_z);
+                const size_t dst_x = dst_xyz % src_x;
+                const size_t dst_yz = dst_xyz / src_x;
+                const size_t dst_y = dst_yz % src_y;
+                const size_t dst_z = dst_yz / src_y;
+
+                vec[Channelndex(l, DataChannelName::X)] = dst_x;
+                vec[Channelndex(l, DataChannelName::Y)] = dst_y;
+                vec[Channelndex(l, DataChannelName::Z)] = dst_z;
+                vec[Channelndex(l, DataChannelName::FEATURE)] = dst_ifm;
+                vec[Channelndex(l, DataChannelName::BATCH)] = Batch().v;
+            }
+            else if (src_channels == 5 && dst_channels == 2)
+            {
+                const size_t dst_ifm = Feature().v * src_x * src_y * src_z;
+                vec[Channelndex(l, DataChannelName::FEATURE)] = dst_ifm;
+                vec[Channelndex(l, DataChannelName::BATCH)] = Batch().v;
+            }
+            else if (src_channels == 5 && dst_channels == 5)
+            {
+                vec[Channelndex(l, DataChannelName::X)] = X().v;
+                vec[Channelndex(l, DataChannelName::Y)] = Y().v;
+                vec[Channelndex(l, DataChannelName::Z)] = Z().v;
+                vec[Channelndex(l, DataChannelName::FEATURE)] = Feature().v;
+                vec[Channelndex(l, DataChannelName::BATCH)] = Batch().v;
+            }
             else
             {
                 // TODO: implement ROI
@@ -212,6 +241,7 @@ namespace kernel_selector
 
             const auto x = X();
             const auto y = Y();
+            const auto z = Z();
             const auto f = Feature();
             const auto b = Batch();
 
@@ -235,6 +265,14 @@ namespace kernel_selector
 
             case Tensor::bfyx:
                 if (f.pitch == y.v*x.v*x.pitch)                                         // no padding in X/Y axis
+                {
+                    l = targetLayout;
+                    break;
+                }
+                throw std::runtime_error("Unsupported - cannot flatten with padding");
+
+            case Tensor::bfzyx:
+                if (f.pitch == z.v*y.v*x.v*x.pitch)                                         // no padding in X/Y/Z axis
                 {
                     l = targetLayout;
                     break;
@@ -362,10 +400,6 @@ namespace kernel_selector
                 assert(newDims.size() == 4);
                 newDims[2] = RoundUp(newDims[2], 16);
                 newDims[3] = RoundUp(newDims[3], 16);
-                break;
-            case oiyx_o16:
-                assert(newDims.size() == 4);
-                newDims[0] = RoundUp(newDims[0], 16);
                 break;
             default:
                 break;

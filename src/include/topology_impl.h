@@ -37,7 +37,7 @@ public:
 
     void add(std::shared_ptr<primitive> desc)
     {
-        auto id = desc->id;
+        auto id = desc->get_id();
         auto itr = _primitives.find(id);
         if (itr != _primitives.end())
         {
@@ -67,7 +67,7 @@ public:
     void change_input_layout(const primitive_id& id, layout new_layout)
     {
         auto& inp_layout = this->at(id);
-        if (inp_layout->type != input_layout::type_id())
+        if (inp_layout->get_type() != input_layout::type_id())
         {
             throw std::runtime_error("Primitive: " + id + " is not input_layout.");
         }
@@ -87,6 +87,9 @@ public:
 
 private:
     topology_map _primitives;
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_NVP(_primitives);
+    )
 };
 }
 

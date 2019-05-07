@@ -428,17 +428,17 @@ inline void PrintTupleTo(const std::tuple<tests::test_params*, cldnn::primitive*
     str << std::endl << "Test params: " << test_param->print();
 
     str << "Layer params:\n"
-        << "Output padding lower size: " << test_param->print_tensor(primitive->output_padding.lower_size())
-        << " upper size: " << test_param->print_tensor(primitive->output_padding.upper_size()) << '\n';
+        << "Output padding lower size: " << test_param->print_tensor(primitive->get_output_padding().lower_size())
+        << " upper size: " << test_param->print_tensor(primitive->get_output_padding().upper_size()) << '\n';
 
     //TODO: do layers not have param dumping? we could consider adding it
 
-    if (primitive->type == cldnn::concatenation::type_id())
+    if (primitive->get_type() == cldnn::concatenation::type_id())
     {
         auto dc = static_cast<cldnn::concatenation*>(primitive);
         (void)dc;
     }
-    else if(primitive->type == cldnn::lrn::type_id())
+    else if(primitive->get_type() == cldnn::lrn::type_id())
     {
         auto lrn = static_cast<cldnn::lrn *>(primitive);
         std::string norm_region = (lrn->norm_region == cldnn_lrn_norm_region_across_channel) ? "across channel" : "within channel";
@@ -448,7 +448,7 @@ inline void PrintTupleTo(const std::tuple<tests::test_params*, cldnn::primitive*
             << " Beta: " << lrn->beta
             << " K: " << lrn->k;
     }
-    else if(primitive->type == cldnn::roi_pooling::type_id())
+    else if(primitive->get_type() == cldnn::roi_pooling::type_id())
     {
         auto p = static_cast<cldnn::roi_pooling *>(primitive);
         str << "Pooling mode: " << (p->mode == cldnn::pooling_mode::max ? "MAX" : "AVG")
@@ -457,28 +457,28 @@ inline void PrintTupleTo(const std::tuple<tests::test_params*, cldnn::primitive*
             << " Spatial scale: " << p->spatial_scale
             << " Group size: " << p->group_sz;
     }
-    else if(primitive->type == cldnn::scale::type_id())
+    else if(primitive->get_type() == cldnn::scale::type_id())
     {
         auto s = static_cast<cldnn::scale *>(primitive);
         (void)s;
     }
-    else if(primitive->type == cldnn::softmax::type_id())
+    else if(primitive->get_type() == cldnn::softmax::type_id())
     {
         auto sm = static_cast<cldnn::softmax *>(primitive);
         (void)sm;
     }
-    else if (primitive->type == cldnn::reorder::type_id())
+    else if (primitive->get_type() == cldnn::reorder::type_id())
     {
         auto reorder = static_cast<cldnn::reorder*>(primitive);
-        str << "Output data type: " << cldnn::data_type_traits::name(*reorder->output_data_type) << " Mean: " << reorder->mean << "Subtract per feature: " << "TODO" /*std::vector<float> subtract_per_feature*/;
+        str << "Output data type: " << cldnn::data_type_traits::name(*reorder->get_output_data_type()) << " Mean: " << reorder->mean << "Subtract per feature: " << "TODO" /*std::vector<float> subtract_per_feature*/;
     }
-    else if (primitive->type == cldnn::normalize::type_id())
+    else if (primitive->get_type() == cldnn::normalize::type_id())
     {
         auto normalize = static_cast<cldnn::normalize*>(primitive);
         std::string norm_region = normalize->across_spatial ? "across_spatial" : "within_spatial";
         str << "Norm region: " << norm_region << " Epsilon: " << normalize->epsilon << " Scale input id: " << normalize->scale_input;
     }
-    else if (primitive->type == cldnn::convolution::type_id()) 
+    else if (primitive->get_type() == cldnn::convolution::type_id()) 
     {
         auto convolution = static_cast<cldnn::convolution*>(primitive);
         str << "Stride x: " << convolution->stride.spatial[0] << " Stride y: " << convolution->stride.spatial[1]
@@ -486,12 +486,12 @@ inline void PrintTupleTo(const std::tuple<tests::test_params*, cldnn::primitive*
             << " Input offset x: " << convolution->input_offset.spatial[0] << " Input offset y: " << convolution->input_offset.spatial[1]
             << " Activation: " << convolution->with_activation << " Activation slope: " << convolution->activation_negative_slope;
     }
-    else if (primitive->type == cldnn::activation::type_id())
+    else if (primitive->get_type() == cldnn::activation::type_id())
     {
         auto activation = static_cast<cldnn::activation*>(primitive);
         str << "Negative slope: " << activation->additional_params.a << " Negative slope input id: " << activation->additional_params_input;
     }
-    else if (primitive->type == cldnn::pooling::type_id())
+    else if (primitive->get_type() == cldnn::pooling::type_id())
     {
         auto pooling = static_cast<cldnn::pooling*>(primitive);
         std::string pooling_mode = (pooling->mode == cldnn::pooling_mode::max) ? "max" : "average";

@@ -46,8 +46,8 @@ layout fused_conv_eltwise_inst::calc_output_layout(fused_conv_eltwise_node const
     auto filter_size = weights_layout.size;
 
     auto input_type = input_layout.data_type;
-    auto output_type = node.get_primitive()->output_data_type
-                           ? *node.get_primitive()->output_data_type
+    auto output_type = node.get_primitive()->get_output_data_type()
+                           ? *node.get_primitive()->get_output_data_type()
                            : input_type;
 
     // TODO: Consider moving general parameter verification to arguments constructor.
@@ -195,3 +195,4 @@ fused_conv_eltwise_inst::typed_primitive_inst(network_impl& network, fused_conv_
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fused_conv_eltwise)

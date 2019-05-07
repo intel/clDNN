@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,42 +14,20 @@
 
 
 #include "include/include_all.cl"
-
-#pragma OPENCL EXTENSION  cl_intel_subgroups : enable
-#pragma OPENCL EXTENSION  cl_intel_subgroups_short : enable
-
-    // Block read - currently block is 4 bytes aligned.
-#if FP16_UNIT_USED == 1
-
-#define GET_SRC(data, id) as_half(intel_sub_group_shuffle(as_ushort(src), id))
-#define GET_SRC8(data, id) as_half8(intel_sub_group_shuffle(as_ushort8(src), id))
-#define ALIGNED_BLOCK_READ(ptr, byte_offset) as_half(intel_sub_group_block_read_us((const __global ushort*)(ptr) + (byte_offset)))
-#define ALIGNED_BLOCK_WRITE(ptr, byte_offset, val) intel_sub_group_block_write_us((__global ushort*)(ptr) + (byte_offset), as_ushort(val))
-
-#define ALIGNED_BLOCK_READ2(ptr, byte_offset) as_half2(intel_sub_group_block_read_us2((const __global ushort*)(ptr) + (byte_offset)))
-#define ALIGNED_BLOCK_READ8(ptr, byte_offset) as_half8(intel_sub_group_block_read_us8((const __global ushort*)(ptr) + (byte_offset)))
-#define ALIGNED_BLOCK_WRITE8(ptr, byte_offset, val) intel_sub_group_block_write_us8((__global ushort*)(ptr) + (byte_offset), as_ushort8(val))
-#else
-#define GET_SRC(data, id) intel_sub_group_shuffle(src, id)
-#define GET_SRC8(data, id) intel_sub_group_shuffle(src, id)
-#define ALIGNED_BLOCK_READ(ptr, byte_offset) as_float(intel_sub_group_block_read((const __global uint*)(ptr) + (byte_offset)))
-#define ALIGNED_BLOCK_WRITE(ptr, byte_offset, val) intel_sub_group_block_write((__global uint*)(ptr) + (byte_offset), as_uint(val))
-
-#define ALIGNED_BLOCK_READ2(ptr, byte_offset) as_float2(intel_sub_group_block_read2((const __global uint*)(ptr) + (byte_offset)))
-#define ALIGNED_BLOCK_READ8(ptr, byte_offset) as_float8(intel_sub_group_block_read8((const __global uint*)(ptr) + (byte_offset)))
-#define ALIGNED_BLOCK_WRITE8(ptr, byte_offset, val) intel_sub_group_block_write8((__global uint*)(ptr) + (byte_offset), as_uint8(val))
-#endif
+#include "include/unit_type.cl"
 
 #define vec_t MAKE_VECTOR_TYPE(UNIT_TYPE, X_BLOCK_SIZE)
+#define uint_vec_t MAKE_VECTOR_TYPE(uint, X_BLOCK_SIZE)
 
 #if   defined MAX_POOLING
     #define UNIT_INIT_VAL UNIT_VAL_MIN
 #elif defined AVG_POOLING
     #define UNIT_INIT_VAL UNIT_VAL_ZERO
 #else
-#error
+    #error pooling_gpu_blocked.cl - Unsupported pooling mode.
 #endif
 
+__attribute__((intel_reqd_sub_group_size(SUB_GROUP_SIZE)))
 KERNEL(pooling_gpu_blocked)(const __global UNIT_TYPE* input, __global UNIT_TYPE* output)
 {
 
@@ -63,14 +41,39 @@ KERNEL(pooling_gpu_blocked)(const __global UNIT_TYPE* input, __global UNIT_TYPE*
 
     const int input_x = x * STRIDE_SIZE_X - PADDING_SIZE_X;
     const int input_y = y * STRIDE_SIZE_Y - PADDING_SIZE_Y;
-    const int input_offset = b*INPUT0_BATCH_PITCH*IC_BLOCK + INPUT0_OFFSET*IC_BLOCK + input_y*IC_BLOCK*INPUT0_Y_PITCH + input_x*IC_BLOCK + f_block*IC_BLOCK*INPUT0_FEATURE_PITCH;
 
-    const int dst_index = OUTPUT_OFFSET*IC_BLOCK + f_block*IC_BLOCK*OUTPUT_FEATURE_PITCH;
+    // Input offset calculations:
+    const int input_x_pitch = IC_BLOCK;
+    const int input_y_pitch = input_x_pitch * (INPUT0_PAD_BEFORE_SIZE_X +  INPUT0_SIZE_X + INPUT0_PAD_AFTER_SIZE_X);
+    const int input_fs_pitch = input_y_pitch * (INPUT0_PAD_BEFORE_SIZE_Y +  INPUT0_SIZE_Y + INPUT0_PAD_AFTER_SIZE_Y);
+    const int input_total_f_size = INPUT0_PAD_BEFORE_FEATURE_NUM + INPUT0_FEATURE_NUM + INPUT0_PAD_AFTER_FEATURE_NUM;
+    const int input_b_pitch = input_fs_pitch * ((input_total_f_size + IC_BLOCK - 1) / IC_BLOCK);
+
+    const uint input_fs_pad_before = INPUT0_PAD_BEFORE_FEATURE_NUM / IC_BLOCK;
+
+    const int input_offset = b * input_b_pitch +
+                             (input_y + INPUT0_PAD_BEFORE_SIZE_Y) * input_y_pitch +
+                             (input_x + INPUT0_PAD_BEFORE_SIZE_X) * input_x_pitch +
+                             (f_block + input_fs_pad_before) * input_fs_pitch;
+
+    // Output offset calculations:
+    const uint output_x_pitch = IC_BLOCK;
+    const uint output_y_pitch = output_x_pitch * (OUTPUT_PAD_BEFORE_SIZE_X +  OUTPUT_SIZE_X + OUTPUT_PAD_AFTER_SIZE_X);
+    const uint output_total_f_size = OUTPUT_PAD_BEFORE_FEATURE_NUM + OUTPUT_FEATURE_NUM + OUTPUT_PAD_AFTER_FEATURE_NUM;
+    const uint output_fs_pitch = output_y_pitch * (OUTPUT_PAD_BEFORE_SIZE_Y +  OUTPUT_SIZE_Y + OUTPUT_PAD_AFTER_SIZE_Y);
+    const uint output_b_pitch = output_fs_pitch * ((output_total_f_size + IC_BLOCK - 1) / IC_BLOCK);
+
+    const uint output_fs_pad_before = OUTPUT_PAD_BEFORE_FEATURE_NUM / IC_BLOCK;
+
+    const int dst_index = b * output_b_pitch +
+                          INPUT0_PAD_BEFORE_SIZE_Y * input_y_pitch +
+                          INPUT0_PAD_BEFORE_SIZE_X * input_x_pitch +
+                          (f_block + output_fs_pad_before) * output_fs_pitch;
 
     vec_t dst = (vec_t)UNIT_INIT_VAL;
 
 #if AVG_POOLING && DYNAMIC_KERNEL_DIVIDER
-    UNIT_TYPE count;
+    uint count;
     if (lid < X_BLOCK_SIZE)
     {
         int x_min = max(0, input_x + lid);
@@ -78,17 +81,17 @@ KERNEL(pooling_gpu_blocked)(const __global UNIT_TYPE* input, __global UNIT_TYPE*
         int y_min = max(0, input_y);
         int y_max = min(input_y + POOL_SIZE_Y, INPUT0_SIZE_Y);
 
-        count = (UNIT_TYPE)(1.f / (float)((y_max - y_min) * (x_max - x_min)));
+        count = (y_max - y_min) * (x_max - x_min);
     }
 
-    vec_t scale = (vec_t)(intel_sub_group_shuffle(count, 0),
-                          intel_sub_group_shuffle(count, 1),
-                          intel_sub_group_shuffle(count, 2),
-                          intel_sub_group_shuffle(count, 3),
-                          intel_sub_group_shuffle(count, 4),
-                          intel_sub_group_shuffle(count, 5),
-                          intel_sub_group_shuffle(count, 6),
-                          intel_sub_group_shuffle(count, 7));
+    uint_vec_t scale = (uint_vec_t)(intel_sub_group_shuffle(count, 0),
+                                    intel_sub_group_shuffle(count, 1),
+                                    intel_sub_group_shuffle(count, 2),
+                                    intel_sub_group_shuffle(count, 3),
+                                    intel_sub_group_shuffle(count, 4),
+                                    intel_sub_group_shuffle(count, 5),
+                                    intel_sub_group_shuffle(count, 6),
+                                    intel_sub_group_shuffle(count, 7));
 #endif
 
     for (int kh = 0; kh < POOL_SIZE_Y; kh++)
@@ -100,7 +103,7 @@ KERNEL(pooling_gpu_blocked)(const __global UNIT_TYPE* input, __global UNIT_TYPE*
         for (int i = 0; i < INPUT_LINE_SIZE; i++)
         {
             if ((input_x + i) >= 0 && (input_x + i) < INPUT0_SIZE_X)
-                line_cache[i] = ALIGNED_BLOCK_READ(input, input_offset + kh*IC_BLOCK*INPUT0_Y_PITCH + i*IC_BLOCK);
+                line_cache[i] = UNIT_BLOCK_READ(input, input_offset + kh * input_y_pitch + i * IC_BLOCK);
             else
                 line_cache[i] = UNIT_INIT_VAL;
         }
@@ -110,9 +113,8 @@ KERNEL(pooling_gpu_blocked)(const __global UNIT_TYPE* input, __global UNIT_TYPE*
         {
             vec_t src;
             for (int i = 0; i < X_BLOCK_SIZE; i++) {
-                src[i] = line_cache[kw + STRIDE_SIZE_X*i];
+                src[i] = line_cache[kw + STRIDE_SIZE_X * i];
             }
-
 
 #if defined MAX_POOLING
             dst = max(dst, src);
@@ -125,19 +127,21 @@ KERNEL(pooling_gpu_blocked)(const __global UNIT_TYPE* input, __global UNIT_TYPE*
 #if defined MAX_POOLING
     dst = ACTIVATION(dst, NL_M, NL_N);
 #elif defined AVG_POOLING && DYNAMIC_KERNEL_DIVIDER
-    dst = ACTIVATION((dst*scale), NL_M ,NL_N);
+    dst = ACTIVATION((dst / scale), NL_M ,NL_N);
 #elif defined AVG_POOLING && FIXED_KERNEL_DIVIDER
-    dst = ACTIVATION((dst/(POOL_SIZE_X*POOL_SIZE_Y)), NL_M ,NL_N);
+    dst = ACTIVATION((dst / (POOL_SIZE_X * POOL_SIZE_Y)), NL_M ,NL_N);
 #endif
+
     if (x + X_BLOCK_SIZE <= OUTPUT_SIZE_X)
     {
-        ALIGNED_BLOCK_WRITE8(output, dst_index + y*OUTPUT_Y_PITCH*IC_BLOCK + x*IC_BLOCK, dst);
+        UNIT_BLOCK_WRITE8(output, dst_index + y * output_y_pitch + x * output_x_pitch, dst);
     }
     else
     {
+        // TODO Add case for not full feature slice
         const int x_tail = OUTPUT_SIZE_X - x;
         for (int i = 0; i < x_tail; i++)
-            ALIGNED_BLOCK_WRITE(output, dst_index + (x+i)*IC_BLOCK + y*IC_BLOCK*OUTPUT_Y_PITCH, dst[i]);
+            UNIT_BLOCK_WRITE(output, dst_index + (x+i) * output_x_pitch + y * output_y_pitch, dst[i]);
     }
 
 

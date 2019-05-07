@@ -30,7 +30,7 @@ namespace cldnn
 
 	layout index_select_inst::calc_output_layout(index_select_node const& node)
 	{
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for "
                   "index_select_node!");
         auto desc = node.get_primitive();
@@ -133,3 +133,4 @@ namespace cldnn
         }
 	}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(index_select)

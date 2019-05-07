@@ -35,7 +35,7 @@ namespace cldnn
         , _network_id(net_id)
     {}
 
-    memory_impl::ptr memory_pool::alloc_memory(const layout& layout)
+    memory_impl::ptr memory_pool::alloc_memory(const layout& layout, resource_flags flags, memory_impl::ptr to_copy)
     {
         auto context = _engine->get_context();
         
@@ -55,7 +55,12 @@ namespace cldnn
             if (layout.format.is_image_2d())
                 return{ new gpu::gpu_image2d(_engine, layout), false };
             else
-                return{ new gpu::gpu_buffer(_engine, layout), false };
+            {
+                if (to_copy != nullptr)
+                    return{ new gpu::gpu_buffer(_engine, flags, static_cast<gpu::gpu_buffer::ptr>(to_copy)), false };
+                else
+                    return{ new gpu::gpu_buffer(_engine, layout), false };
+            }
         }
         catch (const cl::Error& clErr)
         {
@@ -105,7 +110,7 @@ namespace cldnn
                 ++it;
         }
         // didn't find anything for you? create new resource
-        auto mem = alloc_memory(layout);
+        auto mem = alloc_memory(layout, resource_flags::READ_WRITE);
         {
             _non_padded_pool.emplace(layout.bytes_count(), memory_record({ {id, network_id } }, mem, network_id));
             // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine. 
@@ -131,13 +136,13 @@ namespace cldnn
                     return ret_mem;
                 }
             }
-            auto mem = alloc_memory(layout);
+            auto mem = alloc_memory(layout, resource_flags::NONE);
             first_level_cache->second.emplace_back(memory_record({ { id, network_id } }, mem, network_id));
             // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine. 
             _engine->release();
             return mem;            
         }
-        auto mem = alloc_memory(layout);
+        auto mem = alloc_memory(layout, resource_flags::NONE);
         std::list<memory_record> list = { memory_record({ { id, network_id } },mem, network_id) };
         _padded_pool.emplace(layout, std::move(list));
         // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine. 
@@ -165,7 +170,7 @@ namespace cldnn
             }
             ++it;
         }
-        auto mem = alloc_memory(layout);
+        auto mem = alloc_memory(layout, resource_flags::NONE);
         {
             _no_reusable_pool.emplace(layout.bytes_count(), memory_record({ { id, network_id } }, mem, network_id));
             // we don't want to store any resources with no parents so memory pool has to store weak pointer of _engine. 
@@ -176,7 +181,12 @@ namespace cldnn
 
     memory_impl::ptr memory_pool::get_memory(const layout& layout)
     {
-        return alloc_memory(layout);
+        return alloc_memory(layout, resource_flags::NONE, nullptr);
+    }
+
+    memory_impl::ptr memory_pool::alloc_and_copy_memory(memory_impl::ptr src, resource_flags flags)
+    {
+        return alloc_memory(src->get_layout(), flags, src);
     }
 
     memory_impl::ptr memory_pool::get_memory(const layout& layout, const primitive_id& id, uint32_t network_id, const std::set<primitive_id>& restrictions, bool reusable_across_network)
@@ -194,7 +204,7 @@ namespace cldnn
             else  // images
             {
                 // not yet implemented
-                return alloc_memory(layout);
+                return alloc_memory(layout, resource_flags::NONE);
             }
         }
         else

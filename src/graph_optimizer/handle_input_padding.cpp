@@ -44,8 +44,8 @@ void handle_input_padding::run(program_impl& p)
             if (node->as<convolution>().get_primitive()->padding_above.spatial[0] != node->as<convolution>().get_primitive()->padding_below.spatial[0]
                 || node->as<convolution>().get_primitive()->padding_above.spatial[1] != node->as<convolution>().get_primitive()->padding_below.spatial[1])
             {
-                primitive_id conv_id = conv_primitive->id;
-                primitive_id input_id = conv_primitive->input[0];
+                primitive_id conv_id = conv_primitive->get_id();
+                primitive_id input_id = conv_primitive->get_input()[0];
 
                 auto padding_above = conv_primitive->padding_above;
                 auto padding_below = conv_primitive->padding_below;

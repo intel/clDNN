@@ -406,6 +406,13 @@ mark_as_advanced(CLDNN__INCLUDE_CORE)
 
 # ======================================================================================================
 
+# Include and build: Serialization feature of clDNN framework.
+set(CLDNN__INCLUDE_SERIALIZATION ON CACHE BOOL "Include and build: clDNN serialization feature.")
+mark_as_advanced(CLDNN__INCLUDE_SERIALIZATION)
+
+# ======================================================================================================
+
+
 # Include and build: Kernel selector for clDNN framework.
 set(CLDNN__INCLUDE_KERNEL_SELECTOR ON CACHE BOOL "Include and build: clDNN kernel selector.")
 mark_as_advanced(CLDNN__INCLUDE_KERNEL_SELECTOR)
@@ -613,6 +620,9 @@ set(Boost_USE_STATIC_LIBS    ON)
 set(Boost_USE_DEBUG_RUNTIME  ON)
 set(Boost_USE_STATIC_RUNTIME ${CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME})
 set(CLDNN__BOOST_USAGE system date_time program_options filesystem)
+if(CLDNN__INCLUDE_SERIALIZATION)
+  list(APPEND CLDNN__BOOST_USAGE serialization)
+endif()
 find_package(Boost "${CLDNN__BOOST_VERSION}" EXACT REQUIRED
       COMPONENTS ${CLDNN__BOOST_USAGE}
     )
@@ -722,6 +732,7 @@ message(STATUS "[clDNN]  - boost ver. used to build:          ${CLDNN__BOOST_VER
 message(STATUS "[clDNN]")
 message(STATUS "[clDNN]  - Include/Build cldnn core:          ${CLDNN__INCLUDE_CORE}")
 message(STATUS "[clDNN]  - Include/Build kernel selector:     ${CLDNN__INCLUDE_KERNEL_SELECTOR}")
+message(STATUS "[clDNN]  - Include/Build serialization:       ${CLDNN__INCLUDE_SERIALIZATION}")
 message(STATUS "[clDNN]  - Include/Build tests:               ${CLDNN__INCLUDE_TESTS}")
 message(STATUS "[clDNN]  - Include/Build core internal tests: ${CLDNN__INCLUDE_CORE_INTERNAL_TESTS}")
 message(STATUS "[clDNN]  - Include/Build tutorial:            ${CLDNN__INCLUDE_TUTORIAL}")
@@ -882,6 +893,7 @@ foreach(__CLDNN_CompilerFlagName IN ITEMS "CMAKE_CXX_FLAGS" "CMAKE_C_FLAGS")
             SET_RAW
             "/arch:SSE2"
             "/sdl"
+			"/bigobj"
         )
       else()
         intel_config_flag_apply_settings(
@@ -890,6 +902,7 @@ foreach(__CLDNN_CompilerFlagName IN ITEMS "CMAKE_CXX_FLAGS" "CMAKE_C_FLAGS")
                 ALL_PATTERN ""
                 SET_RAW
                 "/sdl"
+				"/bigobj"
             )
       endif()
     endif()

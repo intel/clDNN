@@ -39,6 +39,8 @@ public:
 
     bool use_momentum() const { return !get_primitive()->prev_scale_grad.empty(); }
     bool bias_term() const { return get_dependencies().size() > 3; }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using scale_grad_weights_node = typed_program_node<scale_grad_weights>;
@@ -67,3 +69,4 @@ public:
 using scale_grad_weights_inst = typed_primitive_inst<scale_grad_weights>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(scale_grad_weights)

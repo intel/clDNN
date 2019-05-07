@@ -149,7 +149,6 @@ kernel_selector::weights_layout to_weights_layout(format f)
     case format::bs_xs_xsv8_bsv8:   return kernel_selector::weights_layout::os_i_osv8__ai8;
     case format::bs_xs_xsv8_bsv16:  return kernel_selector::weights_layout::os_i_osv16__ai8;
     case format::bs_x_bsv16:        return kernel_selector::weights_layout::os_i_osv16;
-    case format::oiyx_o16:          return kernel_selector::weights_layout::oiyx_o16;
     case format::o_i_yx_i16_o16:    return kernel_selector::weights_layout::o_i_yx_i16_o16;
     case format::image_2d_weights_c4_fyx_b:     return kernel_selector::weights_layout::image_2d_weights_c4_fyx_b;
     case format::image_2d_weights_c1_b_fyx:     return kernel_selector::weights_layout::image_2d_weights_c1_b_fyx;
@@ -188,7 +187,6 @@ cldnn::format::type from_weights_layout(kernel_selector::weights_layout l)
     case kernel_selector::weights_layout::os_i_osv16:      return cldnn::format::bs_x_bsv16;
     case kernel_selector::weights_layout::os_i_osv8__ai8:  return cldnn::format::bs_xs_xsv8_bsv8;
     case kernel_selector::weights_layout::os_i_osv16__ai8: return cldnn::format::bs_xs_xsv8_bsv16;
-    case kernel_selector::weights_layout::oiyx_o16:        return cldnn::format::oiyx_o16;
     case kernel_selector::weights_layout::o_i_yx_i16_o16:  return cldnn::format::o_i_yx_i16_o16;
     case kernel_selector::weights_layout::image_2d_weights_c4_fyx_b:     return cldnn::format::image_2d_weights_c4_fyx_b;
     case kernel_selector::weights_layout::image_2d_weights_c1_b_fyx:     return cldnn::format::image_2d_weights_c1_b_fyx;
@@ -257,6 +255,10 @@ kernel_selector::data_tensor convert_data_tensor(const layout& l, uint32_t split
     {
         new_vals[3] = align_to(vals[3], 4);
         new_vals[2] = align_to(vals[2], 8);
+    }
+    if (ks_layout == kernel_selector::Tensor::bfyx_f16)
+    {
+        new_vals[1] = align_to(vals[1], 16);
     }
 
     for (size_t i = 0; i < vec.size(); i++)

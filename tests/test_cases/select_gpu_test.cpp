@@ -361,6 +361,114 @@ TEST(select_gpu_f32, select_basic_mask_f16) {
     }
 }
 
+TEST(select_gpu_f32, select_basic_mask_i32) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i32, format::yxfb,{ 2, 2, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values(input, {
+        1.f,   0.f, 5.f, 1.5f,
+        2.f,   0.f, 6.f, 5.2f,
+        3.f,  0.5f, 7.f, 12.f,
+        4.f, -0.5f, 8.f,  8.f
+        });
+
+    set_values(input2, {
+        0.5f,   2.5f,  0.5f,  2.5f,
+        5.f,   7.f,    2.f,   4.f,
+        15.f,  17.f,    8.f,  10.f,
+        -2.f,  6.5f,  -0.5f, -2.5f });
+
+    set_values<int>(mask, {
+        0,   0,  0,  0,
+        1,   1,  1,  1,
+        0,   1,  0,  1,
+        1,   0,  1,  0 });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    float answers[16] = { 0.5f,  2.5f,   0.5f,  2.5f,
+        2.f,   0.f,    6.f,   5.2f,
+        15.f,   0.5f,   8.f,  12.f,
+        4.f,   6.5f,   8.f,  -2.5f };
+
+    auto output_ptr = output.pointer<float>();
+
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
+}
+
+TEST(select_gpu_f32, select_basic_mask_i64) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i64, format::yxfb,{ 2, 2, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values(input, {
+        1.f,   0.f, 5.f, 1.5f,
+        2.f,   0.f, 6.f, 5.2f,
+        3.f,  0.5f, 7.f, 12.f,
+        4.f, -0.5f, 8.f,  8.f
+        });
+
+    set_values(input2, {
+        0.5f,   2.5f,  0.5f,  2.5f,
+        5.f,   7.f,    2.f,   4.f,
+        15.f,  17.f,    8.f,  10.f,
+        -2.f,  6.5f,  -0.5f, -2.5f });
+
+    set_values<long long>(mask, {
+        0,   0,  0,  0,
+        1,   1,  1,  1,
+        0,   1,  0,  1,
+        1,   0,  1,  0 });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    float answers[16] = { 0.5f,  2.5f,   0.5f,  2.5f,
+        2.f,   0.f,    6.f,   5.2f,
+        15.f,   0.5f,   8.f,  12.f,
+        4.f,   6.5f,   8.f,  -2.5f };
+
+    auto output_ptr = output.pointer<float>();
+
+    for (int i = 0; i < 16; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
+}
+
 TEST(select_gpu_f32, select_basic_mask_i8) {
     const auto& engine = get_test_engine();
 
@@ -716,6 +824,106 @@ TEST(select_gpu_f16, select_basic_mask_f32_1x1x2x2) {
     }
 }
 
+TEST(select_gpu_f16, select_basic_mask_i32_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<uint16_t>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<uint16_t>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<int>(mask, {
+        0,   0,
+        1,   1
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    uint16_t answers[4] = {
+        0,  2,
+        2,   0
+    };
+
+    auto output_ptr = output.pointer<uint16_t>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
+}
+
+TEST(select_gpu_f16, select_basic_mask_i64_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<uint16_t>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<uint16_t>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<long long>(mask, {
+        0,   0,
+        1,   1
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    uint16_t answers[4] = {
+        0,  2,
+        2,   0
+    };
+
+    auto output_ptr = output.pointer<uint16_t>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
+}
+
 TEST(select_gpu_f16, select_basic_mask_i8_1x1x2x2) {
     const auto& engine = get_test_engine();
 
@@ -967,6 +1175,106 @@ TEST(select_gpu_i8, select_basic_mask_f16_1x1x2x2) {
     }
 }
 
+TEST(select_gpu_i8, select_basic_mask_i32_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<char>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<char>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<int>(mask, {
+        0,   0,
+        128,   255
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<char>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i8, select_basic_mask_i64_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<char>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<char>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<long long>(mask, {
+        0,   0,
+        128,   255
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<char>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
 TEST(select_gpu_i8, select_basic_mask_u8_1x1x2x2) {
     const auto& engine = get_test_engine();
 
@@ -1168,6 +1476,106 @@ TEST(select_gpu_u8, select_basic_mask_f16_1x1x2x2) {
     }
 }
 
+TEST(select_gpu_u8, select_basic_mask_i32_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<unsigned char>(input, {
+        128,   0,
+        255,   0
+        });
+
+    set_values<unsigned char>(input2, {
+        0,   255,
+        205,   128
+        });
+
+    set_values<int>(mask, {
+        0,   0,
+        1,   1
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    unsigned char answers[4] = {
+        0,  255,
+        255,  0
+    };
+
+    auto output_ptr = output.pointer<unsigned char>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_u8, select_basic_mask_i64_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<unsigned char>(input, {
+        128,   0,
+        255,   0
+        });
+
+    set_values<unsigned char>(input2, {
+        0,   255,
+        205,   128
+        });
+
+    set_values<long long>(mask, {
+        0,   0,
+        1,   1
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    unsigned char answers[4] = {
+        0,  255,
+        255,  0
+    };
+
+    auto output_ptr = output.pointer<unsigned char>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
 TEST(select_gpu_u8, select_basic_mask_i8_1x1x2x2) {
     const auto& engine = get_test_engine();
 
@@ -1211,6 +1619,608 @@ TEST(select_gpu_u8, select_basic_mask_i8_1x1x2x2) {
     };
 
     auto output_ptr = output.pointer<unsigned char>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+// select_gpu_i32
+TEST(select_gpu_i32, select_basic_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<int>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<int>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<int>(mask, {
+        0,   0,
+        3,   5
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<int>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i32, select_basic_mask_f32_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<int>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<int>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<float>(mask, {
+        0.f,   0.f,
+        1.5f,  0.4f
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<int>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i32, select_basic_mask_f16_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<int>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<int>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<uint16_t>(mask, {
+        0,   0,
+        3,   5
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<int>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i32, select_basic_mask_i8_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<int>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<int>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<char>(mask, {
+        0,   0,
+        1,   1
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<int>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i32, select_basic_mask_i64_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<int>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<int>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<long long>(mask, {
+        0,   0,
+        128,   255
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<int>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i32, select_basic_mask_u8_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<int>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<int>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<unsigned char>(mask, {
+        0,   0,
+        128,   255
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<int>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+// select_gpu_i64
+TEST(select_gpu_i64, select_basic_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<long long>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<long long>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<long long>(mask, {
+        0,   0,
+        3,   5
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<long long>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i64, select_basic_mask_f32_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<long long>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<long long>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<float>(mask, {
+        0.f,   0.f,
+        1.5f,  0.4f
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<long long>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i64, select_basic_mask_f16_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<long long>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<long long>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<uint16_t>(mask, {
+        0,   0,
+        3,   5
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<long long>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i64, select_basic_mask_i8_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<long long>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<long long>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<char>(mask, {
+        0,   0,
+        1,   1
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<long long>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i64, select_basic_mask_i32_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::i32, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<long long>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<long long>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<int>(mask, {
+        0,   0,
+        128,   255
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<long long>();
+
+    for (int i = 0; i < 4; i++)
+    {
+        EXPECT_EQ(answers[i], output_ptr[i]);
+    }
+}
+
+TEST(select_gpu_i64, select_basic_mask_u8_1x1x2x2) {
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = memory::allocate(engine, { data_types::i64, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(cldnn::select("select", "input", "input2", "mask"));
+
+    set_values<long long>(input, {
+        1,   0,
+        2,   0
+        });
+
+    set_values<long long>(input2, {
+        0,   2,
+        5,   7
+        });
+
+    set_values<unsigned char>(mask, {
+        0,   0,
+        128,   255
+        });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    network.set_input_data("mask", mask);
+    auto outputs = network.execute();
+
+    auto output = outputs.at("select").get_memory();
+
+    int answers[4] = {
+        0,  2,
+        2,  0
+    };
+
+    auto output_ptr = output.pointer<long long>();
 
     for (int i = 0; i < 4; i++)
     {

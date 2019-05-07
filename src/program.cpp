@@ -29,6 +29,7 @@
 
 #include "convolution_inst.h"
 #include "concatenation_inst.h"
+#include "condition_inst.h"
 #include "crop_inst.h"
 #include "data_inst.h"
 #include "deconvolution_inst.h"
@@ -55,6 +56,11 @@
 #include <iomanip>
 #include <memory>
 
+#ifdef CLDNN_SERIALIZATION
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#endif
+
 program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal, bool no_optimizations)
     : engine(&engine_ref), options(options), processing_order(* new nodes_ordering), pm(std::unique_ptr<pass_manager>(new pass_manager()))
 {
@@ -73,6 +79,15 @@ program_impl::program_impl(engine_impl& engine_ref, std::set<std::shared_ptr<pro
     set_options();
     prepare_nodes(nodes);
     build_program(is_internal);
+}
+
+program_impl::program_impl() : pm(std::unique_ptr<pass_manager>(new pass_manager())) 
+{
+}
+
+program_impl::program_impl(engine_impl& engine_ref) // Private constructor for serialization process
+    : engine(&engine_ref), pm(std::unique_ptr<pass_manager>(new pass_manager()))
+{
 }
 
 program_impl::~program_impl() = default;
@@ -210,7 +225,7 @@ void program_impl::prepare_nodes(std::set<std::shared_ptr<program_node>>const &n
         {
             if (src_node == nullptr)
                 throw error("NULL pointer in nodes_map.", CLDNN_ERROR);
-            if (node.first == src_node->get_primitive()->id)
+            if (node.first == src_node->get_primitive()->get_id())
             {
                 copy_node_dependencies(node_ptr.get(), src_node.get());
                 found = true;
@@ -262,7 +277,7 @@ void program_impl::add_node_dependencies(program_node* node)
         }
         catch (...) {
             throw std::runtime_error("Program doesn't contain primitive: " + dep +
-                " that is input to: " + node->get_primitive()->id);
+                " that is input to: " + node->get_primitive()->get_id());
         }
     }
 }
@@ -272,25 +287,25 @@ void program_impl::add_node_dependencies(program_node* node)
    But only to those which appaer in this program implementation nodes_map */
 void program_impl::copy_node_dependencies(program_node* dest_node, program_node* src_node)
 {
-    if (dest_node->get_primitive()->id != src_node->get_primitive()->id)
+    if (dest_node->get_primitive()->get_id() != src_node->get_primitive()->get_id())
     {
-        throw std::runtime_error("Node " + src_node->get_primitive()->id +  " and its copy " + dest_node->get_primitive()->id + " do not match.");
+        throw std::runtime_error("Node " + src_node->get_primitive()->get_id() +  " and its copy " + dest_node->get_primitive()->get_id() + " do not match.");
     }
     auto src_deps = src_node->get_dependencies();
     //add pointers to node's dependencies
     for (auto& src_dep : src_deps)
     {
         // do not copy dependencies to nodes which does not belong to the new (subgraph) topology
-        if (nodes_map.find(src_dep->get_primitive()->id) == nodes_map.end()) continue;
+        if (nodes_map.find(src_dep->get_primitive()->get_id()) == nodes_map.end()) continue;
 
         try {
-            auto dest_dep = nodes_map.at(src_dep->get_primitive()->id);
+            auto dest_dep = nodes_map.at(src_dep->get_primitive()->get_id());
             dest_node->dependencies.push_back(dest_dep.get());
             dest_dep->users.push_back(dest_node);
         }
         catch (...) {
-            throw std::runtime_error("Program doesn't contain primitive: " + src_dep->get_primitive()->id +
-                " that is input to: " + src_node->get_primitive()->id);
+            throw std::runtime_error("Program doesn't contain primitive: " + src_dep->get_primitive()->get_id() +
+                " that is input to: " + src_node->get_primitive()->get_id());
         }
     }
 }
@@ -337,7 +352,7 @@ void program_impl::init_graph()
 
 void program_impl::apply_opt_pass(base_pass& p)
 { 
-    pm->run(*this, p); 
+    pm->run(*this, p);
 }
 
 void program_impl::run_graph_compilation() {
@@ -355,8 +370,6 @@ void program_impl::pre_optimize_graph(bool is_internal)
 
     add_reshape_to_primitives add_reshape_to_primitives_pass; // add reshape to input/parameters for some primitives
     apply_opt_pass(add_reshape_to_primitives_pass);
-
-    processing_order.calculate_BFS_processing_order(); // this method makes sense only for OOOQ (out of order execution queue)
 
     bool output_size_handling_enabled = analyze_output_size_handling_need();
     for (auto& node : processing_order)
@@ -391,6 +404,7 @@ void program_impl::pre_optimize_graph(bool is_internal)
         prepare_conv_eltw_fusing prepare_conv_eltw_fusing_pass;
         apply_opt_pass(prepare_conv_eltw_fusing_pass);
 
+        // For now this optimization is not working correctly with serializaiton.
         prepare_conv_eltw_read_write_opt prepare_conv_eltw_read_write_opt_pass;
         apply_opt_pass(prepare_conv_eltw_read_write_opt_pass);
     }
@@ -423,12 +437,14 @@ void program_impl::pre_optimize_graph(bool is_internal)
     //check if there exists some layout incompatibilities and add an reorder node if required
     add_required_reorders add_required_reorders_pass;
     apply_opt_pass(add_required_reorders_pass);
+
+    processing_order.calculate_BFS_processing_order(); // this method makes sense only for OOOQ (out of order execution queue)
 }
 
 void program_impl::post_optimize_graph(bool is_internal)
 {
     post_input_reorder post_input_reorder_pass; // input reorder for fully connected if necessary
-    pm->run(*this, post_input_reorder_pass);
+    apply_opt_pass(post_input_reorder_pass);
 
     layout_optimizer lo;
     post_optimize_weights post_optimize_weights_pass(lo);
@@ -519,7 +535,7 @@ void program_impl::add_split_outputs() {
         if (node->is_type<split>())
         {
             auto split_prim = node->as<split>().typed_desc();
-            primitive_id input_id = split_prim->input[0];
+            primitive_id input_id = split_prim->get_input()[0];
             auto split_num = split_prim->output_offsets.size();
 
             //create crop for each split ouptut provided
@@ -748,12 +764,12 @@ void program_impl::reverse_connection(program_node& dep_node, program_node& user
 
 program_node& program_impl::get_or_create(std::shared_ptr<primitive> prim)
 {
-    auto itr = nodes_map.lower_bound(prim->id);
-    if (itr != nodes_map.end() && itr->first == prim->id)
+    auto itr = nodes_map.lower_bound(prim->get_id());
+    if (itr != nodes_map.end() && itr->first == prim->get_id())
         return *itr->second;
 
-    auto new_node = prim->type->create_node(*this, prim);
-    nodes_map.insert(itr, { prim->id, new_node });
+    auto new_node = prim->get_type()->create_node(*this, prim);
+    nodes_map.insert(itr, { prim->get_id(), new_node });
     return *new_node;
 }
 
@@ -862,7 +878,7 @@ void program_impl::rename(program_node & node, primitive_id const & new_id)
     nodes_map.erase(node.id());
 
     if (!node.is_type<internal_primitive>())
-        const_cast<primitive_id&>(node.desc->id) = new_id;
+        node.desc->set_id(new_id);
     else
         reinterpret_cast<details::internal_program_node_base&>(node).internal_id = new_id;
 }
@@ -872,7 +888,7 @@ void program_impl::swap_names(program_node& node1, program_node& node2)
     const auto _extract_id = [](program_node& node) -> primitive_id&
     {
         if (!node.is_type<internal_primitive>())
-            return const_cast<primitive_id&>(node.desc->id);
+            return const_cast<primitive_id&>(node.desc->get_id());
         else
             return reinterpret_cast<details::internal_program_node_base&>(node).internal_id;
     };
@@ -1084,4 +1100,64 @@ void program_impl::dump_program(const char* stage, bool with_full_info, std::fun
     dump_graph_optimized(graph, *this);
 }
 
+void program_impl::save_program(const std::string& file_name)
+{
+    CLDNN_SERIALIZATION_SAVE(this, file_name)
+}
 
+void program_impl::load_program(const std::string& file_name, const std::string& dump_path)
+{
+    CLDNN_SERIALIZATION_LOAD(this, file_name, dump_path)
+    CLDNN_SERIALIZATION_IF_INCLUDED(
+        this->get_engine().get_context()->get_kernels_cache().build_from_binaries();
+    )
+}
+
+template <typename data_type, typename BinArchive>
+void program_impl::serialize_memory(BinArchive & ar, memory_impl* mem_impl_ptr)
+{
+    mem_lock<data_type> src{ mem_impl_ptr };
+    auto ptr = src.data();
+    for (size_t x = 0; x < mem_impl_ptr->get_layout().count(); x++)
+        ar & *(ptr + x);
+}
+
+template<typename BinArchive>
+void program_impl::serialize_binary(BinArchive & ar, nodes_ordering& proc_order)
+{
+    for (auto& node : proc_order)
+    {
+        if (node->is_type<condition>())
+        {
+            serialize_binary(ar, node->as<condition>().get_branch_true()->get_processing_order());
+            serialize_binary(ar, node->as<condition>().get_branch_false()->get_processing_order());
+        }
+        else if (node->is_type<data>() || node->is_type<mutable_data>() || node->is_type<prior_box>())
+        {
+            memory_impl* mem_impl_ptr;
+
+            if (node->is_type<data>()) 
+                mem_impl_ptr = &node->as<data>().get_attached_memory();
+            else if (node->is_type<mutable_data>()) 
+                mem_impl_ptr = &node->as<mutable_data>().get_attached_memory();
+            else 
+                mem_impl_ptr = &node->as<prior_box>().get_result_buffer();
+
+            switch (mem_impl_ptr->get_layout().data_type)
+            {
+            case data_types::i8:
+                serialize_memory<int8_t>(ar, mem_impl_ptr); break;
+            case data_types::i32:
+                serialize_memory<int32_t>(ar, mem_impl_ptr); break;
+            case data_types::i64:
+                serialize_memory<int64_t>(ar, mem_impl_ptr); break;
+            case data_types::u8:
+                serialize_memory<uint8_t>(ar, mem_impl_ptr); break;
+            case data_types::f16:
+                serialize_memory<int16_t>(ar, mem_impl_ptr); break;
+            default: 
+                serialize_memory<float>(ar, mem_impl_ptr);
+            }
+        }
+    }
+}

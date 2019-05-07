@@ -30,7 +30,7 @@ namespace cldnn
 
     layout one_hot_inst::calc_output_layout(one_hot_node const& node)
     {
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for one_hot_node!");
         auto input_layout = node.input().get_output_layout();
         auto desc = node.get_primitive();
@@ -95,3 +95,4 @@ namespace cldnn
         }
     }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(one_hot)

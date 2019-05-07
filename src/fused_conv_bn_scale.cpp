@@ -31,7 +31,7 @@ primitive_type_id fused_conv_bn_scale_type_id()
 // TODO: unify this code with regular convolution.
 layout fused_conv_bn_scale_inst::calc_output_layout(fused_conv_bn_scale_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for "
               "fused_conv_bn_scale_node!");
     auto desc = node.get_primitive();
@@ -128,3 +128,4 @@ fused_conv_bn_scale_inst::typed_primitive_inst(network_impl& network, fused_conv
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fused_conv_bn_scale)

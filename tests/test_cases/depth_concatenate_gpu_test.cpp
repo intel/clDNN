@@ -27,6 +27,7 @@
 #include <api/CPP/topology.hpp>
 #include <api/CPP/network.hpp>
 #include <api/CPP/engine.hpp>
+#include <api/CPP/reshape.hpp>
 #include "test_utils/test_utils.h"
 
 using namespace cldnn;
@@ -171,6 +172,128 @@ TEST(depth_concatenate_int32_gpu, concat_basic) {
 
 TEST(depth_concatenate_int64_gpu, concat_basic) {
     concat_basic_with_reorder<data_types::i64>();
+}
+
+TEST(depth_concatenate, concat_with_different_format_inputs) {
+    const auto& engine = get_test_engine();
+    build_options build_opt;
+    const int in1_f = 2, in2_f = 1;
+    const int b = 2, x = 2, y = 4;
+    auto input1 = memory::allocate(engine, { data_types::f32, format::yxfb,{ b, in1_f, y, x } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ b, in2_f, y, x } });
+    unsigned input2_start_value = (unsigned)input1.count() + 1;
+
+    std::vector<float> in1(input1.count());
+    std::vector<float> in2(input2.count());
+
+    for (unsigned i = 0; i < input1.count(); i++)
+    {
+        in1[i] = (float)(i + 1);
+    }
+
+    for (unsigned i = 0; i < input2.count(); i++)
+    {
+        in2[i] = (float)(i + input2_start_value);
+    }
+
+    set_values(input1, in1);
+    set_values(input2, in2);
+
+    // Special constrution of topology to run buffer fusing optimization
+    // for concatenation with different format inputs
+    topology topology;
+    topology.add(input_layout("input1", input1.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(concatenation("depth1", { "input1" }, concatenation::along_f));
+    topology.add(concatenation("depth2", { "input2" }, concatenation::along_f));
+    // In the step below there will be run of buffer fusing optimization for concatenation with
+    // Input1 YXFB, Input2 BFYX and Output YXFB
+    topology.add(concatenation("depth3", { "depth1", "depth2" }, concatenation::along_f));
+    topology.add(concatenation("depth4", { "depth3" }, concatenation::along_f));
+
+    build_opt.set_option(build_option::optimize_data(true));
+    network network(engine, topology, build_opt);
+
+    network.set_input_data("input1", input1);
+    network.set_input_data("input2", input2);
+
+    auto outputs = network.execute({});
+    ASSERT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "depth4");
+
+    auto output = outputs.at("depth4").get_memory();
+    auto output_ptr = output.pointer<float>();
+
+    int input1_values_count = in1_f * x;
+    int input2_values_count = in2_f * x;
+    int all_values_count = input1_values_count + input2_values_count;
+    int input2_batch_offset = x * y;
+    int out_offset = 0;
+
+    for (unsigned i = 0; i < input1.count(); i++)
+    {
+        int value = i + 1;
+        EXPECT_FLOAT_EQ(float(value), output_ptr[out_offset++]);
+
+        if ((value % input1_values_count) == 0)
+        {
+            out_offset += input2_values_count;
+        }
+    }
+
+    out_offset = input1_values_count;
+    for (unsigned i = 0; i < input2.count() / b; i++)
+    {
+        for (unsigned j = 0; j < b; j++)
+        {
+            int value = i + input2_start_value + j * input2_batch_offset;
+            EXPECT_FLOAT_EQ(float(value), output_ptr[out_offset++]);
+
+            if ((out_offset % all_values_count) == 0)
+            {
+                out_offset += input1_values_count;
+            }
+        }
+    }
+}
+
+TEST(depth_concatenate, concat_with_reshape_input) {
+
+        const auto& engine = get_test_engine();
+        build_options build_opt;
+        auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2,4,1,2 } });
+
+        std::vector<float> values = {
+            0.1f, 0.2f, 0.3f, 0.4f,
+            0.5f, 0.6f, 0.7f, 0.8f ,
+            0.11f, 0.22f, 0.33f, 0.44f ,
+            0.55f, 0.66f, 0.77f, 0.88f };
+
+        set_values(input1, values);
+
+        topology topology;
+        topology.add(input_layout("input1", input1.get_layout()));
+        topology.add(reshape("reshape", "input1", tensor(2, 1, 4, 2)));
+        topology.add(concatenation("depth1", { "reshape" }, concatenation::along_f));
+        topology.add(concatenation("depth2", { "depth1" }, concatenation::along_f));
+
+        build_opt.set_option(build_option::optimize_data(true));
+        network network(engine, topology, build_opt);
+
+        network.set_input_data("input1", input1);
+
+        auto outputs = network.execute({});
+        EXPECT_EQ(outputs.size(), size_t(1));
+        EXPECT_EQ(outputs.begin()->first, "depth2");
+
+        auto output = outputs.at("depth2").get_memory();
+
+        auto output_ptr = output.pointer<float>();
+
+        for (int i = 0; i < 16; i++)
+        {
+            EXPECT_FLOAT_EQ(values[i], output_ptr[i]);
+        }
 }
 
 TEST(depth_concatenate_f32_gpu, test02) {

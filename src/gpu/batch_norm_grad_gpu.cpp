@@ -59,6 +59,8 @@ namespace cldnn {
 
                 return norm;
             };
+        private:
+            CLDNN_SERIALIZATION_PARENT_ONLY()
         };
 
         namespace {
@@ -79,3 +81,4 @@ namespace cldnn {
         }
     }
 }
+CLDNN_SERIALIZATION_GPU_CLASS(batch_norm_grad)

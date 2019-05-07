@@ -280,8 +280,16 @@ protected:
         dto.output_size = output_size;
         dto.global_pooling = global_pooling;
     }
+private:
+    pooling() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(pooling) & CLDNN_SERIALIZATION_NVP(argmax) & CLDNN_SERIALIZATION_NVP(mode) 
+           & CLDNN_SERIALIZATION_NVP(global_pooling) & CLDNN_SERIALIZATION_NVP(input_offset) & CLDNN_SERIALIZATION_NVP(stride) 
+           & CLDNN_SERIALIZATION_NVP(size) & CLDNN_SERIALIZATION_NVP(with_output_size) & CLDNN_SERIALIZATION_NVP(output_size);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(pooling)

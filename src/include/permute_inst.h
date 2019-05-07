@@ -32,6 +32,8 @@ public:
     using parent::parent;
 
     program_node& input() const { return get_dependency(0); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using permute_node = typed_program_node<permute>;
@@ -52,3 +54,4 @@ public:
 using permute_inst = typed_primitive_inst<permute>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(permute)

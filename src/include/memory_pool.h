@@ -36,6 +36,8 @@ struct memory_user;
 struct memory_user_comparer;
 using memory_set = std::set<memory_user, memory_user_comparer>;
 
+enum class resource_flags;
+
 struct memory_user
 {
     primitive_id _id;
@@ -111,7 +113,7 @@ class memory_pool
 {
     memory_pool();
     
-    refcounted_obj_ptr<memory_impl> alloc_memory(const layout& layout);
+    refcounted_obj_ptr<memory_impl> alloc_memory(const layout& layout, resource_flags flags, refcounted_obj_ptr<memory_impl> to_copy = nullptr);
     static bool has_conflict(const memory_set&, const std::set<primitive_id>&, uint32_t);
 
     std::multimap<uint64_t, memory_record> _non_padded_pool;
@@ -125,6 +127,7 @@ public:
     ~memory_pool();
     refcounted_obj_ptr<memory_impl> get_memory(const layout& layout, const primitive_id& id, uint32_t network_id,  const std::set<primitive_id>& restrictions, bool reusable = true); // get from pool or create memory allocation
     refcounted_obj_ptr<memory_impl> get_memory(const layout& layout);
+    refcounted_obj_ptr<memory_impl> alloc_and_copy_memory(refcounted_obj_ptr<memory_impl> src, resource_flags flags);
     refcounted_obj_ptr<memory_impl> get_from_non_padded_pool(const layout& layout, const primitive_id& id, uint32_t network_id, const std::set<primitive_id>&);
     refcounted_obj_ptr<memory_impl> get_from_padded_pool(const layout& layout, const primitive_id& id, uint32_t network_id, const std::set<primitive_id>& restrictions);
     refcounted_obj_ptr<memory_impl> get_from_across_networks_pool(const layout& layout, const primitive_id& id, uint32_t network_id);

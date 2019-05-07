@@ -50,6 +50,8 @@ namespace cldnn {
 
                 return new one_hot_gpu(arg, best_kernels[0]);
             }
+        private:
+            CLDNN_SERIALIZATION_PARENT_ONLY()
         };
 
         namespace {
@@ -70,3 +72,4 @@ namespace cldnn {
         }
     }
 }
+CLDNN_SERIALIZATION_GPU_CLASS(one_hot)

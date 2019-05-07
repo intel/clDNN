@@ -31,7 +31,7 @@ primitive_type_id gemm_type_id()
 
 layout gemm_inst::calc_output_layout(gemm_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for gemm_node!");
     auto input1_layout = node.input(0).get_output_layout();
     auto input2_layout = node.input(1).get_output_layout();
@@ -129,3 +129,4 @@ gemm_inst::typed_primitive_inst(network_impl& network, gemm_node const& node)
 
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(gemm)

@@ -318,7 +318,6 @@ namespace kernel_selector
         case WeightsLayout::oyxi:                       return "OYXI";
         case WeightsLayout::iyxo:                       return "IYXO";
         case WeightsLayout::yxio:                       return "YXIO";
-        case WeightsLayout::oiyx_o16:                   return "OIYX_O16";
         case WeightsLayout::o_i_yx_i16_o16:             return "O_I_YX_I16_O16";
         case WeightsLayout::os_iyx_osv16:               return "OS_IYX_OSV16";
         case WeightsLayout::os_iyx_osv32:               return "OS_IYX_OSV32";

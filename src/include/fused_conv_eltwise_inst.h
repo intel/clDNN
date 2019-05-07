@@ -51,7 +51,7 @@ public:
 
     program_node& input(size_t idx = 0) const
     {
-        if (static_cast<int32_t>(idx) >= static_cast<int32_t>(desc->input.size()))
+        if (static_cast<int32_t>(idx) >= static_cast<int32_t>(desc->get_input().size()))
             throw std::range_error("input index too big");
 
         return get_dependency(idx);
@@ -62,7 +62,7 @@ public:
         if (static_cast<int32_t>(idx) >= this->get_split())
             throw std::range_error("weights offset too big");
 
-        return get_dependency(desc->input.size() + idx);
+        return get_dependency(desc->get_input().size() + idx);
     }
 
     program_node& bias(size_t idx = 0) const
@@ -70,7 +70,7 @@ public:
         if (static_cast<int32_t>(idx) >= this->get_split())
             throw std::range_error("bias offset too big");
 
-        return get_dependency(desc->input.size() + this->get_split() + idx);
+        return get_dependency(desc->get_input().size() + this->get_split() + idx);
     }
 
     program_node& weights_quantization_factors(size_t idx = 0) const
@@ -78,7 +78,7 @@ public:
         if (static_cast<int32_t>(idx) >= this->get_split())
             throw std::range_error("quantization factor offset too big");
 
-        return get_dependency(desc->input.size()
+        return get_dependency(desc->get_input().size()
                               + (1 + 1 * bias_term()) * this->get_split() + idx);
     }
 
@@ -88,7 +88,7 @@ public:
             throw std::range_error("calibration factor offset too big");
 
         return get_dependency(
-            desc->input.size()
+            desc->get_input().size()
             + (1 + 1 * bias_term() + 1 * weights_quantization_term())
                 * this->get_split()
             + idx);
@@ -96,7 +96,7 @@ public:
 
     program_node& eltw_output_calibration_factors() const
     {
-        return get_dependency(desc->input.size()
+        return get_dependency(desc->get_input().size()
                               + (1 + 1 * bias_term()
                                  + 1 * weights_quantization_term()
                                  + 1 * conv_output_calibration_term())
@@ -134,6 +134,11 @@ private:
     float conv_input_qf;
     float conv_output_qf;
     float eltw_output_qf;
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(depthwise_sep_opt) & CLDNN_SERIALIZATION_NVP(transposed)
+        /* & CLDNN_SERIALIZATION_NVP(eltw_output_qf) *//* <- not used */
+        /* split, conv_input_qf, conv_output_qf from primitvie */;
+    )
 };
 
 using fused_conv_eltwise_node = typed_program_node<fused_conv_eltwise>;
@@ -219,3 +224,4 @@ public:
 using fused_conv_eltwise_inst = typed_primitive_inst<fused_conv_eltwise>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(fused_conv_eltwise)

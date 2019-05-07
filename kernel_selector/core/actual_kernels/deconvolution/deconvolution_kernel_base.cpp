@@ -80,7 +80,7 @@ namespace kernel_selector
         }
         kd.gws0 = gws0;
         kd.gws1 = params.output.X().v;
-        kd.gws2 = params.output.Y().v;
+        kd.gws2 = params.output.Y().v * params.output.Z().v;
         kd.lws0 = lws0;
         kd.lws1 = 1;
         kd.lws2 = 1;
@@ -98,7 +98,8 @@ namespace kernel_selector
             WeightsLayout::oiyx,
             WeightsLayout::iyxo,
             WeightsLayout::yxio,
-            WeightsLayout::oyxi
+            WeightsLayout::oyxi,
+            WeightsLayout::oizyx,
         };
 
         DispatchData runInfo = SetDefault(orgParams);

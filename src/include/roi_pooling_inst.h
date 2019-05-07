@@ -31,6 +31,8 @@ public:
 
     program_node& input() const { return get_dependency(0); }
     program_node& rois() const { return get_dependency(1); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using roi_pooling_node = typed_program_node<roi_pooling>;
@@ -53,3 +55,4 @@ public:
 using roi_pooling_inst = typed_primitive_inst<roi_pooling>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(roi_pooling)

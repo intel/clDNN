@@ -41,6 +41,8 @@ public:
     }
     bool input_forget() const { return get_primitive()->input_forget; }
     int32_t direction() const { return get_primitive()->direction; }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using lstm_elt_node = typed_program_node<lstm_elt>;
@@ -73,3 +75,4 @@ public:
 using lstm_elt_inst = typed_primitive_inst<lstm_elt>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(lstm_elt)

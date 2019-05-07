@@ -29,7 +29,7 @@ primitive_type_id scale_type_id()
 
 layout scale_inst::calc_output_layout(scale_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for scale_node!");
     auto result = node.input().get_non_padded_output_layout();
 
@@ -111,3 +111,4 @@ scale_inst::typed_primitive_inst(network_impl& network, scale_node const& node)
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(scale)

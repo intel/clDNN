@@ -49,7 +49,8 @@ namespace kernel_selector
             }
 
             if (dilation.x != 1 ||
-                dilation.y != 1)
+                dilation.y != 1 ||
+                dilation.z != 1)
             {
                 k.EnableDilation();
             }

@@ -36,6 +36,9 @@ public:
     program_node& prev_bias_grad() const { return get_dependency(5); }
     bool use_momentum() const { return !get_primitive()->prev_weights_grad.empty(); }
     bool bias_term() const { return !get_primitive()->bias.empty(); }
+
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using fully_connected_grad_weights_node = typed_program_node<fully_connected_grad_weights>;
@@ -63,3 +66,4 @@ public:
 using fully_connected_grad_weights_inst = typed_primitive_inst<fully_connected_grad_weights>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(fully_connected_grad_weights)

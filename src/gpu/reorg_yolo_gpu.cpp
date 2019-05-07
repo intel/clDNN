@@ -49,6 +49,8 @@ namespace cldnn {
 
                 return reorg_yolo_node;
             };
+        private:
+            CLDNN_SERIALIZATION_PARENT_ONLY()
         };
 
         namespace {
@@ -70,3 +72,4 @@ namespace cldnn {
 
     }
 }
+CLDNN_SERIALIZATION_GPU_CLASS(reorg_yolo)

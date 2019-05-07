@@ -37,7 +37,7 @@ primitive_type_id condition_type_id()
 */
 layout condition_inst::calc_output_layout(condition_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for condition_node!");
     node.set_branches();
 
@@ -83,3 +83,4 @@ condition_inst::typed_primitive_inst(network_impl& network, condition_node const
 
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(condition)

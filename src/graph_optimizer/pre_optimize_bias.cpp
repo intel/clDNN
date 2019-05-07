@@ -37,7 +37,7 @@ void pre_optimize_bias::optimize_bias(T& node, layout_optimizer& lo, program_imp
 {
     layout output_layout = node.get_output_layout();
 
-    size_t weights_offset = node.get_primitive()->input.size();
+    size_t weights_offset = node.get_primitive()->get_input().size();
     size_t bias_offset = weights_offset + program_helpers::wrap_if_single(node.get_primitive()->weights).size();
     for (size_t i = bias_offset; i < node.get_dependencies().size(); ++i)
     {

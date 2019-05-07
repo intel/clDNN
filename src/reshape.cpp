@@ -32,7 +32,7 @@ primitive_type_id reshape_type_id()
 
 layout reshape_inst::calc_output_layout(reshape_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for reshape_node!");
     auto input_layout = node.input().get_non_padded_output_layout();
     auto sizes = node.get_primitive()->output_shape.sizes();
@@ -112,3 +112,4 @@ void reshape_inst::reuse_input()
 }
 
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(reshape)

@@ -366,8 +366,21 @@ protected:
         dto.activation_negative_slope = activation_negative_slope;
         dto.stride = tensor_vector_to_arr(_stride);
     }
+private:
+    eltwise() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(eltwise) & CLDNN_SERIALIZATION_NVP(output_calibration_factors) 
+           & CLDNN_SERIALIZATION_NVP(output_quantization_factor) & CLDNN_SERIALIZATION_NVP(mode) & CLDNN_SERIALIZATION_NVP(coefficients) 
+           & CLDNN_SERIALIZATION_NVP(with_activation) & CLDNN_SERIALIZATION_NVP(activation_negative_slope) & CLDNN_SERIALIZATION_NVP(stride);
+        
+        std::vector<tensor> _stride_as_tensor(_stride.begin(), _stride.end());
+        ar & CLDNN_SERIALIZATION_NVP(_stride_as_tensor);
+        if (!Archive::is_saving::value)
+            _stride = tensor_vector_to_cldnn_vector(_stride_as_tensor);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(eltwise)

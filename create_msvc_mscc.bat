@@ -32,7 +32,7 @@ rmdir /S /Q %SOLUTION_DIR64%\codegen
 echo Creating Visual Studio 2015 (Win32) files in %SOLUTION_DIR32%... && ^
 cd "%ROOT_DIR%" && cmake -E make_directory "%SOLUTION_DIR32%" && cd "%SOLUTION_DIR32%" && cmake -G "Visual Studio 14 2015" "-DCLDNN__ARCHITECTURE_TARGET=%SOLUTION_TARGET32%" "-DCLDNN__BOOST_VERSION=%BOOST_VERSION%" "%ROOT_DIR%"
 echo Creating Visual Studio 2015 (x64) files in %SOLUTION_DIR64%... && ^
-cd "%ROOT_DIR%" && cmake -E make_directory "%SOLUTION_DIR64%" && cd "%SOLUTION_DIR64%" && cmake -G "Visual Studio 14 2015 Win64" "-DCLDNN__ARCHITECTURE_TARGET=%SOLUTION_TARGET64%" "-DCLDNN__BOOST_VERSION=%BOOST_VERSION%" "%ROOT_DIR%"
+cd "%ROOT_DIR%" && cmake -E make_directory "%SOLUTION_DIR64%" && cd "%SOLUTION_DIR64%" && cmake -G "Visual Studio 14 2015 Win64" "-DCLDNN__ARCHITECTURE_TARGET=%SOLUTION_TARGET64%" "-DCLDNN__BOOST_VERSION=%BOOST_VERSION%" "%ROOT_DIR%" 
 
 echo Done.
 pause

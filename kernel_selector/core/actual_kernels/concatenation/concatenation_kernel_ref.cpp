@@ -62,13 +62,15 @@ namespace kernel_selector
     {
         auto cldnnJit = ConcatenationKernelBase::GetJitConstants(params);
         const concatenation_params& orgParams = static_cast<const concatenation_params&>(params);
+        auto input_format = params.inputs[0].GetLayout();
+        auto output_format = params.output.GetLayout();
+
         if (orgParams.inputs[0].Feature().v != 1)
         {
             cldnnJit.AddConstant(MakeJitConstant("CHECK_FEATURES", 1));
+            int f_channel = DataTensor::Channelndex(params.output.GetLayout(), Tensor::DataChannelName::FEATURE);
+            cldnnJit.AddConstant(MakeJitConstant("FEATURE_CHANNEL", f_channel));
         }
-
-        auto input_format = params.inputs[0].GetLayout();
-        auto output_format = params.output.GetLayout();
 
         //default values when input_format = output_format
         std::vector<uint32_t> dim_index = { 0, 1, 2, 3 };

@@ -31,6 +31,8 @@ public:
     using parent::parent;
     program_node& input() const { return get_dependency(0); }
     program_node& argmax() const { return get_dependency(1); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using max_unpooling_node = typed_program_node<max_unpooling>;
@@ -49,3 +51,4 @@ public:
 using max_unpooling_inst = typed_primitive_inst<max_unpooling>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(max_unpooling)

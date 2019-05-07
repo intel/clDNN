@@ -19,6 +19,7 @@
 #include "cldnn_defs.h"
 #include "compounds.h"
 #include "meta_utils.hpp"
+#include "api/CPP/serialization_helper.h"
 
 #include <map>
 #include <list>
@@ -88,8 +89,6 @@ struct format
         fyxb = cldnn_format_fyxb, ///< format not used inside clDNN, but supported in reorder as extension for user provided formats.
         bfyx_f16 = cldnn_format_bfyx_f16,             ///< format used for blocked convolution
         o_i_yx_i16_o16 = cldnn_format_o_i_yx_i16_o16, ///< format used for blocked convolution
-        //TODO: [block_formats] - verify if it is really the weights format is needed (check os_iyx_osv16)
-        oiyx_o16 = cldnn_format_oiyx_o16,         ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
         os_iyx_osv16 = cldnn_format_os_iyx_osv16, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv16 - 16 values of single slice.
                                                   ///< \n \image html os_iyx_osv16.jpg
         os_iyx_osv32 = cldnn_format_os_iyx_osv32, ///< format used only for convolution weights: os - output feature maps slice, i - input feature maps, yx - spatials, sv32 - 32 values of single slice.
@@ -141,7 +140,6 @@ struct format
             { fyxb,{ 1, 1, 2, 0, "fyxb", "bfxy?" } },
             { bfyx_f16, { 1, 1, 2, 0, "bfyx", "bfxy" }},
             { o_i_yx_i16_o16, { 1, 1, 2, 0, "bfyx", "bfxy" } },
-            { oiyx_o16, { 1, 1, 2, 0, "bfyx", "bfxy" } },
             { os_iyx_osv16, { 1, 1, 2, 0, "bfyx", "bfxy?" } },
             { os_iyx_osv32,{ 1, 1, 2, 0, "bfyx", "bfxy?" } },
             { os_iyx_osv64,{ 1, 1, 2, 0, "bfyx", "bfxy?" } },
@@ -226,6 +224,11 @@ struct format
     constexpr explicit format(cldnn_format_type t) : value(static_cast<type>(t)) {}
     /// @brief Conversion to C API @ref ::cldnn_format_type.
     constexpr explicit operator cldnn_format_type() const { return static_cast<cldnn_format_type>(value); }
+
+private:
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_NVP(value);
+    )
 };
 
 struct tensor;
@@ -486,6 +489,12 @@ public:
             _sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX] =
                 sizes[CLDNN_TENSOR_BATCH_DIM_MAX + CLDNN_TENSOR_FEATURE_DIM_MAX + CLDNN_TENSOR_SPATIAL_DIM_MAX];
         }
+        if (sizes.size() > 6)
+        {
+            int max_size = std::max((int)sizes.size(), CLDNN_TENSOR_DIM_MAX);
+            for (int i = 4; i < max_size; i++)
+                _sizes[i] = sizes[i];
+        }
     }
 
     tensor(format fmt, const std::vector<value_type>& sizes, value_type default_size = 1)
@@ -732,22 +741,34 @@ public:
      */
     tensor transform(cldnn::format new_fmt, value_type default_size) const
     {
-        cldnn::format format = cldnn::format::bfyx;
+        cldnn::format format = cldnn::format::bfzyx;
         auto val_order = format.internal_order();
         auto new_order = new_fmt.internal_order();
         std::vector<value_type> old_sizes = sizes();
         std::vector<value_type> new_sizes(old_sizes.size(), default_size);
         auto tmp = 1;
+        auto tmp_z = 1;
         for(size_t i = 0; i < format.order().size(); i++)
         {
             auto c = val_order[i];
-            //skip f or b and y for the formats that do not have it
-            if (((new_fmt == format::bs_xs_xsv8_bsv8) || (new_fmt == format::bs_xs_xsv8_bsv16) || (new_fmt == format::bs_x_bsv16)) && ((c == 'f') || (c == 'y')))
+            //skip f and y, z for the formats that do not have it
+            if (((new_fmt == format::bs_xs_xsv8_bsv8) || (new_fmt == format::bs_xs_xsv8_bsv16) || (new_fmt == format::bs_x_bsv16))
+                && ((c == 'f') || (c == 'y') || (c == 'z')))
             {
                 if (new_order[i] == '?')
                     new_sizes[i] = default_size;
 
                 tmp *= old_sizes[i];
+                continue;
+            }
+
+            //skip z for the formats that do not have it
+            if (((new_fmt != format::bfzyx)) && (c == 'z'))
+            {
+                if (new_order[i] == '?')
+                    new_sizes[i] = default_size;
+
+                tmp_z *= old_sizes[i];
                 continue;
             }
 
@@ -758,7 +779,7 @@ public:
         }
         
         //in case of formats with smaller number of dimensions than input, flatten is performed below
-        if (tmp != 1)
+        if (tmp != 1 || tmp_z != 1)
         {
             for (size_t i = 0; i < format.order().size(); i++)
             {
@@ -767,6 +788,11 @@ public:
                 {
                     auto new_pos = new_order.find(c);
                     new_sizes[new_pos] *= tmp;
+                }
+                if (c == 'y')
+                {
+                    auto new_pos = new_order.find(c);
+                    new_sizes[new_pos] *= tmp_z;
                 }
             }
         }
@@ -806,11 +832,6 @@ public:
             my_sizes[1] = align_to(my_sizes[1], 16);
             adjusted_coords[0] = align_to(adjusted_coords[0], 16);
             adjusted_coords[1] = align_to(adjusted_coords[1], 16);
-        }
-        else if (fmt == cldnn::format::oiyx_o16 && !is_aligned_to(my_sizes[0], 16))
-        {
-            my_sizes[0] = align_to(my_sizes[0], 16);
-            adjusted_coords[0] = align_to(adjusted_coords[0], 16);
         }
         else if (fmt == cldnn::format::bs_xs_xsv8_bsv8 && !(is_aligned_to(my_sizes[0], 8) && is_aligned_to(my_sizes[1], 8)))
         {
@@ -937,6 +958,9 @@ private:
         init.init_tensor_values(*this);
         assign_inits(std::forward<KindInitTys>(kind_inits) ...);
     }
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_NVP(_sizes);
+    )
 };
 
 

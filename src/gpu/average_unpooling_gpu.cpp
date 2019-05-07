@@ -68,6 +68,8 @@ namespace cldnn {
 
                 return average_unpool;
             }
+        private:
+            CLDNN_SERIALIZATION_PARENT_ONLY()
         };
 
         namespace {
@@ -90,3 +92,4 @@ namespace cldnn {
         }
     }
 }
+CLDNN_SERIALIZATION_GPU_CLASS(average_unpooling)

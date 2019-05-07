@@ -30,7 +30,7 @@ primitive_type_id broadcast_type_id()
 
 layout broadcast_inst::calc_output_layout(broadcast_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for broadcast_node!");
     auto input_layout = node.input().get_output_layout();
     auto desc         = node.get_primitive();
@@ -124,3 +124,4 @@ broadcast_inst::typed_primitive_inst(network_impl& network, broadcast_node const
                                            "Invalid broadcast size: not dividable by input size");
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(broadcast)

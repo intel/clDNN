@@ -39,7 +39,7 @@ primitive_type_id proposal_type_id()
 
 layout proposal_inst::calc_output_layout(proposal_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for proposal_node!");
     auto desc = node.get_primitive();
     layout input_layout = node.get_dependency(cls_scores_index).get_output_layout();
@@ -176,3 +176,4 @@ static void generate_anchors(unsigned int base_size,
 
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(proposal)

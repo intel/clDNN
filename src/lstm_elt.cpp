@@ -30,7 +30,7 @@ primitive_type_id lstm_elt_type_id()
 
 layout lstm_elt_inst::calc_output_layout(lstm_elt_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for lstm_elt_node!");
     auto desc = node.get_primitive();
     auto input_layout = node.input().get_output_layout();
@@ -68,3 +68,4 @@ lstm_elt_inst::typed_primitive_inst(network_impl& network, lstm_elt_node const& 
     CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_size.format.value, "expected format", format::bfyx, format::fyxb);
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(lstm_elt)

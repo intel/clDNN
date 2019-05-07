@@ -30,7 +30,7 @@ primitive_type_id fully_connected_grad_input_type_id()
 
 layout fully_connected_grad_input_inst::calc_output_layout(fully_connected_grad_input_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for "
               "fully_connected_grad_input_node!");
     auto desc = node.get_primitive();
@@ -68,3 +68,4 @@ fully_connected_grad_input_inst::typed_primitive_inst(network_impl& network, ful
 
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fully_connected_grad_input)

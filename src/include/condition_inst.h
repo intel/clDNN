@@ -36,17 +36,24 @@ private:
     class branch
     {
     public:
-        branch(topology_impl& tpl) : _topology(tpl) {}
+        branch(topology_impl* tpl) : _topology(tpl) 
+        {
+            if (_topology == nullptr)
+                throw std::runtime_error("Pointer to topology cannot be nullptr");
+        }
 
         void set(const program_node& node)
         {
             add_or_change_input_layout(node);
-            _program = node.get_program().get_engine().build_program(_topology, node.get_program().get_options(), true); //rebuild program 
+            _program = node.get_program().get_engine().build_program(*_topology, node.get_program().get_options(), true); //rebuild program 
         }
         program_impl::ptr get() const { return _program; }
+        void set_program(program_impl::ptr prog) { _program = prog; }
+        topology_impl& get_topology() const { return *_topology; }
+        
 
     private:
-        topology_impl & _topology;
+        topology_impl* _topology = nullptr;
         program_impl::ptr _program = nullptr;
 
         void add_or_change_input_layout(const program_node& node)
@@ -55,10 +62,11 @@ private:
             auto input_id = node.as<condition>().result_id();
             if (_program == nullptr) //if first run, create input_layout
             {
-                _topology.add(std::make_shared<input_layout>(input_id, layout));
-                for (auto& prim : _topology.get_primitives())
+                assert(_topology != nullptr && "Pointer to topology cannot be nullptr");
+                _topology->add(std::make_shared<input_layout>(input_id, layout));
+                for (auto& prim : _topology->get_primitives())
                 {
-                    for (auto& inp : prim.second->input)
+                    for (auto& inp : prim.second->get_input())
                     {
                         if (inp == node.id())
                             inp = input_id;
@@ -67,9 +75,13 @@ private:
             }
             else
             {
-                _topology.change_input_layout(input_id, layout);
+                _topology->change_input_layout(input_id, layout);
             }
         }
+        branch() {}
+        CLDNN_SERIALIZATION_MEMBERS(
+            ar & CLDNN_SERIALIZATION_NVP(_topology);
+        )
     };
 
 public:
@@ -77,8 +89,8 @@ public:
 
     typed_program_node(std::shared_ptr<primitive> prim, program_impl& prog)
         : parent(prim, prog)
-        , _branch_true(*api_cast(this->get_primitive()->topology_true.get()))
-        , _branch_false(*api_cast(this->get_primitive()->topology_false.get()))
+        , _branch_true(api_cast(this->get_primitive()->topology_true.get()))
+        , _branch_false(api_cast(this->get_primitive()->topology_false.get()))
     {
     }
 
@@ -98,6 +110,24 @@ public:
 private:
     mutable branch _branch_true;
     mutable branch _branch_false;
+
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(_branch_true) & CLDNN_SERIALIZATION_NVP(_branch_false);
+        if (Archive::is_saving::value) 
+        {
+            ar & boost::serialization::make_nvp("branch_true_program", *_branch_true.get());
+            ar & boost::serialization::make_nvp("branch_false_program", *_branch_false.get());
+        }
+        else
+        {
+            auto program_true = new program_impl(this->get_program().get_engine());
+            ar & boost::serialization::make_nvp("branch_true_program", *program_true);
+            _branch_true.set_program({ program_true, false });
+
+            auto program_false = new program_impl(this->get_program().get_engine());
+            ar & boost::serialization::make_nvp("branch_false_program", *program_false);
+            _branch_false.set_program({ program_false, false });
+        })
 };
 
 using condition_node = typed_program_node<condition>;
@@ -125,3 +155,4 @@ private:
 
 using condition_inst = typed_primitive_inst<condition>;
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(condition)

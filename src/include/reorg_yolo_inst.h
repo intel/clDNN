@@ -39,3 +39,4 @@ public:
 using reorg_yolo_inst = typed_primitive_inst<reorg_yolo>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(reorg_yolo)

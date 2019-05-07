@@ -393,6 +393,10 @@ struct proposal_gpu : typed_primitive_impl<proposal>
 
         return new proposal_gpu(arg);
     }
+    private:
+        CLDNN_SERIALIZATION_MEMBERS(
+            ar & boost::serialization::make_nvp("typed_primitive_impl_proposal", boost::serialization::base_object<typed_primitive_impl<proposal>>(*this));
+        )
 };
 
 namespace {
@@ -408,3 +412,4 @@ namespace {
     attach attach_impl;
 }
 } }
+CLDNN_SERIALIZATION_GPU_NG_CLASS(cldnn::gpu, proposal)

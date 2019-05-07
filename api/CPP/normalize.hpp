@@ -100,8 +100,15 @@ protected:
         dto.across_spatial = across_spatial;
         dto.epsilon = epsilon;
     }
+private:
+    normalize() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(normalize) & CLDNN_SERIALIZATION_NVP(scale_input) 
+           & CLDNN_SERIALIZATION_NVP(across_spatial) & CLDNN_SERIALIZATION_NVP(epsilon);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(normalize)

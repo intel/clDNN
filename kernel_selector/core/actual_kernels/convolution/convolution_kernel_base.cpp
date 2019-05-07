@@ -236,7 +236,13 @@ namespace kernel_selector
         }
 
         KernelData kd = KernelData::Default<convolution_params>(params);
+
         convolution_params& newParams = *static_cast<convolution_params*>(kd.params.get());
+        if (newParams.engineInfo.bIMMADSupport)
+        {
+            kd.weightsReorderParams.read_only = true;
+            kd.weightsReorderParams.device_only = true;
+        }
 
         if (NeedPaddedInput())
         {

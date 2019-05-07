@@ -1157,7 +1157,7 @@ TEST(eltwise_gpu_f16, fs_b_yx_fsv32_basic)
     //    1221 1222  2221 2222
 
 
-    tensor input_tensor( 2,2,2,2 );
+    tensor input_tensor(2, 2, 2, 2);
     auto fp16_bfyx_2x2x2x2_input =
     {
         FLOAT16(1111),FLOAT16(1112),FLOAT16(1121),FLOAT16(1122),
@@ -1201,7 +1201,7 @@ TEST(eltwise_gpu_f16, fs_b_yx_fsv32_basic)
     FSV32_topology.add(reorder("reorder2", "input2", layout(data_types::f16, format::fs_b_yx_fsv32, input_tensor)));
     FSV32_topology.add(eltwise("eltwise", "reorder1", "reorder2", eltwise_mode::sum));
     FSV32_topology.add(reorder("reorderOutput", "eltwise", layout(data_types::f16, format::bfyx, input_tensor)));
-    
+
     network FSV32_network(engine, FSV32_topology);
     FSV32_network.set_input_data("input1", input1);
     FSV32_network.set_input_data("input2", input2);
@@ -1217,7 +1217,60 @@ TEST(eltwise_gpu_f16, fs_b_yx_fsv32_basic)
     {
         EXPECT_EQ(float(golden_ptr[i]), float(FSV32_ptr[i]));
     }
+}
 
+TEST(eltwise_gpu_f32, broadcast_test_in4x4x2x2x2) {
+    //  Input  : 2x2x2x2x1
+    //  Input2 : 2x2x1x1x2
+    //  Output : 2x2x2x2x2
+
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx,{ 2, 2, 2, 2, 1 } });
+    auto input2 = memory::allocate(engine, { data_types::f32, format::bfzyx,{ 2, 2, 1, 1, 2 } });
+
+    topology topology;
+    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(eltwise("eltwise", { "input", "input2" }, eltwise_mode::sum));
+
+    set_values(input, {
+        1.f,   0.f, 5.f, 1.5f,
+        2.f,   0.f, 6.f, 5.2f,
+        3.f,  0.5f, 7.f, 12.f,
+        4.f, -0.5f, 8.f,  8.f
+    });
+
+    set_values(input2, { 0.5f, 2.5f, 0.5f, 2.5f, 1.f, 2.f, 3.f, 4.f });
+
+    network network(engine, topology);
+
+    network.set_input_data("input", input);
+    network.set_input_data("input2", input2);
+    auto outputs = network.execute();
+
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "eltwise");
+
+    auto output = outputs.at("eltwise").get_memory();
+
+    float answers[32] = {
+        1.5f,   0.5f,   5.5f,   2.f,
+        3.5f,   2.5f,   7.5f,   4.f,
+        2.5f,   0.5f,   6.5f,   5.7f,
+        4.5f,   2.5f,   8.5f,   7.7f,
+        4.f,    1.5f,   8.f,    13.f,
+        5.f,    2.5f,   9.f,    14.f,
+        7.f,    2.5f,   11.f,   11.f,
+        8.f,    3.5f,   12.f,   12.f
+    };
+
+    auto output_ptr = output.pointer<float>();
+
+    for (int i = 0; i < 32; i++)
+    {
+        EXPECT_TRUE(are_equal(answers[i], output_ptr[i]));
+    }
 }
 
 TEST(eltwise_gpu_f16, bfyx_and_fs_b_yx_fsv32_basic)
@@ -1469,6 +1522,117 @@ TEST(eltwise_gpu_f16, bfyx_and_fs_b_yx_fsv32_input_padding)
     {
         EXPECT_EQ(float(golden_ptr[i]), float(BYXF_OUTPUT_ptr[i]));
     }
+}
+
+void test_eltwise_gpu_bfyx_f16(
+    int batch_num,
+    int input_f,
+    int input_x,
+    int input_y,
+    int inputs_number,
+    bool w_activation = false,
+    bool reorder_only_first = false)
+{
+    const auto& engine = get_test_engine();
+    if (!engine.get_info().supports_fp16) {
+        std::cout << "[ SKIPPED  ] The test is skipped (cl_khr_fp16 is not supported)." << std::endl;
+        return;
+    }
+
+    // Generate random inputs
+    std::vector<VVVVF<FLOAT16>> inputs_data(inputs_number);
+    std::vector<VF<FLOAT16>> inputs_bfyx(inputs_number);
+
+    for (int i = 0; i < inputs_number; ++i)
+    {
+        inputs_data[i] = generate_random_4d<FLOAT16>(batch_num, input_f, input_y, input_x, -1, 1);
+        inputs_bfyx[i] = flatten_4d(format::bfyx, inputs_data[i]);
+    }
+
+    // Calculate reference output
+    auto first_activation = inputs_number == 2 ? w_activation : false;
+    auto expected_out = eltwise_reference(inputs_data[0], inputs_data[1], eltwise_mode::sum, first_activation);
+
+    for (int i = 2; i < inputs_number; ++i)
+    {
+        auto last_activation = i == inputs_number - 1 ? w_activation : false;
+        expected_out = eltwise_reference(expected_out, inputs_data[i], eltwise_mode::sum, last_activation);
+    }
+
+    // Create topology to test
+    std::vector<std::string> inputs;
+    topology topo;
+
+    for (int i = 0; i < inputs_number; ++i)
+    {
+        auto input_id = "input" + std::to_string(i);
+        topo.add(input_layout(input_id + "_bfyx", layout(data_types::f16, format::bfyx, { batch_num, input_f, input_y, input_x })));
+
+        if (i == 0 || !reorder_only_first)
+        {
+            topo.add(reorder(input_id, input_id + "_bfyx", layout(data_types::f16, format::bfyx_f16, { batch_num, input_f, input_y, input_x })));
+            inputs.push_back(input_id);
+        }
+        else
+        {
+            inputs.push_back(input_id + "_bfyx");
+        }
+    }
+
+    topo.add(eltwise("eltwise", inputs, eltwise_mode::sum, w_activation));
+
+    // Build network, set input data and execute
+    auto net = network(engine, topo);
+
+    for (int i = 0; i < inputs_number; ++i)
+    {
+        auto mem = memory::allocate(engine, layout(data_types::f16, format::bfyx, { batch_num, input_f, input_y, input_x }));
+        set_values(mem, inputs_bfyx[i]);
+        net.set_input_data("input" + std::to_string(i) + "_bfyx", mem);
+    }
+
+    net.execute();
+
+    // Compare result to reference
+    auto out_mem = net.get_output("eltwise").get_memory();
+    ASSERT_EQ(out_mem.get_layout().format, format::bfyx_f16);
+
+    auto out_ptr = out_mem.pointer<FLOAT16>();
+
+    for (int bi = 0; bi < batch_num; ++bi)
+    {
+        for (int fi = 0; fi < input_f; ++fi)
+        {
+            for (int yi = 0; yi < input_y; ++yi)
+            {
+                for (int xi = 0; xi < input_x; ++xi)
+                {
+                    auto ref_val = expected_out[bi][fi][yi][xi];
+                    auto val = out_ptr[fi % 16 +
+                                       xi * 16 +
+                                       yi * input_x * 16 +
+                                       (fi / 16) * input_x * input_y * 16 +
+                                       bi * input_x * input_y * input_f];
+                    EXPECT_EQ((float)ref_val, (float)val);
+                }
+            }
+        }
+    }
+}
+
+TEST(eltwise_gpu_f16, bfyx_f16_simple)
+{
+    test_eltwise_gpu_bfyx_f16(3, 32, 14, 17, 2, true);
+}
+
+TEST(eltwise_gpu_f16, bfyx_f16_mixed)
+{
+    test_eltwise_gpu_bfyx_f16(3, 32, 14, 17, 2, true, true);
+}
+
+TEST(eltwise_gpu_f16, bfyx_f16_mixed_3_inputs)
+{
+    test_eltwise_gpu_bfyx_f16(3, 32, 14, 17, 3, true, true);
 }
 
 template <typename T>

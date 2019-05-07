@@ -30,6 +30,9 @@ struct typed_program_node<input_layout> : public typed_program_node_base<input_l
     using parent::parent;
 
     typed_program_node(const std::shared_ptr<input_layout> prim, program_impl& prog);
+
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using input_layout_node = typed_program_node<input_layout>;
@@ -55,3 +58,4 @@ public:
 using input_layout_inst = typed_primitive_inst<input_layout>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(input_layout)

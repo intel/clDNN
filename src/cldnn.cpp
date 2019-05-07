@@ -397,6 +397,17 @@ cldnn_program cldnn_build_program(cldnn_engine engine, cldnn_topology topology, 
     });
 }
 
+cldnn_program cldnn_build_serialized_program(cldnn_engine engine, const char* file_name, const char* dump_path, cldnn_status* status)
+{
+    return exception_handler<cldnn_program>(CLDNN_ERROR, status, nullptr, [&]()
+    {
+        SHOULD_NOT_BE_NULL(engine, "Engine");
+
+        cldnn::program_impl* prog = api_cast(engine)->load_program(std::string(file_name), std::string(dump_path)).detach();
+        return api_cast(prog);
+    });
+}
+
 void cldnn_retain_program(cldnn_program program, cldnn_status* status)
 {
     exception_handler(CLDNN_ERROR, status, [&]()
@@ -435,6 +446,18 @@ cldnn_network cldnn_build_network(cldnn_engine engine, cldnn_topology topology, 
     cldnn_release_program(program, nullptr);
     return network;
 }
+
+cldnn_network cldnn_build_serialized_network(cldnn_engine engine, const char* file_name, const char* dump_path, cldnn_status* status)
+{
+    cldnn_program program = cldnn_build_serialized_program(engine, file_name, dump_path, status);
+    if (!program)
+        return nullptr;
+
+    cldnn_network network = cldnn_allocate_network(program, status);
+    cldnn_release_program(program, nullptr);
+    return network;
+}
+
 void cldnn_retain_network(cldnn_network network, cldnn_status* status)
 {
     exception_handler(CLDNN_ERROR, status, [&]()

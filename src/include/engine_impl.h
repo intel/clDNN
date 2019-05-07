@@ -45,12 +45,31 @@ struct program_node;
 template <class>
 struct typed_program_node;
 
+enum class resource_flags : int
+{
+    NONE = 0,
+    READ_WRITE = (1 << 0),
+    READ_ONLY =  (1 << 1),
+    WRITE_ONLY = (1 << 2),
+    DEVICE_ONLY = (1 << 3), // no access from host, fill with data available only on creation
+    COPY_HOST_PTR = (1 << 4) // will copy host pointer data on creation
+};
+inline resource_flags operator|(resource_flags a, resource_flags b)
+{
+    return static_cast<resource_flags>(static_cast<int>(a) | static_cast<int>(b));
+}
+inline resource_flags operator&(resource_flags a, resource_flags b)
+{
+    return static_cast<resource_flags>(static_cast<int>(a) & static_cast<int>(b));
+}
+
 struct engine_impl : public refcounted_obj<engine_impl>
 {
 public:
     engine_impl(const engine_configuration& conf);
     ~engine_impl();
     engine_types type() const { return engine_types::ocl; }
+    refcounted_obj_ptr<memory_impl> allocate_and_copy_memory(refcounted_obj_ptr<memory_impl> to_copy, resource_flags flags = resource_flags::READ_WRITE);
     refcounted_obj_ptr<memory_impl> allocate_memory(layout layout);
     refcounted_obj_ptr<memory_impl> allocate_memory(layout layout, primitive_id, uint32_t, std::set<primitive_id>, bool reusable = true);
     refcounted_obj_ptr<memory_impl> reinterpret_buffer(const memory_impl& memory, layout new_layout);
@@ -60,7 +79,8 @@ public:
     void wait_for_events(std::vector<event_impl::ptr> const& events);
 
     refcounted_obj_ptr<program_impl> build_program(const topology_impl& topology, const build_options& options, bool is_internal = false, bool no_optimizations = false);
-    refcounted_obj_ptr<program_impl> build_program(const std::set<std::shared_ptr<program_node>>& nodes, const build_options & options, bool is_internal);
+    refcounted_obj_ptr<program_impl> build_program(const std::set<std::shared_ptr<program_node>>& nodes, const build_options & options, bool is_internal); 
+    refcounted_obj_ptr<program_impl> load_program(const std::string& file_name, const std::string& dump_path = "");
     void compile_program(program_impl& prog);
 
     refcounted_obj_ptr<network_impl> allocate_network(const program_impl& program, bool is_internal = false);

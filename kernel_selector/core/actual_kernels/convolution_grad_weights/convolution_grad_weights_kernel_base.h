@@ -57,6 +57,12 @@ namespace kernel_selector
             {
                 k.EnableDepthwiseSeparableOpt();
             }
+
+            if (output_grad_w)
+            {
+                k.EnableGradientOutput();
+            }
+
             return k;
         }
     };

@@ -29,7 +29,7 @@ primitive_type_id scale_grad_weights_type_id()
 
 layout scale_grad_weights_inst::calc_output_layout(scale_grad_weights_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for "
               "scale_grad_weights_node!");
     //output buffer will not be used in this primitive
@@ -101,3 +101,4 @@ scale_grad_weights_inst::typed_primitive_inst(network_impl& network, scale_grad_
     }
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(scale_grad_weights)

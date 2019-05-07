@@ -145,6 +145,7 @@ namespace kernel_selector {
         auto b = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::BATCH);
         auto f = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::FEATURE);
         auto x = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::X);
+        auto z = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::Z);
 
         if (x == -1)
         {
@@ -152,8 +153,16 @@ namespace kernel_selector {
         }
         else
         {
-            b = (b < x) ? b : b - 1;
-            f = (f < x) ? f : f - 1;
+            if (z == -1)
+            {
+                b = (b < x) ? b : b - 1;
+                f = (f < x) ? f : f - 1;
+            }
+            else
+            {
+                b = (b < x) ? b : b - 2;
+                f = (f < x) ? f : f - 2;
+            }
         }
 
         JitConstants jit{
@@ -169,10 +178,11 @@ namespace kernel_selector {
     {
         std::vector<size_t> sizes;
         auto y = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::Y);
+        auto z = DataTensor::Channelndex(t.GetLayout(), Tensor::DataChannelName::Z);
         for (size_t i = 0; i < t.GetDims().size(); i++)
         {
             const auto& o = t.GetDims()[i];
-            if (y == (int)i)
+            if (y == (int)i || z == (int)i)
             {
                 sizes.back() *= o.v;
             }

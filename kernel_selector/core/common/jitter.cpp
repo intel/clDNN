@@ -546,7 +546,7 @@ namespace kernel_selector {
             val_one = "1.0h";
             val_zero = "0.0h";
             to_type = "convert_half(v)";
-            to_type_sat = "convert_half_sat(v)";
+            to_type_sat = "convert_half(v)";
             max_func = "fmax";
             min_func = "fmin";
             type_size = "2";

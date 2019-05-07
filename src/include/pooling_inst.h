@@ -32,6 +32,8 @@ public:
     using parent::parent;
     program_node& input() const { return get_dependency(0); }
     program_node& argmax() const { return get_dependency(1); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using pooling_node = typed_program_node<pooling>;
@@ -51,3 +53,4 @@ public:
 using pooling_inst = typed_primitive_inst<pooling>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(pooling)

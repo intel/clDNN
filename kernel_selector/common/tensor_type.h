@@ -73,7 +73,6 @@ namespace kernel_selector
             os_iyx_osv32,
             os_iyx_osv64,
             o_i_yx_i16_o16,
-            oiyx_o16,
             os_iyx_osv16_rotate_180,
             os_i_osv16,
             os_i_osv8__ai8,         // TODO can we drop the alignment form layout name?

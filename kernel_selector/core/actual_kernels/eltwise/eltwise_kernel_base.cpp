@@ -1,5 +1,5 @@
 ﻿/*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,7 +163,14 @@ namespace kernel_selector
             {
                 jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_X", params.stride[i].x));
                 jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_Y", params.stride[i].y));
+                jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_Z", params.stride[i].z));
             }
+            else
+            {
+                jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_X", 1));
+                jit.AddConstant(MakeJitConstant("INPUT" + std::to_string(i) + "_STRIDE_Y", 1));
+            }
+
             if (useVload8)
             {
                 vload_decls += "\\\n\tconst " + toCLType(params.inputs[i].GetDType()) + "8 in" + std::to_string(i);
@@ -206,14 +213,14 @@ namespace kernel_selector
                     else
                     {
                         if (params.inputs[input_idx].GetLayout() == DataLayout::bfyx_f16)
-                            jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[GET_INDEX1(INPUT, " + std::to_string(input.index) + ")]"));
+                            jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[GET_INPUT_INDEX_BFYX_F16(" + std::to_string(input.index) + ")]"));
                         else
                             jit.AddConstant(MakeJitConstant(name, "input" + std::to_string(input.index) + "[GET_INDEX(INPUT, " + std::to_string(input.index) + ")]"));
                     }
                     break;
                 case EltwiseInputMode::OUTPUT_BUFFER:
                     if (params.output.GetLayout() == DataLayout::bfyx_f16)
-                        jit.AddConstant(MakeJitConstant(name, "output[GET_INDEX1(OUTPUT, )]"));
+                        jit.AddConstant(MakeJitConstant(name, "output[GET_OUTPUT_INDEX(d4, d3, d2, d1)]"));
                     else
                         jit.AddConstant(MakeJitConstant(name, "output[GET_INDEX(OUTPUT, )]"));
                     break;
@@ -370,14 +377,25 @@ namespace kernel_selector
 
         if (params.layoutBased || params.int8_quantization)
         {
-            auto global = GetTensorFriendlyWorkGroups(params.inputs[0]);
-            kd.gws0 = global[0];
-            kd.gws1 = global[1];
-            kd.gws2 = global[2];
             if (!params.stride.empty())
             {
+                auto global = GetTensorFriendlyWorkGroups(params.inputs[0]);
+                kd.gws0 = global[0];
+                kd.gws1 = global[1];
+                kd.gws2 = global[2];
                 kd.gws0 /= params.stride[0].x;
                 kd.gws0 /= params.stride[0].y;
+                kd.gws0 /= params.stride[0].z;
+            }
+            else
+            {  // Inputs and output dims may differ due brodcasting
+                auto in = params.inputs[0];
+                auto in_layout = in.GetLayout();
+                auto dims0 = in.GetDims();
+                auto global1 = GetTensorFriendlyWorkGroups(params.output.TransformIgnorePadding(in_layout));
+                kd.gws0 = global1[0];
+                kd.gws1 = global1[1];
+                kd.gws2 = global1[2];
             }
         }
         else if (CheckInputsOutputNoPitchSameDims(params))
@@ -396,14 +414,24 @@ namespace kernel_selector
                 gws.push_back(o.v);
             }
 
-            for (size_t i = gws.size(); i < 4; i++)
+            size_t n_dims;
+            if (out.GetLayout() == DataLayout::bfzyx)
+                n_dims = 5;
+            else
+                n_dims = 4;
+
+            for (size_t i = gws.size(); i < n_dims; i++)
             {
                 gws.push_back(1U);
             }
 
             kd.gws0 = gws[0];
-            kd.gws1 = gws[1];
+            if (n_dims == 5)
+                kd.gws1 = gws[1]* gws[2]; // y*z
+            else
+                kd.gws1 = gws[1];
             kd.gws2 = gws[2] * gws[3];
+
         }
 
         auto local = GetOptimalLocalWorkGroupSizes( { kd.gws0, kd.gws1, kd.gws2 } );

@@ -35,7 +35,7 @@ void prep_opt_depthwise_sep_post::optimize_depthwise_sep_pre(program_impl& p, T&
 
     const auto& split = node.get_primitive()->split();
 
-    auto dependency_offset = node.get_primitive()->input.size();
+    auto dependency_offset = node.get_primitive()->get_input().size();
     //concatenate weights
     {
         //if weights were optimized it is needed to use the sizes after optimization

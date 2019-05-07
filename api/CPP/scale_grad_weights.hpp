@@ -159,8 +159,15 @@ protected:
         dto.prev_bias_grad = prev_bias_grad.c_str();
         dto.scale_grad = scale_grad.c_str();
     }
+private:
+    scale_grad_weights() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(scale_grad_weights) & CLDNN_SERIALIZATION_NVP(scale_input) & CLDNN_SERIALIZATION_NVP(bias)
+           & CLDNN_SERIALIZATION_NVP(prev_scale_grad) & CLDNN_SERIALIZATION_NVP(prev_bias_grad) & CLDNN_SERIALIZATION_NVP(scale_grad);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(scale_grad_weights)

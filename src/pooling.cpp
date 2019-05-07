@@ -30,7 +30,7 @@ primitive_type_id pooling_type_id()
 
 layout pooling_inst::calc_output_layout(parent::typed_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for pooling_node!");
     auto desc = node.get_primitive();
 
@@ -70,6 +70,13 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input offset feature", input_offset.feature[0], "", 0, "Input offset in feature is not supported");
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input offset batch", input_offset.batch[0], "", 0, "Input offset in batch is not supported");
 
+    if (input_layout.format == format::bfzyx) {
+        // 3D
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "stride spatial Z", stride.spatial[1], "", 0, "Stride spatial Z must be positive (>= 1)");
+        CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "window size spatial Z", window_size.spatial[2], "", 0, "Size Z (of pooling window) must be positive (>= 1)");
+        CLDNN_ERROR_GREATER_THAN(node.id(), "Input offset spatial Z", 2 * input_offset.spatial[2], "input layout size spatial Z", input_layout.size.spatial[2], "Input offset is greater than input data range. There is no input data to process");
+    }
+
     if (desc->with_output_size)
     {
         CLDNN_ERROR_LESS_OR_EQUAL_THAN(node.id(), "User-defined size of output X", desc->output_size.spatial[0], "", 0, "User-defined size of output layout (spatial X) must be positive (>= 1)");
@@ -85,7 +92,7 @@ layout pooling_inst::calc_output_layout(parent::typed_node const& node)
         input_layout.size, window_size, input_offset, stride, {1, 1, 1, 1}, true, 1);
 
     tensor output_size(input_layout.size.batch[0], input_layout.size.feature[0],
-                       output_range.spatial[0], output_range.spatial[1]);
+                       output_range.spatial[0], output_range.spatial[1], output_range.spatial[2]);
     return{ input_layout.data_type, input_layout.format, output_size };
 }
 
@@ -118,3 +125,4 @@ std::string pooling_inst::to_string(pooling_node const& node)
 }
 
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(pooling)

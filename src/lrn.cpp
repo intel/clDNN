@@ -29,7 +29,7 @@ primitive_type_id lrn_type_id()
 
 layout lrn_inst::calc_output_layout(lrn_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for lrn_node!");
     return node.input().get_non_padded_output_layout();
 }
@@ -67,3 +67,4 @@ lrn_inst::typed_primitive_inst(network_impl& network, lrn_node const& desc)
     CLDNN_ERROR_LESS_OR_EQUAL_THAN(desc.id(), "LRN argument size", argument.size, "value", static_cast<uint32_t>(0), "LRN size must be greater than 0!");
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(lrn)

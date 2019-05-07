@@ -91,6 +91,84 @@ TEST(activation_f32_fw_gpu, relu_basic_yxfb) {
     }
 }
 
+TEST(activation_f32_fw_gpu, relu_basic_bfzyx) {
+    //  Input:
+    //  1 -2 -3  4  5
+    //  2  2  3  4 -6
+    //  3 -3  3  5  1
+    //  1  1  1 -1  1
+    //
+    //  2 -1 -4  5  2
+    //  2  1 -3  2 -2
+    //  4 -3  2  4 -1
+    //  1  2  1 -2  2
+    //
+    //  Slope: 0.5
+    //
+    //  Output:
+    //  1   -1   -1.5  4    5
+    //  2    2    3    4   -3
+    //  3   -1.5  3    5    1
+    //  1    1    1   -0.5  1
+    //
+    //  2   -0.5 -2    5    2
+    //  2    1   -1.5  2   -1
+    //  4   -1.5  2    4   -0.5
+    //  1    2    1   -1    2
+    //
+
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx,{ 1, 1, 5, 4, 2 } });
+    set_values(input,
+    { 1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
+        2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
+        3.0f, -3.0f, 3.0f, 5.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
+        2.0f, -1.0f, -4.0f, 5.0f, 2.0f,
+        2.0f, 1.0f, -3.0f, 2.0f, -2.0f,
+        4.0f, -3.0f, 2.0f, 4.0f, -1.0f,
+        1.0f, 2.0f, 1.0f, -2.0f, 2.0f });
+    VF<float> output_vec = {
+        1.0f, -1.0f, -1.5f, 4.0f, 5.0f,
+        2.0f, 2.0f, 3.0f, 4.0f, -3.0f,
+        3.0f, -1.5f, 3.0f, 5.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, -0.5f, 1.0f,
+        2.0f, -0.5f, -2.0f, 5.0f, 2.0f,
+        2.0f, 1.0f, -1.5f, 2.0f, -1.0f,
+        4.0f, -1.5f, 2.0f, 4.0f, -0.5f,
+        1.0f, 2.0f, 1.0f, -1.0f, 2.0f };
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        activation("relu", "input", activation_relu_negative_slope, { 0.5f, 0.f }, { { 0, 0, 0, 0, 0 }, 0 }));
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "relu");
+
+    auto output_memory = outputs.at("relu").get_memory();
+    auto output_layout = output_memory.get_layout();
+    auto output_ptr = output_memory.pointer<float>();
+
+    int z_size = output_layout.size.spatial[2];
+    int y_size = output_layout.size.spatial[1];
+    int x_size = output_layout.size.spatial[0];
+    int f_size = output_layout.size.feature[0];
+    int b_size = output_layout.size.batch[0];
+    EXPECT_EQ(output_layout.format, format::bfzyx);
+    EXPECT_EQ(z_size, 2);
+    EXPECT_EQ(y_size, 4);
+    EXPECT_EQ(x_size, 5);
+    EXPECT_EQ(f_size, 1);
+    EXPECT_EQ(b_size, 1);
+
+    for (size_t i = 0; i < output_vec.size(); ++i) {
+        EXPECT_FLOAT_EQ(output_vec[i], output_ptr[i]);
+    }
+}
+
 TEST(activation_f32_fw_gpu, basic_yxfb_all_functions) 
 {
     //  Input:
@@ -377,6 +455,96 @@ TEST(activation_f32_fw_gpu, relu_basic_input_padding_yxfb) {
     int f_size = output_layout.size.feature[0];
     int b_size = output_layout.size.batch[0];
     EXPECT_EQ(output_layout.format, format::yxfb);
+    EXPECT_EQ(y_size, 4);
+    EXPECT_EQ(x_size, 5);
+    EXPECT_EQ(f_size, 1);
+    EXPECT_EQ(b_size, 1);
+
+    for (size_t i = 0; i < output_vec.size(); ++i) {
+        EXPECT_FLOAT_EQ(output_vec[i], output_ptr[i]);
+    }
+}
+
+TEST(activation_f32_fw_gpu, relu_basic_input_padding_bfzyx) {
+    //  Input Padding: 0x2x1 (zyx format) out of the reorder layer
+    //  The expected size is the same as input - the output padding is set to 0, 0
+    //
+    //  Input:
+    //  z  z  z  z  z  z  z
+    //  z  z  z  z  z  z  z
+    //  z  1 -2 -3  4  5  z
+    //  z  2  2  3  4 -6  z
+    //  z  3 -3  3  5  1  z
+    //  z  1  1  1 -1  1  z
+    //  z  z  z  z  z  z  z
+    //  z  z  z  z  z  z  z
+    //
+    //  z  z  z  z  z  z  z
+    //  z  z  z  z  z  z  z
+    //  z  1 -2 -3  4  5  z
+    //  z  2  2  3  4 -6  z
+    //  z  3 -3  3  5  1  z
+    //  z  1  1  1 -1  1  z
+    //  z  z  z  z  z  z  z
+    //  z  z  z  z  z  z  z
+    //
+    //  Slope: 0.5
+    //
+    //  Output:
+    //  1   -1   -1.5  4    5
+    //  2    2    3    4   -3
+    //  3   -1.5  3    5    1
+    //  1    1    1   -0.5  1
+    //  1   -1   -1.5  4    5
+    //  2    2    3    4   -3
+    //  3   -1.5  3    5    1
+    //  1    1    1   -0.5  1
+
+    const auto& engine = get_test_engine();
+
+    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx,{ 1, 1, 5, 4, 2 } });
+    set_values(input,
+    {
+        1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
+        2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
+        3.0f, -3.0f, 3.0f, 5.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
+
+        1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
+        2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
+        3.0f, -3.0f, 3.0f, 5.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, -1.0f, 1.0f });
+    VF<float> output_vec = {
+        1.0f, -1.0f, -1.5f, 4.0f, 5.0f,
+        2.0f, 2.0f, 3.0f, 4.0f, -3.0f,
+        3.0f, -1.5f, 3.0f, 5.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, -0.5f, 1.0f,
+        1.0f, -1.0f, -1.5f, 4.0f, 5.0f,
+        2.0f, 2.0f, 3.0f, 4.0f, -3.0f,
+        3.0f, -1.5f, 3.0f, 5.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, -0.5f, 1.0f };
+
+    topology topology(
+        input_layout("input", input.get_layout()),
+        reorder("reorder", "input", input.get_layout().with_padding({ { 0, 0, 2, 1, 0 }, 0 })),
+        activation("relu", "reorder", activation_relu_negative_slope, { 0.5f, 0.f }, { { 0, 0, 0, 0, 0 }, 0 }));
+    network network(engine, topology);
+    network.set_input_data("input", input);
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.begin()->first, "relu");
+
+    auto output_memory = outputs.at("relu").get_memory();
+
+    auto output_layout = output_memory.get_layout();
+    auto output_ptr = output_memory.pointer<float>();
+
+    int z_size = output_layout.size.spatial[2];
+    int y_size = output_layout.size.spatial[1];
+    int x_size = output_layout.size.spatial[0];
+    int f_size = output_layout.size.feature[0];
+    int b_size = output_layout.size.batch[0];
+    EXPECT_EQ(output_layout.format, format::bfzyx);
+    EXPECT_EQ(z_size, 2);
     EXPECT_EQ(y_size, 4);
     EXPECT_EQ(x_size, 5);
     EXPECT_EQ(f_size, 1);

@@ -35,6 +35,8 @@ class layout_optimizer;
 class pass_manager;
 class base_pass;
 class program_impl_wrapper;
+struct condition;
+
 /*
     cldnn_program implementation
 */
@@ -49,10 +51,14 @@ struct program_impl : public refcounted_obj<program_impl>
     friend class reorder_inputs;                    // to be removed when possible
     friend class program_impl_wrapper;              // this class is intended to extend the interface of program_impl for 
                                                     // the usage within tests_core_internal project only
+    friend struct engine_impl;
+    friend struct typed_program_node<condition>;
+
 public:
     struct nodes_ordering
     {
     public:
+        nodes_ordering() {}
         typedef std::list<program_node*> list_of_nodes;
         typedef list_of_nodes::const_iterator const_iterator;
         const_iterator begin() const { return _processing_order.begin(); }
@@ -72,6 +78,12 @@ public:
     private:
         list_of_nodes _processing_order;
         std::map<program_node*, const_iterator> processing_order_iterators;
+        CLDNN_SERIALIZATION_MEMBERS(
+            ar & CLDNN_SERIALIZATION_NVP(_processing_order);
+            if(!Archive::is_saving::value)
+                for(auto itr = _processing_order.begin(); itr != _processing_order.end(); itr++)
+                    processing_order_iterators[*itr] = itr;
+        )
     };
 
     template <class T>
@@ -150,6 +162,9 @@ public:
     void remove_nodes(std::list<program_node*>& to_remove);
     void dump_program(const char* stage, bool with_full_info, std::function<bool(program_node const&)> const& filter = nullptr) const;
 
+    void save_program(const std::string& file_name);// Serialize program
+    void load_program(const std::string& file_name, const std::string& dump_path = "");// Deserialize program
+
 private:
     uint32_t prog_id = 0;
     engine_impl::ptr engine;
@@ -161,6 +176,12 @@ private:
 
     std::map<primitive_id, std::shared_ptr<program_node>> nodes_map;
     std::list<primitive_id> optimized_out;
+
+    /*
+    ** Necessary constructors for serialization process
+    */
+    program_impl();
+    program_impl(engine_impl& engine_ref);
 
     /*
     ** High-level functions, in order of usage
@@ -221,8 +242,20 @@ private:
     // old_node - node which will be replaced
     // new_node - node which will replace the old one
     void replace(program_node& old_node, program_node& new_node);
+
+
+    /*
+    ** Serialization
+    */
+    // Serialize memory_impl to bin file.
+    template <typename data_type,typename BinArchive>
+    void serialize_memory(BinArchive & ar, memory_impl* mem_impl_ptr);
+    // Serialize binary data to bin file.
+    template<typename BinArchive>
+    void serialize_binary(BinArchive & ar, nodes_ordering& proc_order);
+    // Macro defining serialize method for program_node.
+    CLDNN_SERIALIZATION_PROGRAM_SERIALIZE()
 };
 
 }
-
 API_CAST(::cldnn_program, cldnn::program_impl)

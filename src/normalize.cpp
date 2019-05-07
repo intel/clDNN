@@ -29,7 +29,7 @@ primitive_type_id normalize_type_id()
 
 layout normalize_inst::calc_output_layout(normalize_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for normalize_node!");
     return node.input().get_non_padded_output_layout();
 }
@@ -77,3 +77,4 @@ normalize_inst::typed_primitive_inst(network_impl& network, normalize_node const
 
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(normalize)

@@ -62,8 +62,14 @@ struct select : public primitive_base<select, CLDNN_PRIMITIVE_DESC(select)>
 protected:
 	void update_dto(dto&) const override
 	{}
+private:
+    select() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(select);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(select)

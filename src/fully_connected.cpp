@@ -58,7 +58,7 @@ bool is_batch_after_spatial(const std::string order)
 
 layout fully_connected_inst::calc_output_layout(fully_connected_node const& node)
 {
-    assert((bool)node.get_primitive()->output_data_type == false
+    assert((bool)node.get_primitive()->get_output_data_type() == false
            && "Output data type forcing is not supported for "
               "fully_connected_node!");
     auto desc = node.get_primitive();
@@ -111,3 +111,4 @@ fully_connected_inst::typed_primitive_inst(network_impl& network, fully_connecte
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_layout.size.raw.size(), "output size", output_layout.size.raw.size(), "");
 }
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fully_connected)

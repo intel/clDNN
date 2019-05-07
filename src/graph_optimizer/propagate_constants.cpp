@@ -22,7 +22,7 @@
 #include "program_impl.h"
 #include "network_impl.h"
 #include "data_inst.h"
-
+#include "../gpu/memory_gpu.h"
 
 using namespace cldnn;
 
@@ -79,14 +79,37 @@ void propagate_constants::run(program_impl& p)
     {
         auto& id_to_replace = cout.first;
 
-        //TODO: do not use API primitives internally and get rid of this last 'cldnn::memory' internal usage
-        memory api_memory = details::memory_c_to_cpp_converter::convert(api_cast(cout.second.get()));
-        //c-cpp converter does not retain since normally it is done inside API-impl layer (cldnn.cpp) so we need to do it manually
-        cout.second->add_ref();
+        auto& curr_node = p.get_node(id_to_replace);
 
+        cldnn::memory_impl::ptr mem_impl;
+
+        if (curr_node.is_type<generic_layer>())
+        {
+            auto gen_layer_prim = curr_node.as<generic_layer>().get_primitive();
+            if (gen_layer_prim->get_generic_params().device_only &&
+                gen_layer_prim->get_generic_params().read_only)
+            {
+                // create new gpu buffer and copy existing one's data into it
+                if (dynamic_cast<cldnn::gpu::gpu_buffer*>(cout.second.get()))
+                {
+                    resource_flags flags = resource_flags::COPY_HOST_PTR | resource_flags::READ_ONLY | resource_flags::DEVICE_ONLY;
+                    mem_impl = p.get_engine().allocate_and_copy_memory(cout.second.get(), flags);
+                }
+            }
+        }
+
+        // if we didn't create new memory, let's proceed with the one that's already there
+        if(!mem_impl)
+        {
+            mem_impl = cout.second;
+        }
+
+        //TODO: do not use API primitives internally and get rid of this last 'cldnn::memory' internal usage
+        memory api_memory = details::memory_c_to_cpp_converter::convert(api_cast(mem_impl.get()));
+        //c-cpp converter does not retain since normally it is done inside API-impl layer (cldnn.cpp) so we need to do it manually
+        mem_impl->add_ref();
         auto const_data = std::make_shared<data>("_cldnn_const_prop_" + id_to_replace, api_memory /* <<< REMOVE ME WHEN POSSIBLE */);
         auto& new_node = p.get_or_create(const_data);
-        auto& curr_node = p.get_node(id_to_replace);
 
         if (!curr_node.is_type<generic_layer>())
         {
@@ -158,7 +181,7 @@ void propagate_constants::add_constant(program_impl& prog, program_node& node)
 {
     if (node.is_type<data>())
         return;
-    nodes.insert(prog.get_node_ptr(node.get_primitive()->id));
+    nodes.insert(prog.get_node_ptr(node.get_primitive()->get_id()));
     has_non_trivial_constants = true;
 
     //if a node is either an endpoint or an output, always add it as an output
@@ -183,10 +206,10 @@ void propagate_constants::add_deps_to_tpl(program_impl& prog, const std::vector<
     {
         if (dep->is_type<data>())
         {
-            auto dep_ptr = prog.get_node_ptr(dep->get_primitive()->id);
+            auto dep_ptr = prog.get_node_ptr(dep->get_primitive()->get_id());
             if (nodes.find(dep_ptr) == nodes.end())
             {
-                nodes.insert(prog.get_node_ptr(dep->get_primitive()->id));
+                nodes.insert(prog.get_node_ptr(dep->get_primitive()->get_id()));
                 const_inputs.push_back(&dep->as<data>());
             }
         }

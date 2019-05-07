@@ -36,9 +36,9 @@ layout reorder_inst::calc_output_layout(reorder_node const& node)
     auto input_layout = node.input().get_output_layout();
     auto ifmt = input_layout.format;
 
-    auto odt = *node.get_primitive()->output_data_type;
+    auto odt = *node.get_primitive()->get_output_data_type();
     auto ofmt = node.get_primitive()->output_format;
-    auto op = node.get_primitive()->output_padding;
+    auto op = node.get_primitive()->get_output_padding();
 
     if (ofmt.is_winograd() && ifmt.is_winograd())
     {
@@ -120,7 +120,8 @@ layout reorder_inst::calc_output_layout(reorder_node const& node)
         CLDNN_ERROR_MESSAGE(node.id(), "Conversion of weights from winograd to standard domain is currently unsupported");
     }
 
-    if(ofmt == format::bs_xs_xsv8_bsv8 || ofmt == format::bs_xs_xsv8_bsv16 || ofmt == format::bs_x_bsv16)
+    if(ofmt == format::bs_xs_xsv8_bsv8 || ofmt == format::bs_xs_xsv8_bsv16 || ofmt == format::bs_x_bsv16
+        || ofmt == format::bfzyx || ifmt == format::bfzyx)
         return layout(odt, ofmt, input_layout.size.transform(ofmt, 1), op);
     else
         return layout(odt, ofmt, input_layout.size, op);
@@ -192,3 +193,4 @@ void reorder_inst::reuse_input()
 }
 
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(reorder)

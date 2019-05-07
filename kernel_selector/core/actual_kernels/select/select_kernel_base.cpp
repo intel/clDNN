@@ -80,10 +80,9 @@ namespace kernel_selector
 			{
 				absType = "fabs";
 			}
-			// f32, f32, i8
-			// f32, f32, u8
-			// f16, f16, i8
-			// f16, f16, u8
+			// x, x, i8
+			// x, x, i32
+			// x, x, i64
 			else
 			{
 				absType = "abs";
@@ -97,10 +96,16 @@ namespace kernel_selector
 			else if (params.inputs[0].GetDType() == Datatype::F16) {
 				destType = "short";
 			}
-			// i8, i8, f32
-			// i8, i8, f16
-			// u8, u8, f32
-			// u8, u8, f16
+            // i32, i32, x
+            else if (params.inputs[0].GetDType() == Datatype::INT32) {
+                destType = "int";
+            }
+            // i64, i64, x
+            else if (params.inputs[0].GetDType() == Datatype::INT64) {
+                destType = "long";
+            }
+			// i8,  i8,  x
+			// u8,  u8,  x
 			else
 			{
 				destType = "char";

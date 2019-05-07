@@ -89,6 +89,8 @@ namespace cldnn {
 
 				return conv;
 			}
+        private:
+            CLDNN_SERIALIZATION_PARENT_ONLY()
 		};
 
 		namespace {
@@ -107,3 +109,4 @@ namespace cldnn {
 		}
 	}
 }
+CLDNN_SERIALIZATION_GPU_CLASS(arg_max_min)

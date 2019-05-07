@@ -35,6 +35,8 @@ public:
     program_node& slope_input() const { return get_dependency(1); }
 
     bool is_parameterized() const { return !typed_desc()->additional_params_input.empty(); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using activation_node = typed_program_node<activation>;
@@ -57,3 +59,4 @@ public:
 
 using activation_inst = typed_primitive_inst<activation>;
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(activation)

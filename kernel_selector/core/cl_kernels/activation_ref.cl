@@ -32,9 +32,22 @@ KERNEL(activation)(
 #endif
     )
 {
+#if defined OUTPUT_LAYOUT_BFZYX
+    const unsigned x = get_global_id(0);
+    const uint y = get_global_id(1) % OUTPUT_SIZE_Y;
+    const uint z = get_global_id(1) / OUTPUT_SIZE_Y;
+#if OUTPUT_BATCH_NUM == 1
+    const unsigned feature = get_global_id(2);
+    const unsigned batch = 0;
+#else
+    const unsigned feature = get_global_id(2) % OUTPUT_FEATURE_NUM;
+    const unsigned batch = get_global_id(2) / OUTPUT_FEATURE_NUM;
+#endif
+#else
 #if defined OUTPUT_LAYOUT_YXFB
     const unsigned x = get_global_id(1);
     const unsigned y = get_global_id(2);
+#define z 0
 #if OUTPUT_BATCH_NUM == 1
     const unsigned feature = get_global_id(0);
     const unsigned batch = 0;
@@ -43,6 +56,7 @@ KERNEL(activation)(
     const unsigned batch = get_global_id(0) / OUTPUT_FEATURE_NUM;
 #endif
 #else
+#define z 0
     const unsigned x = get_global_id(0);
     const unsigned y = get_global_id(1);
 #if OUTPUT_BATCH_NUM == 1
@@ -53,14 +67,15 @@ KERNEL(activation)(
     const unsigned batch = get_global_id(2) / OUTPUT_FEATURE_NUM;
 #endif
 #endif
+#endif
 
 #if GRADIENT
-    const unsigned src_grad_index = batch*INPUT0_BATCH_PITCH + feature*INPUT0_FEATURE_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH + INPUT0_OFFSET;
-    const unsigned src_index = batch*INPUT1_BATCH_PITCH + feature*INPUT1_FEATURE_PITCH + y*INPUT1_Y_PITCH + x*INPUT1_X_PITCH + INPUT1_OFFSET;
+    const unsigned src_grad_index = batch*INPUT0_BATCH_PITCH + feature*INPUT0_FEATURE_PITCH + z*INPUT0_Z_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH + INPUT0_OFFSET;
+    const unsigned src_index = batch*INPUT1_BATCH_PITCH + feature*INPUT1_FEATURE_PITCH + z*INPUT1_Z_PITCH + y*INPUT1_Y_PITCH + x*INPUT1_X_PITCH + INPUT1_OFFSET;
 #else
-    const unsigned src_index = batch*INPUT0_BATCH_PITCH + feature*INPUT0_FEATURE_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH + INPUT0_OFFSET;
+    const unsigned src_index = batch*INPUT0_BATCH_PITCH + feature*INPUT0_FEATURE_PITCH + z*INPUT0_Z_PITCH + y*INPUT0_Y_PITCH + x*INPUT0_X_PITCH + INPUT0_OFFSET;
 #endif
-    const unsigned dst_index = batch*OUTPUT_BATCH_PITCH + feature*OUTPUT_FEATURE_PITCH + y*OUTPUT_Y_PITCH + x*OUTPUT_X_PITCH + OUTPUT_OFFSET;
+    const unsigned dst_index = batch*OUTPUT_BATCH_PITCH + feature*OUTPUT_FEATURE_PITCH + z*OUTPUT_Z_PITCH + y*OUTPUT_Y_PITCH + x*OUTPUT_X_PITCH + OUTPUT_OFFSET;
 
 #if defined PARAMETERIZED
     #if   PARAMS_NUM == 2

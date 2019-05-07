@@ -72,8 +72,14 @@ protected:
     {
         dto.inv_variance = inv_variance.c_str();
     }
+private:
+    batch_norm_grad() : primitive_base() {} // Constructor necessary for serialization process
+    CLDNN_SERIALIZATION_MEMBERS(
+        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(batch_norm_grad) & CLDNN_SERIALIZATION_NVP(inv_variance);
+    )
 };
 /// @}
 /// @}
 /// @}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_KEY(batch_norm_grad)

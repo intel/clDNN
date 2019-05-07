@@ -31,7 +31,7 @@ namespace cldnn
 
 	layout embed_inst::calc_output_layout(embed_node const& node)
 	{
-        assert((bool)node.get_primitive()->output_data_type == false
+        assert((bool)node.get_primitive()->get_output_data_type() == false
                && "Output data type forcing is not supported for embed_node!");
         auto input_layout = node.input().get_output_layout();
 		auto desc = node.get_primitive();
@@ -73,3 +73,4 @@ namespace cldnn
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Input y size ", input_size.size.spatial[1], "size 1", 1, "");
 	}
 }
+CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(embed)

@@ -31,6 +31,8 @@ public:
     using parent::parent;
 
     program_node& input() const { return get_dependency(0); }
+private:
+    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using split_node = typed_program_node<split>;
@@ -48,3 +50,4 @@ public:
 
 using split_inst = typed_primitive_inst<split>;
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(split)

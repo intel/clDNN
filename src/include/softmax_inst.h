@@ -39,3 +39,4 @@ public:
 using softmax_inst = typed_primitive_inst<softmax>;
 
 }
+CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(softmax)
