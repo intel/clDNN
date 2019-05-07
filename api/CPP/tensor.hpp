@@ -19,7 +19,7 @@
 #include "cldnn_defs.h"
 #include "compounds.h"
 #include "meta_utils.hpp"
-#include "api/CPP/serialization_helper.h"
+#include "serialization_helper.h"
 
 #include <map>
 #include <list>
