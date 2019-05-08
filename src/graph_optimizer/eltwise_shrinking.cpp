@@ -62,6 +62,13 @@ void eltwise_shrinking::run(program_impl& p)
                     }
 
                     auto weights_node_ptr = p.get_node_ptr(conv->weights[0]);
+                    // make sure that eltwise node is not filter for convolution
+                    if (weights_node_ptr->id() == node->id())
+                    {
+                        can_shrink = false;
+                        break;
+                    }
+
                     auto filter_size = weights_node_ptr->get_output_layout().size;
                     // make sure this is conv 1x1
                     if (filter_size.spatial[0] != 1 || filter_size.spatial[1] != 1)
