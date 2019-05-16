@@ -25,7 +25,6 @@
 #include <api/CPP/engine.hpp>
 #include "test_utils.h"
 #include "float16.h"
-#include "instrumentation.h"
 #include <boost/filesystem.hpp>
 #include <iostream>
 
@@ -152,20 +151,6 @@ namespace tests
         auto output = outputs.begin()->second.get_memory();
         
         auto output_ref = generate_reference(input_mems);
-        
-
-        if (dump_memory)
-        {
-            std::string prefix = test_info.name();
-            for (size_t i = 0; i < generic_params->input_layouts.size(); i++)
-            {
-                ::instrumentation::logger::log_memory_to_file(input_mems[i], prefix + "input" + std::to_string(i));
-            }
-            for (size_t i = 0; i < outputs.size(); i++)
-            {
-                ::instrumentation::logger::log_memory_to_file(output, prefix + "output" + std::to_string(i));
-            }          
-        }
 
         if (output.get_layout().data_type == data_types::f32)
         {

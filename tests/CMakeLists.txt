@@ -23,7 +23,7 @@ set(CLDNN_BUILD__PROJ_OUTPUT_NAME "${CLDNN_BUILD__PROJ}${CLDNN__OUT_CPU_SUFFIX}"
 intel_config_flag_apply_settings(CompilerOptions CMAKE_CXX_FLAGS ALL_PATTERN ""
     SET
       WarnLevel3
-	  StandardCxx14
+	  StandardCxx11
   )
 if (NOT MSVC)
   intel_config_flag_apply_settings(CompilerOptions CMAKE_CXX_FLAGS ALL_PATTERN ""

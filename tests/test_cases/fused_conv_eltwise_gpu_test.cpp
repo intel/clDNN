@@ -120,9 +120,10 @@ class FusedConvTest : public testing::Test
 {
 protected:
     static constexpr bool is_pure_float = std::is_same<InputTy, float>::value;
-    using OutputPreActivationTy = std::conditional_t<is_pure_float, float, int32_t>;
-    using WeightsTy = std::conditional_t<is_pure_float, float, int8_t>;
-    using BiasesTy = std::conditional_t<is_pure_float, float, int32_t>;
+
+    typedef typename std::conditional<is_pure_float, float, int32_t>::type OutputPreActivationTy;
+    typedef typename std::conditional<is_pure_float, float, int8_t>::type WeightsTy;
+    typedef typename std::conditional<is_pure_float, float, int32_t>::type BiasesTy;
 
     topology the_topology;
 
@@ -257,25 +258,19 @@ protected:
                     pre_relu_to_output(output_pre_relu[f * x_size + x]);
                 auto actual = static_cast<OutputPreActivationTy>(
                     output_ptr[f * x_size + x]);
-                expect_eq(expected, actual);
+                if (std::is_floating_point<OutputPreActivationTy>::value)
+                {
+                    EXPECT_NEAR(expected, actual, 0.001f);
+                }
+                else if (std::is_integral<OutputPreActivationTy>::value)
+                {
+                    EXPECT_EQ(expected, actual);
+                }
+                //expect_eq(expected, actual);
             }
     }
 
 private:
-    template<typename T = OutputPreActivationTy>
-    static std::enable_if_t<std::is_floating_point<T>::value>
-    expect_eq(const OutputPreActivationTy& lhs, const OutputPreActivationTy& rhs)
-    {
-        EXPECT_NEAR(lhs, rhs, 0.001f);
-    }
-
-    template<typename T = OutputPreActivationTy>
-    static std::enable_if_t<std::is_integral<T>::value>
-    expect_eq(const OutputPreActivationTy& lhs, const OutputPreActivationTy& rhs)
-    {
-        EXPECT_EQ(lhs, rhs);
-    }
-
     template <typename T>
     static T pre_relu_to_output(T pre_relu) {
       // No std::clamp before C++17 :(
