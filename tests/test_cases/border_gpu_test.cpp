@@ -23,31 +23,12 @@
 #include <api/CPP/network.hpp>
 
 #include "test_utils/test_utils.h"
-#include "test_utils/uniform_quantized_real_distribution.hpp"
 
 #include <cstddef>
 
 
 using namespace cldnn;
 using namespace ::tests;
-
-
-template<typename T>
-static std::vector<T> generate_rnd_real_input(
-    const std::size_t b, const std::size_t f, const std::size_t y, const std::size_t x,
-    const T min = static_cast<T>(0), const T max = static_cast<T>(1), const unsigned rnd_bits = 9)
-{
-    static std::default_random_engine rnd_gen(random_seed);
-    cldnn::tests::distributions::uniform_quantized_real_distribution<T> rnd_dist(min, max, rnd_bits);
-
-    std::vector<T> data;
-    data.reserve(b * f * y * x);
-    for (size_t i = 0; i < b * f * y * x; ++i)
-        data.push_back(rnd_dist(rnd_gen));
-
-    return data;
-}
-
 
 TEST(border_gpu, basic_yxfb_0x0x1x2_0x0x3x4_border_constant) {
     //  Input (XY) : 4x3
@@ -469,7 +450,8 @@ TEST(border_gpu, basic_bfyx_2x1x2x3_1x2x3x4_border_constant) {
                0.0f)
     );
 
-    std::vector<float> input_data = generate_rnd_real_input<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8.0f, 8.0f);
+    VVVVF<float> input_rnd = generate_random_4d<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8, 8);
+    VF<float> input_data = flatten_4d<float>(format::bfyx, input_rnd);
     set_values(input, input_data);
 
     network network(engine, topology);
@@ -538,7 +520,8 @@ TEST(border_gpu, basic_bfyx_2x1x2x3_1x2x3x4_border_mirror) {
                border_type::mirror)
     );
 
-    std::vector<float> input_data = generate_rnd_real_input<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8.0f, 8.0f);
+    VVVVF<float> input_rnd = generate_random_4d<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8, 8);
+    VF<float> input_data = flatten_4d<float>(format::bfyx, input_rnd);
     set_values(input, input_data);
 
     network network(engine, topology);
@@ -604,7 +587,8 @@ TEST(border_gpu, basic_bfyx_2x1x2x3_1x2x3x4_border_mirror_101) {
                border_type::mirror_101)
     );
 
-    std::vector<float> input_data = generate_rnd_real_input<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8.0f, 8.0f);
+    VVVVF<float> input_rnd = generate_random_4d<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8, 8);
+    VF<float> input_data = flatten_4d<float>(format::bfyx, input_rnd);
     set_values(input, input_data);
 
     network network(engine, topology);
@@ -670,7 +654,8 @@ TEST(border_gpu, basic_bfyx_2x1x2x3_1x2x3x4_border_edge) {
                border_type::edge)
     );
 
-    std::vector<float> input_data = generate_rnd_real_input<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8.0f, 8.0f);
+    VVVVF<float> input_rnd = generate_random_4d<float>(in_size_b, in_size_f, in_size_y, in_size_x, -8, 8);
+    VF<float> input_data = flatten_4d<float>(format::bfyx, input_rnd);
     set_values(input, input_data);
 
     network network(engine, topology);

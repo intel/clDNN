@@ -3994,20 +3994,6 @@ protected:
             output_pre_relu.end(), output.begin(), output.end());
     }
 
-    template<typename T = PreActivationTy>
-    static std::enable_if_t<std::is_floating_point<T>::value>
-    expect_eq(const PreActivationTy& lhs, const PreActivationTy& rhs)
-    {
-        EXPECT_NEAR(lhs, rhs, 0.001f);
-    }
-
-    template<typename T = PreActivationTy>
-    static std::enable_if_t<std::is_integral<T>::value>
-    expect_eq(const PreActivationTy& lhs, const PreActivationTy& rhs)
-    {
-        EXPECT_EQ(lhs, rhs);
-    }
-
     template <typename T>
     static T pre_relu_to_output(T pre_relu) {
       // No std::clamp before C++17 :(
@@ -4100,7 +4086,14 @@ protected:
                 // printf("f: %d, x: %d\n", f, x);
                 PreActivationTy expected = pre_relu_to_output(output_pre_relu[f * x_size + x]);
                 auto actual = static_cast<PreActivationTy>(output_ptr[f * x_size + x]);
-                expect_eq(expected, actual);
+                if (std::is_floating_point<PreActivationTy>::value)
+                {
+                    EXPECT_NEAR(expected, actual, 0.001f);
+                }
+                else if (std::is_integral<PreActivationTy>::value)
+                {
+                    EXPECT_EQ(expected, actual);
+                }
             }
     }
 };
@@ -4994,18 +4987,27 @@ TEST_P(convolution_gpu, b_fs_yx_fsv4)
     {
         // Bias, Callibraiton, Quantization
         std::vector<float> vB(_OuD), vC(_OuD), vQ(_OuD);
+        #ifdef __GNUC__
+            __extension__
+        #endif
         std::generate(vB.begin(), vB.end(), [x = 0.1f]() mutable {
             x += 0.01f;
             if (x >= 0.9f)
                 x = 0.1f;
             return x;
         });
+        #ifdef __GNUC__
+            __extension__
+        #endif
         std::generate(vC.begin(), vC.end(), [x = 0.2f]() mutable {
             x += 0.01f;
             if (x >= 0.9f)
                 x = 0.2f;
             return x;
         });
+        #ifdef __GNUC__
+            __extension__
+        #endif
         std::generate(vQ.begin(), vQ.end(), [x = 0.3f]() mutable {
             x += 0.01f;
             if (x >= 0.9f)

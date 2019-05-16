@@ -22,6 +22,13 @@
 
 namespace cldnn
 {
+    template<typename T>
+    typename std::list<T>::iterator
+        const_iterator_cast(std::list<T>& v, typename std::list<T>::const_iterator iter)
+    {
+        return std::next(v.begin(), std::distance(v.cbegin(), iter));
+    }
+
     // helper method for calc_processing order
     void program_impl::nodes_ordering::calc_processing_order_visit(program_node* node)
     {
@@ -123,7 +130,7 @@ namespace cldnn
 
     program_impl::nodes_ordering::const_iterator program_impl::nodes_ordering::insert(const_iterator i, program_node* node)
     { 
-        const_iterator tmp = _processing_order.insert(i, node);
+        const_iterator tmp = _processing_order.insert(const_iterator_cast(_processing_order, i), node);
         processing_order_iterators[node] = tmp;
         return tmp;
     }
@@ -131,7 +138,7 @@ namespace cldnn
     void program_impl::nodes_ordering::erase(const_iterator i)
     { 
         processing_order_iterators.erase(*i);
-        _processing_order.erase(i);
+        _processing_order.erase(const_iterator_cast(_processing_order, i));
     }
 
     void program_impl::nodes_ordering::clear()

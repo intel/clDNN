@@ -25,7 +25,6 @@
 #include <api/CPP/engine.hpp>
 #include "test_utils/test_utils.h"
 #include <api/CPP/data.hpp>
-#include "instrumentation.h"
 #include <boost/filesystem.hpp>
 
 #include <cmath>
@@ -793,6 +792,9 @@ TEST(fully_connected_gpu, b_fs_yx_fsv4)
 
     // Input data
     std::vector<char> Data(in_F * in_B); // in_X=in_Y=1
+    #ifdef __GNUC__
+        __extension__
+    #endif
     std::generate(Data.begin(), Data.end(), [i = 0]() mutable { return i++ % 9; });
     auto input = memory::allocate(engine, {data_types::i8, format::bfyx, {in_B, in_F, in_X, in_Y}});
     set_values(input, std::move(Data));
@@ -807,6 +809,9 @@ TEST(fully_connected_gpu, b_fs_yx_fsv4)
 
     // Weights
     std::vector<char> Weights(W_B * W_F);
+    #ifdef __GNUC__
+        __extension__
+    #endif
     std::generate(Weights.begin(), Weights.end(), [W_F, i = 0]() mutable {
         return i % 2 ? -(i++) / W_F - 1 : (i++) / W_F + 1;
     });
@@ -820,18 +825,27 @@ TEST(fully_connected_gpu, b_fs_yx_fsv4)
 
     // Bias, Callibraiton, Quantization
     std::vector<float> vB(in_F), vC(in_F), vQ(in_F);
+    #ifdef __GNUC__
+        __extension__
+    #endif
     std::generate(vB.begin(), vB.end(), [x = 0.1f]() mutable {
         x += 0.01f;
         if (x >= 0.9f)
             x = 0.1f;
         return x;
     });
+    #ifdef __GNUC__
+            __extension__
+    #endif
     std::generate(vC.begin(), vC.end(), [x = 0.2f]() mutable {
         x += 0.01f;
         if (x >= 0.9f)
             x = 0.2f;
         return x;
     });
+    #ifdef __GNUC__
+                __extension__
+    #endif
     std::generate(vQ.begin(), vQ.end(), [x = 0.3f]() mutable {
         x += 0.01f;
         if (x >= 0.9f)

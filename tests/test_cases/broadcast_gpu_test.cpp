@@ -23,7 +23,6 @@
 #include <api/CPP/network.hpp>
 
 #include "test_utils/test_utils.h"
-#include "test_utils/uniform_quantized_real_distribution.hpp"
 
 #include <cstddef>
 

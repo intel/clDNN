@@ -29,7 +29,6 @@
 #include <api/CPP/engine.hpp>
 #include "test_utils/test_utils.h"
 #include <api/CPP/data.hpp>
-#include "instrumentation.h"
 #include <boost/filesystem.hpp>
 #include <test_utils/float16.h>
 

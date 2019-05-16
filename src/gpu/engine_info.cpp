@@ -147,6 +147,9 @@ std::shared_ptr<rapidjson::Document> get_cache_from_file(uint32_t compute_units_
         tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("\\")) + "\\cache.json";
 #else
         Dl_info dl_info;
+        #ifdef __GNUC__
+            __extension__
+        #endif
         dladdr((void *)get_cache_from_file, &dl_info);
         std::string path(dl_info.dli_fname);
         tuning_cache_path = path.substr(0, path.find_last_of('/'));
