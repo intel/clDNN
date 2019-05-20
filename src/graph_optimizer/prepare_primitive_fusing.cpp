@@ -26,6 +26,7 @@
 #include "activation_inst.h"
 #include "batch_norm_inst.h"
 #include "batch_norm_grad_inst.h"
+#include "broadcast_inst.h"
 #include "crop_inst.h"
 #include "eltwise_inst.h"
 #include "fused_conv_bn_scale_inst.h"
@@ -188,6 +189,12 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
     if (!(*(node->get_users().begin()))->is_type<eltwise>())
         return;
 
+    for (auto i = 0; node->get_dependencies().size(); i++)
+    {
+         if(node->dependencies[i]->is_type<broadcast>())
+             return;
+    }
+	
     convolution_node* conv_node = static_cast<convolution_node*>(node);
     convolution& conv = const_cast<convolution&>(*conv_node->get_primitive());
 
@@ -421,7 +428,7 @@ void prepare_primitive_fusing::run(program_impl& p)
                     !input.is_type<fully_connected>() && !input.is_type<lrn>() && !input.is_type<normalize>() &&
                     !input.is_type<permute>() && !input.is_type<pooling>() && !input.is_type<reorder>() &&
                     !input.is_type<reshape>() && !input.is_type<roi_pooling>() && !input.is_type<scale>() &&
-                    !input.is_type<softmax>() && !input.is_type<upsampling>() && !input.is_type<mvn>()))
+                    !input.is_type<softmax>() && !input.is_type<upsampling>() && !input.is_type<mvn>() && !input.is_type<broadcast>()))
                 return;
 
             input.set_fused_activation(node.get_primitive()->activation_func, node.get_primitive()->additional_params);
