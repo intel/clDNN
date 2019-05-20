@@ -4987,28 +4987,22 @@ TEST_P(convolution_gpu, b_fs_yx_fsv4)
     {
         // Bias, Callibraiton, Quantization
         std::vector<float> vB(_OuD), vC(_OuD), vQ(_OuD);
-        #ifdef __GNUC__
-            __extension__
-        #endif
-        std::generate(vB.begin(), vB.end(), [x = 0.1f]() mutable {
+        auto x = 0.1f;
+        std::generate(vB.begin(), vB.end(), [&x]() {
             x += 0.01f;
             if (x >= 0.9f)
                 x = 0.1f;
             return x;
         });
-        #ifdef __GNUC__
-            __extension__
-        #endif
-        std::generate(vC.begin(), vC.end(), [x = 0.2f]() mutable {
+        x = 0.2f;
+        std::generate(vC.begin(), vC.end(), [&x]() {
             x += 0.01f;
             if (x >= 0.9f)
                 x = 0.2f;
             return x;
         });
-        #ifdef __GNUC__
-            __extension__
-        #endif
-        std::generate(vQ.begin(), vQ.end(), [x = 0.3f]() mutable {
+        x = 0.3f;
+        std::generate(vQ.begin(), vQ.end(), [&x]() {
             x += 0.01f;
             if (x >= 0.9f)
                 x = 0.3f;
