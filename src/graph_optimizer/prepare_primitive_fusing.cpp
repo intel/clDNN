@@ -189,7 +189,7 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
     if (!(*(node->get_users().begin()))->is_type<eltwise>())
         return;
 
-    for (auto i = 0; node->get_dependencies().size(); i++)
+    for (auto i = 0; i < node->get_dependencies().size(); i++)
     {
          if(node->dependencies[i]->is_type<broadcast>())
              return;
