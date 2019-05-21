@@ -189,12 +189,6 @@ void prepare_conv_eltw_fusing::fuse_conv_eltwise(program_impl& p, program_node* 
     if (!(*(node->get_users().begin()))->is_type<eltwise>())
         return;
 
-    for (size_t i = 0; i < node->get_dependencies().size(); i++)
-    {
-         if(node->dependencies[i]->is_type<broadcast>())
-             return;
-    }
-	
     convolution_node* conv_node = static_cast<convolution_node*>(node);
     convolution& conv = const_cast<convolution&>(*conv_node->get_primitive());
 
@@ -428,7 +422,7 @@ void prepare_primitive_fusing::run(program_impl& p)
                     !input.is_type<fully_connected>() && !input.is_type<lrn>() && !input.is_type<normalize>() &&
                     !input.is_type<permute>() && !input.is_type<pooling>() && !input.is_type<reorder>() &&
                     !input.is_type<reshape>() && !input.is_type<roi_pooling>() && !input.is_type<scale>() &&
-                    !input.is_type<softmax>() && !input.is_type<upsampling>() && !input.is_type<mvn>() && !input.is_type<broadcast>()))
+                    !input.is_type<softmax>() && !input.is_type<upsampling>() && !input.is_type<mvn>()))
                 return;
 
             input.set_fused_activation(node.get_primitive()->activation_func, node.get_primitive()->additional_params);
@@ -475,6 +469,11 @@ void prepare_conv_eltw_read_write_opt::conv_eltwise_read_write_opt(program_impl&
 {
     fused_conv_eltwise_node * fused_conv_eltw_node = static_cast<fused_conv_eltwise_node*>(node);
     program_node * second_input_node = &fused_conv_eltw_node->get_dependency(1);
+    for (uint32_t i = 0; i < fused_conv_eltw_node->get_dependencies().size(); i++)
+    {
+        if (fused_conv_eltw_node->dependencies[i]->is_type<broadcast>())
+            return;
+    }
     // output layouts must match
     if (fused_conv_eltw_node->get_output_layout() != second_input_node->get_output_layout()) // check whole layout
     {
