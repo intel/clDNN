@@ -769,6 +769,22 @@ program_node& program_impl::get_or_create(std::shared_ptr<primitive> prim)
         return *itr->second;
 
     auto new_node = prim->get_type()->create_node(*this, prim);
+
+    nodes_map.insert(itr, { prim->get_id(), new_node });
+    return *new_node;
+}
+
+program_node& program_impl::get_or_create(std::shared_ptr<program_node> node)
+{
+    std::shared_ptr<primitive> prim = node->desc;
+    auto itr = nodes_map.lower_bound(prim->get_id());
+    if (itr != nodes_map.end() && itr->first == prim->get_id())
+        return *itr->second;
+
+    auto new_node = prim->get_type()->create_node(*this, prim);
+    // Need to copy values specific for node
+    new_node->set_fused_activation(node->get_fused_activation_func(), node->get_fused_activation_params());
+
     nodes_map.insert(itr, { prim->get_id(), new_node });
     return *new_node;
 }

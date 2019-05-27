@@ -124,9 +124,10 @@ public:
     std::shared_ptr<program_node> get_node_ptr(const primitive_id& prim) const { return nodes_map.at(prim); }
     void dump_memory_pool() const;
 
-    //returns already existing program_node for given primitive 'prim' (lookup in 'nodes_map')
+    //returns already existing program_node for given primitive 'prim' or program_node 'node' (lookup in 'nodes_map')
     //if it was previously created, otherwise creates and then returns program_node
     program_node& get_or_create(std::shared_ptr<primitive> prim);
+    program_node& get_or_create(std::shared_ptr<program_node> node);
 
     // Inserts given program_node 'node' as an intermediate node between 'next' and it's
     //  dependency at 'prev_idx' index.
