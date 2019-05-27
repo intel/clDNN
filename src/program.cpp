@@ -211,7 +211,7 @@ void program_impl::prepare_nodes(std::set<std::shared_ptr<program_node>>const &n
         }
         else
         {
-            get_or_create(itr->desc);
+            get_or_create(itr);
         }
     }
     for (const auto& node : nodes_map)
