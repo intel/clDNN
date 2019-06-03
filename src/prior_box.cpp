@@ -271,4 +271,3 @@ prior_box_inst::typed_primitive_inst(network_impl& network, prior_box_node const
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(prior_box)

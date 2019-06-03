@@ -39,8 +39,6 @@ public:
     bool bias_term() const { return !get_primitive()->bias.empty(); }
     bool hidden_term() const { return !get_primitive()->hidden.empty(); }
     uint32_t direction() const { return get_primitive()->direction; }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using lstm_gemm_node = typed_program_node<lstm_gemm>;
@@ -71,4 +69,3 @@ public:
 using lstm_gemm_inst = typed_primitive_inst<lstm_gemm>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(lstm_gemm)

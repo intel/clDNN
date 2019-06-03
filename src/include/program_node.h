@@ -283,28 +283,12 @@ protected:
         fused_activation_params() = default;
         cldnn_activation_func activation_func = activation_none;
         cldnn_activation_additional_params additional_params = { 0.0f, 0.0f };
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(activation_func) & boost::serialization::make_nvp("additional_params_a", additional_params.a) & boost::serialization::make_nvp("additional_params_b", additional_params.b);
-        )
-        fused_activation_params(cldnn_activation_func activation_func) : activation_func(activation_func) {}
     };
 
     fused_activation_params fused_activation;
 
     void invalidate_users() const;
 
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(output_layout) & CLDNN_SERIALIZATION_NVP(valid_output_layout) & CLDNN_SERIALIZATION_NVP(dependencies) & CLDNN_SERIALIZATION_NVP(memory_dependencies) 
-           & CLDNN_SERIALIZATION_NVP(constant) & CLDNN_SERIALIZATION_NVP(data_flow) & CLDNN_SERIALIZATION_NVP(output) & CLDNN_SERIALIZATION_NVP(user_mark) & CLDNN_SERIALIZATION_NVP(optimized)
-           & CLDNN_SERIALIZATION_NVP(share_buffer) & CLDNN_SERIALIZATION_NVP(_support_padding) & boost::serialization::make_nvp("org_id", const_cast<primitive_id&>(org_id)) & CLDNN_SERIALIZATION_NVP(fused_activation)
-           & CLDNN_SERIALIZATION_NVP(desc) & CLDNN_SERIALIZATION_NVP(selected_impl) & CLDNN_SERIALIZATION_NVP(users);
-        if (Archive::is_saving::value)
-            ar & boost::serialization::make_nvp("has_reused_memory", const_cast<bool&>(has_reused_memory)) & boost::serialization::make_nvp("reused_memory_color", const_cast<uint32_t&>(reused_memory_color));
-        else
-            ar & CLDNN_SERIALIZATION_NVP(has_reused_memory) & CLDNN_SERIALIZATION_NVP(reused_memory_color);
-        )
 };
 
 namespace details
@@ -323,10 +307,6 @@ namespace details
 
     protected:
         std::shared_ptr<PType> typed_desc() const { return std::static_pointer_cast<PType>(desc); }
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(program_node);
-        )
     };
 
     struct internal_program_node_base : public program_node
@@ -343,10 +323,6 @@ namespace details
         primitive_id internal_id;
 
         static primitive_id get_next_internal_id();
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(program_node)
-               & CLDNN_SERIALIZATION_NVP(internal_id);
-            )
     };
 
     template <class PType>
@@ -374,10 +350,6 @@ namespace details
         {
             static_assert(meta::always_false<meta::pack<Guard...>>::value, "Trying to get primitive from internal node");
         }
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(internal_program_node_base);
-        )
     };
 }
 
@@ -405,10 +377,5 @@ struct typed_program_node : public typed_program_node_base<PType>
     using typed_program_node_base<PType>::typed_program_node_base;
 
     program_node& input() const { return program_node::get_dependency(0); }
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & boost::serialization::make_nvp("typed_program_node_base", boost::serialization::base_object<typed_program_node_base<PType>>(*this));
-    )
 };
 }
-CLDNN_SERIALIZATION_PROGRAM_NODE()

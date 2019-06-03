@@ -67,13 +67,8 @@ namespace cldnn
         {
             dto.stride = stride;
         }
-        reorg_yolo() : primitive_base() {} // Constructor necessary for serialization process
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(reorg_yolo) & CLDNN_SERIALIZATION_NVP(stride);
-        )
     };
     /// @}
     /// @}
     /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(reorg_yolo)

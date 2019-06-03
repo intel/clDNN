@@ -207,16 +207,6 @@ private:
     bool decrease_label_id;
     /// @brief Clip decoded boxes
     bool clip;
-
-    detection_output() : primitive_base() {}// Constructor necessary for serialization process 
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(detection_output) & CLDNN_SERIALIZATION_NVP(num_classes)
-        & CLDNN_SERIALIZATION_NVP(keep_top_k) & CLDNN_SERIALIZATION_NVP(share_location) & CLDNN_SERIALIZATION_NVP(background_label_id) 
-        & CLDNN_SERIALIZATION_NVP(nms_threshold) & CLDNN_SERIALIZATION_NVP(top_k) & CLDNN_SERIALIZATION_NVP(eta) & CLDNN_SERIALIZATION_NVP(code_type) 
-        & CLDNN_SERIALIZATION_NVP(variance_encoded_in_target) & CLDNN_SERIALIZATION_NVP(confidence_threshold) & CLDNN_SERIALIZATION_NVP(prior_info_size)
-        & CLDNN_SERIALIZATION_NVP(prior_coordinates_offset) & CLDNN_SERIALIZATION_NVP(prior_is_normalized) & CLDNN_SERIALIZATION_NVP(input_width) 
-        & CLDNN_SERIALIZATION_NVP(input_height) & CLDNN_SERIALIZATION_NVP(decrease_label_id) & CLDNN_SERIALIZATION_NVP(clip);
-    )
 };
 
 /// @brief Generates a list of detections based on location and confidence predictions by doing non maximum suppression.
@@ -298,16 +288,8 @@ private:
     /// @brief Background label id (-1 if there is no background class).
     int background_label_id;
 
-    detection_output_sort() : primitive_base() {}// Constructor necessary for serialization process overloaded below
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(detection_output_sort) & CLDNN_SERIALIZATION_NVP(num_images)
-           & CLDNN_SERIALIZATION_NVP(num_classes) & CLDNN_SERIALIZATION_NVP(keep_top_k) & CLDNN_SERIALIZATION_NVP(share_location)
-           & CLDNN_SERIALIZATION_NVP(top_k) & CLDNN_SERIALIZATION_NVP(background_label_id);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(detection_output)
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(detection_output_sort)

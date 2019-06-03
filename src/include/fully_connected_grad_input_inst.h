@@ -31,9 +31,6 @@ public:
 
     program_node& input() const { return get_dependency(0); }
     program_node& weights() const { return get_dependency(2); }
-
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using fully_connected_grad_input_node = typed_program_node<fully_connected_grad_input>;
@@ -58,4 +55,3 @@ public:
 using fully_connected_grad_input_inst = typed_primitive_inst<fully_connected_grad_input>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(fully_connected_grad_input)

@@ -74,8 +74,6 @@ namespace cldnn {
 
 				return embed_node;
 			};
-        private:
-            CLDNN_SERIALIZATION_PARENT_ONLY()
 		};
 
 		namespace {
@@ -94,4 +92,3 @@ namespace cldnn {
 
 	} // namespace gpu
 } // namespace cldnn
-CLDNN_SERIALIZATION_GPU_CLASS(embed)

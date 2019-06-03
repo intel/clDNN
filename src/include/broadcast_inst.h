@@ -33,8 +33,6 @@ public:
 
     typed_program_node(const std::shared_ptr<broadcast> prim, program_impl& prog) : parent(prim, prog) { support_padding(true); }
     program_node& input() const { return get_dependency(0); }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using broadcast_node = typed_program_node<broadcast>;
@@ -53,4 +51,3 @@ public:
 
 using broadcast_inst = typed_primitive_inst<broadcast>;
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(broadcast)

@@ -98,9 +98,6 @@ public:
 private:
     int32_t split;
     bool depthwise_sep_opt;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(depthwise_sep_opt) /* split from primitive */;
-    )
 };
 
 using convolution_grad_weights_node = typed_program_node<convolution_grad_weights>;
@@ -183,4 +180,3 @@ public:
 using convolution_grad_weights_inst = typed_primitive_inst<convolution_grad_weights>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(convolution_grad_weights)

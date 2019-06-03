@@ -50,8 +50,6 @@ struct region_yolo_gpu : typed_primitive_gpu_impl<region_yolo>
 
         return region_yolo_node;
     };
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -72,4 +70,3 @@ namespace {
 
 } // namespace gpu
 } // namespace cldnn
-CLDNN_SERIALIZATION_GPU_CLASS(region_yolo)

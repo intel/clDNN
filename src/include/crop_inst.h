@@ -33,8 +33,6 @@ public:
 
     typed_program_node(const std::shared_ptr<crop> prim, program_impl& prog) : parent(prim, prog) { support_padding(true); }
     program_node& input() const { return get_dependency(0); }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using crop_node = typed_program_node<crop>;
@@ -57,4 +55,3 @@ private:
 
 using crop_inst = typed_primitive_inst<crop>;
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(crop)

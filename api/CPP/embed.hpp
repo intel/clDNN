@@ -96,15 +96,8 @@ namespace cldnn
 			dto.weights = weights.c_str();
 			dto.bias = bias.c_str();
 		}
-    private:
-        embed() : primitive_base() {} // Constructor necessary for serialization process
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(embed) & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(bias);
-        )
-
 	};
 	/// @}
 	/// @}
 	/// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(embed)

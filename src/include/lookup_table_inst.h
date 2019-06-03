@@ -36,8 +36,6 @@ namespace cldnn
         }
         program_node& input() const { return get_dependency(0); }
         program_node& indices() const { return get_dependency(1); }
-    private:
-        CLDNN_SERIALIZATION_PARENT_ONLY()
     };
 
     using lookup_table_node = typed_program_node<lookup_table>;
@@ -58,4 +56,3 @@ namespace cldnn
     using lookup_table_inst = typed_primitive_inst<lookup_table>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(lookup_table)

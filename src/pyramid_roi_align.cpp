@@ -61,4 +61,3 @@ namespace cldnn {
         : parent(network, node)
     { }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(pyramid_roi_align)

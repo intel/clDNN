@@ -100,4 +100,3 @@ max_unpooling_inst::typed_primitive_inst(network_impl& network, max_unpooling_no
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(max_unpooling)

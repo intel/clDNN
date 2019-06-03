@@ -51,10 +51,6 @@ struct generic_layer_gpu : typed_primitive_impl<generic_layer>
         _kernel.set_output_event(instance.node.is_output());
         return _kernel.run(_cl_kernel_data, events, args);
     }
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & boost::serialization::make_nvp("typed_primitive_impl_generic_layer", boost::serialization::base_object<typed_primitive_impl<generic_layer>>(*this));
-    )
 };
 
 // TODO: move this file to cpu folder and add a new traget to 'cldnn::engine_types'
@@ -110,4 +106,3 @@ namespace {
     attach attach_impl;
 }
 }
-CLDNN_SERIALIZATION_GPU_NG_CLASS(neural, generic_layer)

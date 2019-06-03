@@ -62,14 +62,8 @@ protected:
     }
 
     void update_dto(dto&) const override {}
-private:
-    scale_grad_input() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(scale_grad_input);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(scale_grad_input)

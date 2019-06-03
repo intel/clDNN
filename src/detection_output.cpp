@@ -232,6 +232,3 @@ detection_output_sort_inst::typed_primitive_inst(network_impl& network, detectio
     CLDNN_ERROR_BOOL(node.id(), "Detecion output layer padding", node.is_padded(), "Detection output layer doesn't support output padding.");
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(detection_output)
-
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(detection_output_sort)

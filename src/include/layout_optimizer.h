@@ -32,7 +32,6 @@
 
 #include "kernel_selector_common.h"
 #include "kernel_selector_helper.h"
-#include <boost/optional.hpp>
 
 #include <vector>
 

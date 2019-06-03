@@ -80,4 +80,3 @@ apply_adam_inst::typed_primitive_inst(network_impl& network, apply_adam_node con
     CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "beta2_power format", beta2_power_format.value, "supported beta2_power formats", format::yxfb, format::bfyx);
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(apply_adam)

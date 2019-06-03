@@ -112,15 +112,8 @@ namespace cldnn
             dto.mode = static_cast<cldnn_contract_mode>(mode);
             dto.reduction_axes = uint16_t_vector_to_arr(reduction_axes);
         }
-    
-    private:
-        contract() : primitive_base() {}  // Constructor necessary for serialization process
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(contract) & CLDNN_SERIALIZATION_NVP(mode) & CLDNN_SERIALIZATION_NVP(reduction_axes);
-        )
     };
     /// @}
     /// @}
     /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(contract)

@@ -33,8 +33,6 @@ namespace cldnn
 		program_node& weights() const { return get_dependency(1); }
 		program_node& bias() const { return get_dependency(2); }
 		bool bias_term() const { return !get_primitive()->bias.empty(); }
-    private:
-        CLDNN_SERIALIZATION_PARENT_ONLY()
 	};
 
 	using embed_node = typed_program_node<embed>;
@@ -58,4 +56,3 @@ namespace cldnn
 	using embed_inst = typed_primitive_inst<embed>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(embed)

@@ -193,4 +193,3 @@ void reorder_inst::reuse_input()
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(reorder)

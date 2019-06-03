@@ -207,4 +207,3 @@ convolution_inst::typed_primitive_inst(network_impl& network, convolution_node c
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(convolution)

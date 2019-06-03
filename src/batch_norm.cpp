@@ -99,4 +99,3 @@ batch_norm_inst::typed_primitive_inst(network_impl& network, batch_norm_node con
 	}
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(batch_norm)

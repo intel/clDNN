@@ -353,44 +353,5 @@ void kernels_cache::build_all()
     _pending_compilation = false;
 }
 
-void kernels_cache::build_from_binaries()
-{
-#ifdef CLDNN_SERIALIZATION
-    if (!_pending_compilation)
-        return;
-
-    std::lock_guard<std::mutex> lock(_mutex);
-
-    try 
-    {
-        for (const auto& binaries : *_context.get_binaries())
-        {
-            cl::Program program(_context.context(), { _context.device() }, binaries);
-            program.build({ _context.device() });
-
-            cl::vector<cl::Kernel> kernels;
-            program.createKernels(&kernels);
-            for (auto& k : kernels)
-            {
-                auto kernel_name = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
-                if (_kernels_code[kernel_name].one_time_kernel)
-                    _one_time_kernels[_kernels_code[kernel_name].id] = k;
-                else
-                    _kernels[_kernels_code[kernel_name].id] = k;
-
-            }
-        }
-    }
-    catch(...)
-    {
-        throw std::runtime_error("Kernels build failed!");
-    }
-    _kernels_code.clear();
-    _pending_compilation = false;
-#else
-    throw std::runtime_error("Cannot build from binaries, serialization feature not included.");
-#endif
-}
-
 }}
  

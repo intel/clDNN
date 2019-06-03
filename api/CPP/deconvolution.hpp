@@ -420,18 +420,8 @@ protected:
         dto.gradient = _gradient;
         dto.groups = groups;
     }
-
-    deconvolution() : primitive_base() {} // Constructor necessary for serialization process
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(deconvolution) & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(bias) 
-           & CLDNN_SERIALIZATION_NVP(input_offset) & CLDNN_SERIALIZATION_NVP(stride) & CLDNN_SERIALIZATION_NVP(with_activation) 
-           & CLDNN_SERIALIZATION_NVP(activation_negative_slope) & CLDNN_SERIALIZATION_NVP(with_output_size) & CLDNN_SERIALIZATION_NVP(output_size)
-           & CLDNN_SERIALIZATION_NVP(groups) & CLDNN_SERIALIZATION_NVP(_weights) & CLDNN_SERIALIZATION_NVP(_bias) & CLDNN_SERIALIZATION_NVP(_gradient);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(deconvolution)

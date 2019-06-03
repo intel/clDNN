@@ -83,4 +83,3 @@ condition_inst::typed_primitive_inst(network_impl& network, condition_node const
 
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(condition)

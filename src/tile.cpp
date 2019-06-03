@@ -71,4 +71,3 @@ tile_inst::typed_primitive_inst(network_impl& network, tile_node const& node)
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(tile)

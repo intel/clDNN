@@ -16,25 +16,6 @@
 #pragma once
 #include "kernel_selector_params.h"
 
-#ifdef CLDNN_SERIALIZATION
-#include <boost/serialization/nvp.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/utility.hpp>
-#define CLDNN_SERIALIZATION_NVP(Name)                           \
-    BOOST_SERIALIZATION_NVP(Name)
-#define CLDNN_SERIALIZATION_MEMBERS(Members)                    \
-    friend class boost::serialization::access;                  \
-    template<class Archive>                                     \
-    void serialize(Archive &ar, const unsigned int /*version*/) \
-    {                                                           \
-        Members                                                 \
-    }
-#else
-#define CLDNN_SERIALIZATION_NVP(Name)
-#define CLDNN_SERIALIZATION_MEMBERS(Members)
-#endif
-
 #include <cfloat>
 #include <cstdint>
 #include <limits>
@@ -92,10 +73,6 @@ namespace kernel_selector {
         {
             return str + jit + options + entry_point;
         }
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(entry_point);
-        )
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,9 +85,6 @@ namespace kernel_selector {
     private:
         WorkGroupSizes() {}
         friend struct clKernelData;
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(global) & CLDNN_SERIALIZATION_NVP(local);
-        )
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,13 +104,6 @@ namespace kernel_selector {
             int64_t  s64;
             float    f32;
             double   f64;
-        // Is union necessary for serialization?
-        //private:
-        //    friend class boost::serialization::access;
-        //    template<class Archive>
-        //    void serialize(Archive & ar, const unsigned int/* file_version*/) {
-        //        ar & 
-        //    }
         };
 
         enum class Types
@@ -154,11 +121,6 @@ namespace kernel_selector {
         };
         Types t;
         ValueT v;
-        ScalarDescriptor() {}
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(t) /*& CLDNN_SERIALIZATION_NVP(v)*/;
-        )
     };
 
     using Scalars = std::vector<ScalarDescriptor>;
@@ -206,12 +168,6 @@ namespace kernel_selector {
 
         Types t;
         uint32_t index;
-        ArgumentDescriptor() {}
-        ArgumentDescriptor(Types t, uint32_t index): t(t), index(index) {}
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(t) & CLDNN_SERIALIZATION_NVP(index);
-        )
     };
 
     using Arguments = std::vector<ArgumentDescriptor>;
@@ -226,12 +182,6 @@ namespace kernel_selector {
         Arguments                       arguments;
         Scalars                         scalars;
         std::string                     layerID;            // TODO: in order to support run single layer. think about more appropriate place
-        clKernelData() {}
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(kernelString) & CLDNN_SERIALIZATION_NVP(workGroups)
-               & CLDNN_SERIALIZATION_NVP(arguments) & CLDNN_SERIALIZATION_NVP(scalars) & CLDNN_SERIALIZATION_NVP(layerID);
-        )
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -263,10 +213,6 @@ namespace kernel_selector {
         bool device_only = false;
         // output is read-only
         bool read_only = false;
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(engine) & CLDNN_SERIALIZATION_NVP(clKernel) & CLDNN_SERIALIZATION_NVP(device_only) & CLDNN_SERIALIZATION_NVP(read_only);
-        )
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -310,10 +256,6 @@ namespace kernel_selector {
             kd.autoTuneIndex = -1;
             return kd;
         }
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(kernels);
-        )
     };
 
     using KernelsData = std::vector<KernelData>;

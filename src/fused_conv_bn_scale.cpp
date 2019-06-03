@@ -128,4 +128,3 @@ fused_conv_bn_scale_inst::typed_primitive_inst(network_impl& network, fused_conv
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fused_conv_bn_scale)

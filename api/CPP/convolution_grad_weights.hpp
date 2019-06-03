@@ -276,18 +276,8 @@ protected:
         dto.prev_bias_grad = _prev_bias_grad.ref();
         dto.prev_weights_grad = _prev_weights_grad.ref();
     }
-private:
-    convolution_grad_weights() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(convolution_grad_weights) & CLDNN_SERIALIZATION_NVP(weights) 
-           & CLDNN_SERIALIZATION_NVP(bias) & CLDNN_SERIALIZATION_NVP(prev_weights_grad) & CLDNN_SERIALIZATION_NVP(prev_bias_grad)
-           & CLDNN_SERIALIZATION_NVP(conv_grad) & CLDNN_SERIALIZATION_NVP(stride) & CLDNN_SERIALIZATION_NVP(input_offset) 
-           & CLDNN_SERIALIZATION_NVP(dilation) & CLDNN_SERIALIZATION_NVP(_weights) & CLDNN_SERIALIZATION_NVP(_bias) 
-           & CLDNN_SERIALIZATION_NVP(_prev_weights_grad) & CLDNN_SERIALIZATION_NVP(_prev_bias_grad);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(convolution_grad_weights)

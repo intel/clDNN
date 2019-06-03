@@ -58,8 +58,6 @@ public:
 
         return crop;
     };
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -99,4 +97,3 @@ namespace {
 
 }
 } }
-CLDNN_SERIALIZATION_GPU_CLASS(crop)

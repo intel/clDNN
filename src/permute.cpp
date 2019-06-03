@@ -123,4 +123,3 @@ permute_inst::typed_primitive_inst(network_impl& network, permute_node const& no
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(permute)

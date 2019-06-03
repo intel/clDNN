@@ -151,14 +151,8 @@ protected:
         dto.reference_input = reference_input;
         dto.offsets = offsets;
     }
-private:
-    crop() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(crop) & CLDNN_SERIALIZATION_NVP(reference_input) & CLDNN_SERIALIZATION_NVP(offsets);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(crop)

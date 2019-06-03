@@ -54,4 +54,3 @@ custom_gpu_primitive_inst::typed_primitive_inst(network_impl& network, custom_gp
 {
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(custom_gpu_primitive)

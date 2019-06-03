@@ -39,4 +39,3 @@ public:
 using softmax_loss_grad_inst = typed_primitive_inst<softmax_loss_grad>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(softmax_loss_grad)

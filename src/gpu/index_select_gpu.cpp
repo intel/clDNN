@@ -68,8 +68,6 @@ struct index_select_gpu : typed_primitive_gpu_impl<index_select>
 
         return new index_select_gpu(arg, best_kernels[0]);
     }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -95,4 +93,3 @@ namespace {
 
 }
 } }
-CLDNN_SERIALIZATION_GPU_CLASS(index_select)

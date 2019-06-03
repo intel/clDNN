@@ -64,8 +64,6 @@ namespace cldnn {
 
                 return new contract_gpu(arg, best_kernels[0]);
             }
-        private:
-            CLDNN_SERIALIZATION_PARENT_ONLY()
         };
 
         namespace {
@@ -88,4 +86,3 @@ namespace cldnn {
         }
     }
 }
-CLDNN_SERIALIZATION_GPU_CLASS(contract)

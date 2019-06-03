@@ -78,15 +78,8 @@ protected:
         dto.size = size;
         dto.output_size = output_size;
     }
-private:
-    average_unpooling() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(average_unpooling) & CLDNN_SERIALIZATION_NVP(stride) 
-           & CLDNN_SERIALIZATION_NVP(size) & CLDNN_SERIALIZATION_NVP(output_size);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(average_unpooling)

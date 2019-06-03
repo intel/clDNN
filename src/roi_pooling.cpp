@@ -77,4 +77,3 @@ std::string roi_pooling_inst::to_string(roi_pooling_node const& node)
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(roi_pooling)

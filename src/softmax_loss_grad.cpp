@@ -52,4 +52,3 @@ softmax_loss_grad_inst::typed_primitive_inst(network_impl& network, softmax_loss
     //TODO: add size check here for labels
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(softmax_loss_grad)

@@ -27,7 +27,6 @@ namespace cldnn
     {
     private:
         using parent = typed_program_node_base<one_hot>;
-        CLDNN_SERIALIZATION_PARENT_ONLY()
 
     public:
         using parent::parent;
@@ -52,4 +51,3 @@ namespace cldnn
 
     using one_hot_inst = typed_primitive_inst<one_hot>;
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(one_hot)

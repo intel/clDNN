@@ -144,4 +144,3 @@ void crop_inst::reuse_input()
     _output = _network.get_engine().reinterpret_buffer(input_memory(), node.get_output_layout());
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(crop)

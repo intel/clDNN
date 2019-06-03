@@ -171,19 +171,9 @@ protected:
         dto.round_ratios = round_ratios;
         dto.shift_anchors = shift_anchors;
     }
-private:
-    proposal() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(proposal) & CLDNN_SERIALIZATION_NVP(max_proposals) & CLDNN_SERIALIZATION_NVP(iou_threshold)
-           & CLDNN_SERIALIZATION_NVP(base_bbox_size) & CLDNN_SERIALIZATION_NVP(min_bbox_size) & CLDNN_SERIALIZATION_NVP(feature_stride) & CLDNN_SERIALIZATION_NVP(pre_nms_topn)
-           & CLDNN_SERIALIZATION_NVP(post_nms_topn) & CLDNN_SERIALIZATION_NVP(ratios) & CLDNN_SERIALIZATION_NVP(scales) & CLDNN_SERIALIZATION_NVP(coordinates_offset)
-           & CLDNN_SERIALIZATION_NVP(box_coordinate_scale) & CLDNN_SERIALIZATION_NVP(box_size_scale) & CLDNN_SERIALIZATION_NVP(swap_xy) & CLDNN_SERIALIZATION_NVP(initial_clip)
-           & CLDNN_SERIALIZATION_NVP(round_ratios) & CLDNN_SERIALIZATION_NVP(shift_anchors);
-    )
 };
 
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(proposal)

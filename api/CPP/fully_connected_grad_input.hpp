@@ -71,14 +71,8 @@ protected:
     {
         dto.weights = weights.c_str();
     }
-private:
-    fully_connected_grad_input() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(fully_connected_grad_input) & CLDNN_SERIALIZATION_NVP(weights);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(fully_connected_grad_input)

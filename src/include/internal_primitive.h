@@ -50,9 +50,6 @@ private:
     internal_primitive() = delete;
     internal_primitive(internal_primitive const&) = delete;
     internal_primitive(internal_primitive&&) = delete;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(primitive);
-    )
 };
 
 }

@@ -101,15 +101,8 @@ protected:
         dto.with_activation = with_activation;
         dto.activation_negative_slope = activation_negative_slope;
     }
-private:
-    upsampling() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(upsampling) & CLDNN_SERIALIZATION_NVP(scale) & CLDNN_SERIALIZATION_NVP(num_filter)
-           & CLDNN_SERIALIZATION_NVP(sample_type) & CLDNN_SERIALIZATION_NVP(with_activation) & CLDNN_SERIALIZATION_NVP(activation_negative_slope);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(upsampling)

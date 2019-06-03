@@ -56,11 +56,6 @@
 #include <iomanip>
 #include <memory>
 
-#ifdef CLDNN_SERIALIZATION
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#endif
-
 program_impl::program_impl(engine_impl& engine_ref, topology_impl const& topology, build_options const& options, bool is_internal, bool no_optimizations)
     : engine(&engine_ref), options(options), processing_order(* new nodes_ordering), pm(std::unique_ptr<pass_manager>(new pass_manager()))
 {
@@ -79,15 +74,6 @@ program_impl::program_impl(engine_impl& engine_ref, std::set<std::shared_ptr<pro
     set_options();
     prepare_nodes(nodes);
     build_program(is_internal);
-}
-
-program_impl::program_impl() : pm(std::unique_ptr<pass_manager>(new pass_manager())) 
-{
-}
-
-program_impl::program_impl(engine_impl& engine_ref) // Private constructor for serialization process
-    : engine(&engine_ref), pm(std::unique_ptr<pass_manager>(new pass_manager()))
-{
 }
 
 program_impl::~program_impl() = default;
@@ -404,7 +390,6 @@ void program_impl::pre_optimize_graph(bool is_internal)
         prepare_conv_eltw_fusing prepare_conv_eltw_fusing_pass;
         apply_opt_pass(prepare_conv_eltw_fusing_pass);
 
-        // For now this optimization is not working correctly with serializaiton.
         prepare_conv_eltw_read_write_opt prepare_conv_eltw_read_write_opt_pass;
         apply_opt_pass(prepare_conv_eltw_read_write_opt_pass);
     }
@@ -1114,66 +1099,4 @@ void program_impl::dump_program(const char* stage, bool with_full_info, std::fun
 
     graph.open(path + "cldnn_program_" + std::to_string(prog_id) + "_" + stage + ".optimized");
     dump_graph_optimized(graph, *this);
-}
-
-void program_impl::save_program(const std::string& file_name)
-{
-    CLDNN_SERIALIZATION_SAVE(this, file_name)
-}
-
-void program_impl::load_program(const std::string& file_name, const std::string& dump_path)
-{
-    CLDNN_SERIALIZATION_LOAD(this, file_name, dump_path)
-    CLDNN_SERIALIZATION_IF_INCLUDED(
-        this->get_engine().get_context()->get_kernels_cache().build_from_binaries();
-    )
-}
-
-template <typename data_type, typename BinArchive>
-void program_impl::serialize_memory(BinArchive & ar, memory_impl* mem_impl_ptr)
-{
-    mem_lock<data_type> src{ mem_impl_ptr };
-    auto ptr = src.data();
-    for (size_t x = 0; x < mem_impl_ptr->get_layout().count(); x++)
-        ar & *(ptr + x);
-}
-
-template<typename BinArchive>
-void program_impl::serialize_binary(BinArchive & ar, nodes_ordering& proc_order)
-{
-    for (auto& node : proc_order)
-    {
-        if (node->is_type<condition>())
-        {
-            serialize_binary(ar, node->as<condition>().get_branch_true()->get_processing_order());
-            serialize_binary(ar, node->as<condition>().get_branch_false()->get_processing_order());
-        }
-        else if (node->is_type<data>() || node->is_type<mutable_data>() || node->is_type<prior_box>())
-        {
-            memory_impl* mem_impl_ptr;
-
-            if (node->is_type<data>()) 
-                mem_impl_ptr = &node->as<data>().get_attached_memory();
-            else if (node->is_type<mutable_data>()) 
-                mem_impl_ptr = &node->as<mutable_data>().get_attached_memory();
-            else 
-                mem_impl_ptr = &node->as<prior_box>().get_result_buffer();
-
-            switch (mem_impl_ptr->get_layout().data_type)
-            {
-            case data_types::i8:
-                serialize_memory<int8_t>(ar, mem_impl_ptr); break;
-            case data_types::i32:
-                serialize_memory<int32_t>(ar, mem_impl_ptr); break;
-            case data_types::i64:
-                serialize_memory<int64_t>(ar, mem_impl_ptr); break;
-            case data_types::u8:
-                serialize_memory<uint8_t>(ar, mem_impl_ptr); break;
-            case data_types::f16:
-                serialize_memory<int16_t>(ar, mem_impl_ptr); break;
-            default: 
-                serialize_memory<float>(ar, mem_impl_ptr);
-            }
-        }
-    }
 }

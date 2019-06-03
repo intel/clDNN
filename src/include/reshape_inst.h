@@ -39,8 +39,6 @@ public:
             return false;
         return (!this->get_output_layout().data_padding && !input().get_output_layout(false).data_padding);
     }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using reshape_node = typed_program_node<reshape>;
@@ -66,4 +64,3 @@ private:
 using reshape_inst = typed_primitive_inst<reshape>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(reshape)

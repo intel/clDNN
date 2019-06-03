@@ -58,8 +58,6 @@ private:
         detectOutParams.conf_padding_x = arg.confidence().get_output_layout().data_padding.lower_size().spatial[0];
         detectOutParams.conf_padding_y = arg.confidence().get_output_layout().data_padding.lower_size().spatial[1];
     }
-    CLDNN_SERIALIZATION_PARENT_ONLY()
-
 
 public:
 
@@ -122,7 +120,6 @@ private:
             detectOutParams.background_label_id = primitive->get_background_label_id();
         }
     }
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 
 public:
     static primitive_impl* create(const detection_output_sort_node& arg)
@@ -162,5 +159,3 @@ namespace {
 }
 
 }}
-CLDNN_SERIALIZATION_GPU_CLASS(detection_output)
-CLDNN_SERIALIZATION_GPU_CLASS(detection_output_sort)

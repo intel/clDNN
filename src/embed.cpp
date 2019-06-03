@@ -73,4 +73,3 @@ namespace cldnn
         CLDNN_ERROR_NOT_EQUAL(node.id(), "Input y size ", input_size.size.spatial[1], "size 1", 1, "");
 	}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(embed)

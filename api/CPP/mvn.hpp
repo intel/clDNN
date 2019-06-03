@@ -77,15 +77,8 @@ protected:
         dto.normalize_variance = normalize_variance;
         dto.epsilon = epsilon;
     }
-private:
-    mvn() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(mvn) & CLDNN_SERIALIZATION_NVP(across_channels) 
-           & CLDNN_SERIALIZATION_NVP(normalize_variance) & CLDNN_SERIALIZATION_NVP(epsilon);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(mvn)

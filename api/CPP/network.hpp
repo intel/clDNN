@@ -75,13 +75,6 @@ struct network
         :network(program(engine, topology, options))
     {}
 
-    /// @brief Constructs network object from program created from file.
-    /// @param engine
-    /// @param file_name
-    network(const engine& engine, const std::string& file_name, const std::string& dump_path = "")
-        :network(program(engine, file_name, dump_path))
-    {}
-
     /// @brief Constructs network object from C API @ref cldnn_network.
     network(cldnn_network impl) :_impl(impl)
     {

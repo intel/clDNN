@@ -76,4 +76,3 @@ lstm_gemm_inst::typed_primitive_inst(network_impl& network, lstm_gemm_node const
     CLDNN_ERROR_NOT_PROPER_FORMAT(node.id(), "input format", input_layout.format.value, "expected format", format::bfyx, format::fyxb);
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(lstm_gemm)

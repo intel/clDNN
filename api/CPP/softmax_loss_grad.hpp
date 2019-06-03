@@ -56,13 +56,8 @@ private:
     void update_dto(dto&) const override
     {
     }
-    softmax_loss_grad() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(softmax_loss_grad);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(softmax_loss_grad)

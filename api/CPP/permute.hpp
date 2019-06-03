@@ -70,14 +70,8 @@ protected:
     {
         dto.permute_order = uint16_t_vector_to_arr(permute_order);
     }
-private:
-    permute() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(permute) & CLDNN_SERIALIZATION_NVP(permute_order);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(permute)

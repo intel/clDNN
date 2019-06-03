@@ -56,11 +56,6 @@ public:
         // This primitive is being executed on CPU during network compilation.
         return new wait_for_events_gpu(prior_box);
     }
-private:
-    wait_for_events_gpu() {}
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(primitive_impl);
-    )
 };
 
 namespace {
@@ -84,4 +79,3 @@ namespace {
 }
 
 }}
-CLDNN_SERIALIZATION_EXPORT_CLASS_GUID(cldnn::gpu::wait_for_events_gpu, "wait_for_events_gpu")

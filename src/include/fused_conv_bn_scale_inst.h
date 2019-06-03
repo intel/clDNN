@@ -96,7 +96,6 @@ public:
 
 private:
     int32_t split;
-    CLDNN_SERIALIZATION_PARENT_ONLY() /* split from primitvie */
 };
 
 using fused_conv_bn_scale_node = typed_program_node<fused_conv_bn_scale>;
@@ -148,4 +147,3 @@ public:
 using fused_conv_bn_scale_inst = typed_primitive_inst<fused_conv_bn_scale>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(fused_conv_bn_scale)

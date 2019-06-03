@@ -78,8 +78,6 @@ public:
 
         return lstm_elt;
     };
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 
@@ -100,4 +98,3 @@ namespace {
     attach attach_impl;
 }
 } }
-CLDNN_SERIALIZATION_GPU_CLASS(lstm_elt)

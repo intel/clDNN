@@ -136,4 +136,3 @@ convolution_grad_weights_inst::typed_primitive_inst(network_impl& network, convo
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(convolution_grad_weights)

@@ -65,9 +65,6 @@ struct primitive
     {
     private:
         std::vector<primitive_id>& vref;
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(vref);
-        )
 
     public:
         fixed_size_vector_ref() : vref(*new std::vector<primitive_id>) {}
@@ -195,10 +192,6 @@ protected:
         }
 
         size_t size() const { return cpp_ids.size(); }
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(cpp_ids);
-        )
     };
 
     /// @brief Primitive's type id.
@@ -221,11 +214,6 @@ protected:
     virtual std::vector<std::reference_wrapper<const primitive_id>> get_dependencies() const { return{}; }
     primitive(const primitive_type_id& type) : type(type) {}
 
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(id) & CLDNN_SERIALIZATION_NVP(input)
-           & CLDNN_SERIALIZATION_NVP(output_padding) & CLDNN_SERIALIZATION_NVP(output_data_type) & CLDNN_SERIALIZATION_NVP(_input);
-    )
 };
 
 /// @brief base class for all primitives implementations.
@@ -272,9 +260,6 @@ private:
     mutable DTO _dto;
 
     virtual void update_dto(DTO& dto) const = 0;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(primitive);
-    )
 };
 
 #define CLDNN_DEFINE_TYPE_ID(PType) static primitive_type_id type_id()\

@@ -212,7 +212,6 @@ typedef enum /*:int32_t*/
     cldnn_build_option_outputs,                 ///< User selected list of network outputs.
     cldnn_build_option_tuning_config,           ///< Tuning config.
     cldnn_build_option_graph_dumps_dir,         ///< Specifies a directory to which stages of network compilation should be dumped.
-    cldnn_build_option_serialization,           ///< Specifies a name of files to which serialization should be dumped.
     cldnn_build_option_learning_config,         ///< User defined learning parameters.
     cldnn_build_option_detection_output_gpu     ///< Run detection output layer always on GPU, regardless performance
 } cldnn_build_option_type;
@@ -647,11 +646,6 @@ CLDNN_API void cldnn_get_event_profiling_info(cldnn_event event, cldnn_profiling
 /// @param[in] options_num Number of elements in the @p options array.
 CLDNN_API cldnn_program cldnn_build_program(cldnn_engine engine, cldnn_topology topology, cldnn_build_option* options, size_t options_num, cldnn_status* status);
 
-/// @brief Builds executable program based on the one serialized to file.
-/// @param[in] engine The engine which will be used to build the program.
-/// @param[in] file_name The base name of files from which program will be build.
-CLDNN_API cldnn_program cldnn_build_serialized_program(cldnn_engine engine, const char* file_name, const char* dump_path, cldnn_status* status);
-
 /// @brief Increment reference counter for the program object.
 CLDNN_API void cldnn_retain_program(cldnn_program program, cldnn_status* status);
 
@@ -668,11 +662,6 @@ CLDNN_API void cldnn_release_program(cldnn_program program, cldnn_status* status
 /// @param[in] options The pointer of array of @ref cldnn_build_option which define network build options.
 /// @param[in] options_num Number of elements in the @p options array.
 CLDNN_API        cldnn_network cldnn_build_network(cldnn_engine engine, cldnn_topology topology, cldnn_build_option* options, size_t options_num, cldnn_status* status);
-
-/// @brief Builds executable network based on serialized to file program.
-/// @param[in] engine The engine which will be used to build the program.
-/// @param[in] file_name The base name of files from which program will be build.
-CLDNN_API        cldnn_network cldnn_build_serialized_network(cldnn_engine engine, const char* file_name, const char* dump_path, cldnn_status* status);
 
 /// @brief Allocates memory for a new network which will be able to execute specified @p program.
 /// @param[in] program The program object which holds binaries compiled from some topology and engine. Multiple network objects can share the same program.
