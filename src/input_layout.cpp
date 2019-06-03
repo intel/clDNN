@@ -73,4 +73,3 @@ std::string input_layout_inst::to_string(input_layout_node const& node)
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(input_layout)

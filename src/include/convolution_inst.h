@@ -113,10 +113,6 @@ private:
     float input_qf;
     float output_qf;
     uint32_t groups;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(depthwise_sep_opt) 
-           & CLDNN_SERIALIZATION_NVP(transposed) /* split, input_qf, output_qf from primitvie */;
-    )
 };
 
 using convolution_node = typed_program_node<convolution>;
@@ -200,4 +196,3 @@ public:
 using convolution_inst = typed_primitive_inst<convolution>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(convolution)

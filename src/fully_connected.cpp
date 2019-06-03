@@ -111,4 +111,3 @@ fully_connected_inst::typed_primitive_inst(network_impl& network, fully_connecte
     CLDNN_ERROR_NOT_EQUAL(node.id(), "Input size", input_layout.size.raw.size(), "output size", output_layout.size.raw.size(), "");
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fully_connected)

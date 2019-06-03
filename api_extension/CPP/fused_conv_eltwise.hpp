@@ -182,14 +182,6 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
             output_calibration_factors(output_calibration_factors)
         {}
 
-        conv_data() {} // Constructor necessary for serialization process
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(bias) & CLDNN_SERIALIZATION_NVP(weights_quantization_factors) 
-               & CLDNN_SERIALIZATION_NVP(output_calibration_factors) & CLDNN_SERIALIZATION_NVP(input_quantization_factor) & CLDNN_SERIALIZATION_NVP(output_quantization_factor) 
-               & CLDNN_SERIALIZATION_NVP(input_offset) & CLDNN_SERIALIZATION_NVP(stride) & CLDNN_SERIALIZATION_NVP(dilation) & CLDNN_SERIALIZATION_NVP(with_activation)
-               & CLDNN_SERIALIZATION_NVP(activation_negative_slope) & CLDNN_SERIALIZATION_NVP(with_output_size) & CLDNN_SERIALIZATION_NVP(output_size);
-        )
     } conv;
 
     struct eltw_data
@@ -211,12 +203,6 @@ struct fused_conv_eltwise : public primitive_base<fused_conv_eltwise, CLDNN_PRIM
             : output_calibration_factors(output_calibration_factors)
         {}
 
-        eltw_data() {} // Constructor necessary for serialization process
-    private:
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(output_calibration_factors) & CLDNN_SERIALIZATION_NVP(output_quantization_factor) & CLDNN_SERIALIZATION_NVP(mode) 
-               & CLDNN_SERIALIZATION_NVP(with_activation) & CLDNN_SERIALIZATION_NVP(activation_negative_slope) & CLDNN_SERIALIZATION_NVP(stride);
-        )
     } eltw;
 
     /// @brief On how many cards split the computation to.
@@ -292,22 +278,8 @@ protected:
         dto.non_conv_scale = non_conv_scale;
         dto.second_input_in_output = second_input_in_output;
     }
-
-private:
-    fused_conv_eltwise() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(fused_conv_eltwise) & CLDNN_SERIALIZATION_NVP(conv) & CLDNN_SERIALIZATION_NVP(eltw)
-           & CLDNN_SERIALIZATION_NVP(second_input_in_output) & CLDNN_SERIALIZATION_NVP(_conv_weights) & CLDNN_SERIALIZATION_NVP(_conv_bias) & CLDNN_SERIALIZATION_NVP(_conv_weights_quantization_factors)
-           & CLDNN_SERIALIZATION_NVP(_conv_output_calibration_factors);
-
-        std::vector<tensor> _eltw_stride_as_tensor(_eltw_stride.begin(), _eltw_stride.end());
-        ar & CLDNN_SERIALIZATION_NVP(_eltw_stride_as_tensor);
-        if (!Archive::is_saving::value)
-            _eltw_stride = tensor_vector_to_cldnn_vector(_eltw_stride_as_tensor);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(fused_conv_eltwise)

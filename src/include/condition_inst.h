@@ -79,9 +79,6 @@ private:
             }
         }
         branch() {}
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_NVP(_topology);
-        )
     };
 
 public:
@@ -110,24 +107,6 @@ public:
 private:
     mutable branch _branch_true;
     mutable branch _branch_false;
-
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(_branch_true) & CLDNN_SERIALIZATION_NVP(_branch_false);
-        if (Archive::is_saving::value) 
-        {
-            ar & boost::serialization::make_nvp("branch_true_program", *_branch_true.get());
-            ar & boost::serialization::make_nvp("branch_false_program", *_branch_false.get());
-        }
-        else
-        {
-            auto program_true = new program_impl(this->get_program().get_engine());
-            ar & boost::serialization::make_nvp("branch_true_program", *program_true);
-            _branch_true.set_program({ program_true, false });
-
-            auto program_false = new program_impl(this->get_program().get_engine());
-            ar & boost::serialization::make_nvp("branch_false_program", *program_false);
-            _branch_false.set_program({ program_false, false });
-        })
 };
 
 using condition_node = typed_program_node<condition>;
@@ -155,4 +134,3 @@ private:
 
 using condition_inst = typed_primitive_inst<condition>;
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(condition)

@@ -138,15 +138,8 @@ protected:
         dto.prev_weights_grad = prev_weights_grad.c_str();
         dto.prev_bias_grad = prev_bias_grad.c_str();
     }
-private:
-    fully_connected_grad_weights() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(fully_connected_grad_weights) & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(bias)
-           & CLDNN_SERIALIZATION_NVP(fc_grad) & CLDNN_SERIALIZATION_NVP(prev_weights_grad) & CLDNN_SERIALIZATION_NVP(prev_bias_grad);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(fully_connected_grad_weights)

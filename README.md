@@ -23,7 +23,6 @@ clDNN is licensed is licensed under
 
 ### Attached licenses
 clDNN uses 3<sup>rd</sup>-party components licensed under following licenses:
-- *boost* under [Boost\* Software License - Version 1.0](http://www.boost.org/LICENSE_1_0.txt)
 - *googletest* under [Google\* License](https://github.com/google/googletest/blob/master/googletest/LICENSE)
 - *OpenCL™ ICD and C++ Wrapper* under [Khronos™ License](https://github.com/KhronosGroup/OpenCL-CLHPP/blob/master/LICENSE.txt)
 - *RapidJSON* under [Tencent\* License](https://github.com/Tencent/rapidjson/blob/master/license.txt)
@@ -372,13 +371,6 @@ clDNN requires CPU with Intel® SSE/Intel® AVX support.
 
 The software dependencies are:
 - [CMake\*](https://cmake.org/download/) 3.9 or later  
-(the project is compatible with CMake 3.1, but, due to issues with boost libraries resolution
-in CMake 3.4.3, with CheckCXXCompilerFlag module in CMake 3.5.2 and hard dependency on supported boost version based
-on version of CMake, we strongly recommend 3.9+)
-    > **NOTE:** In rare situation when update of CMake is not possible, you can try to update / override only *FindBoost.cmake*
-    module. You can do that by downloading *FindBoost.cmake* file from newer version of CMake (e.g. from [here](https://gitlab.kitware.com/cmake/cmake/blob/master/Modules/FindBoost.cmake))
-    and putting the file into *common/boost/cmake/modules* directory (create it if necessary). This directory will be attached
-    to the list of modules if your CMake version is lower than 3.9.
 - C++ compiler with partial or full C++11 standard support compatible with:
     * GNU\* Compiler Collection 4.8.2
     * clang 3.5 or later
@@ -458,7 +450,6 @@ CMake solution offers multiple options which you can specify using normal CMake 
 |                                           |          |                                                                              |
 | **CMake advanced option**                 | **Type** | **Description**                                                              |
 | PYTHON\_EXECUTABLE                        | FILEPATH | Path to Python interpreter. CMake will try to detect Python. Specify this option only if CMake has problem with locating Python. |
-| CLDNN\_\_BOOST\_VERSION                   | STRING   | Version of boost prebuilded binaries to use (from `common` subdirectory). It is automatically setected by CMake (highest version). Specify, if you have multiple versions and want to use different than automatically selected. |
 | CLDNN\_\_IOCL\_ICD\_USE\_EXTERNAL         | BOOL     | Use this option to enable use of external Intel® OpenCL™ SDK as a source for ICD binaries and headers (based on `INTELOCLSDKROOT` environment variable). Default: `OFF` |
 | CLDNN\_\_IOCL\_ICD\_VERSION               | STRING   | Version of Intel® OpenCL™ ICD binaries and headers to use (from `common` subdirectory). It is automatically setected by CMake (highest version). Specify, if you have multiple versions and want to use different than automatically selected. |
 |                                           |          |                                                                              |

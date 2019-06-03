@@ -125,4 +125,3 @@ std::string pooling_inst::to_string(pooling_node const& node)
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(pooling)

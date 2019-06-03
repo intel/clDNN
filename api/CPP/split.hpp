@@ -112,19 +112,8 @@ protected:
 
         return res;
     }
-private:
-    split() : primitive_base() {}// Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(split) & CLDNN_SERIALIZATION_NVP(output_offsets) & CLDNN_SERIALIZATION_NVP(_output_ids);
-        auto output_ids_ref = output_ids.ref();
-        std::vector<tensor> _output_offsets_as_tensor(_output_offsets.begin(), _output_offsets.end());
-        ar & CLDNN_SERIALIZATION_NVP(_output_offsets_as_tensor) & CLDNN_SERIALIZATION_NVP(output_ids_ref);
-        if (!Archive::is_saving::value)
-            _output_offsets = tensor_vector_to_cldnn_vector(_output_offsets_as_tensor);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(split)

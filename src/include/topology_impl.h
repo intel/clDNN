@@ -87,9 +87,6 @@ public:
 
 private:
     topology_map _primitives;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(_primitives);
-    )
 };
 }
 

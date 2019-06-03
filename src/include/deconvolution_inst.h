@@ -94,9 +94,6 @@ private:
     int32_t split;
     bool depthwise_sep_opt;
     uint32_t groups;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(depthwise_sep_opt) /* split from primitive */;
-    )
 };
 
 using deconvolution_node = typed_program_node<deconvolution>;
@@ -151,4 +148,3 @@ public:
 using deconvolution_inst = typed_primitive_inst<deconvolution>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(deconvolution)

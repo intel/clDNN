@@ -44,9 +44,6 @@ public:
 private:
     bool req_reinterpr = false;
     tensor input_offset = tensor{ 0 }; //used by reorder to winograd domain
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(req_reinterpr) & CLDNN_SERIALIZATION_NVP(input_offset);
-    )
 };
 
 using reorder_node = typed_program_node<reorder>;
@@ -75,4 +72,3 @@ private:
 using reorder_inst = typed_primitive_inst<reorder>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(reorder)

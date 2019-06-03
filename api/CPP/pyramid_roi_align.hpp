@@ -59,12 +59,6 @@ namespace cldnn {
     protected:
         void update_dto(dto &) const override
         {}
-    private:
-        pyramid_roi_align() : primitive_base() {} // Constructor necessary for serialization process
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(pyramid_roi_align);
-        )
 
     };
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(pyramid_roi_align)

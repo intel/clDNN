@@ -30,8 +30,6 @@ public:
     using parent::parent;
 
     program_node& input(size_t idx = 0) const { return get_dependency(idx); }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using custom_gpu_primitive_node = typed_program_node<custom_gpu_primitive>;
@@ -66,4 +64,3 @@ public:
 using custom_gpu_primitive_inst = typed_primitive_inst<custom_gpu_primitive>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(custom_gpu_primitive)

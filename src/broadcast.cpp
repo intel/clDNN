@@ -124,4 +124,3 @@ broadcast_inst::typed_primitive_inst(network_impl& network, broadcast_node const
                                            "Invalid broadcast size: not dividable by input size");
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(broadcast)

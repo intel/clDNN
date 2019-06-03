@@ -67,4 +67,3 @@ fully_connected_grad_weights_inst::typed_primitive_inst(network_impl& network, f
 
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fully_connected_grad_weights)

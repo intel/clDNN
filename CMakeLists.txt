@@ -15,11 +15,6 @@
 cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
 include(CheckCXXCompilerFlag)
 
-if(CMAKE_VERSION VERSION_LESS 3.9)
-  # Register module overrides for boost package if cmake is too old.
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/common/boost/cmake/modules")
-endif()
-
 # Register Intel helper modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/utils/build/cmake/modules")
 include(IntelHelpers)
@@ -88,9 +83,6 @@ set(CLDNN__KERNEL_SELECTOR_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/kernel_selecto
 
 # Path which points to directory with binaries for Intel OpenCL SDK ICD (Installable Client Driver).
 set(CLDNN__IOCL_ICD_DIR  "${CLDNN__COMMON_DIR}/intel_ocl_icd")
-
-# Path which points to directory with boost libraries (only selection).
-set(CLDNN__BOOST_DIR     "${CLDNN__COMMON_DIR}/boost")
 
 # Path which points to directory with C++ bindings for OpenCL (header files + wrapper that disables specific warnings).
 set(CLDNN__KHR_CLHPP_DIR "${CLDNN__COMMON_DIR}/khronos_ocl_clhpp")
@@ -328,24 +320,6 @@ if(__CLDNN_IOclIcdDefaultVersion VERSION_EQUAL "0")
 endif()
 
 # ======================================================================================================
-
-# Detecting all versions of added boost package in the project.
-if(NOT EXISTS "${CLDNN__BOOST_DIR}")
-  message(FATAL_ERROR "[clDNN] Root for boost libraries is invalid or does not exist.
-    Please make sure that libraries are added into \"${CLDNN__BOOST_DIR}\".")
-endif()
-
-cldnn_locate_component_versions(__CLDNN_BoostVersions __CLDNN_BoostPaths __CLDNN_BoostDefaultVersion
-    "boost libraries" "${CLDNN__BOOST_DIR}"
-    "include/boost-*/boost/config.hpp"
-    "include/boost-*/boost/filesystem/config.hpp"
-  )
-
-if(__CLDNN_BoostDefaultVersion VERSION_EQUAL "0")
-  message(FATAL_ERROR "[clDNN] boost libraries required for build cannot be located.")
-endif()
-
-# ======================================================================================================
 # ============================================ CMAKE OPTIONS ===========================================
 # ======================================================================================================
 
@@ -393,25 +367,11 @@ mark_as_advanced(CLDNN__IOCL_ICD_USE_EXTERNAL)
 
 # ======================================================================================================
 
-# boost libraries (filesystem subset): Version of libraries used to build clDNN.
-set(CLDNN__BOOST_VERSION "${__CLDNN_BoostDefaultVersion}" CACHE STRING "boost libraries (filesystem subset): Version of libraries used to build clDNN framework.")
-mark_as_advanced(CLDNN__BOOST_VERSION)
-set_property(CACHE CLDNN__BOOST_VERSION PROPERTY STRINGS ${__CLDNN_BoostVersions})
-
-# ======================================================================================================
-
 # Include and build: Core of clDNN framework.
 set(CLDNN__INCLUDE_CORE ON CACHE BOOL "Include and build: clDNN core.")
 mark_as_advanced(CLDNN__INCLUDE_CORE)
 
 # ======================================================================================================
-
-# Include and build: Serialization feature of clDNN framework.
-set(CLDNN__INCLUDE_SERIALIZATION ON CACHE BOOL "Include and build: clDNN serialization feature.")
-mark_as_advanced(CLDNN__INCLUDE_SERIALIZATION)
-
-# ======================================================================================================
-
 
 # Include and build: Kernel selector for clDNN framework.
 set(CLDNN__INCLUDE_KERNEL_SELECTOR ON CACHE BOOL "Include and build: clDNN kernel selector.")
@@ -600,45 +560,6 @@ unset(__CLDNN_IOclIcdVersionIdx)
 
 # ======================================================================================================
 set(CLDNN_UTILS__RAPIDJSON_INCDIRS "utils/rapidjson" CACHE INTERNAL "Paths to interface headers for rapidjson.")
-
-# Selecting boost libraries version and path.
-list(FIND __CLDNN_BoostVersions "${CLDNN__BOOST_VERSION}" __CLDNN_BoostVersionIdx)
-if(__CLDNN_BoostVersionIdx LESS 0)
-  message(FATAL_ERROR "[clDNN] CLDNN__BOOST_VERSION: Selected version of boost libraries cannot be found.
-    Please use one of following values: ${__CLDNN_BoostVersions}.")
-endif()
-list(GET __CLDNN_BoostPaths ${__CLDNN_BoostVersionIdx} CLDNN__BOOST_ROOT)
-set(CLDNN__BOOST_ROOT "${CLDNN__BOOST_ROOT}" CACHE INTERNAL "Path to boost libraries (filesystem subset) used to build clDNN framework.")
-
-# Setting paths for find_package.
-set(BOOST_ROOT            "${CLDNN__BOOST_ROOT}")
-set(BOOST_INCLUDEDIR      "${CLDNN__BOOST_ROOT}")
-set(BOOST_LIBRARYDIR      "${CLDNN__BOOST_ROOT}/${__CLDNN_TargetOs}/${__CLDNN_TargetCpuDir}/${__CLDNN_TargetCompilerDir}/lib")
-set(Boost_NO_SYSTEM_PATHS ON)
-# Setting preferred types of libraries.
-set(Boost_USE_STATIC_LIBS    ON)
-set(Boost_USE_DEBUG_RUNTIME  ON)
-set(Boost_USE_STATIC_RUNTIME ${CLDNN__COMPILE_LINK_USE_STATIC_RUNTIME})
-set(CLDNN__BOOST_USAGE system date_time program_options filesystem)
-if(CLDNN__INCLUDE_SERIALIZATION)
-  list(APPEND CLDNN__BOOST_USAGE serialization)
-endif()
-find_package(Boost "${CLDNN__BOOST_VERSION}" EXACT REQUIRED
-      COMPONENTS ${CLDNN__BOOST_USAGE}
-    )
-
-
-get_cmake_property(__CLDNN_VarNames VARIABLES)
-cldnn_dmsg("All boost package variables:")
-foreach(__CLDNN_VarName ${__CLDNN_VarNames})
-  string(REPLACE ";" "\;" __CLDNN_VarName "${__CLDNN_VarName}") # [WA#1] Must escape ; again if occurred in item.
-  if(__CLDNN_VarName MATCHES "^Boost_")
-    cldnn_dmsg(" - ${__CLDNN_VarName}:     ${${__CLDNN_VarName}}")
-  endif()
-endforeach()
-cldnn_dmsg("")
-
-
 # ====================================== Version Calculation ===========================================
 
 if(EXISTS "${CLDNN__VERSION_FILE_NAME}")
@@ -728,11 +649,9 @@ if (CLDNN__IOCL_ICD_USE_EXTERNAL)
 else()
   message(STATUS "[clDNN]  - ICD version used to build:         ${CLDNN__IOCL_ICD_VERSION}")
 endif()
-message(STATUS "[clDNN]  - boost ver. used to build:          ${CLDNN__BOOST_VERSION}")
 message(STATUS "[clDNN]")
 message(STATUS "[clDNN]  - Include/Build cldnn core:          ${CLDNN__INCLUDE_CORE}")
 message(STATUS "[clDNN]  - Include/Build kernel selector:     ${CLDNN__INCLUDE_KERNEL_SELECTOR}")
-message(STATUS "[clDNN]  - Include/Build serialization:       ${CLDNN__INCLUDE_SERIALIZATION}")
 message(STATUS "[clDNN]  - Include/Build tests:               ${CLDNN__INCLUDE_TESTS}")
 message(STATUS "[clDNN]  - Include/Build core internal tests: ${CLDNN__INCLUDE_CORE_INTERNAL_TESTS}")
 message(STATUS "[clDNN]  - Include/Build tutorial:            ${CLDNN__INCLUDE_TUTORIAL}")
@@ -752,10 +671,6 @@ message(STATUS "[clDNN]     + Static libs:  ${CLDNN__IOCL_ICD_STLDIRS}")
 message(STATUS "[clDNN]     + Shared libs:  ${CLDNN__IOCL_ICD_SHLDIRS}")
 message(STATUS "[clDNN]     + Libs to link: ${CLDNN__IOCL_ICD_LIBDIRS}")
 message(STATUS "[clDNN]")
-message(STATUS "[clDNN] boost libraries:")
-message(STATUS "[clDNN]  - Root:            ${CLDNN__BOOST_ROOT}")
-message(STATUS "[clDNN]     + Headers:      ${Boost_INCLUDE_DIRS}")
-message(STATUS "[clDNN]     + Libs to link: ${Boost_LIBRARY_DIRS}")
 
 message(STATUS "[clDNN] =============================================================================")
 unset(__CLDNN_DetectedArch_Target)
@@ -1100,7 +1015,6 @@ unset(__CLDNN_TargetCompilerDir)
 
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
     CLDNN_CMAKE
-    BOOST_ALL_NO_LIB
   )
 
 if (MSVC)
@@ -1120,7 +1034,6 @@ include_directories(
     ${CLDNN__IOCL_ICD_INCDIRS}
 	${CLDNN_UTILS__RAPIDJSON_INCDIRS}
     "${CLDNN__KHR_CLHPP_DIR}"
-    ${Boost_INCLUDE_DIRS}
     "${CLDNN__CODEGEN_INCDIR}"
   )
 link_directories(

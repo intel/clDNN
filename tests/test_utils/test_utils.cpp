@@ -25,8 +25,8 @@
 #include <api/CPP/engine.hpp>
 #include "test_utils.h"
 #include "float16.h"
-#include <boost/filesystem.hpp>
 #include <iostream>
+#include <experimental/filesystem>
 
 using namespace cldnn;
 
@@ -351,14 +351,17 @@ namespace tests
     const std::string test_dump::create_dump_graph_dir(std::string& str_err) const
     {
         const std::string dump_dir = graph_dump_dir + "/" + test_case_name() + "/" + name();
-        try
+        std::stringstream bufH;
+        bufH << dump_dir;
+        if (!std::experimental::filesystem::exists(bufH.str()))
         {
-            boost::filesystem::create_directories(dump_dir);
+            std::experimental::filesystem::create_directories(bufH.str());
         }
-        catch (boost::filesystem::filesystem_error const& err)
+        else
         {
-            str_err = err.what();
+            str_err = "Dump dir exists!";
         }
+
         return dump_dir;
     }
 

@@ -91,14 +91,8 @@ protected:
         dto.mem = mem.get();
         dto.fill_type = static_cast<cldnn_filler_type>(fill_type);
     }
-private:
-    mutable_data() : primitive_base(), mem(memory::attach(layout(data_types::f32, format::byxf, { 1,1,1,1,1 }), new float[1], 1)) {}
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(mutable_data) & CLDNN_SERIALIZATION_NVP(fill_type);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(mutable_data)

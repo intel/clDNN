@@ -67,4 +67,3 @@ softmax_inst::typed_primitive_inst(network_impl& network, softmax_node const& no
     //        throw std::runtime_error("Softmax input has more than one dimension per batch");
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(softmax)

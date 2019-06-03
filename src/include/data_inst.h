@@ -35,12 +35,6 @@ struct typed_program_node<data> : public typed_program_node_base<data>
     
 private:
     memory_impl::ptr mem;
-    CLDNN_SERIALIZATION_MEMBERS(
-        auto mem_layout = &mem->get_layout();
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(parent) & CLDNN_SERIALIZATION_NVP(mem_layout);
-        if (!Archive::is_saving::value)
-            mem = this->get_program().get_engine().allocate_memory(*mem_layout);
-    )
 };
 
 using data_node = typed_program_node<data>;
@@ -64,4 +58,3 @@ public:
 using data_inst = typed_primitive_inst<data>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(data)

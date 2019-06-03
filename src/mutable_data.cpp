@@ -129,4 +129,3 @@ mutable_data_inst::typed_primitive_inst(network_impl& network, mutable_data_node
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(mutable_data)

@@ -62,4 +62,3 @@ mvn_inst::typed_primitive_inst(network_impl& network, mvn_node const& node)
 
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(mvn)

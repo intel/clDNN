@@ -91,4 +91,3 @@ activation_inst::typed_primitive_inst(network_impl& network, activation_node con
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(activation)

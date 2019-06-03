@@ -96,4 +96,3 @@ namespace cldnn
         }
     }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(scale_grad_input)

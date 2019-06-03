@@ -123,14 +123,8 @@ protected:
         dto.axis_num = (int)axis.size();
         dto.reverse = reverse;
     }
-private:
-    index_select() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(index_select) & CLDNN_SERIALIZATION_NVP(axis) & CLDNN_SERIALIZATION_NVP(reverse);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(index_select)

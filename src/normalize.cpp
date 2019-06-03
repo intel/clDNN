@@ -77,4 +77,3 @@ normalize_inst::typed_primitive_inst(network_impl& network, normalize_node const
 
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(normalize)

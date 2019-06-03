@@ -34,8 +34,6 @@ public:
     program_node& input(size_t idx = 0) const { return get_dependency(idx); }
 
     size_t inputs_count() const { return desc->get_input().size(); }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using concatenation_node = typed_program_node<concatenation>;
@@ -61,4 +59,3 @@ private:
 using concatenation_inst = typed_primitive_inst<concatenation>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(concatenation)

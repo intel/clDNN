@@ -38,8 +38,6 @@ namespace cldnn
         program_node& indices() const { return get_dependency(1); }
         bool get_reverse() const { return get_primitive()->reverse; }
         std::vector<index_select_axis_name> get_axes() const { return get_primitive()->axis; }
-    private:
-        CLDNN_SERIALIZATION_PARENT_ONLY()
 	};
 
 	using index_select_node = typed_program_node<index_select>;
@@ -63,4 +61,3 @@ namespace cldnn
 	using index_select_inst = typed_primitive_inst<index_select>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(index_select)

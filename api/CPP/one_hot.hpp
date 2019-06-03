@@ -96,14 +96,8 @@ namespace cldnn
             dto.one_hot_axis = one_hot_axis;
 
         }
-    private:
-        one_hot() : primitive_base() {} // Constructor necessary for serialization process
-        CLDNN_SERIALIZATION_MEMBERS(
-            ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(one_hot) & CLDNN_SERIALIZATION_NVP(shape) & CLDNN_SERIALIZATION_NVP(one_hot_axis);
-        )
     };
     /// @}
     /// @}
     /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(one_hot)

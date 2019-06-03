@@ -74,4 +74,3 @@ data_inst::typed_primitive_inst(network_impl& network, data_node const& node)
 }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(data)

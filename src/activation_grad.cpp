@@ -77,4 +77,3 @@ activation_grad_inst::typed_primitive_inst(network_impl& network, activation_gra
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(activation_grad)

@@ -59,4 +59,3 @@ namespace cldnn
     }
 
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(batch_norm_grad)

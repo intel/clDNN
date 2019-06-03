@@ -31,8 +31,6 @@ public:
 
     program_node& input(size_t idx = 0) const { return get_dependency(idx); }
     size_t inputs_count() const { return get_dependencies().size(); }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using gemm_node = typed_program_node<gemm>;
@@ -53,4 +51,3 @@ public:
 using gemm_inst = typed_primitive_inst<gemm>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(gemm)

@@ -64,9 +64,6 @@ struct primitive_impl
     virtual bool is_cpu() const { return true; }
 private:
 	std::string _kernel_name;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(_kernel_name);
-    )
 };
 
 /*
@@ -188,10 +185,6 @@ private:
         return true;
     }
 
-
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP(primitive_impl);
-    )
 };
 
 namespace details

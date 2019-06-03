@@ -62,9 +62,6 @@ public:
     bool use_scale_shift() const { return !get_primitive()->scale.empty() && !get_primitive()->shift.empty(); };
     bool forwad_pass() const { return !get_primitive()->inv_variance.empty(); };
     bool calc_mean_var() const { return (use_global_stats() && mean().is_type<mutable_data>() && variance().is_type<mutable_data>()); };
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
-
 };
 
 using batch_norm_node = typed_program_node<batch_norm>;
@@ -115,4 +112,3 @@ public:
 using batch_norm_inst = typed_primitive_inst<batch_norm>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(batch_norm)

@@ -19,7 +19,6 @@
 #include "cldnn_defs.h"
 #include "compounds.h"
 #include "meta_utils.hpp"
-#include "serialization_helper.h"
 
 #include <map>
 #include <list>
@@ -225,10 +224,6 @@ struct format
     /// @brief Conversion to C API @ref ::cldnn_format_type.
     constexpr explicit operator cldnn_format_type() const { return static_cast<cldnn_format_type>(value); }
 
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(value);
-    )
 };
 
 struct tensor;
@@ -958,9 +953,6 @@ private:
         init.init_tensor_values(*this);
         assign_inits(std::forward<KindInitTys>(kind_inits) ...);
     }
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(_sizes);
-    )
 };
 
 

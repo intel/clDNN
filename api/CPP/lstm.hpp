@@ -177,37 +177,6 @@ protected:
         dto.clip = clip;
         dto.input_forget = input_forget;
     }
-private:
-    lstm() : primitive_base() {} // Constructor necessary for serialization process
-    // To make it easier, create serialize method for std::vector<cldnn_activation_additional_params>.
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(lstm) & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(recurrent)
-           & CLDNN_SERIALIZATION_NVP(bias) & CLDNN_SERIALIZATION_NVP(initial_hidden) & CLDNN_SERIALIZATION_NVP(initial_cell) & CLDNN_SERIALIZATION_NVP(peepholes)
-           & CLDNN_SERIALIZATION_NVP(clip) & CLDNN_SERIALIZATION_NVP(input_forget) & CLDNN_SERIALIZATION_NVP(activations) & CLDNN_SERIALIZATION_NVP(output_selection)
-           & CLDNN_SERIALIZATION_NVP(offset_order);
-        float ap_a;
-        float ap_b;
-        const std::string param_a_str("activation_params_a_");
-        const std::string param_b_str("activation_params_b_");
-        std::string activation_params_a;
-        std::string activation_params_b;
-        auto activation_params_size = activation_params.size();
-        ar & CLDNN_SERIALIZATION_NVP(activation_params_size);
-        for (size_t x = 0; x < activation_params_size; x++)
-        {
-            activation_params_a = param_a_str + std::to_string(x);
-            activation_params_b = param_b_str + std::to_string(x);
-            if (Archive::is_saving::value)
-            {
-                ap_a = activation_params.at(x).a;
-                ap_b = activation_params.at(x).b;
-            }
-            ar & boost::serialization::make_nvp(activation_params_a.c_str(), ap_a)
-               & boost::serialization::make_nvp(activation_params_b.c_str(), ap_b);
-            if (!Archive::is_saving::value)
-                activation_params.push_back({ ap_a, ap_b });
-        }
-        )
 };
 
 struct lstm_gemm : public primitive_base<lstm_gemm, CLDNN_PRIMITIVE_DESC(lstm_gemm)>
@@ -284,12 +253,6 @@ protected:
         dto.hidden = hidden.c_str();
         dto.direction = direction;
     }
-private:
-    lstm_gemm() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(lstm_gemm) & CLDNN_SERIALIZATION_NVP(weights) & CLDNN_SERIALIZATION_NVP(recurrent) 
-           & CLDNN_SERIALIZATION_NVP(bias) & CLDNN_SERIALIZATION_NVP(hidden) & CLDNN_SERIALIZATION_NVP(direction);
-    )
 };
 
 struct lstm_elt : public primitive_base<lstm_elt, CLDNN_PRIMITIVE_DESC(lstm_elt)>
@@ -380,41 +343,9 @@ protected:
         }
         dto.direction = direction;
     }
-private:
-    lstm_elt() : primitive_base() {} // Constructor necessary for serialization process
-    // To make it easier, create serialize method for std::vector<cldnn_activation_additional_params>.
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(lstm_elt) & CLDNN_SERIALIZATION_NVP(cell) & CLDNN_SERIALIZATION_NVP(clip) & CLDNN_SERIALIZATION_NVP(input_forget)
-           & CLDNN_SERIALIZATION_NVP(activations) & CLDNN_SERIALIZATION_NVP(offset_order) & CLDNN_SERIALIZATION_NVP(direction);
-        float ap_a;
-        float ap_b;
-        const std::string param_a_str("activation_params_a_");
-        const std::string param_b_str("activation_params_b_");
-        std::string activation_params_a;
-        std::string activation_params_b;
-        auto activation_params_size = activation_params.size();
-        ar & CLDNN_SERIALIZATION_NVP(activation_params_size);
-        for (size_t x = 0; x < activation_params_size; x++)
-        {
-            activation_params_a = param_a_str + std::to_string(x);
-            activation_params_b = param_b_str + std::to_string(x);
-            if (Archive::is_saving::value)
-            {
-                ap_a = activation_params.at(x).a;
-                ap_b = activation_params.at(x).b;
-            }
-            ar & boost::serialization::make_nvp(activation_params_a.c_str(), ap_a)
-               & boost::serialization::make_nvp(activation_params_b.c_str(), ap_b);
-            if (!Archive::is_saving::value)
-                activation_params.push_back({ ap_a, ap_b });
-        }
-        )
 };
 
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(lstm)
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(lstm_gemm)
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(lstm_elt)

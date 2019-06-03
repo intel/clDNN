@@ -195,4 +195,3 @@ fused_conv_eltwise_inst::typed_primitive_inst(network_impl& network, fused_conv_
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(fused_conv_eltwise)

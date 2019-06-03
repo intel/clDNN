@@ -57,10 +57,6 @@ struct custom_gpu_primitive_gpu : typed_primitive_impl<custom_gpu_primitive>
         _kernel.set_output_event(instance.node.is_output());
         return _kernel.run(*cl_kernel.get(), events, args);
     }
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & boost::serialization::make_nvp("typed_primitive_impl_custom_gpu_primitive", boost::serialization::base_object<typed_primitive_impl<custom_gpu_primitive>>(*this));
-    )
 };
 
 static kernel_selector::kernel_argument_element get_arg(cldnn_arg arg)
@@ -236,29 +232,3 @@ namespace {
     attach attach_impl;
 }
 }
-CLDNN_SERIALIZATION_EXPORT_CLASS_GUID(cldnn::typed_primitive_impl<cldnn::custom_gpu_primitive>, "typed_primitive_impl_custom_gpu_primitive")
-CLDNN_SERIALIZATION_EXPORT_CLASS_GUID(neural::custom_gpu_primitive_gpu, "custom_gpu_primitive_gpu")
-#ifdef CLDNN_SERIALIZATION
-///@brief Overloaded constructor.
-namespace boost {
-    namespace serialization {
-        template<class Archive>
-        void save_construct_data(Archive & ar, const neural::custom_gpu_primitive_gpu * t, const unsigned int /*file_version*/)
-        {
-            auto outer = &t->outer;
-            ar << make_nvp("outer", outer)
-               << make_nvp("cl_kernel", t->cl_kernel);
-        }
-        template<class Archive>
-        void load_construct_data(Archive & ar, neural::custom_gpu_primitive_gpu * t, const unsigned int /*file_version*/)
-        {
-            cldnn::typed_program_node<cldnn::custom_gpu_primitive>* outer;
-            std::shared_ptr<kernel_selector::cl_kernel_data> cl_kernel;
-
-            ar >> make_nvp("outer", outer)
-               >> make_nvp("cl_kernel", cl_kernel);
-            ::new(static_cast<void*>(t))neural::custom_gpu_primitive_gpu(*outer, cl_kernel);
-        }
-    }
-}
-#endif

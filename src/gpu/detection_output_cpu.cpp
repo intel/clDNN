@@ -623,10 +623,6 @@ struct detection_output_cpu : typed_primitive_impl<detection_output>
     {
         return new detection_output_cpu(arg);
     }
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & boost::serialization::make_nvp("parent", boost::serialization::base_object<typed_primitive_impl<detection_output>>(*this));
-    )
 };
 
 primitive_impl* runDetectOutCpu(const detection_output_node& arg)
@@ -635,6 +631,3 @@ primitive_impl* runDetectOutCpu(const detection_output_node& arg)
 }
 
 }}
-/// @brief typed_primitive_impl_detection_output exported in detection_output_gpu.cpp
-CLDNN_SERIALIZATION_EXPORT_CLASS_GUID(cldnn::gpu::detection_output_cpu, "detection_output_cpu")
-CLDNN_SERIALIZATION_OVERLOAD_NT_GPU_CLASS_CONSTRUCTOR(cldnn::gpu::detection_output_cpu, detection_output)

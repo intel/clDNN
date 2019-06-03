@@ -131,21 +131,12 @@ void engine_impl::release_pending_memory()
 
 program_impl::ptr engine_impl::build_program(const topology_impl& topology, const build_options& options, bool is_internal, bool no_optimizations)
 {
-    auto prog_impl = new program_impl(*this, topology, options, is_internal, no_optimizations);
-    CLDNN_SERIALIZATION_PROGRAM_SAVE(prog_impl, options, is_internal)
-    return{ prog_impl, false };
+    return{ new program_impl(*this, topology, options, is_internal, no_optimizations), false };
 }
 
 program_impl::ptr engine_impl::build_program(const std::set<std::shared_ptr<program_node>>& nodes, const build_options& options, bool is_internal)
 {
-    auto prog_impl = new program_impl(*this, nodes, options, is_internal);
-    CLDNN_SERIALIZATION_PROGRAM_SAVE(prog_impl, options, is_internal)
-    return{ prog_impl, false };
-}
-
-program_impl::ptr engine_impl::load_program(const std::string& file_name, const std::string& dump_path)
-{
-    CLDNN_SERIALIZATION_PROGRAM_LOAD(this, file_name, dump_path)
+    return{ new program_impl(*this, nodes, options, is_internal), false };
 }
 
 network_impl::ptr engine_impl::build_network(const topology_impl& topology, const build_options& options, bool is_internal)

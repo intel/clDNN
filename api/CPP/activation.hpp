@@ -114,16 +114,8 @@ protected:
         dto.additional_params = additional_params;
         dto.additional_params_input = additional_params_input.c_str();
     }
-private:
-    activation() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(activation) & CLDNN_SERIALIZATION_NVP(activation_func) 
-           & CLDNN_SERIALIZATION_NVP(additional_params.a) & CLDNN_SERIALIZATION_NVP(additional_params.b) 
-           & CLDNN_SERIALIZATION_NVP(additional_params_input);
-        )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(activation)

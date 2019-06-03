@@ -119,14 +119,8 @@ protected:
         dto.broadcast_axes = uint16_t_vector_to_arr(broadcast_axes);
 
     }
-private:
-    broadcast() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(broadcast) & CLDNN_SERIALIZATION_NVP(broadcast_sizes);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(broadcast)

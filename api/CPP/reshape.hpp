@@ -70,15 +70,9 @@ protected:
     {
         dto.output_shape = output_shape;
     }
-private:
-    reshape() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(reshape) & CLDNN_SERIALIZATION_NVP(output_shape);
-    )
 };
 
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(reshape)

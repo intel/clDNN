@@ -166,11 +166,6 @@ protected:
         bool group_events = split > 1 ? true : false;
         return aggregate_events(tmp_events, group_events);
     }
-
-private:
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & boost::serialization::make_nvp("typed_primitive_impl", boost::serialization::base_object<typed_primitive_impl<PType>>(*this));
-    )
 };
 
 } }

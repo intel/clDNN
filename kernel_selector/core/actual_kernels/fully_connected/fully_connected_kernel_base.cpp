@@ -17,7 +17,6 @@
 #include "fully_connected_kernel_base.h"
 #include "kernel_selector_utils.h"
 #include "common_tools.h"
-#include "boost/make_unique.hpp"
 
 namespace kernel_selector 
 {
@@ -50,7 +49,7 @@ namespace kernel_selector
 
     std::unique_ptr<FullyConnectedKernelBase::DispatchData> FullyConnectedKernelBase::SetDefault(const fully_connected_params& params, int) const
     {
-        std::unique_ptr<DispatchData> dispatchData = boost::make_unique<DispatchData>();
+        std::unique_ptr<DispatchData> dispatchData = std::unique_ptr<DispatchData>(new DispatchData());
         dispatchData->fp16UnitUsed = params.inputs[0].GetDType() == Datatype::F16;
 
         // Determine global work sizes.

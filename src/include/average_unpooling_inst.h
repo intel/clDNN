@@ -30,8 +30,6 @@ namespace cldnn
     public:
         using parent::parent;
         program_node& input() const { return get_dependency(0); }
-    private:
-        CLDNN_SERIALIZATION_PARENT_ONLY()
     };
 
     using average_unpooling_node = typed_program_node<average_unpooling>;
@@ -50,4 +48,3 @@ namespace cldnn
     using average_unpooling_inst = typed_primitive_inst<average_unpooling>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(average_unpooling)

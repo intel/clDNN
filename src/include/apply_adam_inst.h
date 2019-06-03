@@ -39,8 +39,6 @@ public:
     program_node& additional_dep() const { return get_dependency(5); }
 
     bool has_additional_dep() const { return get_dependencies().size() > 5; }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using apply_adam_node = typed_program_node<apply_adam>;
@@ -69,4 +67,3 @@ public:
 using apply_adam_inst = typed_primitive_inst<apply_adam>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(apply_adam)

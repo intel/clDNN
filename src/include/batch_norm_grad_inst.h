@@ -31,8 +31,6 @@ namespace cldnn
         using parent::parent;
         program_node& input() const { return get_dependency(0); }
         program_node& inv_variance() const { return get_dependency(2); }
-    private:
-        CLDNN_SERIALIZATION_PARENT_ONLY()
     };
 
     using batch_norm_grad_node = typed_program_node<batch_norm_grad>;
@@ -54,4 +52,3 @@ namespace cldnn
     using batch_norm_grad_inst = typed_primitive_inst<batch_norm_grad>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(batch_norm_grad)

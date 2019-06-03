@@ -101,4 +101,3 @@ scale_grad_weights_inst::typed_primitive_inst(network_impl& network, scale_grad_
     }
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(scale_grad_weights)

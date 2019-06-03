@@ -83,4 +83,3 @@ select_inst::typed_primitive_inst(network_impl& network, select_node const& node
 	CLDNN_ERROR_DATA_TYPES_MISMATCH(node.id(), "Data type input 1", data_type1, "Data type input 2", data_type2, "");
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(select)

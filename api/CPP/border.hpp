@@ -143,15 +143,8 @@ protected:
         dto.border_type        = static_cast<cldnn_border_type>(type);
         dto.border_value       = border_value;
     }
-private:
-    border() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(border) & CLDNN_SERIALIZATION_NVP(left_top_sizes) 
-           & CLDNN_SERIALIZATION_NVP(right_bottom_sizes) & CLDNN_SERIALIZATION_NVP(type) & CLDNN_SERIALIZATION_NVP(border_value);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(border)

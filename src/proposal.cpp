@@ -176,4 +176,3 @@ static void generate_anchors(unsigned int base_size,
 
 }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(proposal)

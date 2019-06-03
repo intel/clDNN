@@ -58,8 +58,6 @@ struct border_gpu : typed_primitive_gpu_impl<border>
 
         return new border_gpu(arg, best_kernels[0]);
     }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -89,4 +87,3 @@ namespace {
 
 }
 } }
-CLDNN_SERIALIZATION_GPU_CLASS(border)

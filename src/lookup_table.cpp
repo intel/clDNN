@@ -65,4 +65,3 @@ namespace cldnn
     {
     }
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENTS(lookup_table)

@@ -71,9 +71,6 @@ public:
 
 private:
     storage_type storage;
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(storage);
-    )
 };
 
 /// Converts C++ type to @ref data_types .
@@ -313,9 +310,6 @@ private:
         std::transform(sizes.cbegin(), sizes.cend(), std::back_inserter(result), [](const tensor::value_type& el) { return abs(el); });
         return result; // NRVO
     }
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(_lower_size) & CLDNN_SERIALIZATION_NVP(_upper_size) & CLDNN_SERIALIZATION_NVP(_filling_value);
-    )
 };
 
 /// @brief Describes memory layout.
@@ -574,11 +568,6 @@ struct layout
     {
         return fuse(data_type, format);
     }
-private:
-    layout() : format(cldnn::format::bfyx){} // Constructor necessary for serialization process.
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_NVP(data_type) & CLDNN_SERIALIZATION_NVP(format) & CLDNN_SERIALIZATION_NVP(size) & CLDNN_SERIALIZATION_NVP(data_padding);
-    )
 };
 
 

@@ -31,8 +31,6 @@ public:
     using parent::parent;
 
     program_node& input() const { return get_dependency(0); }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using generic_layer_node = typed_program_node<generic_layer>;
@@ -57,4 +55,3 @@ public:
 using generic_layer_inst = typed_primitive_inst<generic_layer>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(generic_layer)

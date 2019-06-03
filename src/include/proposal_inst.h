@@ -31,8 +31,6 @@ struct typed_program_node<proposal> : public typed_program_node_base<proposal>
     program_node& cls_score() const { return get_dependency(0); }
     program_node& bbox_pred() const { return get_dependency(1); }
     program_node& image_info() const { return get_dependency(2); }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 using proposal_node = typed_program_node<proposal>;
@@ -100,4 +98,3 @@ private:
 using proposal_inst = typed_primitive_inst<proposal>;
 
 }
-CLDNN_SERIALIZATION_TYPED_PROGRAM_NODE_CLASS(proposal)

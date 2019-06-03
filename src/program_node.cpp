@@ -20,8 +20,6 @@
 #include "to_string_utils.h"
 #include "json_object.h"
 
-#include "boost/make_unique.hpp"
-
 using namespace cldnn;
 
 program_node::program_node(std::shared_ptr<primitive> prim, program_impl & prog) : desc(prim), myprog(prog), org_id(prim->get_id())
@@ -93,7 +91,7 @@ void program_node::add_memory_dependency(std::vector<primitive_id> prim_list)
 
 std::unique_ptr<json_composite> program_node::desc_to_json() const
 {
-    std::unique_ptr<json_composite> node_info = boost::make_unique<json_composite>();
+    std::unique_ptr<json_composite> node_info = std::unique_ptr<json_composite>(new json_composite());
     node_info->add("ptr", "node_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
     node_info->add("id", id());
     node_info->add("type", get_extr_type(typeid(*this).name()));
@@ -276,4 +274,3 @@ void details::internal_program_node_base::set_implementation(std::unique_ptr<pri
 {
     selected_impl = std::move(impl);
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_IMPLEMENT(cldnn::details::internal_program_node_base)

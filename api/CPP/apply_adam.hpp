@@ -139,17 +139,8 @@ protected:
         dto.epsilon = epsilon;
         dto.dependency_id = dependency_id.c_str();
     }
-private:
-    apply_adam() : primitive_base() {} // Constructor necessary for serialization process
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & CLDNN_SERIALIZATION_BASE_OBJECT_NVP_PRIMITIVE_BASE(apply_adam) & CLDNN_SERIALIZATION_NVP(m) & CLDNN_SERIALIZATION_NVP(v) 
-           & CLDNN_SERIALIZATION_NVP(beta1_power) & CLDNN_SERIALIZATION_NVP(beta2_power) & CLDNN_SERIALIZATION_NVP(lr) 
-           & CLDNN_SERIALIZATION_NVP(beta1) & CLDNN_SERIALIZATION_NVP(beta2) & CLDNN_SERIALIZATION_NVP(epsilon) 
-           & CLDNN_SERIALIZATION_NVP(dependency_id);
-    )
 };
 /// @}
 /// @}
 /// @}
 }
-CLDNN_SERIALIZATION_EXPORT_NODE_KEY(apply_adam)

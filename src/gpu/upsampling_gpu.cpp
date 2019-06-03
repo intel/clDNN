@@ -65,8 +65,6 @@ struct upsampling_gpu : typed_primitive_gpu_impl<upsampling>
 
         return upsampling;
     }
-private:
-    CLDNN_SERIALIZATION_PARENT_ONLY()
 };
 
 namespace {
@@ -86,4 +84,3 @@ namespace {
     attach attach_impl;
 }
 } }
-CLDNN_SERIALIZATION_GPU_CLASS(upsampling)

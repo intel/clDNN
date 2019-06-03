@@ -129,10 +129,6 @@ private:
         branch->execute({});
         return branch->get_outputs().at(0)->output_memory();
     }
-    CLDNN_SERIALIZATION_MEMBERS(
-        ar & boost::serialization::make_nvp("typed_primitive_impl_condition", boost::serialization::base_object<typed_primitive_impl<condition>>(*this));
-    )
-
 };
 
 namespace {
@@ -149,4 +145,3 @@ namespace {
 }
 } 
 }
-CLDNN_SERIALIZATION_GPU_NG_CLASS(cldnn::gpu, condition)
