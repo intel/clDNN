@@ -26,7 +26,6 @@
 #include "test_utils.h"
 #include "float16.h"
 #include <iostream>
-#include <experimental/filesystem>
 
 using namespace cldnn;
 
@@ -40,16 +39,8 @@ namespace tests
         assert((generic_params->data_type == data_types::f32) || (generic_params->data_type == data_types::f16));
         if (dump_graphs)
         {
-            std::string err = "";
-            auto graphs_dump_dir = test_info.create_dump_graph_dir(err);
-            if (err.empty())
-            {
-                generic_params->network_build_options.set_option(cldnn::build_option::graph_dumps_dir(graphs_dump_dir));
-            }
-            else
-            {
-                std::cout << err << std::endl;
-            }
+            auto graphs_dump_dir = test_info.create_dump_graph_dir();
+            generic_params->network_build_options.set_option(cldnn::build_option::graph_dumps_dir(graphs_dump_dir));
         }
         topology topology;               
         topology.add(*layer_params);
@@ -348,20 +339,9 @@ namespace tests
         return temp;
     }
 
-    const std::string test_dump::create_dump_graph_dir(std::string& str_err) const
+    const std::string test_dump::create_dump_graph_dir() const
     {
         const std::string dump_dir = graph_dump_dir + "/" + test_case_name() + "/" + name();
-        std::stringstream bufH;
-        bufH << dump_dir;
-        if (!std::experimental::filesystem::exists(bufH.str()))
-        {
-            std::experimental::filesystem::create_directories(bufH.str());
-        }
-        else
-        {
-            str_err = "Dump dir exists!";
-        }
-
         return dump_dir;
     }
 
