@@ -352,7 +352,7 @@ const cldnn::engine & get_test_engine();
 
 struct test_dump
 {
-    const std::string create_dump_graph_dir(std::string& str_err) const;
+    const std::string create_dump_graph_dir() const;
     const std::string name() const;
     const std::string test_case_name() const;
 private:

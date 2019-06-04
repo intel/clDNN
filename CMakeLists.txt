@@ -755,7 +755,6 @@ foreach(__CLDNN_CompilerFlagName IN ITEMS "CMAKE_CXX_FLAGS" "CMAKE_C_FLAGS")
       ALL_PATTERN ""
       SET
         CompileAsDefault
-        DebugInfoProgramDatabase
         ExceptionsEnabled
         MultiProcessorCompilation
         DeadCodeEliminate
@@ -942,7 +941,6 @@ foreach(__CLDNN_LinkerFlagName IN ITEMS "CMAKE_EXE_LINKER_FLAGS" "CMAKE_SHARED_L
       "${__CLDNN_LinkerFlagName}"
       ALL_PATTERN ""
       SET
-        DebugInfoProgramDatabase
         DeadCodeEliminate
         IdenticalCodeDataFold
         IncrementalDisabled
