@@ -1,5 +1,12 @@
 ﻿
 # Compute Library for Deep Neural Networks (clDNN)
+___
+## Discontinued repository
+This project now is an integral part of Intel® Distribution of OpenVino™ Toolkit. 
+It's content and development has been moved to [*DLDT repo*](https://github.com/opencv/dldt/tree/2019/inference-engine/thirdparty/clDNN).
+
+To get latest clDNN sources please refer to *DLDT repo*.
+___
 [![Apache License Version 2.0](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 ![v1.0](https://img.shields.io/badge/1.0-RC1-green.svg)
 
