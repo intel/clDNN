@@ -26,6 +26,7 @@
 #include <iostream>
 #include <numeric>
 #include <algorithm>
+#include <limits>
 #include <sstream>
 
 namespace cldnn
