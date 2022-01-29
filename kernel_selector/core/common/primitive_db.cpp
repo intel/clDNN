@@ -14,8 +14,9 @@
 // limitations under the License.
 */
 #include "primitive_db.h"
-#include <assert.h>
+#include <cassert>
 #include <algorithm>
+#include <stdexcept>
 
 #ifndef NDEBUG
 #include <fstream>
