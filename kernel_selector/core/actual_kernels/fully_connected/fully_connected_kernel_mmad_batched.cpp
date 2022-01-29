@@ -105,7 +105,7 @@ namespace kernel_selector
         runInfo->lws2 = 1;
 
         runInfo->effiency = FORCE_PRIORITY_1;
-        return std::move(runInfo);
+        return runInfo;
     }
 
     KernelsData FullyConnected_mmad_batched::GetKernelsData(const Params& params, const optional_params& options) const

@@ -56,7 +56,7 @@ namespace kernel_selector {
 
         runInfo->effiency = FORCE_PRIORITY_5;
 
-        return std::move(runInfo);
+        return runInfo;
     }
 
     JitConstants FullyConnected_fs_byx_fsv32::GetJitConstants(const fully_connected_params& params, const DispatchData& kd) const
