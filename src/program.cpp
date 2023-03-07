@@ -708,7 +708,7 @@ std::string program_impl::get_memory_dependencies_string() const
         itr++;
         mem_dep = mem_dep.append("primitive: ").append(node->id()).append(" restricted list: ");
         for (auto it : node->get_memory_dependencies())
-            mem_dep == mem_dep.append(it).append(", ");
+            mem_dep = mem_dep.append(it).append(", ");
         mem_dep = mem_dep.append("\n");
     }
     return mem_dep;

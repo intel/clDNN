@@ -57,7 +57,7 @@ namespace kernel_selector {
 
         runInfo->effiency = FORCE_PRIORITY_6;
 
-        return std::move(runInfo);
+        return runInfo;
     }
 
     JitConstants FullyConnected_bf_io_GEMM::GetJitConstants(const fully_connected_params& params, const DispatchData& kd) const

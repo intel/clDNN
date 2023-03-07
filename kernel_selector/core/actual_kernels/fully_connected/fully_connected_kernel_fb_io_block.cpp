@@ -70,7 +70,7 @@ namespace kernel_selector
         kd->units_per_sg_read = units_per_sg_read;
         kd->rg_count          = (uint32_t)rg_count;
         kd->last_rg_size      = response_size % units_per_sg_read;
-        return std::move(kd);
+        return kd;
     }
 
     JitConstants FullyConnected_fb_io_block::GetJitConstants(const fully_connected_params& params, const FullyConnectedKernelBase::DispatchData& run_info) const

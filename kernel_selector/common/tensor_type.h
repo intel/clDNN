@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <numeric>
 #include <cstddef>
+#include <stdexcept>
 #include <algorithm>
 #include <array>
 

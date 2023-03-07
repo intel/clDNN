@@ -44,7 +44,7 @@ namespace kernel_selector
         kd->lws0 = 8;
         kd->lws1 = 1;
 
-        return std::move(kd);
+        return kd;
     }
 
     bool FullyConnected_fb_oi_b8_ref::Validate(const Params& p, const optional_params& o) const

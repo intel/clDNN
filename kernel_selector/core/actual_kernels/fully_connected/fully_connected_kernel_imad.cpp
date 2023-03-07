@@ -59,7 +59,7 @@ namespace kernel_selector
         runInfo->lws1 = 1;
         runInfo->lws2 = 1;
 
-        return std::move(runInfo);
+        return runInfo;
     } // SetDefault
 
     bool FullyConnectedKernelIMAD::Validate(const Params& params, const optional_params& options) const

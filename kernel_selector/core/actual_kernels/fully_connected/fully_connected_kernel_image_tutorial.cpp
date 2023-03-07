@@ -57,7 +57,7 @@ namespace kernel_selector
 
         runInfo->effiency = TUTORIAL_PRIORITY;
 
-        return std::move(runInfo);
+        return runInfo;
     }
 
     KernelsData FullyConnected_image_tutorial::GetKernelsData(const Params& params, const optional_params& options) const

@@ -54,7 +54,7 @@ namespace kernel_selector
         runInfo->lws1 = 1;
         runInfo->lws2 = sub_group_size;
 
-        return std::move(runInfo);
+        return runInfo;
     }
 
     JitConstants FullyConnectedKernelMMAD::GetJitConstants(const fully_connected_params& params, const DispatchData& runInfo) const

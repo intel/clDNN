@@ -1896,6 +1896,7 @@ struct ImageFormat : public cl_image_format
         image_channel_data_type = type;
     }
 
+#if 0
     //! \brief Assignment operator.
     ImageFormat& operator = (const ImageFormat& rhs)
     {
@@ -1905,6 +1906,7 @@ struct ImageFormat : public cl_image_format
         }
         return *this;
     }
+#endif
 };
 
 /*! \brief Class interface for cl_device_id.

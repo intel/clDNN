@@ -79,7 +79,7 @@ namespace {
             undefs += "#endif\n";
         }
 
-        return std::move(undefs);
+        return undefs;
     }
 
     std::string reorder_options(const std::string& org_options)
@@ -181,7 +181,7 @@ kernels_cache::sorted_code kernels_cache::get_program_source(const kernels_code&
         current_bucket.kernels_counter++;
     }
 
-    return std::move(scode);
+    return scode;
 }
 
 kernels_cache::kernels_cache(gpu_toolkit& context): _context(context) {}
