@@ -61,7 +61,7 @@ struct generic_layer : public primitive_base<generic_layer, CLDNN_PRIMITIVE_DESC
     generic_layer(const dto* dto)
         : primitive_base(dto)
         , output_layout(dto->output_layout)
-        , generic_params(*static_cast<const kernel_selector::generic_kernel_params* const>(dto->generic_params))
+        , generic_params(*static_cast<const kernel_selector::generic_kernel_params*>(dto->generic_params))
     {
     }
 
